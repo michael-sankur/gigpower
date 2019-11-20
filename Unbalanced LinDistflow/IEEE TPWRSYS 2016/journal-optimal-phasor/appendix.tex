@@ -1,0 +1,80 @@
+\section*{Appendix}
+\label{sec:appendix}
+
+\emph{Extension of Semidefinite OPF of \cite{dall2012optimization}, \cite{dall2013distributed}: } We start by rewriting the matrix variable $X = v {v}^{*}$, where $v = {\left[ \mathbb{V}_{0}^{T}, \text{ } \mathbb{V}_{1}^{T}, \text{ } \ldots \text{ } \mathbb{V}_{N}^{T} \right]}^{T}$ and $\mathbb{V}_{n} = {\left[ V_{n}^{a}, \text{ } V_{n}^{b}, \textbf{ } V_{n}^{c} \right]}^{T}$. Consider a reference magnitude for phase $\phi$ at node $n$, $\Upsilon_{n}^{\phi}$; Adding the following equality constraint to the OPF formulation will ensure  $\left| V_{n}^{\phi} \right| = \Upsilon_{n}^{\phi}$, as $\left| V_{n}^{\phi} \right| = \Upsilon_{n}^{\phi} \Rightarrow \left| V_{n}^{\phi} \right|^{2} = {\left( \Upsilon_{n}^{\phi} \right)}^{2} \Rightarrow V_{n}^{\phi} {\left( V_{n}^{\phi} \right)}^{*} = {\left( \Upsilon_{n}^{\phi} \right)}^{2}$:
+\begin{equation}
+	\Tr \left( \Phi_{V,n}^{\phi} X \right) = {\left( \Upsilon_{n}^{\phi} \right)}^{2}
+\end{equation}
+
+\noindent where $\Phi_{V,n}^{\phi} = e_{n}^{\phi} {\left( e_{n}^{\phi} \right)}^{T}$ as in \cite{dall2012optimization}.
+
+Now, consider an off-diagonal entry of $X$, $X_{n0}^{\phi} = V_{n}^{\phi} {\left( V_{0}^{\phi} \right)}^{*}$, corresponding to the product of the phasor of phase $\phi$ at node $n$, and the complex conjugate of the phasor of phase $\phi$ at node 0. Here, we express this term in polar form:
+% \begin{align}
+% 	V_{n}^{\phi} \left( V_{0}^{\phi} \right)^{*}
+%     &= \left| V_{n}^{\phi} \right| \left| V_{0}^{\phi} \right| \angle \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right) \label{VnV0polar} \\
+%     &= \left| V_{n}^{\phi} \right| \left| V_{0}^{\phi} \right| \exp \left( j \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right) \right) \label{VnV0rect}
+%     V_{n}^{\phi} \left( V_{0}^{\phi} \right)^{*}
+%     &= \left| V_{n}^{\phi} \right| \left| V_{0}^{\phi} \right| \left[ \cos \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right) + j \sin \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right) \right] \label{VnV0rect} 
+% \end{align}
+\begin{equation}
+	X_{n0}^{\phi} = V_{n}^{\phi} {\left( V_{0}^{\phi} \right)}^{*} = \left| V_{n}^{\phi} \right| \left| V_{0}^{\phi} \right| \angle \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right) \label{VnV0polar}
+\end{equation}
+
+% \begin{equation}
+% 	V_{n}^{\phi} \left( V_{0}^{\phi} \right)^{*} = \left| V_{n}^{\phi} \right| \left| V_{0}^{\phi} \right| \left[ \cos \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right) + j \sin \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right) \right] \label{VnV0rect} 
+% \end{equation}
+
+\noindent Using Euler's rule, we write the the real and imaginary parts of $X_{0n}^{\phi}$ in terms of the tangent of $\theta_{n}^{\phi} - \theta_{0}^{\phi}$:
+% \begin{equation}
+% 	\tan \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right)
+% %     =
+% %     \frac{\sin \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right)}{\cos \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right)}
+%     =
+%     \frac{\Im \left\{ V_{n}^{\phi} \left( V_{0}^{\phi} \right)^{*} \right\}}{\Re \left\{ V_{n}^{\phi} \left( V_{0}^{\phi} \right)^{*} \right\}}.
+%     \label{eq:tanVkV0}
+% \end{equation}
+\begin{equation}
+	\Re \left\{ V_{n}^{\phi} {\left( V_{0}^{\phi} \right)}^{*} \right\} \tan \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right)
+    =
+    \Im \left\{ V_{n}^{\phi} {\left( V_{0}^{\phi} \right)}^{*} \right\}
+\end{equation}
+
+\noindent The real and imaginary parts of $V_{n}^{\phi} \left( V_{0}^{\phi} \right)^{*}$ are defined as:
+\begin{align}
+	\Re \left\{ V_{n}^{\phi} \left( V_{0}^{\phi} \right)^{*} \right\}
+    &= 
+    \frac{1}{2} \left[ V_{n}^{\phi} {\left( V_{0}^{\phi} \right)}^{*} + V_{0}^{\phi} {\left( V_{n}^{\phi} \right)}^{*} \right] \nonumber \\
+    &=
+    \frac{1}{2} \left[ \Tr \left( \Phi_{V,n0}^{\phi} X \right) + \Tr \left( \Phi_{V,0n}^{\phi} X \right) \right] \\
+    \Im \left\{ V_{n}^{\phi} \left( V_{0}^{\phi} \right)^{*} \right\}
+    &=
+    \frac{1}{j2} \left[ V_{n}^{\phi} {\left( V_{0}^{\phi} \right)}^{*} - V_{0}^{\phi} {\left( V_{n}^{\phi} \right)}^{*} \right] \nonumber \\
+    &=
+    \frac{1}{j2} \left[ \Tr \left( \Phi_{V,n0}^{\phi} X \right) - \Tr \left( \Phi_{V,0n}^{\phi} X \right) \right],
+\end{align}
+
+\noindent where $\Phi_{V,n0}^{\phi} = e_{0}^{\phi} {\left( e_{n}^{\phi} \right)}^{T}$ and $\Phi_{V,0n}^{\phi} = e_{n}^{\phi} {\left( e_{0}^{\phi} \right)}^{T}$ using the same convention for $e_{n}^{\phi}$ as in \cite{dall2012optimization}. With some matrix algebra, we obtain equality constraints for the phase angle:
+% \begin{align*}
+% 	& \Tr \left( \left( \Phi_{n0}^{\phi} + \Phi_{0n}^{\phi} \right) X \right)
+%     \tan \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right) = \ldots \nonumber \\
+%     & \quad -j \Tr \left( \left( \Phi_{n0}^{\phi} - \Phi_{0n}^{\phi} \right) X \right),
+% \end{align*}
+% \noindent which can be restated:
+\begin{align}
+     & \Tr \left(\Phi_{\theta,n}^{\phi} X \right) = 0 \label{eq:SDPangeq} \\
+     & \Phi_{\theta,n}^{\phi} = \tan \left( \theta_{n}^{\phi} - \theta_{0}^{\phi} \right)
+    \left( \Phi_{V,n0}^{\phi} + \Phi_{V,0n}^{\phi} \right)
+    \nonumber \\
+     & \quad +
+    j \left( \Phi_{V,n0}^{\phi} - \Phi_{V,0n}^{\phi} \right).
+    \label{eq:PhiVn0}
+\end{align}
+
+In this derivation we reference the phase angle of phase $\phi$ at node $n$ to that of phase $\phi$ at node $0$. This formulation is easily modified to reference phase angles to a common or arbitrary reference.
+
+The nature of SDPs disallows incorporation of the L2 norm, thus we were unable to formulate \eqref{eq:OPF} as an SDP. However, it is possible to formulate the SDP with an L1 norm minimization. We write an example objective function for an OPF where one node has a voltage magnitude reference:
+\begin{equation}
+	\min_{X} \sum_{\phi \in \{ a,b,c \}} \left| \Tr \left( \Phi_{V,n}^{\phi} X \right) - \Upsilon_{n}^{\phi} \right|
+\end{equation}
+
+\noindent This can be extended to a problem with multiple nodes having magnitude references. Similarly, \eqref{eq:SDPangeq} and \eqref{eq:PhiVn0} can be used in the same manner for phase angle references.

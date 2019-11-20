@@ -1,0 +1,489 @@
+\subsection{Linearized Model for Unbalanced 3-phase Power Flow}
+
+\setlength{\abovedisplayskip}{-5pt}
+\setlength{\belowdisplayskip}{-0pt}
+
+In this section, we derive a linear approximation of three phase power flow.  This model can be thought of as an extension of the \emph{LinDistFlow} model to unbalanced circuits.  Consider two adjacent nodes of the distribution feeder, $(j,k) \in H$.  We begin by expressing \eqref{eq:KVL}--\eqref{eq:KCL} in vector form:
+
+\begin{align}
+	\mathbb{V}_{j} &= \mathbb{V}_{k} + \mathbb{Z}_{k} \mathbb{I}_{k} \label{eq:KVL_compact} \\
+    \mathbb{I}_{j} &=  \mathbf{i}_{j}+ \sum_{k:(j,k)\in E}\mathbb{I}_{k} \label{eq:KCL_compact}.
+\end{align}
+
+% \noindent where
+
+% \begin{align}
+% 	\mathbb{V}_{j} &= \begin{bmatrix}
+%     					V_{a} \\
+%     					V_{b} \\
+%     					V_{c} \\
+%     					\end{bmatrix}_{j}
+%     \mathbb{I}_{j} = \begin{bmatrix}
+%     					I_{a} \\
+%     					I_{b} \\
+%     					I_{c} \\
+%     					\end{bmatrix}_{j}
+%     \mathbf{i}_{j} = \begin{bmatrix}
+%     					i_{a} \\
+%     					i_{b} \\
+%     					i_{c} \\
+%     					\end{bmatrix}_{j} \nonumber \\
+%     \mathbb{Z}_{jk} &=\begin{bmatrix}
+%   		Z_{aa} & Z_{ab} & Z_{ac} \\
+%   		Z_{ba} & Z_{bb} & Z_{bc} \\
+%   		Z_{ca} & Z_{cb} & Z_{cc}
+%   	\end{bmatrix}_{jk} \nonumber
+% \end{align}
+
+We now right multiply each side of \eqref{eq:KVL_compact} by its complex conjugate and right multiply both sides of ~\eqref{eq:KCL_compact} by $\mathbb{V}_{j}^{*}$ and take the complex conjugate, resulting in:
+
+\begin{align}
+	\mathbb{V}_{j} \mathbb{V}_{j}^*  & =  \mathbb{V}_{k} \mathbb{V}_{k}^* + \mathbb{Z}_{k} \mathbb{I}_{k} \mathbb{V}_{k}^* + \mathbb{V}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*} + \mathbb{Z}_{k} \mathbb{I}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*} \nonumber \\
+    & = \mathbb{V}_{k} \mathbb{V}_{k}^* + 2 \Re \left\{\mathbb{V}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*} \right\} + \mathbb{Z}_{k} \mathbb{I}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*}
+\label{eq:mag_1},
+\end{align}
+
+% \noindent and
+
+\begin{align}
+	\mathbb{V}_{j}\mathbb{I}_{j}^{*} &= \mathbb{V}_{j}\mathbf{i}_{j}^{*} + \sum_{k:(j,k) \in E} \left(\mathbb{V}_{k} + \mathbb{Z}_{k}\mathbb{I}_{k}\right)\mathbb{I}_{k}^{*} \label{eq:pow_1}.
+\end{align}
+
+Similar to the derivation of the \emph{LinDistFlow} system, we neglect loss terms in \eqref{eq:mag_1}--\eqref{eq:pow_1}, which yields:
+
+\begin{align}
+    \mathbb{V}_{j}\mathbb{V}_{j}^{*} &\approx \mathbb{V}_{k} \mathbb{V}_{k}^* + 2 \Re \left\{\mathbb{V}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*} \right\} \label{eq:mag_2} \\
+	\mathbb{V}_{j}\mathbb{I}_{j}^{*} &\approx \mathbb{V}_{j}\mathbf{i}_{j}^{*} + \sum_{k:(j,k) \in E} \mathbb{V}_{k}\mathbb{I}_{k}^{*} \label{eq:pow_2}.
+\end{align}
+
+\noindent where \eqref{eq:mag_1}--\eqref{eq:pow_1} are $3\times 3$ matrix equations. Focusing our attention first on \eqref{eq:pow_1}, we apply the power equation $S_{\phi,k} = V_{\phi,k}I_{\phi,k}^{*}$ to the diagonal elements and collect these into the vector equation:
+
+\begin{align}
+	\mathbb{S}_{j} \approx \mathbf{s}_{j} + \sum_{k:(j,k) \in E} \mathbb{S}_{k} \label{eq:pow_3}
+\end{align}
+
+Returning attention to \eqref{eq:mag_2}, we expand $\mathbb{I}_{k}$ according to $S_{\phi,k} = V_{\phi,k}I_{\phi,k}^{*}$, resulting in:
+
+\begin{equation}
+	\begin{aligned}
+		\mathbb{V}_{j} & \mathbb{V}_{j}^{*} \approx \mathbb{V}_{k} \mathbb{V}_{k}^{*} + \\
+    	& 2 \Re \left\{ \mathbb{V}_{k}
+    	\begin{bmatrix}
+    		S_{a} V_{a}^{-1} & S_{b} V_{b}^{-1} & S_{c} V_{c}^{-1}
+    	\end{bmatrix}_k
+    	\mathbb{Z}_{jk}^* \right\}
+    \end{aligned}
+    \label{eq:mag_3}
+\end{equation}
+
+\noindent which is equivalent to:
+
+\begin{equation}
+	\begin{aligned}
+		\mathbb{V}_{j} & \mathbb{V}_{j}^{*} \approx \mathbb{V}_{k} \mathbb{V}_{k}^{*} + \\
+    	& 2 \Re \left\{
+    	\begin{bmatrix}
+    		S_{a} & V_{a} S_{b} V_{b}^{-1} & V_{a} S_{c} V_{c}^{-1} \\
+    		V_{b} S_{a} V_{a}^{-1} & S_{b} & V_{b} S_{c} V_{c}^{-1} \\
+    		V_{c} S_{a} V_{a}^{-1} & V_{c} S_{b} V_{b}^{-1} & S_{c}
+    	\end{bmatrix}_k
+    	\mathbb{Z}_{jk}^* \right\}
+    \end{aligned}
+    \label{eq:mag_4}
+\end{equation}
+
+\setlength{\abovedisplayskip}{-5pt}
+\setlength{\belowdisplayskip}{-0pt}
+
+Note that even after neglecting the loss terms, \eqref{eq:mag_4} is still nonlinear.  To further simplify the system, we adopt an approximation that assumes the ratio of voltage phasors are constant:
+
+% \setlength{\abovedisplayskip}{-6pt} \setlength{\abovedisplayshortskip}{-6pt}
+% \setlength{\belowdisplayskip}{-0pt} \setlength{\belowdisplayshortskip}{-0pt}
+
+\begin{equation}
+	V_{a,k} V_{b,k}^{-1} \approx \alpha \quad V_{b,k} V_{c,k}^{-1} \approx \alpha \quad V_{a,k} V_{c,k}^{-1} \approx \alpha^{2}
+    \label{eq:VaVbVc}
+\end{equation}
+
+\noindent where
+
+\begin{align}
+	\alpha = &1 \angle 120 \degree = \frac{-1 + j\sqrt{3}}{2}, \quad \alpha^{2} = 1 \angle 240 \degree = -\frac{1 + j\sqrt{3}}{2}.
+    \label{eq:alpha}
+\end{align}
+
+The simplification of the quotient of the voltage phasors according to \eqref{eq:VaVbVc}--\eqref{eq:alpha} transforms \eqref{eq:mag_4} into:
+	
+\begin{equation}
+	\mathbb{V}_{j} \mathbb{V}_{j}^{*} \approx \mathbb{V}_{k} \mathbb{V}_{k}^{*} + 2 \Re \left\{
+    \begin{bmatrix}
+    	S_{a} & \alpha S_{b} & \alpha^{2} S_{c} \\
+    	\alpha^{2} S_{a} & S_{b} & \alpha S_{c} \\
+    	\alpha S_{a} & \alpha^{2} S_{b} & S_{c}
+    \end{bmatrix}_k
+    \mathbb{Z}_{jk}^* \right\}
+    \label{eq:mag_5}
+\end{equation}
+
+Although ~\eqref{eq:mag_5} is a $3\times 3$ matrix equation, we are intertested only in the diagonal elements, which we gather and place into $3 \times 1$ vectors resulting in \eqref{eq:mag_6}:
+
+\begin{align}
+	\mathbb{Y}_{j} &\approx \mathbb{Y}_{k} +\nonumber \\
+    & 2 \Re \left\{
+    \begin{bmatrix}
+    	Z_{aa,jk}^{*} S_{a,k}  + \alpha Z_{ab,jk}^{*} S_{b,k}  + \alpha^{2} Z_{ac,jk}^{*} S_{c,k} \\
+    	\alpha^{2} Z_{ba,jk}^{*} S_{a,k} + Z_{bb,jk}^{*} S_{b,k} + \alpha Z_{bc,jk}^{*} S_{c,k} \\
+    	\alpha Z_{ca,jk}^{*} S_{a,k} + \alpha^{2} Z_{cb,jk}^{*} S_{b,k} + Z_{cc,jk}^{*} S_{c,k}
+    \end{bmatrix}
+	\right\}
+    \label{eq:mag_6},
+\end{align}
+
+\noindent  where we have defined the vector of the square of voltage magnitudes in phases $a,b,c$ as $\mathbb{Y}_{k} = \begin{bmatrix} y_{a} & y_{b} & y_{c} \end{bmatrix}_{k}^{T}$.  The $3 \times 1$ vector inside the $\Re$ operator can be broken up into a $3 \times 3$ matrix of impedances for line segment $(j,k)$ and a $3 \times 1$ vector of node $k$ power injections, as is shown in \eqref{eq:mag_7}.
+
+\begin{align}
+	\mathbb{Y}_{j} &\approx \mathbb{Y}_{k} + \nonumber \\
+    &2 \Re \left\{
+    \begin{bmatrix}
+    	Z_{aa}^{*} & \alpha Z_{ab}^{*} & \alpha^{2} Z_{ac}^{*} \\
+    	\alpha^{2} Z_{ba}^{*} & Z_{bb}^{*} & \alpha Z_{bc}^{*} \\
+    	\alpha Z_{ca}^{*} & \alpha^{2} Z_{cb}^{*} & Z_{cc}^{*}
+    \end{bmatrix}_{jk}
+    \begin{bmatrix}
+    	S_{a} \\ S_{b} \\ S_{c}
+    \end{bmatrix}_{k}
+	\right\}
+    \label{eq:mag_7}
+\end{align}
+
+Viewed in this form, the approximation to the ratio of voltage phasors essentially introduces $\pm 120 \degree$ rotations of the cross-phase impedances. Expanding the impedance matrix entries as $Z_{\phi \psi,k} = r_{\phi, \psi,k} + j x_{\phi, \psi,k}$, the complex power as $S_{\phi,k} = P_{\phi,k} + j Q_{\phi,k}$, and using the definition of $\alpha$, it can be shown that \eqref{eq:mag_7} simplifies into the following linear matrix equation:
+
+\begin{align}
+	\mathbb{Y}_{j} &\approx \mathbb{Y}_{k} - \mathbb{M}_{jk}^{P} \mathbb{P}_{k} - \mathbb{M}_{jk}^{Q} \mathbb{Q}_{k} \label{eq:mag_8}
+\end{align}
+
+\noindent where
+
+% \begin{align}
+% 	\mathbb{M}_{jk}^{P} &=
+% 	\begin{bmatrix}
+% 		2 r_{aa} & -r_{ab} + \sqrt{3} x_{ab} & -r_{ac} - \sqrt{3} x_{ac} \\
+% 		-r_{ba} - \sqrt{3} x_{ba} & 2 r_{bb} & -r_{bc} + \sqrt{3} x_{bc} \\
+% 		-r_{ca} + \sqrt{3} x_{ca} & -r_{cb} - \sqrt{3} x_{cb} & 2 r_{cc}
+% 	\end{bmatrix}_{jk} \\
+% 	\mathbb{M}_{jk}^{Q} &=
+% 	\begin{bmatrix}
+% 		2 x_{aa} & -\sqrt{3} r_{ab} - x_{ab} & \sqrt{3} r_{ac} - x_{ac} \\
+% 		\sqrt{3} r_{ba} - x_{ba} & 2 x_{bb} & -\sqrt{3} r_{bc} - x_{bc} \\
+% 		-\sqrt{3} r_{ca} - x_{ca} & \sqrt{3} r_{cb} - x_{cb} & 2 x_{cc}
+% 	\end{bmatrix}_{jk}
+% \end{align}
+
+\begin{align}
+	\mathbb{M}_{jk}^{P} &=
+	\begin{bmatrix}
+		-2 r_{aa} & r_{ab} - \sqrt{3} x_{ab} & r_{ac} + \sqrt{3} x_{ac} \\
+		r_{ba} + \sqrt{3} x_{ba} & -2 r_{bb} & r_{bc} - \sqrt{3} x_{bc} \\
+		r_{ca} - \sqrt{3} x_{ca} & r_{cb} + \sqrt{3} x_{cb} & -2 r_{cc}
+	\end{bmatrix}_{jk} \label{eq:M}\\
+	\mathbb{M}_{jk}^{Q} &=
+	\begin{bmatrix}
+		-2 x_{aa} & x_{ab} + \sqrt{3} r_{ab} & x_{ac} - \sqrt{3} r_{ac} \\
+		x_{ba} -\sqrt{3} r_{ba} & -2 x_{bb} & x_{bc} + \sqrt{3} r_{bc}\\
+		x_{ca} + \sqrt{3} r_{ca} & x_{cb} -\sqrt{3} r_{cb} & -2 x_{cc}
+	\end{bmatrix}_{jk} \label{eq:N}.
+\end{align}
+
+We now restate ~\eqref{eq:pow_3} for completeness:
+
+\begin{align}
+	\mathbb{S}_{j} \approx \mathbf{s}_{j} + \sum_{k:(j,k) \in E} \mathbb{S}_{k} \label{eq:pow_4}
+\end{align}
+
+Equations ~\eqref{eq:mag_8}--\eqref{eq:pow_4} represent a linearized model of unbalanced distribution power flow that maps node $k$ real and reactive power injections into squared voltage magnitude differences. As the system shows, power contribution in all three phases collectively influence each phase's squared voltage magnitude difference.  It is easily verified that a reduction to a single phase network results in the \emph{LinDistFlow} model discussed in \cite{baran1989optimal}.
+
+% It is clear that using \eqref{eq:KVL} to propagate voltage throughout the feeder would lead to a system of nonlinear equations to find the voltage magnitudes. This approximation bypasses these nonlinearities and does not affect convexity.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% In this section, we introduce and define several important parameters, approximations, relationships and equations. The constant $\alpha$, extensively used in the study and analysis of power systems, is defined by (\eqref{eq:def_alpha}).
+
+% \begin{equation}
+% 	\alpha = 1 \angle 120 \degree \quad \alpha^{2} = 1 \angle 240 \degree
+%     \label{eq:def_alpha}
+% \end{equation}
+
+% In (\eqref{eq:VaVbVc}), we introduce an approximation for the quotient of two different phasee voltage phasors at a node. We assume that the magnitude of the phasors for each phase are roughly equivalent at each node. Furthermore, we assume that the phase angle difference is $\pm 120 \degree$ as appropriate. These assumptions are reflected in (\eqref{eq:VaVbVc}).
+
+% \begin{equation}
+% 	V_{a,k} V_{b,k}^{-1} \approx \alpha \quad V_{b,k} V_{c,k}^{-1} \approx \alpha \quad V_{a,k} V_{c,k}^{-1} \approx \alpha^{2}
+%     \label{eq:VaVbVc}
+% \end{equation}
+
+% A vector of general values for the three phases at a node is defined by (\eqref{eq:def_Xk}). Bold font ($\mathbb{X}$) indicates a vector or matrix, and the subscript $k$ indicates the node. Normal font ($X$) indicates a value at a particular phase. The first subscript indicates the phase, with $\phi$ being a general phase, and $a,b,c$ the actual phase. The second subscript $k$, if present, indicates the node of the individual value or vector.
+
+% \begin{equation}
+% 	\mathbb{X}_{k}
+%     =
+%     \begin{bmatrix}
+%     X_{a,k} \\
+%     X_{b,k} \\
+%     X_{c,k} \\
+%     \end{bmatrix}
+%     =
+%     \begin{bmatrix}
+%     X_{a} \\
+%     X_{b} \\
+%     X_{c} \\
+%     \end{bmatrix}_{k}
+%     \label{eq:def_Xk}
+% \end{equation}
+
+% The power entering a node on a phase is defined as the phase voltage at the node multiplied by the complex conjugate of the phase current entering the node, as in (\eqref{eq:def_Sk}). 
+
+% \begin{equation}
+% 	S_{\phi,k} = V_{\phi,k} I_{\phi,k}^{*}
+%     \label{eq:def_Sk}
+% \end{equation}
+
+% The squared magnitude of a voltage phasor is given by (\eqref{eq:def_Yk}).
+
+% \begin{equation}
+% 	y_{\phi,k} = \left| V_{\phi,k} \right|^2 = V_{\phi,k} V_{\phi,k}^*
+%     \label{eq:def_Yk}
+% \end{equation}
+
+% Kirchoff's Voltage Law for a three phase line between two nodes is given by (\eqref{eq:kvl_3phase}), and is represented in its compact and expanded form. In all equations we assume node $k-1$ is immediately upstream (toward the feeder head) of node $k$.
+
+% % \begin{equation}
+% % \begin{gathered}
+% % 	\mathbb{V}_{k-1} = \mathbb{V}_{k} + \mathbb{Z}_{k} \mathbb{I}_{k} \\
+% %     \begin{bmatrix}
+% %   		V_{a} \\
+% %   		V_{b} \\
+% %   		V_{c}
+% %   	\end{bmatrix}_{k-1}
+% %   	=
+% %   	\begin{bmatrix}
+% %   		V_{a} \\
+% %   		V_{b} \\
+% %   		V_{c}
+% %   	\end{bmatrix}_{k}
+% %   	+
+% %   	\begin{bmatrix}
+% %   		Z_{aa} & Z_{ab} & Z_{ac} \\
+% %   		Z_{ba} & Z_{bb} & Z_{bc} \\
+% %   		Z_{ca} & Z_{cb} & Z_{cc}
+% %   	\end{bmatrix}_k
+% %   	\begin{bmatrix}
+% %   		I_{a} \\
+% %   		I_{b} \\
+% %   		I_{c}
+% %   	\end{bmatrix}_k
+% % \end{gathered}
+% % \label{eq:kvl_3phase}
+% % \end{equation}
+
+% % \begin{figure}[t]
+% % 	\centering
+% % 	\includegraphics[width=0.5\textwidth, clip, trim = 2.875in 2.875in 2.375in 2.125in]{kvl.pdf}
+% %     \caption{Nodes $k-1$ and $k$ with line impedances and power entering the phases at node $k$ shown.}
+% % 	\label{fig:kvl_3phase}
+% % \end{figure}
+
+
+% % \begin{equation}
+% % 	y_{\phi,k-1} = f \left( \mathbb{Y}_{k} , \mathbb{P}_{k}, \mathbb{Q}_{k} \right)
+% % \end{equation}
+
+% We start by considering (\eqref{eq:kvl_3phase}), and right multiply each side by their complex conjugate as in (\eqref{eq:mag_1}). Though this results in $3 \times 3$ matrices in (\eqref{eq:mag_1}), we are only interested in the entries on the diagonals of each matrix, which represent each row of the (\eqref{eq:kvl_3phase}) multiplied by its complex conjugate. Adding complex conjugates results in the second row of (\eqref{eq:mag_1}).
+
+% % \setlength{\abovedisplayskip}{-5pt} \setlength{\abovedisplayshortskip}{-5pt}
+% % \setlength{\belowdisplayskip}{-5pt} \setlength{\belowdisplayshortskip}{-5pt}
+
+% \begin{equation}
+% \begin{aligned}
+% 	\mathbb{V}_{j} \mathbb{V}_{j}^*  & =  \mathbb{V}_{k} \mathbb{V}_{k}^* + \mathbb{Z}_{k} \mathbb{I}_{k} \mathbb{V}_{k}^* + \mathbb{V}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*} + \mathbb{Z}_{k} \mathbb{I}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*} \\
+%     & = \mathbb{V}_{k} \mathbb{V}_{k}^* + 2 \Re \left\{\mathbb{V}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*} \right\} + \mathbb{Z}_{k} \mathbb{I}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*}
+% \end{aligned}
+% \label{eq:mag_1}
+% \end{equation}
+
+% Voltage constraints dictate that feeder node voltage be within a $\pm 5 \%$ range of 1 pu, such that $0.95 \le \left| V_{\phi,k} \right| \le 1.05 \quad \forall \phi, k$. The magnitudes of line and mutual impedances are generally much smaller than 1, the magnitudes of current phasors are generally smaller than $1$. Normal values of impedance and current magnitude are such that $\left| Z_{\phi\phi} \right| \le 0.1$, $\left| Z_{\phi\psi} \right| \le 0.1$, and $\left| I_{\phi} \right| \le 0.5$. Thus approximate magnitudes of elements of $\mathbb{V}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*}$ and $\mathbb{Z}_{k} \mathbb{I}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*}$ are shown the first and second row of (\eqref{eq:mag_approx}), respectively.
+
+% \begin{equation}
+% \begin{aligned}
+% 	& \left| V_{a,k} Z_{aa,k}^* I_{a,k}^* \right| = \left| V_{a,k} \right| \left| Z_{aa,k} \right| \left| I_{a,k} \right| \approx 0.01 \\
+%     & \left| Z_{aa,k} I_{a,k} Z_{ab,k}^* I_{b,k}^* \right| = \left| Z_{aa,k} \right| \left| I_{a,k} \right| \left| Z_{ab,k} \right| \left| I_{b,k} \right| \approx 0.0001
+% \end{aligned}
+% \label{eq:mag_approx}
+% \end{equation}
+
+% By (\eqref{eq:mag_approx}), higher order terms such as $\left| Z_{aa,k} I_{a,k} \right|^2$ and $Z_{aa,k} I_{a,k} Z_{ab,k}^* I_{b,k}^*$ which are components of $\mathbb{Z}_{k} \mathbb{I}_{k} \mathbb{I}_{k}^* \mathbb{Z}_{k}^*$ are of negligible magnitude compared to other terms such as $V_{a,k} Z_{aa,k}^* I_{a,k}^*$, which is a component of $\mathbb{V}_{k} \mathbb{I}_{k}^* \mathbb{Z}_{k}^*$. Treating higher order terms of $\mathbb{Z}_{k} \mathbb{I}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*}$ as negligible simplifies (\eqref{eq:mag_1}) to (\eqref{eq:mag_2}).
+
+% \begin{equation}
+% 	\mathbb{V}_{j} \mathbb{V}_{j}^{*} = \mathbb{V}_{k} \mathbb{V}_{k}^{*} + 2 \Re \left\{ \mathbb{V}_{k} \mathbb{I}_{k}^{*} \mathbb{Z}_{k}^{*} \right\}
+%     \label{eq:mag_2}
+% \end{equation}
+
+% We take advantage (\eqref{eq:def_Sk}) to replace the current phasors in (\eqref{eq:mag_2}), as in (\eqref{eq:mag_3}).
+
+% \begin{equation}
+% 	\begin{aligned}
+% 		\mathbb{V}_{j} & \mathbb{V}_{j}^{*} = \mathbb{V}_{k} \mathbb{V}_{k}^{*} + \ldots \\
+%     	& 2 \Re \left\{ \mathbb{V}_{k}
+%     	\begin{bmatrix}
+%     		S_{a} V_{a}^{-1} & S_{b} V_{b}^{-1} & S_{c} V_{c}^{-1}
+%     	\end{bmatrix}_k
+%     	\mathbb{Z}_{jk}^* \right\}
+%     \end{aligned}
+%     \label{eq:mag_3}
+% \end{equation}
+
+% \begin{equation}
+% 		\mathbb{V}_{j} \mathbb{V}_{j}^{*} = \mathbb{V}_{k} \mathbb{V}_{k}^{*} +
+%     	2 \Re \left\{ \mathbb{V}_{k}
+%     	\begin{bmatrix}
+%     		S_{a} V_{a}^{-1} & S_{b} V_{b}^{-1} & S_{c} V_{c}^{-1}
+%     	\end{bmatrix}_k
+%     	\mathbb{Z}_{jk}^* \right\}
+%     \label{eq:mag_3}
+% \end{equation}
+
+% Multiplying the first two matrices results in (\eqref{eq:mag_4}), and using (\eqref{eq:VaVbVc}) gives (\eqref{eq:mag_5}).
+
+% % \begin{equation}
+% % 	\mathbb{Y}_{k-1} = \mathbb{Y}_{k} + 2 \Re \left\{
+% %     \begin{bmatrix}
+% %     	S_{a,k} & V_{a,k} S_{b,k} V_{b,k}^{-1} & V_{a,k} S_{c,k} V_{c,k}^{-1} \\
+% %     	V_{b,k} S_{a,k} V_{a,k}^{-1} & S_{b,k} & V_{b,k} S_{c,k} V_{c,k}^{-1} \\
+% %     	V_{c,k} S_{a,k} V_{a,k}^{-1} & V_{c,k} S_{b,k} V_{b,k}^{-1} & S_{c,k}
+% %     \end{bmatrix}
+% %     \mathbb{Z}_{k}^* \right\} \\
+% %     \label{eq:mag_4}
+% % \end{equation}
+
+% \begin{equation}
+% 	\begin{aligned}
+% 		\mathbb{V}_{j} & \mathbb{V}_{j}^{*} = \mathbb{V}_{k} \mathbb{V}_{k}^{*} + \ldots \\
+%     	& 2 \Re \left\{
+%     	\begin{bmatrix}
+%     		S_{a} & V_{a} S_{b} V_{b}^{-1} & V_{a} S_{c} V_{c}^{-1} \\
+%     		V_{b} S_{a} V_{a}^{-1} & S_{b} & V_{b} S_{c} V_{c}^{-1} \\
+%     		V_{c} S_{a} V_{a}^{-1} & V_{c} S_{b} V_{b}^{-1} & S_{c}
+%     	\end{bmatrix}_k
+%     	\mathbb{Z}_{jk}^* \right\}
+%     \end{aligned}
+%     \label{eq:mag_4}
+% \end{equation}
+	
+% \begin{equation}
+% 	\mathbb{V}_{j} \mathbb{V}_{j}^{*} = \mathbb{V}_{k} \mathbb{V}_{k}^{*} + 2 \Re \left\{
+%     \begin{bmatrix}
+%     	S_{a} & \alpha S_{b} & \alpha^{2} S_{c} \\
+%     	\alpha^{2} S_{a} & S_{b} & \alpha S_{c} \\
+%     	\alpha S_{a} & \alpha^{2} S_{b} & S_{c}
+%     \end{bmatrix}_k
+%     \mathbb{Z}_{jk}^* \right\}
+%     \label{eq:mag_5}
+% \end{equation}
+
+% By multiplying the vectors by their complex conjugate to obtain matrices, multiplying the two matrices inside the $\Re$ operator together, and collecting the diagonal elements of all matrices and placing them into vectors gives (\eqref{eq:mag_6}). Here we use define the vector of phase square voltage magnitude as $\mathbb{Y}_{k} = \begin{bmatrix} y_{a,k} & y_{b,k} & y_{c,k} \end{bmatrix}^{T}$.
+
+% \begin{equation}
+% 	\mathbb{Y}_{j} = \mathbb{Y}_{k} + 2 \Re \left\{
+%     \begin{bmatrix}
+%     	Z_{aa}^{*} S_{a}  + \alpha Z_{ab}^{*} S_{b}  + \alpha^{2} Z_{ac}^{*} S_{c} \\
+%     	\alpha^{2} Z_{ba}^{*} S_{a} + Z_{bb}^{*} S_{b} + \alpha Z_{bc}^{*} S_{c} \\
+%     	\alpha Z_{ca}^{*} S_{a} + \alpha^{2} Z_{cb}^{*} S_{b} + Z_{cc}^{*} S_{c}
+%     \end{bmatrix}_k
+% 	\right\}
+%     \label{eq:mag_6}
+% \end{equation}
+
+% The matrix inside the $\Re$ operator can be broken into a $3 \times 3$ matrix and a vector of node complex power, as in (\eqref{eq:mag_7}).
+
+% \begin{equation}
+% 	\mathbb{Y}_{j}= \mathbb{Y}_{k} + 2 \Re \left\{
+%     \begin{bmatrix}
+%     	Z_{aa}^{*} & \alpha Z_{ab}^{*} & \alpha^{2} Z_{ac}^{*} \\
+%     	\alpha^{2} Z_{ba}^{*} & Z_{bb}^{*} & \alpha Z_{bc}^{*} \\
+%     	\alpha Z_{ca}^{*} & \alpha^{2} Z_{cb}^{*} & Z_{cc}^{*}
+%     \end{bmatrix}_{jk}
+%     \begin{bmatrix}
+%     	S_{a} \\ S_{b} \\ S_{c}
+%     \end{bmatrix}_{jk}
+% 	\right\}
+%     \label{eq:mag_7}
+% \end{equation}
+
+% Expanding the impedance matrix entries as $Z_{\phi \psi,k} = r_{\phi, \psi,k} + j x_{\phi, \psi,k}$, the complex power as $S_{\phi,k} = P_{\phi,k} + j Q_{\phi,k}$, the constant $\alpha$ as  $\alpha = \frac{1}{2}(1 + j \sqrt{3})$, and $\alpha^2 = \frac{1}{2}(1 - j \sqrt{3})$, it can be shown that (\eqref{eq:mag_7}) simplifies to (\eqref{eq:mag_8}).
+
+% \begin{equation}
+% \begin{gathered}
+% 	\mathbb{Y}_{j} = \mathbb{Y}_{k} + \mathbb{M}_{jk}^{P} \mathbb{P}_{k} + \mathbb{M}_{jk}^{Q} \mathbb{Q}_{k} \\
+% 	\mathbb{M}_{jk}^{P} =
+% 	\begin{bmatrix}
+% 		2 r_{aa} & -r_{ab} + \sqrt{3} x_{ab} & -r_{ac} - \sqrt{3} x_{ac} \\
+% 		-r_{ba} - \sqrt{3}x_{ba} & 2 r_{bb} & -r_{bc} + \sqrt{3}x_{bc} \\
+% 		-r_{ca} + \sqrt{3}x_{ca} & -r_{cb} - \sqrt{3}x_{cb} & 2 r_{cc}
+% 	\end{bmatrix}_{jk} \\
+% 	\mathbb{M}_{jk}^{Q} =
+% 	\begin{bmatrix}
+% 		2 x_{aa} & -\sqrt{3} r_{ab} - x_{ab} & \sqrt{3} r_{ac} - x_{ac} \\
+% 		\sqrt{3} r_{ba} - x_{ba} & 2 x_{bb} & -\sqrt{3} r_{bc} - x_{bc} \\
+% 		-\sqrt{3} r_{ca} - x_{ca} & \sqrt{3} r_{cb} - x_{cb} & 2 x_{cc}
+% 	\end{bmatrix}_{jk}	\\
+% \end{gathered}
+% \label{eq:mag_8}
+% \end{equation}
+
+% Equation (\eqref{eq:mag_8}) provides a linear equation in real and reactive power, if the line and mutual impedance values are treated as parameters. As (\eqref{eq:mag_8}) is linear, it does not affect the convexity of a system of equations. Using (\eqref{eq:mag_8}) to propagate voltage magnitude throughout a feeder provides a series of linear relations for all nodes, dependent on the power entering each node.
+
+% It is clear that using (\eqref{eq:kvl_3phase}) to propagate voltage throughout the feeder would lead to a system of nonlinear equations to find the voltage magnitudes. This approximation bypasses these nonlinearities and does not affect convexity.
+
+% \begin{equation}
+% 	\mathbb{Y}_{k-1} = \mathbb{Y}_{k} + M_{k}^{P} P_{k} + M_{k}^{Q} Q_{k}
+%     \label{eq:mag_8}
+% \end{equation}
+
+% \begin{equation}
+% M_{k}^{P} =
+% \begin{bmatrix}
+% 2 r_{aa,k} & -r_{ab,k} + \sqrt{3} x_{ab,k} & -r_{ac,k} - \sqrt{3} x_{ac,k} \\
+% -r_{ba,k} - \sqrt{3}x_{ba,k} & 2 r_{bb,k} & -r_{bc,k} + \sqrt{3}x_{bc,k} \\
+% -r_{ca,k} + \sqrt{3}x_{ca,k} & -r_{cb,k} - \sqrt{3}x_{cb,k} & 2 r_{cc,k}
+% \end{bmatrix}
+% \label{eq:MP}
+% \end{equation}
+
+% \begin{equation}
+% M_{k}^{P} =
+% \begin{bmatrix}
+% 2 r_{aa} & -r_{ab} + \sqrt{3} x_{ab} & -r_{ac} - \sqrt{3} x_{ac} \\
+% -r_{ba} - \sqrt{3}x_{ba} & 2 r_{bb} & -r_{bc} + \sqrt{3}x_{bc} \\
+% -r_{ca} + \sqrt{3}x_{ca} & -r_{cb} - \sqrt{3}x_{cb} & 2 r_{cc}
+% \end{bmatrix}_k
+% \label{eq:MP}
+% \end{equation}
+
+% \begin{equation}
+% M_{k}^{Q} =
+% \begin{bmatrix}
+% 2 x_{aa,k} & -\sqrt{3} r_{ab,k} - x_{ab,k} & \sqrt{3} r_{ac,k} - x_{ac,k} \\
+% \sqrt{3} r_{ba,k} - x_{ba,k} & 2 x_{bb,k} & -\sqrt{3} r_{bc,k} - x_{bc,k} \\
+% -\sqrt{3} r_{ca,k} - x_{ca,k} & \sqrt{3} r_{cb,k} - x_{cb,k} & 2 x_{cc,k}
+% \end{bmatrix}
+% \label{eq:MQ}
+% \end{equation}
+
+% \begin{equation}
+% M_{k}^{Q} =
+% \begin{bmatrix}
+% 2 x_{aa} & -\sqrt{3} r_{ab} - x_{ab} & \sqrt{3} r_{ac} - x_{ac} \\
+% \sqrt{3} r_{ba} - x_{ba} & 2 x_{bb} & -\sqrt{3} r_{bc} - x_{bc} \\
+% -\sqrt{3} r_{ca} - x_{ca} & \sqrt{3} r_{cb} - x_{cb} & 2 x_{cc}
+% \end{bmatrix}_k
+% \label{eq:MQ}
+% \end{equation}

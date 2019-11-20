@@ -1,0 +1,147 @@
+\section{Preliminaries}
+
+\setlength{\abovedisplayskip}{-5pt} \setlength{\abovedisplayshortskip}{-5pt}
+\setlength{\belowdisplayskip}{0pt} \setlength{\belowdisplayshortskip}{0pt}
+
+Let $T = (H,E)$ denote rooted tree graph representing a balanced radial distribution feeder, where $H$ is the set of nodes of the feeder and the transmission link and $E$ is the set of line segments.  Nodes are indexed by $i = 0,1,\dots,m$, where $m$ is the order (number of nodes) of the distribution feeder, and node 0 denotes the feeder head (or substation).  We treat node 0 as an infinite bus, decoupling interactions in the downstream distribution system from the rest of the grid.  While the substation voltage may evolve over time, we assume this evolution takes place independently of our inverter control action.  For adjacent nodes $j$ and $k$, the current/voltage relationship is captured by KVL and KCL:
+
+\begin{align}
+	    \begin{bmatrix}
+  		V_{a} \\
+  		V_{b} \\
+  		V_{c}
+  	\end{bmatrix}_{j}
+  	&=
+  	\begin{bmatrix}
+  		V_{a} \\
+  		V_{b} \\
+  		V_{c}
+  	\end{bmatrix}_{k}
+  	+
+  	\begin{bmatrix}
+  		Z_{aa} & Z_{ab} & Z_{ac} \\
+  		Z_{ba} & Z_{bb} & Z_{bc} \\
+  		Z_{ca} & Z_{cb} & Z_{cc}
+  	\end{bmatrix}_{jk}
+  	\begin{bmatrix}
+  		I_{a} \\
+  		I_{b} \\
+  		I_{c}
+  	\end{bmatrix}_k \label{eq:KVL}
+% \end{align}
+    \\
+% \begin{align}
+    \begin{bmatrix}
+  		I_{a} \\
+  		I_{b} \\
+  		I_{c}
+  	\end{bmatrix}_{j}
+  	&= \begin{bmatrix}
+  		i_{a} \\
+  		i_{b} \\
+  		i_{c}
+  	\end{bmatrix}_{j} + \sum_{k:(j,k) \in E}
+  	\begin{bmatrix}
+  		I_{a} \\
+  		I_{b} \\
+  		I_{c}
+  	\end{bmatrix}_{k}\label{eq:KCL},
+\end{align} 
+
+\noindent where $i_{a}$ denotes phase $a$ load current, and $Z_{aa}$ and $Z_{ab}$ are the self impedance for phase $a$ and mutual impedance between phases $a$ and $b$, etc..  We assume that each node serves a complex load in each phase, $s_{\phi,k} = V_{\phi,k}i_{\phi,k}^{*}$ whose real and reactive power components are given by \eqref{eq:pV} and \eqref{eq:qV}, respectively.
+
+\begin{align}
+	p_{\phi,k} ( V_{\phi,k} ) & = p_{\phi,k} \left(a_{\phi,k}^{0} + a_{\phi,k}^{1} \left| V_{\phi,k} \right|^2 \right)
+    \label{eq:pV}
+    \\
+    q_{\phi,k} ( V_{\phi,k} ) & = q_{\phi,k} \left(a_{\phi,k}^{0} + a_{\phi,k}^{1} \left| V_{\phi,k} \right|^2 \right) + u_{\phi,k}
+    \label{eq:qV}
+\end{align}
+
+\noindent where $a_{k}^{0} + a_{k}^{1} = 1$ and are, for simplicity, assumed constant across all phases at each node.  $u_{\phi,k}$ is the reactive power that can be sourced or consumed from a VAR resource on phase $\phi$ at node $k$. In our convention, positive demand denotes power consumption and negative demand is power injected, or supplied, to the grid.  Equations \eqref{eq:KVL}--\eqref{eq:qV} represent the power flow model that will be used to generate simulations in Section \ref{sec:simulation_results}.  
+
+% In this section, we introduce and define several important parameters, approximations, relationships and equations. The constant $\alpha$, extensively used in the study and analysis of power systems, is defined by (\ref{eq:def_alpha}).
+
+% \begin{equation}
+% 	\alpha = 1 \angle 120 \degree \quad \alpha^{2} = 1 \angle 240 \degree
+%     \label{eq:def_alpha}
+% \end{equation}
+
+% In (\ref{eq:VaVbVc}), we introduce an approximation for the quotient of two different phasee voltage phasors at a node. We assume that the magnitude of the phasors for each phase are roughly equivalent at each node. Furthermore, we assume that the phase angle difference is $\pm 120 \degree$ as appropriate. These assumptions are reflected in (\ref{eq:VaVbVc}).
+
+% \begin{equation}
+% 	V_{a,k} V_{b,k}^{-1} \approx \alpha \quad V_{b,k} V_{c,k}^{-1} \approx \alpha \quad V_{a,k} V_{c,k}^{-1} \approx \alpha^{2}
+%     \label{eq:VaVbVc}
+% \end{equation}
+
+% A vector of general values for the three phases at a node is defined by (\ref{eq:def_Xk}). Bold font ($\mathbb{X}$) indicates a vector or matrix, and the subscript $k$ indicates the node. Normal font ($X$) indicates a value at a particular phase. The first subscript indicates the phase, with $\phi$ being a general phase, and $a,b,c$ the actual phase. The second subscript $k$, if present, indicates the node of the individual value or vector.
+
+% \begin{equation}
+% 	\mathbb{X}_{k}
+%     =
+%     \begin{bmatrix}
+%     X_{a,k} \\
+%     X_{b,k} \\
+%     X_{c,k} \\
+%     \end{bmatrix}
+%     =
+%     \begin{bmatrix}
+%     X_{a} \\
+%     X_{b} \\
+%     X_{c} \\
+%     \end{bmatrix}_{k}
+%     \label{eq:def_Xk}
+% \end{equation}
+
+% The power entering a node on a phase is defined as the phase voltage at the node multiplied by the complex conjugate of the phase current entering the node, as in (\ref{eq:def_Sk}). 
+
+% \begin{equation}
+% 	S_{\phi,k} = V_{\phi,k} I_{\phi,k}^{*}
+%     \label{eq:def_Sk}
+% \end{equation}
+
+% The squared magnitude of a voltage phasor is given by (\ref{eq:def_Yk}).
+
+% \begin{equation}
+% 	y_{\phi,k} = \left| V_{\phi,k} \right|^2 = V_{\phi,k} V_{\phi,k}^*
+%     \label{eq:def_Yk}
+% \end{equation}
+
+% Kirchoff's Voltage Law for a three phase line between two nodes is given by (\ref{eq:kvl_3phase}), and is represented in its compact and expanded form. In all equations we assume node $k-1$ is immediately upstream (toward the feeder head) of node $k$.
+
+% \begin{equation}
+% \begin{gathered}
+% 	\mathbb{V}_{k-1} = \mathbb{V}_{k} + \mathbb{Z}_{k} \mathbb{I}_{k} \\
+%     \begin{bmatrix}
+%   		V_{a} \\
+%   		V_{b} \\
+%   		V_{c}
+%   	\end{bmatrix}_{k-1}
+%   	=
+%   	\begin{bmatrix}
+%   		V_{a} \\
+%   		V_{b} \\
+%   		V_{c}
+%   	\end{bmatrix}_{k}
+%   	+
+%   	\begin{bmatrix}
+%   		Z_{aa} & Z_{ab} & Z_{ac} \\
+%   		Z_{ba} & Z_{bb} & Z_{bc} \\
+%   		Z_{ca} & Z_{cb} & Z_{cc}
+%   	\end{bmatrix}_k
+%   	\begin{bmatrix}
+%   		I_{a} \\
+%   		I_{b} \\
+%   		I_{c}
+%   	\end{bmatrix}_k
+% \end{gathered}
+% \label{eq:kvl_3phase}
+% \end{equation}
+
+% % \begin{figure}[t]
+% % 	\centering
+% % 	\includegraphics[width=0.5\textwidth, clip, trim = 2.875in 2.875in 2.375in 2.125in]{kvl.pdf}
+% %     \caption{Nodes $k-1$ and $k$ with line impedances and power entering the phases at node $k$ shown.}
+% % 	\label{fig:kvl_3phase}
+% % \end{figure}
+

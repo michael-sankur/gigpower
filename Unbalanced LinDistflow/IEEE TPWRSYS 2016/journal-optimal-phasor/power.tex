@@ -1,0 +1,37 @@
+\subsection{Dist3Flow: Power and Losses}
+\label{subsec:power}
+
+For completness, we now present the derivation of the Dist3Flow power flow equations (see \cite{arnold2015model}, \cite{sankur2016linear}) between adjacent buses in an unbalanced distribution system. We begin with writing KVL for a line segment $(m,n)$ and KCL at a node $m$:
+\begin{align}
+	\mathbb{V}_{m} &= \mathbb{V}_{n} + \mathbb{Z}_{mn} \mathbb{I}_{n}
+    \label{eq:KVL2}
+    \\
+    \mathbb{I}_{m} &= \mathbf{i}_{m} + \sum_{n:(m,n) \in \mathcal{E}} \mathbb{I}_{n}
+    \label{eq:KCL2}
+\end{align}
+
+Right multiplying $\mathbb{V}_{m}$ by the complex conjugate transpose (denoted by $^*$) of Equation \eqref{eq:KCL2} and plugging in \eqref{eq:KVL2} on the RHS results in:
+\begin{align}
+	\mathbb{V}_{m} \mathbb{I}_{m}^{*} &= \mathbb{V}_{m}\mathbf{i}_{m}^{*} + \sum_{n:(m,n) \in \mathcal{E}} \mathbb{V}_{m} \mathbb{I}_{n}^{*} \nonumber \\
+	&= \mathbb{V}_{m}  \mathbf{i}_{m}^{*} + \sum_{n:(m,n) \in \mathcal{E}} \mathbb{V}_{n}  \mathbb{I}_{n}^{*} + \mathbb{Z}_{mn} \mathbb{I}_{n} \mathbb{I}_{n}^{*} \label{eq:pow_11} \\
+    &= \mathbb{V}_{m}  \mathbf{i}_{m}^{*} + \sum_{n:(m,n) \in \mathcal{E}} \mathbb{V}_{n}  \mathbb{I}_{n}^{*} + \mathcal L_{mn} \label{eq:pow_1},
+\end{align}
+
+\noindent where $\mathcal L_{mn} = \mathbb{Z}_{mn} \mathbb{I}_{n} \mathbb{I}_{n}^{*} \in \mathbb C^{3 \times 3}$ denotes the power loss matrix.
+
+While \eqref{eq:pow_1} is a $3 \times 3$ matrix equation, we are only interested in the diagonal entries, which are the complex powers in each phase of the circuit.  We collect these entries into a $3 \times 1$ vector  equation, that yields a relation of the complex power flowing into node $m$ in terms of node $m$ demand, powers flowing into downstream nodes, and losses in downstream line segments:
+\begin{equation}
+	\mathbb{S}_{m} = \mathbf{s}_{m} + \sum_{n:(m,n) \in \mathcal{E}} \mathbb{S}_{n} + \mathbb{L}_{mn}
+    \label{eq:pow_2}
+\end{equation}
+
+\noindent where $\mathbb{L}_{mn} \in \mathbb{C}^{3}$ and $\mathbb{L}_{mn}(i) = \mathcal L_{mn}(i,i)$ for $i = 1,2,3$. Eq. \eqref{eq:pow_2} is nonlinear and non-convex.  As in our previous works \cite{arnold2015optimal}, \cite{sankur2016linear} we introduce the following assumption:
+\begin{description}
+    \item[\textbf{A1:} ] $\mathbb{L}_{mn}$ is constant $\forall (m,n) \in \mathcal{E}$
+\end{description}
+
+\noindent Applying \textbf{A1} to \eqref{eq:pow_2} gives a linear equation for conservation of complex power, the \emph{LinDist3Flow} power equation. As in \cite{baran1989optimal}, we can further simplify this equation by selecting $\mathbb{L}_{mn} = {\left[0, \text{ } 0, \text{ } 0 \right]}^{T} \text{ } \forall (m,n) \in \mathcal{E}$, giving \eqref{eq:pow_2_lin}.
+\begin{equation}
+	\mathbb{S}_{m} \approx \mathbf{s}_{m} + \sum_{n:(m,n) \in \mathcal{E}} \mathbb{S}_{n}
+    \label{eq:pow_2_lin}
+\end{equation}

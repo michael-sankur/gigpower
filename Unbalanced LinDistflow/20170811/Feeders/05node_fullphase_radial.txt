@@ -1,0 +1,67 @@
+4_node_multiphase_tx
+
+~~~~~ Base Values ~~~~~
+
+base Vbase=5 unit=kV
+base Sbase=5000 unit=kVAr
+
+~~~~~ Nodes ~~~~~
+
+node nodename=A0 phases=abc
+node nodename=A1 phases=abc
+node nodename=A2 phases=abc
+node nodename=A3 phases=abc
+node nodename=A4 phases=abc
+node nodename=A5 phases=abc
+
+~~~~~ Lines ~~~~~
+
+line TXnode=A0 RXnode=A1 phases=abc config=12 length=250 unit=ft
+line TXnode=A1 RXnode=A2 phases=abc config=12 length=1000 unit=ft
+line TXnode=A2 RXnode=A3 phases=abc config=12 length=750 unit=ft
+line TXnode=A2 RXnode=A4 phases=abc config=12 length=750 unit=ft
+line TXnode=A4 RXnode=A5 phases=abc config=12 length=750 unit=ft
+#line TXnode=A3 RXnode=A4 phases=abc config=12 length=750 unit=ft
+#line TXnode=A3 RXnode=A5 phases=abc config=12 length=750 unit=ft
+
+
+~~~~~ Configuration ~~~~~
+
+config config=12 unit=ohm/mile raa=0.3465 xaa=1.0179 rab=0.156 xab=0.5017 rac=0.158 xac=0.4236 rbb=0.3375 xbb=1.0478 rbc=0.1535 xbc=0.3849 rcc=0.3414 xcc=1.0348 
+config config=13 unit=ohm/mile raa=0.3465 xaa=1.0179 rab=0.156 xab=0.5017 rac=0.158 xac=0.4236 rbb=0.3375 xbb=1.0478 rbc=0.1535 xbc=0.3849 rcc=0.3414 xcc=1.0348
+config config=14 unit=ohm/mile raa=0.3465 xaa=1.0179 rab=0.156 xab=0.5017 rac=0.158 xac=0.4236 rbb=0.3375 xbb=1.0478 rbc=0.1535 xbc=0.3849 rcc=0.3414 xcc=1.0348
+
+~~~~~ Loads ~~~~~
+
+load nodename=A2 conn=wye phases=a type=cpq apq=0.85 ai=0 az=0.15 real=1600 unit=kW reac=1100 unit=kVAr
+load nodename=A2 conn=wye phases=b type=cpq apq=0.85 ai=0 az=0.15 real=1200 unit=kW reac=900 unit=kVAr
+load nodename=A2 conn=wye phases=c type=cpq apq=0.85 ai=0 az=0.15 real=1200 unit=kW reac=900 unit=kVAr
+
+load nodename=A3 conn=wye phases=a type=cpq apq=0.85 ai=0 az=0.15 real=500 unit=kW reac=500 unit=kVAr
+load nodename=A3 conn=wye phases=b type=cpq apq=0.85 ai=0 az=0.15 real=500 unit=kW reac=500 unit=kVAr
+load nodename=A3 conn=wye phases=c type=cpq apq=0.85 ai=0 az=0.15 real=50 unit=kW reac=0 unit=kVAr
+
+load nodename=A4 conn=wye phases=a type=cpq apq=0.85 ai=0 az=0.15 real=300 unit=kW reac=400 unit=kVAr
+load nodename=A4 conn=wye phases=b type=cpq apq=0.85 ai=0 az=0.15 real=100 unit=kW reac=0 unit=kVAr
+load nodename=A4 conn=wye phases=c type=cpq apq=0.85 ai=0 az=0.15 real=1200 unit=kW reac=900 unit=kVAr
+
+load nodename=A5 conn=wye phases=a type=cpq apq=0.85 ai=0 az=0.15 real=300 unit=kW reac=200 unit=kVAr
+
+
+~~~~~ Capacitors ~~~~~
+
+capacitor nodename=A5 conn=wye phase=a reac=200 unit=kVAr
+
+~~~~~ Controllers ~~~~~
+
+#controller nodename=A2 conn=wye phases=a mag=500 unit=kVAr ramprate=10
+
+controller nodename=A3 conn=wye phases=a mag=500 unit=kVAr ramprate=10
+controller nodename=A3 conn=wye phases=b mag=500 unit=kVAr ramprate=10
+controller nodename=A3 conn=wye phases=c mag=500 unit=kVAr ramprate=10
+
+controller nodename=A4 conn=wye phases=a mag=500 unit=kVAr ramprate=10
+#controller nodename=A4 conn=wye phases=b mag=500 unit=kVAr ramprate=10
+controller nodename=A4 conn=wye phases=c mag=500 unit=kVAr ramprate=10
+
+controller nodename=A5 conn=wye phases=b mag=500 unit=kVAr ramprate=10

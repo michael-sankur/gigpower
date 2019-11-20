@@ -1,0 +1,39 @@
+2node_fullphase
+
+~~~~~ Base Values ~~~~~
+
+base Vbase=4.160 unit=kV
+base Sbase=5000.000 unit=kVAr
+
+~~~~~ Nodes ~~~~~
+
+node nodename=SUB phases=abc
+node nodename=1 phases=abc
+node nodename=2 phases=abc
+
+~~~~~ Lines ~~~~~
+
+line TXnode=SUB RXnode=1 phases=abc config=SUB length=100.00 unit=m
+line TXnode=1 RXnode=2 phases=abc config=601 length=1000.00 unit=ft
+
+~~~~~ Configuration ~~~~~
+
+config config=SUB unit=ohm/mile raa=1.0000 xaa=0.0000 rab=0.5000 xab=0.0000 rac=0.5000 xac=0.0000 rbb=1.0000 xbb=0.0000 rbc=0.5000 xbc=0.0000 rcc=1.0000 xcc=0.0000
+config config=601 unit=ohm/mile raa=0.3465 xaa=1.0179 rab=0.1560 xab=0.5017 rac=0.1580 xac=0.4236 rbb=0.3375 xbb=1.0478 rbc=0.1535 xbc=0.3849 rcc=0.3414 xcc=1.0348
+
+~~~~~ Loads ~~~~~
+
+load nodename=2 conn=wye phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=40.0000 unit=kW reac=20.0000 unit=kVAr
+
+load nodename=2 conn=wye phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=160.0000 unit=kW reac=110.0000 unit=kVAr
+load nodename=2 conn=wye phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=120.0000 unit=kW reac=90.0000 unit=kVAr
+load nodename=2 conn=wye phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=120.0000 unit=kW reac=90.0000 unit=kVAr
+
+~~~~~ Capacitors ~~~~~
+
+
+~~~~~ Controllers ~~~~~
+
+controller nodename=2 conn=wye phases=a mag=500.0000 unit=kVAr ramprate=10.00
+controller nodename=2 conn=wye phases=b mag=500.0000 unit=kVAr ramprate=10.00
+controller nodename=2 conn=wye phases=c mag=500.0000 unit=kVAr ramprate=10.00

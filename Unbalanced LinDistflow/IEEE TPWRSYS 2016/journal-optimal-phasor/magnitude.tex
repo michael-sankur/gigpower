@@ -1,0 +1,157 @@
+\subsection{Dist3Flow: Magnitude Equations}
+\label{subsec:magnitude}
+
+In this section, we present the derivation of the Dist3Flow voltage magnitude equations (see \cite{arnold2015model}, \cite{sankur2016linear}).  We do this to motivate the extension of the model to consider voltage angles in the following section, and to highlight a common structure shared between the voltage magnitude/complex power flow and voltage angle/complex power flow relationships. 
+
+To start, we consider \eqref{eq:KVL2} on edge $(m,n) \in \mathcal{E}$ and right multiply both sides by their respective complex conjugate transpose, resulting in the $3 \times 3$ matrix equation:
+\begin{align}
+% \begin{aligned}
+	\mathbb{V}_{m} \mathbb{V}_{m}^*  & =  \mathbb{V}_{n} \mathbb{V}_{n}^* + \mathbb{Z}_{mn} \mathbb{I}_{n} \mathbb{V}_{n}^* + \mathbb{V}_{n} \mathbb{I}_{n}^{*} \mathbb{Z}_{mn}^{*} + \mathbb{Z}_{mn} \mathbb{I}_{n} \mathbb{I}_{n}^{*} \mathbb{Z}_{mn}^{*} \nonumber \\
+    & = \mathbb{V}_{n} \mathbb{V}_{n}^* + 2 \Re \left\{\mathbb{V}_{n} \mathbb{I}_{n}^{*} \mathbb{Z}_{mn}^{*} \right\} + \mathcal H_{mn},
+\label{eq:mag_1}
+% \end{aligned}
+\end{align}
+
+\noindent where $\mathcal H_{mn} = \mathbb{Z}_{mn} \mathbb{I}_{n} \mathbb{I}_{n}^{*} \mathbb{Z}_{mn}^{*} \in \mathbb C^{3 \times 3}$ denotes a matrix of higher order terms.  Noticing that for the scalar current ${\left( I^{\phi}_{n} \right)}^{*} = S_{n}^{\phi} {\left( V_{n}^{\phi} \right)}^{-1} \in \mathbb{C}$,  we can write \eqref{eq:mag_1} as:
+\begin{equation}
+	\begin{aligned}
+		\mathbb{V}_{m} & \mathbb{V}_{m}^{*} = \mathbb{V}_{n} \mathbb{V}_{n}^{*} + \mathcal H_{mn} + \ldots \\
+    	& \text{ } 2 \Re \left\{ \mathbb{V}_{n}
+    	\begin{bmatrix}
+    		S_{n}^{a} {\left( V_{n}^{a} \right)}^{-1} & S_{n}^{b} {\left( V_{n}^{b} \right)}^{-1} & S_{n}^{c} {\left( V_{n}^{c} \right)}^{-1}
+    	\end{bmatrix}
+%         \left[
+%     		S_{n}^{a} {\left( V_{n}^{a} \right)}^{-1} \text{ } S_{n}^{b} {\left( V_{n}^{b} \right)}^{-1} \text{ } S_{n}^{c} {\left( V_{n}^{c} \right)}^{-1}
+%     	\right]
+    	\mathbb{Z}_{mn}^{*} \right\}.
+    \end{aligned}
+    \label{eq:mag_2}
+\end{equation}
+
+Now, we define $\gamma_{n}^{\phi \psi} = V_{n}^{\phi} {\left( V_{n}^{\psi} \right)}^{-1} \in \mathbb{C}$ as the ratio of voltages between phases $\phi$ and $\psi$ at node $n$, where $\phi,\psi \in \{ a,b,c \}$, and clearly $\gamma_{n}^{\phi \psi} = 1 $ if $\phi = \psi$. Applying this to \eqref{eq:mag_2} results in:
+\begin{equation}
+	\begin{aligned}
+		\mathbb{V}_{m} & \mathbb{V}_{m}^{*} = \mathbb{V}_{n} \mathbb{V}_{n}^{*} + \mathcal H_{mn} + \ldots \\
+    	& 2 \Re \left\{
+    	\begin{bmatrix}
+    		S_{n}^{a} & \gamma_{n}^{ab} S_{n}^{b} & \gamma_{n}^{ac} S_{n}^{c} \\
+    		\gamma_{n}^{ba} S_{n}^{a} & S_{n}^{b} & \gamma_{n}^{bc} S_{n}^{c} \\
+    		\gamma_{n}^{ca} S_{n}^{a} & \gamma_{n}^{cb} S_{n}^{b} & S_{n}^{c}
+    	\end{bmatrix}
+    	\mathbb{Z}_{mn}^* \right\} .
+    \end{aligned}
+    \label{eq:mag_4}
+\end{equation}
+
+We now gather the diagonal entries of \eqref{eq:mag_4} and place them into a $3 \times 1$ vector equation.  Defining the variable $y_{n}^{\phi} = | V_{n}^{\phi} |^{2}$, and the vector
+$\mathbb{Y}_{n} = {\left[ y_{n}^{a}, \text{ } y_{n}^{b}, \text{ } y_{n}^{c} \right]}^{T}$
+% $\mathbb{Y}_{n} = {\begin{bmatrix} y_{n}^{a} & y_{n}^{b} & y_{n}^{c} \end{bmatrix}}^{T}$
+, \eqref{eq:mag_4} becomes:
+\begin{align}
+	& \mathbb{Y}_{m} = \mathbb{Y}_{n} + \mathbb{H}_{mn} + \ldots \nonumber \\
+    & \text{ } 2 \Re \left\{
+    \begin{bmatrix}
+    	{\left( Z_{mn}^{aa} \right)}^{*} S_{n}^{a}  + \gamma_{n}^{ab} {\left( Z_{mn}^{ab} \right)}^{*} S_{n}^{b}  + \gamma_{n}^{ac} {\left( Z_{mn}^{ac} \right)}^{*} S_{n}^{c} \\
+    	\gamma_{n}^{ba} {\left( Z_{mn}^{ba} \right)}^{*} S_{n}^{a} + {\left( Z_{mn}^{bb} \right)}^{*} S_{n}^{b} + \gamma_{n}^{bc} {\left( Z_{mn}^{bc} \right)}^{*} S_{n}^{c} \\
+    	\gamma_{n}^{ca} {\left( Z_{mn}^{ca} \right)}^{*} S_{n}^{a} + \gamma_{n}^{cb} {\left( Z_{mn}^{cb} \right)}^{*} S_{n}^{b} + {\left( Z_{mn}^{cc} \right)}^{*} S_{n}^{c}
+    \end{bmatrix}
+	\right\}
+    \label{eq:mag_5},
+\end{align}
+
+\noindent where $\mathbb{H}_{mn} \in \mathbb{C}^{3}$ and $\mathbb{H}_{mn}(i) = \mathcal H_{mn}(i,i)$ for $i = 1,2,3$.  Equation \eqref{eq:mag_5} can be restated by grouping the $\gamma$ and impedance terms into a $3\times 3$ matrix multiplied by a $3 \times 1$ vector of complex powers, which results in:
+\begin{align}
+	& \mathbb{Y}_{m} = \mathbb{Y}_{n} + \mathbb{H}_{mn} + \ldots \nonumber \\
+    & \text{ } 2 \Re \left\{
+    \begin{bmatrix}
+    	{\left( Z_{mn}^{aa} \right)}^{*} & \gamma_{ab} {\left( Z_{mn}^{ab} \right)}^{*} & \gamma_{n}^{ab} {\left( Z_{mn}^{ac} \right)}^{*} \\
+    	\gamma_{n}^{ba} {\left( Z_{mn}^{ba} \right)}^{*} & {\left( Z_{mn}^{bb} \right)}^{*} & \gamma_{n}^{ab} {\left( Z_{mn}^{bc} \right)}^{*} \\
+    	\gamma_{n}^{ca} {\left( Z_{mn}^{ca} \right)}^{*} & \gamma_{n}^{cb} {\left( Z_{mn}^{cb} \right)}^{*} & {\left( Z_{mn}^{cc} \right)}^{*}
+    \end{bmatrix}
+    \begin{bmatrix}
+    	S_{n}^{a} \\ S_{n}^{b} \\ S_{n}^{c}
+    \end{bmatrix}
+	\right\}
+    \label{eq:mag_6}.
+\end{align}
+
+We can now rewrite \eqref{eq:mag_6} in terms of active and reactive components $\mathbb{P}_{n},\mathbb{Q}_{n} \in \mathbb C^{3}$:
+\begin{equation}
+	\mathbb{Y}_{m} = \mathbb{Y}_{n} + \mathbb{M}_{mn} \mathbb{P}_{n} + \mathbb{N}_{mn} \mathbb{Q}_{n} + \mathbb{H}_{mn},
+    \label{eq:mag_7}
+\end{equation}
+
+\noindent where the elements of $\mathbb{M}_{mn}$ and $\mathbb{N}_{mn}$ are defined as:
+\begin{align}
+	\mathbb{M}_{mn} (\phi, \psi) &= 2\Re \left\{\gamma_{n}^{\phi \psi} {\left( Z_{mn}^{\phi \psi} \right)}^{*} \right\} \label{eq:mag_8} \\
+    \mathbb{N}_{mn} (\phi, \psi) &= -2\Im \left\{\gamma_{n}^{\phi \psi} {\left( Z_{mn}^{\phi \psi} \right)}^{*} \right\} \label{eq:mag_9},
+\end{align}
+
+\noindent with $a=1$, $b=2$, and $c=3$ for indexing purposes on the LHS of \eqref{eq:mag_8} and \eqref{eq:mag_9} (e.g. $M_{mn}(a,b)$ refers to the (1,2) index so that $M_{mn} (1,2) = 2 \Re \{ \gamma_{n}^{ab} {\left( Z_{mn}^{ab} \right)}^{*} \}$). Finally, we express the $\gamma$ terms as generalized complex numbers, $\gamma_{n}^{\phi \psi} = \alpha_{n}^{\phi \psi} + j\beta_{n}^{\phi \psi} $,
+%and organize \eqref{eq:mag_6} in terms of active and reactive components $\mathbb{P}_{n},\mathbb{Q}_{n} \in \mathbb C^{3}$:
+and rewrite \eqref{eq:mag_8} and \eqref{eq:mag_9} as \eqref{eq:mag_10} and \eqref{eq:mag_11}, respectively:
+\begin{align}
+	\mathbb{M}_{mn} (\phi, \psi) &= 2\begin{cases}
+    	 r_{mn}^{\phi \psi} &\mbox{if } \phi = \psi \\
+         \alpha_{n}^{\phi \psi} r_{mn}^{\phi \psi} + \beta_{n}^{\phi \psi} x_{mn}^{\phi \psi} &\mbox{if } \phi \ne \psi
+    \end{cases} \label{eq:mag_10}
+\end{align}
+
+\begin{align}
+	\mathbb{N}_{mn} (\phi, \psi) &= 2\begin{cases}
+    	 x_{mn}^{\phi \psi} &\mbox{if } \phi = \psi \\
+         \alpha_{n}^{\phi \psi} x_{mn}^{\phi \psi} - \beta_{n}^{\phi \psi} r_{mn}^{\phi \psi} &\mbox{if } \phi \ne \psi
+    \end{cases} \label{eq:mag_11}
+\end{align}
+
+% \noindent with $a=1$, $b=2$, and $c=3$ for indexing purposes on the LHS of \eqref{eq:mag_8} and \eqref{eq:mag_9} (e.g. $M_{mn}(a,b)$ refers to the (1,2) index).
+
+% We notice that the entries of $\mathbb{M}_{mn}$ and $\mathbb{N}_{mn}$ can also be defined as following:
+% \begin{align}
+% 	\mathbb{M}_{mn} (\phi, \psi) &= 2\Re \left\{\gamma_{n}^{\phi \psi} {\left( Z_{mn}^{\phi \psi} \right)}^{*} \right\} \label{eq:mag_10} \\
+%     \mathbb{N}_{mn} (\phi, \psi) &= -2\Im \left\{\gamma_{n}^{\phi \psi} {\left( Z_{mn}^{\phi \psi} \right)}^{*} \right\} \label{eq:mag_11},
+% \end{align}
+
+% \noindent where clearly $\gamma_{n}^{\phi \psi} = 1 \text{ } \forall n \in \mathcal{N}$ if $\phi = \psi$.
+
+Eqs. \eqref{eq:mag_7} - \eqref{eq:mag_11} represent the portion of the \emph{Dist3Flow} equations that govern the relationship between squared voltage magnitudes between adjacent nodes and complex power flow.  This system, as it is nonlinear and nonconvex, is difficult to directly incorporate into an OPF formulation without the use of convex relaxations.  However, this system can be linearized via making the following assumptions:
+
+\begin{description}
+	\item[\textbf{A2:} ] $\mathbb{H}_{mn}$ is constant $\forall (m,n) \in \mathcal{E}$
+	\item[\textbf{A3:} ] $\gamma_{n}^{\phi \psi}$ are constant $\forall n \in \mathcal{N}$, $\forall \phi \in \{a,b,c\}$, $\psi \in \{a,b,c\}$,  $\phi \ne \psi$    
+\end{description}
+
+% \noindent Assumption {A2} states that higher order terms are constant on all line segments $(m,n) \in \mathcal{E}$. Assumption {A3} states that voltage phasor ratios at all nodes are constant.
+\noindent Application of assumptions \textbf{A2} and \textbf{A3} to the system of \eqref{eq:mag_7} - \eqref{eq:mag_11} results in a linear model that relates the squared magnitudes of nodal voltages and complex power flows to DER injected power.  We refer to the resulting system due to the application of \textbf{A2} and \textbf{A3} to \eqref{eq:mag_7} - \eqref{eq:mag_11} as the \emph{LinDist3Flow} magnitude equations.
+
+The \emph{LinDist3Flow} magnitude equations can be further simplified via logical choices for the constant parameters of \textbf{A2} and \textbf{A3}.  Following the analysis presented in \cite{baran1989optimal}, we choose $\mathbb{H}_{mn} = {\left[0, \text{ } 0, \text{ } 0 \right]}^{T} \text{ } \forall (m,n) \in \mathcal{E}$.  Next we define the parameter $\sigma$ such that:
+\begin{equation}
+	\sigma = \frac{-1 + j\sqrt{3}}{2}, \quad \sigma^{2} = \frac{-1 - j\sqrt{3}}{2}
+    \label{eq:sigma},
+\end{equation}
+\noindent and assign them to the $\gamma$ terms according to:
+\begin{equation}
+	\gamma_{n}^{ab} = \sigma \quad \gamma_{n}^{bc} = \sigma \quad \gamma_{n}^{ac} = \sigma^{2} \quad \forall n \in \mathcal{N}
+    \label{eq:gamma}
+\end{equation}
+
+\noindent where clearly $\sigma = 1 \angle 120\degree$ and $\sigma^{2} = \sigma^{*}$.  This choice of parameters for \textbf{A3} reflects the ratio of nominal voltages at the distribution substation, where, typically, $V_{0}^{a} = 1\angle 0 \degree$, $V_{0}^{b} = 1\angle 240 \degree$, and $V_{0}^{c} = 1\angle 120 \degree$.  Choosing the $\gamma$ terms in this manner highlights the effect of the voltage ratio terms of \eqref{eq:mag_10} - \eqref{eq:mag_11} in rotating non-diagonal elements of the impedance matrix by $ \pm 120 \degree$.  With a bit of algebra, it is straightforward to verify that with these choices for \textbf{A2} and \textbf{A3}, Eqs. \eqref{eq:mag_7} - \eqref{eq:mag_11} become:
+\begin{align}
+	\mathbb{Y}_{m} &\approx \mathbb{Y}_{n} - \mathbb{M}_{mn} \mathbb{P}_{n} - \mathbb{N}_{mn} \mathbb{Q}_{n} \label{eq:mag_7_lin}
+\end{align}
+\begin{align}
+	\mathbb{M}_{mn} &=
+	\begin{bmatrix}
+		-2 r_{mn}^{aa} & r_{mn}^{ab} - \sqrt{3} x_{mn}^{ab} & r_{mn}^{ac} + \sqrt{3} x_{mn}^{ac} \\
+		r_{mn}^{ba} + \sqrt{3} x_{mn}^{ba} & -2 r_{mn}^{bb} & r_{mn}^{bc} - \sqrt{3} x_{mn}^{bc} \\
+		r_{mn}^{ca} - \sqrt{3} x_{mn}^{ca} & r_{mn}^{cb} + \sqrt{3} x_{mn}^{cb} & -2 r_{mn}^{cc}
+	\end{bmatrix} \label{eq:mag_8_lin}\\
+	\mathbb{N}_{mn} &=
+	\begin{bmatrix}
+		-2 x_{mn}^{aa} & x_{mn}^{ab} + \sqrt{3} r_{mn}^{ab} & x_{mn}^{ac} - \sqrt{3} r_{mn}^{ac} \\
+		x_{mn}^{ba} -\sqrt{3} r_{mn}^{ba} & -2 x_{mn}^{bb} & x_{bc} + \sqrt{3} r_{mn}^{bc}\\
+		x_{mn}^{ca} + \sqrt{3} r_{mn}^{ca} & x_{mn}^{cb} -\sqrt{3} r_{mn}^{cb} & -2 x_{mn}^{cc}
+	\end{bmatrix} \label{eq:mag_9_lin}.
+\end{align}
+
+The system of \eqref{eq:mag_7_lin} - \eqref{eq:mag_9_lin} was incorporated into an OPF formulation used to conduct simulations in this work (discussed in Section \ref{sec:simulation_results}). Notice that in the single phase case, this system reduces to a variant of the \emph{LinDistFlow} equations.

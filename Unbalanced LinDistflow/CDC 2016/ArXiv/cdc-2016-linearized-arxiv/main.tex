@@ -1,0 +1,131 @@
+% \documentclass[letterpaper, 10pt, conference]{IEEEtran}
+\documentclass[letterpaper, 10 pt, conference]{ieeeconf}
+
+\pdfoutput=1
+
+% \usepackage{draftwatermark}
+% \SetWatermarkText{DRAFT}
+
+\pdfminorversion=4
+
+\overrideIEEEmargins
+
+\usepackage{todonotes}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{gensymb}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[small,bf]{caption}
+\usepackage{subcaption}
+\usepackage{url}
+\usepackage{color}
+\usepackage{epstopdf}
+\usepackage{cuted}
+\usepackage{tikz}
+\usepackage{tabularx}
+\usepackage{tabulary}
+
+% \usepackage[showframe,paper=letterpaper,top=1.00in,bottom=0.75in,right=0.75in,left=0.75in]{geometry}
+
+\graphicspath{{figures/},{pdf/},{eps/},{png/}}
+
+\DeclareMathOperator*{\argmin}{argmin}
+
+\renewcommand{\Re}{\operatorname{\textbf{Re}}}
+\renewcommand{\Im}{\operatorname{\textbf{Im}}}
+
+% \begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% TITLE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \title{CDC 2016 - A Linearized Power Flow Model for Optimization in Unbalanced Distribution Systems}
+
+\title{\LARGE \bf
+A Linearized Power Flow Model for Optimization in Unbalanced Distribution Systems}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% AUTHORS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \author{
+% \IEEEauthorblockN{Daniel B. Arnold*, Michael Sankur*, Roel Dobbe**, Kyle Brady**, \\Duncan S. Callaway***, and Alexandra Von Meier**}
+% \IEEEauthorblockA{*Department of Mechanical Engineering\\
+% **Department of Electrical Engineering and Computer Science\\
+% ***Energy and Resources Group\\
+% University of California, Berkeley\\
+% Berkeley, California 94720\\
+% (dbarnold, msankur, dobbe, kwbrady, dcal, vonmeier) @berkeley.edu}}
+
+% \maketitle
+
+\author{Michael D. Sankur, Roel Dobbe, Emma Stewart, Duncan S. Callaway, and Daniel B. Arnold% <-this % stops a space
+% \thanks{This work was not supported by any organization}% <-this % stops a space
+% \thanks{M. Sankur is a PhD candidate in the Mechanical Engineering Department, University of California, Berkeley, Berkeley, CA 94720, USA
+%         {\tt\small msankur@berkeley.edu}}%
+% \thanks{P. Misra is with the Department of Electrical Engineering, Wright State University,
+%         Dayton, OH 45435, USA
+%         {\tt\small pmisra@cs.wright.edu}}%
+}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\pagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% SPONSOR FOOTNOTE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \let\thefootnote\relax\footnote{This work was supported in part by the U.S. Department of Energy ARPA-E program (DE-AR0000340).}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ABSTRACT
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+\noindent Optimal Power Flow (OPF) is an important tool used to coordinate assets in electric power systems to ensure customer voltages are within pre-defined tolerances and to improve distribution system operations.  While convex relaxations of Optimal Power Flow (OPF) problems have been proposed for both balanced and unbalanced networks, these approaches do not provide universal convexity guarantees and scale inefficiently as network size and the number of  constraints increase.  To address these issues, we have recently explored a novel linearized OPF formulation for unbalanced distribution systems.  Our approach is made possible in part by approximating the ratio of voltages across phases throughout the network.  In this work, we generalize the previous formulation to allow arbitrary complex numbers to approximate voltage ratios at different locations in the feeder.  Furthermore, we continue the analysis of the linearized OPF via comparison to results obtained through convex relaxations and Semi-Definite Programming (SDP).  Simulations of IEEE test feeders show that the proposed formulation produces control decisions that closely approximate those obtained via SDP relaxations.  In a specific case, we show that the linearized OPF is capable of solving certain problems which cannot be formulated as SDPs.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% IEEE KEYWORDS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \begin{IEEEkeywords}
+% Distributed energy resources, Voltage regulation,  Load Following, Model Predictive Control, Distributed Plug Load Control, Battery Storage Optimization
+% \end{IEEEkeywords}
+
+% \input{nomenclature}
+% \label{sec:nomenclature}
+
+\input{introduction}
+\label{sec:introduction}
+
+% \input{preliminaries}
+% \label{sec:preliminaries}
+
+% \input{magnitude}
+% \label{sec:magnitude}
+
+\input{analysis}
+%\label{sec:analysis}
+
+\input{simulation_results}
+\label{sec:simulation_results}
+
+\input{sim_real_power}
+\label{subsec:sim_real_power}
+
+\input{sim_voltage_balance}
+\label{subsec:sim_voltage_balance}
+
+\input{conclusion}
+\label{sec:conclusion}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% REFERENCES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\bibliography{bibtex_DBA}
+\bibliographystyle{IEEEtran}
+
+\end{document}
