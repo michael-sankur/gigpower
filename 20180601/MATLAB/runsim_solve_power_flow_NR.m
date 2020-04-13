@@ -24,6 +24,9 @@ fn = 'ieee_34node.txt';
 fn = '03node_fullphase_radial_example.txt';
 fn = '03node_fullphase_mesh_example.txt';
 
+fp = '/home/michael/Dropbox/';
+fn = 'ieee_37node.txt';
+
 [network1] = network_mapper_function(fp, fn);
 
 %% Network paramaters
