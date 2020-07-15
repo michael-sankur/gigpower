@@ -4,7 +4,7 @@
 clc, clear, close all
 
 % Add directory and subdirectories to path
-path(path,genpath('/home/michael/Dropbox/Unbalanced LinDistflow/20180601/MATLAB/'));
+path(path,genpath('/home/michael/Desktop/git/LinDist3Flow/20180601/MATLAB/'));
 
 %% Load network
 
@@ -22,10 +22,10 @@ path(path,genpath('/home/michael/Dropbox/Unbalanced LinDistflow/20180601/MATLAB/
 fp = '/home/michael/Dropbox/Unbalanced LinDistflow/20180601/NETWORKS/';
 fn = 'ieee_34node.txt';
 fn = '03node_fullphase_radial_example.txt';
-fn = '03node_fullphase_mesh_example.txt';
+% fn = '03node_fullphase_mesh_example.txt';
 
-fp = '/home/michael/Dropbox/';
-fn = 'ieee_37node.txt';
+fp = '/home/michael/Desktop/git/LinDist3Flow/20180601/NETWORKS/';
+% fn = 'ieee_37node.txt';
 
 [network1] = network_mapper_function(fp, fn);
 
