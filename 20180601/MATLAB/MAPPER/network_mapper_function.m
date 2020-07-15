@@ -391,6 +391,8 @@ for k1 = 1:size(configlinearray,2)
         (rab + 1j*xab) (rbb + 1j*xbb) (rbc + 1j*xbc);
         (rac + 1j*xac) (rbc + 1j*xbc) (rcc + 1j*xcc)];
     
+    
+    
 end
 
 % network.conflist = configs.conflist;

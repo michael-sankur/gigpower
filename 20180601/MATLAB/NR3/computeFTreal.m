@@ -93,6 +93,8 @@ FTSUBV = [XNR(2*slacknode-1) - real(Vslack(1));
     XNR(2*2*nnode + 2*slacknode-1) - real(Vslack(3));
     XNR(2*2*nnode + 2*slacknode) - imag(Vslack(3))];
 
+
+
 % Residuals for KVL across line (m,n)
 FTKVL = zeros(2*3*nline,1);
 for ph = 1:3

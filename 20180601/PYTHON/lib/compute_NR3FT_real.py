@@ -109,6 +109,8 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 
                 # indexes of C_mn^phi and D_mn^phi
                 idxCmn = 2*3*nnode + 2*ph*nline + 2*k1
+                
+                
                 idxDmn = 2*3*nnode + 2*ph*nline + 2*k1+1
 
                 # set residuals for KVL

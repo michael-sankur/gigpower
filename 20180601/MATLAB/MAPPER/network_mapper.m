@@ -12,6 +12,8 @@ fn = 'ieee_13node_balance.txt';
 fn = '05node_fullphase_radial.txt';
 fn = '03node_singlephase_radial_example.txt';
 fn = '03node_singlephase_mesh_example.txt';
+fn = 'ieee_34node.txt';
+
 
 
 linearray = {};

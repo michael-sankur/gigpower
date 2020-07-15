@@ -4,7 +4,7 @@
 clc, clear, close all
 
 % Add directory and subdirectories to path
-path(path,genpath('/home/michael/Dropbox/Unbalanced LinDistflow/20180601/MATLAB/'));
+path(path,genpath('C:\Users\kathl\Desktop\LinDist3Flow\20180601\MATLAB\'));
 
 %% Load network
 
@@ -19,14 +19,16 @@ path(path,genpath('/home/michael/Dropbox/Unbalanced LinDistflow/20180601/MATLAB/
 % path(path,genpath(genpathstr));
 
 % File path and file name of network configuration file
-fp = '/home/michael/Dropbox/Unbalanced LinDistflow/20180601/NETWORKS/';
-fn = 'ieee_34node.txt';
-fn = '03node_fullphase_radial_example.txt';
-fn = '03node_fullphase_mesh_example.txt';
-
-fp = '/home/michael/Dropbox/';
-fn = 'ieee_37node.txt';
-
+fp = 'C:\Users\kathl\Desktop\LinDist3Flow\20180601\NETWORKS\';
+fn = '05node_singlephase_radial.txt';
+%fn = '05node_fullphase_radial.txt';
+%fn = 'ieee_13node_balance.txt';
+%fn = '03node_fullphase_mesh_example.txt'
+%fn = '03node_singlephase_mesh_example.txt'
+%fn = '03node_fullphase_radial_example.txt'
+%fn = 'ieee_13node_mesh_open.txt';
+%fn = '03node_fullphase_radial_COPY.txt';
+%fn = 'ieee_34node - Copy.txt';
 [network1] = network_mapper_function(fp, fn);
 
 %% Network paramaters
@@ -90,7 +92,7 @@ phstr = {'a','b','c'};
 
 % VNR0 = round(1e6*VNR0)/1e6
 
-fp = '/home/michael/Dropbox/Unbalanced LinDistflow/20180601/MATLAB/';
+fp = 'C:\Users\kathl\Desktop\LinDist3Flow\20180601\MATLAB\';
 fn = ['NR3-' erase(fn,'.txt') '-matlab' '.txt'];
 
 fid = fopen([fp fn],'w');
