@@ -74,7 +74,7 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     FXpu = network.lines.FXpu
 
     # load parameters
-    spu = network.loads.spu
+    spu = network.loads.spu_nominal
     APQ = network.loads.aPQ
     AI = network.loads.aI
     AZ = network.loads.aZ
@@ -203,7 +203,7 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     sNR = np.zeros((3,nnode), dtype='complex')
     iNR = np.zeros((3,nnode), dtype='complex')
     # Total node loads
-    sNR = spu*(APQ + AI*np.abs(VNR) + AZ*np.abs(VNR)**2) - 1j*cappu.real + wpu;
+    sNR = spu*(APQ + AI*np.abs(VNR) + AZ*np.abs(VNR)**2) - 1j*cappu.real + wpu +1j *vvcpu.real;
     sNR[network.nodes.PH == 0] = 0;
     if np.abs(sNR[ph,k1].real) <= 1e-12:
         sNR[ph,k1] = 0 + sNR[ph,k1].imag

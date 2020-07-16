@@ -75,7 +75,7 @@ FRpu = lines.FRpu;
 FXpu = lines.FXpu;
 
 % load parameters
-spu = loads.spu;
+spu = loads.spu_nom;
 aPQ = loads.aPQ;
 aI = loads.aI;
 aZ = loads.aZ;
