@@ -55,6 +55,16 @@ network1.loads.aZ = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 
 network1.loads.spu = 2*network1.loads.spu;
 
+network1.loads.spu_nominal = network1.loads.spu
+
+% for kt = 1:length(time)
+%     for ph = 1:3
+%         for kn = 1:nnode
+%             network1.loads.spu(ph,kn) = network1.loads.spu_nominal(ph,kn)*loadprofile_normalized(kt)
+%         end
+%     end
+% end
+
 %% Capacitor parameters
 
 % network1.caps.cappu = 1*network1.caps.cappu;
