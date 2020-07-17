@@ -58,7 +58,7 @@ network1.loads.aPQ = 1.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 network1.loads.aI = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 network1.loads.aZ = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 
-network1.loads.spu = 2*network1.loads.spu;
+network1.loads.spu = 1*network1.loads.spu;
 
 
 %% Phases That Exist
