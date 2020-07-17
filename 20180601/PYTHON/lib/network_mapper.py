@@ -531,6 +531,7 @@ def network_mapper_function(fp, fn):
 
     # Complex loads [pu]
     loads.spu = loads.ppu + 1j*loads.qpu
+    loads.spu_nominal = loads.ppu +1j*loads.qpu
 
     if printflag == 1:
         print()

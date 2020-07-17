@@ -23,11 +23,11 @@ fp = 'C:\Users\kathl\Desktop\LinDist3Flow\20180601\NETWORKS\';
 
 
 fn = '05node_singlephase_radial.txt'; %works
-fn = '03node_singlephase_mesh_example.txt' %works
+fn = '03node_singlephase_mesh_example.txt'; %works
 %fn = '03node_singlephase_radial_example.txt'; %works
 
-fn = '03node_fullphase_radial_example.txt' %nope
-fn = '03node_fullphase_mesh_example.txt' %nope
+fn = '03node_fullphase_radial_example.txt'; %nope
+fn = '03node_fullphase_mesh_example.txt'; %nope
 
 %fn = 'ieee_13node_balance.txt';
 %fn = 'ieee_13node_mesh_open.txt';
@@ -71,6 +71,7 @@ b = 0;
 c = 0;
 for phaseCount=1:length(network1.nodes.phases)
     curr = network1.nodes.phases{phaseCount};
+    
     if contains(curr, 'a') & a == 0
         phase_count = phase_count + 1;
         a = 1;
@@ -95,6 +96,7 @@ all_demands= cell(3,nnode);
 for ph = 1:3
     for kn = 1:nnode
         if (a == 1 & ph == 1) | (b == 1 & ph == 2) | (c == 1 & ph == 3)
+     
         csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum0\node_'+string(csv_file_count)+'_pv_0_minute_normalized.csv');
         demand = csvfile(:, 6);
         all_demands{ph, kn} = demand;
@@ -105,6 +107,7 @@ for ph = 1:3
         end
     end
 end
+
 phstr = {'a','b','c'};
 %for kt = 1:length(csvfile) %time
 for kt = 1:50
@@ -114,10 +117,11 @@ for kt = 1:50
             if (a == 1 & ph == 1) | (b == 1 & ph == 2) | (c == 1 & ph == 3)       
                 network1.loads.spu_nom(ph,kn) = ...
                     network1.loads.spu(ph,kn)*all_demands{ph,kn}(kt)%(ph,kn,kt)
+             
             end
         end
     end
-    
+    disp(network1.loads.spu_nom)
     network1.cons.wpu = zeros(3,nnode);
     network1.vvc.vvcpu = zeros(3,nnode);
     slacknode = 1;
