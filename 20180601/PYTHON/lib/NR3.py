@@ -109,7 +109,7 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     # intialize line current portion of XNR
     if I0 == None or len(I0) == 0:
         for k1 in range(0,nnode):
-            XNR[(2*3*nnode):] = 0.1*np.ones((6*nline,1))
+            XNR[(2*3*nnode):] = 0.0*np.ones((6*nline,1))
             
     elif len(I0) != 0:
         for ph in range(0,3):
@@ -180,17 +180,18 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     # SRXNR_n^phi = V_n^phi (I_mn^phi)^*
     STXNR = np.zeros((3,nnode), dtype='complex')
     SRXNR = np.zeros((3,nnode), dtype='complex')
-    for k1 in range(0,nline):
-        STXNR[:,k1] = VNR[:,network.lines.TXnum[k1]]*np.conj(INR[:,k1])
-        if np.abs(STXNR[ph,k1].real) <= 1e-12:
-            STXNR[ph,k1] = 0 + STXNR[ph,k1].imag
-        if np.abs(STXNR[ph,k1].imag) <= 1e-12:
-            STXNR[ph,k1] = STXNR[ph,k1].real + 0
-        SRXNR[:,k1] = VNR[:,network.lines.RXnum[k1]]*np.conj(INR[:,k1])
-        if np.abs(SRXNR[ph,k1].real) <= 1e-12:
-            SRXNR[ph,k1] = 0 + SRXNR[ph,k1].imag
-        if np.abs(SRXNR[ph,k1].imag) <= 1e-12:
-            SRXNR[ph,k1] = SRXNR[ph,k1].real + 0
+    for ph in range(0,3):
+        for k1 in range(0,nline):
+            STXNR[ph,k1] = VNR[ph,network.lines.TXnum[k1]]*np.conj(INR[ph,k1])
+            if np.abs(STXNR[ph,k1].real) <= 1e-12:
+                STXNR[ph,k1] = 0 + STXNR[ph,k1].imag
+            if np.abs(STXNR[ph,k1].imag) <= 1e-12:
+                STXNR[ph,k1] = STXNR[ph,k1].real + 0
+            SRXNR[ph,k1] = VNR[ph,network.lines.RXnum[k1]]*np.conj(INR[ph,k1])
+            if np.abs(SRXNR[ph,k1].real) <= 1e-12:
+                SRXNR[ph,k1] = 0 + SRXNR[ph,k1].imag
+            if np.abs(SRXNR[ph,k1].imag) <= 1e-12:
+                SRXNR[ph,k1] = SRXNR[ph,k1].real + 0
         
         
     # print(STXNR)
@@ -201,17 +202,22 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     # Total node loads
     sNR = spu*(APQ + AI*np.abs(VNR) + AZ*np.abs(VNR)**2) - 1j*cappu.real + wpu;
     sNR[network.nodes.PH == 0] = 0;
-    if np.abs(sNR[ph,k1].real) <= 1e-12:
-        sNR[ph,k1] = 0 + sNR[ph,k1].imag
-    if np.abs(sNR[ph,k1].imag) <= 1e-12:
-        sNR[ph,k1] = sNR[ph,k1].real + 0
+    for ph in range(0,3):
+        for k1 in range(0,nnode):
+            if np.abs(sNR[ph,k1].real) <= 1e-12:
+                sNR[ph,k1] = 0 + sNR[ph,k1].imag
+            if np.abs(sNR[ph,k1].imag) <= 1e-12:
+                sNR[ph,k1] = sNR[ph,k1].real + 0
     # Total node current
     iNR[network.nodes.PH != 0] = np.conj(sNR[network.nodes.PH != 0]/VNR[network.nodes.PH != 0]);
     iNR[network.nodes.PH == 0] = 0;
-    if np.abs(iNR[ph,k1].real) <= 1e-12:
-        iNR[ph,k1] = 0 + iNR[ph,k1].imag
-    if np.abs(iNR[ph,k1].imag) <= 1e-12:
-        iNR[ph,k1] = iNR[ph,k1].real + 0
+    for ph in range(0,3):
+        for k1 in range(0,nnode):
+            if np.abs(iNR[ph,k1].real) <= 1e-12:
+                iNR[ph,k1] = 0 + iNR[ph,k1].imag
+            if np.abs(iNR[ph,k1].imag) <= 1e-12:
+                iNR[ph,k1] = iNR[ph,k1].real + 0
     
     
     return VNR, INR, STXNR, SRXNR, iNR, sNR, itercount
+    

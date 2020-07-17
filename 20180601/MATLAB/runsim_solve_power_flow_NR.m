@@ -53,9 +53,9 @@ network1.loads.aPQ = 1.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 network1.loads.aI = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 network1.loads.aZ = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 
-network1.loads.spu = 2*network1.loads.spu;
+network1.loads.spu = 1*network1.loads.spu;
 
-network1.loads.spu_nominal = network1.loads.spu
+% network1.loads.spu_nominal = network1.loads.spu
 
 % for kt = 1:length(time)
 %     for ph = 1:3
@@ -100,7 +100,7 @@ phstr = {'a','b','c'};
 
 % VNR0 = round(1e6*VNR0)/1e6
 
-fp = '/home/michael/Dropbox/Unbalanced LinDistflow/20180601/MATLAB/';
+fp = '/home/michael/Desktop/git/LinDist3Flow/20180601/MATLAB/';
 fn = ['NR3-' erase(fn,'.txt') '-matlab' '.txt'];
 
 fid = fopen([fp fn],'w');
