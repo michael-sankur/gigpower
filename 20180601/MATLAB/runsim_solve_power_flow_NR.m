@@ -24,16 +24,16 @@ fp = 'C:\Users\kathl\Desktop\LinDist3Flow\20180601\NETWORKS\';
 
 fn = '05node_singlephase_radial.txt'; %works
 fn = '03node_singlephase_mesh_example.txt'; %works
-%fn = '03node_singlephase_radial_example.txt'; %works
+fn = '03node_singlephase_radial_example.txt'; %works
 
-fn = '03node_fullphase_radial_example.txt'; %nope
-fn = '03node_fullphase_mesh_example.txt'; %nope
+%fn = '03node_fullphase_radial_example.txt'; %nope
+%fn = '03node_fullphase_mesh_example.txt'; %nope
 
-%fn = 'ieee_13node_balance.txt';
-%fn = 'ieee_13node_mesh_open.txt';
-%fn = 'ieee_34node - Copy.txt';
+fn = 'ieee_13node_balance.txt';
+fn = 'ieee_13node_mesh_open.txt';
+fn = 'ieee_34node.txt';
 
-fn = '05node_fullphase_radial.txt'; %nope
+%fn = '05node_fullphase_radial.txt'; %nope
 
 [network1] = network_mapper_function(fp, fn);
 
@@ -96,14 +96,23 @@ all_demands= cell(3,nnode);
 for ph = 1:3
     for kn = 1:nnode
         if (a == 1 & ph == 1) | (b == 1 & ph == 2) | (c == 1 & ph == 3)
-     
-        csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum0\node_'+string(csv_file_count)+'_pv_0_minute_normalized.csv');
-        demand = csvfile(:, 6);
-        all_demands{ph, kn} = demand;
-        csv_file_count = csv_file_count + 1;
-        if csv_file_count == 36
-            csv_file_count = 1;
-        end
+            if csv_file_count < 38
+                csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum0\node_'+string(csv_file_count)+'_pv_0_minute_normalized.csv');   
+            end
+            if csv_file_count < 75 & csv_file_count > 37
+                csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum1\node_'+string(mod(csv_file_count, 38) + 1)+'_pv_1_minute_normalized.csv');
+            end
+            if csv_file_count > 76 * csv_file_count < 105
+                csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum2\node_'+string(mod(csv_file_count, 37) + 1)+'_pv_2_minute_normalized.csv');
+            end
+            if csv_file_count > 105
+                 csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum3\node_'+string(mod(csv_file_count, 37) + 1)+'_pv_3_minute_normalized.csv');
+           
+            end
+            demand = csvfile(:, 6);
+            all_demands{ph, kn} = demand;
+            csv_file_count = csv_file_count + 1;
+      
         end
     end
 end

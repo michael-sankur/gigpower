@@ -163,8 +163,9 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
                 VNR[ph,k1] = 0 + VNR[ph,k1].imag
             if np.abs(VNR[ph,k1].imag) <= 1e-12:
                 VNR[ph,k1] = VNR[ph,k1].real + 0
-    
+    VNR[network.nodes.PH == 0] = 0
     XNR = XNR[2*3*nnode:]
+    
     
     # INR = XNR(2*3*nnode+1:2:2*3*nnode+2*3*nline-1) + 1j*XNR(2*3*nnode+2:2:2*3*nnode+2*3*nline)
     INR = np.zeros((3,nline), dtype='complex')
