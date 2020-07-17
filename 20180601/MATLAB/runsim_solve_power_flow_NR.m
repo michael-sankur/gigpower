@@ -87,7 +87,7 @@ end
 %% Adjusting spu
 
 csv_file_count = 1;
-all_demands= cell(phase_count,nnode);
+all_demands= cell(3,nnode);
 
 for ph = 1:3
     for kn = 1:nnode
@@ -178,9 +178,6 @@ for kt = 1:50
 
 
 end
-
-%% testing sth
-fopen
 
 %% Capacitor parameters
 
