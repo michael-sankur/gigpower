@@ -137,23 +137,23 @@ end
 % Newton-Raphson for loop
 FT = 1e99;
 itercount = 0;
-
 % Loop until all residuals within tolerance bound
 while max(abs(FT)) >= tol && itercount < maxiter
 
     % Compute residuals
     FT = computeFTreal(XNR,network,slacknode,Vslack);
-    
+
     % Compute derivaties of residuals
     JT = computeJTreal(XNR,network,slacknode);
-    
         
     % If Jacobian matrix is tall
     if size(JT,1) >= size(JT,2)
         XNR = XNR - (JT.'*JT)\(JT.'*FT);
-        % eig(JT.'*JT);  
-    end   
-    itercount = itercount + 1;  
+        % eig(JT.'*JT);
+    end
+    
+    itercount = itercount + 1;
+    
 end
 
 % remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
@@ -219,6 +219,7 @@ for ph = 1:3
         end
     end
 end
+
 
 % Total node loads
 sNR = spu.*(aPQ + aI.*abs(VNR) + aZ.*abs(VNR).^2) - 1j*cappu + wpu + 1j*vvcpu;

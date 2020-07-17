@@ -109,16 +109,14 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     # intialize line current portion of XNR
     if I0 == None or len(I0) == 0:
         for k1 in range(0,nnode):
-            XNR[(2*3*nnode):] = 0.00*np.ones((6*nline,1)) #was .1 before
+            XNR[(2*3*nnode):] = 0.0*np.ones((6*nline,1))
             
-    elif len(I0) != 0: #(CVX)
+    elif len(I0) != 0:
         for ph in range(0,3):
             for k1 in range(0,nnode):
                 XNR[(2*3*nnode) + 2*ph*nnode + 2*k1] = I0[ph,k1].real
                 XNR[(2*3*nnode) + 2*ph*nnode + 2*k1+1] = I0[ph,k1].imag
                 
-    
-   
     if tol == None:
         tol = 1e-9
         
@@ -138,23 +136,22 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
         """
         
         FT = compute_NR3FT_real_function(XNR,network,slacknode,Vslack)
-        
-#         if itercount == 1:
-#             print(FT)
+        #print(FT)
 
         JT = compute_NR3JT_real_function(XNR,network,slacknode,Vslack)
-      
+        #print(JT)
                 
         if JT.shape[0] >= JT.shape[1]:
             #XNR = XNR - inv(JT.'*JT)*JT.'*FT;
             #print(np.linalg.eigvals(JT))
             #print(np.linalg.eigvals(JT.T@JT))
-            XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT 
-
-        #print(itercount)    
+            XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
+        
+        #print(itercount)
         itercount+=1
         
         #pass
+    #print(XNR)
 
     # remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
     # VNR = XNR(1:2:2*3*nnode-1).' + 1j*XNR(2:2:2*3*nnode).';
@@ -166,10 +163,10 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
                 VNR[ph,k1] = 0 + VNR[ph,k1].imag
             if np.abs(VNR[ph,k1].imag) <= 1e-12:
                 VNR[ph,k1] = VNR[ph,k1].real + 0
-    XNR = XNR[2*3*nnode:]
-    VNR[network.nodes.PH == 0] = 0 #line 167
     
-        # INR = XNR(2*3*nnode+1:2:2*3*nnode+2*3*nline-1) + 1j*XNR(2*3*nnode+2:2:2*3*nnode+2*3*nline)
+    XNR = XNR[2*3*nnode:]
+    
+    # INR = XNR(2*3*nnode+1:2:2*3*nnode+2*3*nline-1) + 1j*XNR(2*3*nnode+2:2:2*3*nnode+2*3*nline)
     INR = np.zeros((3,nline), dtype='complex')
     for ph in range(0,3):
         for k1 in range(0,nline):
@@ -223,3 +220,4 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     
     
     return VNR, INR, STXNR, SRXNR, iNR, sNR, itercount
+    

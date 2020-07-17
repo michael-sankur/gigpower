@@ -21,16 +21,19 @@ path(path,genpath('C:\Users\kathl\Desktop\LinDist3Flow\20180601\MATLAB\'));
 % File path and file name of network configuration file
 fp = 'C:\Users\kathl\Desktop\LinDist3Flow\20180601\NETWORKS\';
 
-fp2 = 'C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum0';
-fn = '05node_singlephase_radial.txt'; %5 nodes, each node has 3 phases
-%fn = '05node_fullphase_radial.txt';
+
+fn = '05node_singlephase_radial.txt'; %works
+fn = '03node_singlephase_mesh_example.txt' %works
+%fn = '03node_singlephase_radial_example.txt'; %works
+
+fn = '03node_fullphase_radial_example.txt' %nope
+fn = '03node_fullphase_mesh_example.txt' %nope
+
 %fn = 'ieee_13node_balance.txt';
-%fn = '03node_fullphase_mesh_example.txt'
-%fn = '03node_singlephase_mesh_example.txt'
-%fn = '03node_fullphase_radial_example.txt'
 %fn = 'ieee_13node_mesh_open.txt';
-%fn = '03node_fullphase_radial_COPY.txt';
 %fn = 'ieee_34node - Copy.txt';
+
+fn = '05node_fullphase_radial.txt'; %nope
 
 [network1] = network_mapper_function(fp, fn);
 
@@ -50,13 +53,13 @@ nline = network1.lines.nline; % Number of lines
 %% Load parameters
 
 % Change ZIP parameters for all loads/demands
-% network1.loads.aPQ = 0.75*ones(3,nnode).*(network1.loads.spu ~= 0);
-% network1.loads.aI = 0.10*ones(3,nnode).*(network1.loads.spu ~= 0);
-% network1.loads.aZ = 0.15*ones(3,nnode).*(network1.loads.spu ~= 0);
+network1.loads.aPQ = 0.75*ones(3,nnode).*(network1.loads.spu ~= 0);
+network1.loads.aI = 0.10*ones(3,nnode).*(network1.loads.spu ~= 0);
+network1.loads.aZ = 0.15*ones(3,nnode).*(network1.loads.spu ~= 0);
 
-network1.loads.aPQ = 1.00*ones(3,nnode).*(network1.loads.spu ~= 0);
-network1.loads.aI = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
-network1.loads.aZ = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
+%network1.loads.aPQ = 1.00*ones(3,nnode).*(network1.loads.spu ~= 0);
+%network1.loads.aI = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
+%network1.loads.aZ = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 
 network1.loads.spu = 1*network1.loads.spu;
 
@@ -96,13 +99,16 @@ for ph = 1:3
         demand = csvfile(:, 6);
         all_demands{ph, kn} = demand;
         csv_file_count = csv_file_count + 1;
+        if csv_file_count == 36
+            csv_file_count = 1;
+        end
         end
     end
 end
 phstr = {'a','b','c'};
 %for kt = 1:length(csvfile) %time
 for kt = 1:50
-    network1.loads.spu_nom = network1.loads.spu
+    network1.loads.spu_nom = network1.loads.spu;
     for ph = 1:3 %no of phases
         for kn = 1:nnode %no of nodes
             if (a == 1 & ph == 1) | (b == 1 & ph == 2) | (c == 1 & ph == 3)       
