@@ -2,7 +2,7 @@ import numpy as np
 from lib.compute_NR3FT_real import compute_NR3FT_real_function
 from lib.compute_NR3JT_real import compute_NR3JT_real_function
 
-def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
+def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-12,maxiter=100):
     
     # This function runs a Newton-Raphson algorithm to solve power flow 
 
@@ -220,4 +220,3 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     
     
     return VNR, INR, STXNR, SRXNR, iNR, sNR, itercount
-    
