@@ -248,6 +248,9 @@ for ph = 1:3
     end
 end
 
+A(abs(real(A)) <= 0.5) = 1j*imag(A(abs(real(A)) <= 0.5))
+A(abs(imag(A)) <= 0.5) = real(A(abs(imag(A)) <= 0.5))
+
 NRRES.VNR = VNR;
 NRRES.INR = INR;
 NRRES.STXNR = STXNR;
