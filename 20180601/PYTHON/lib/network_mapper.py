@@ -532,6 +532,13 @@ def network_mapper_function(fp, fn):
     # Complex loads [pu]
     loads.spu = loads.ppu + 1j*loads.qpu
     loads.spu_nominal = loads.ppu +1j*loads.qpu
+    
+ 
+    
+#     loads.ppu_n = np.abs(loads.ppu * np.random.normal(0, 1, loads.ppu.shape))
+#     loads.qpu_n = np.abs(loads.qpu * np.random.normal(0, 1, loads.ppu.shape))
+#     loads.spu_n = loads.ppu_n + loads.qpu_n
+    
 
     if printflag == 1:
         print()

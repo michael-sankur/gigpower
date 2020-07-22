@@ -26,12 +26,12 @@ fn = '05node_singlephase_radial.txt'; %works
 fn = '03node_singlephase_mesh_example.txt'; %works
 fn = '03node_singlephase_radial_example.txt'; %works
 
-%fn = '03node_fullphase_radial_example.txt'; %nope
+fn = '03node_fullphase_radial_example.txt'; %nope
 %fn = '03node_fullphase_mesh_example.txt'; %nope
 
-
-fn = 'ieee_13node_mesh_open.txt';
-fn = 'ieee_13node_balance.txt';
+%fn = 'ieee_34node-2.txt';
+%fn = 'ieee_13node_mesh_open.txt';
+%fn = 'ieee_13node_balance.txt';
 %fn = 'ieee_34node.txt';
 
 %fn = '05node_fullphase_radial.txt'; %nope
@@ -61,6 +61,11 @@ network1.loads.aZ = 0.15*ones(3,nnode).*(network1.loads.spu ~= 0);
 %network1.loads.aPQ = 1.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 %network1.loads.aI = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 %network1.loads.aZ = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
+
+network1.loads.aPQ = ones(3,nnode).*(network1.loads.spu ~= 0);
+network1.loads.aI = ones(3,nnode).*(network1.loads.spu ~= 0);
+network1.loads.aZ = ones(3,nnode).*(network1.loads.spu ~= 0);
+
 
 network1.loads.spu = 1*network1.loads.spu;
 
@@ -92,49 +97,52 @@ end
 %% Adjusting spu
 
 csv_file_count = 1;
-all_demands= cell(3,nnode);
+profiles= cell(3,nnode);
 
 for ph = 1:3
     for kn = 1:nnode
-        if (a == 1 & ph == 1) | (b == 1 & ph == 2) | (c == 1 & ph == 3)
-%             if csv_file_count < 38
-%                 csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum0\node_'+string(csv_file_count)+'_pv_0_minute_normalized.csv');   
-%             end
-%             if csv_file_count < 73 & csv_file_count > 37
-%                 csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum1\node_'+string(mod(csv_file_count, 37))+'_pv_1_minute_normalized.csv');
-%             end
-%             if csv_file_count > 73 & csv_file_count < 111
-%                 csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum2\node_'+string(mod(csv_file_count, 37) + 1)+'_pv_2_minute_normalized.csv');
-%             end
-%             if csv_file_count > 110
-%                  csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum3\node_'+string(mod(csv_file_count, 37) + 1)+'_pv_3_minute_normalized.csv');
-%            
-%             end
-            
+        if (a == 1 & ph == 1) | (b == 1 & ph == 2) | (c == 1 & ph == 3)        
             csvfile = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\testpvnum'+string(floor(csv_file_count / 38))+'\\node_'+string(mod(csv_file_count, 37) + 1)+'_pv_'+string(floor(csv_file_count / 38))+'_minute_normalized.csv');
-            
             demand = csvfile(:, 6);
-            all_demands{ph, kn} = demand;
-            csv_file_count = csv_file_count + 1;
-      
+            profiles{ph, kn} = demand;
+            csv_file_count = csv_file_count + 1;     
         end
     end
 end
 
-phstr = {'a','b','c'};
+%Load noise applied to spu
+noise = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\PYTHON\spu_noise.txt');
+n_counter = 1;
+
+aPQ_noise = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\PYTHON\aPQ.txt');
+aPQ_noise = aPQ_noise(:, 1:end-1);
+
+aZ_noise = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\PYTHON\aZ.txt');
+aZ_noise = aZ_noise(:, 1:end-1);
+aI_noise = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\PYTHON\aI.txt');
+aI_noise = aI_noise(:, 1:end-1);
+
 %for kt = 1:length(csvfile) %time
-for kt = 1:50
+for kt = 1:2 %100 time steps
     network1.loads.spu_nom = network1.loads.spu;
     for ph = 1:3 %no of phases
         for kn = 1:nnode %no of nodes
             if (a == 1 & ph == 1) | (b == 1 & ph == 2) | (c == 1 & ph == 3)       
                 network1.loads.spu_nom(ph,kn) = ...
-                    network1.loads.spu(ph,kn)*all_demands{ph,kn}(kt)%(ph,kn,kt)
-             
+                    network1.loads.spu(ph,kn)*profiles{ph,kn}(kt) * noise(n_counter);%(ph,kn,kt)
+                n_counter = n_counter + 1;
             end
         end
     end
-    disp(network1.loads.spu_nom)
+    
+    for i =1:3
+        for j = 1:nnode
+            network1.loads.aPQ = aPQ_noise((3*kt-2):kt*3, :) .*(network1.loads.spu ~= 0);
+            network1.loads.aZ = aZ_noise((3*kt-2):kt*3, :) .*(network1.loads.spu ~= 0);
+            network1.loads.aI = aI_noise((3*kt-2):kt*3, :) .*(network1.loads.spu ~= 0);
+        end
+    end
+    
     network1.cons.wpu = zeros(3,nnode);
     network1.vvc.vvcpu = zeros(3,nnode);
     slacknode = 1;
@@ -142,7 +150,8 @@ for kt = 1:50
         1*exp(1j*-120*pi/180);
         1*exp(1j*120*pi/180)];
     [NRRES0, VNR0, INR0, STXNR0, SRXNR0, iNR0, sNR0, iter] = NR3(network1,slacknode,Vslack,[],[],1e-9);
-
+    
+    phstr = {'a','b','c'};
 
     fp = 'C:\Users\kathl\Desktop\LinDist3Flow\20180601\MATLAB\';
     fn = 'NR3-matlab.txt';
