@@ -22,19 +22,16 @@ path(path,genpath('C:\Users\kathl\Desktop\LinDist3Flow\20180601\MATLAB\'));
 fp = 'C:\Users\kathl\Desktop\LinDist3Flow\20180601\NETWORKS\';
 
 
-fn = '05node_singlephase_radial.txt'; %works
-fn = '03node_singlephase_mesh_example.txt'; %works
-fn = '03node_singlephase_radial_example.txt'; %works
-
-fn = '03node_fullphase_radial_example.txt'; %nope
-%fn = '03node_fullphase_mesh_example.txt'; %nope
-
+% fn = '05node_singlephase_radial.txt'; 
+% fn = '03node_singlephase_mesh_example.txt'; 
+% fn = '03node_singlephase_radial_example.txt';
+% fn = '03node_fullphase_radial_example.txt'; 
+% fn = '03node_fullphase_mesh_example.txt'; 
 %fn = 'ieee_34node-2.txt';
 %fn = 'ieee_13node_mesh_open.txt';
 %fn = 'ieee_13node_balance.txt';
-%fn = 'ieee_34node.txt';
-
-%fn = '05node_fullphase_radial.txt'; %nope
+fn = 'ieee_34node.txt';
+%fn = '05node_fullphase_radial.txt'; 
 
 [network1] = network_mapper_function(fp, fn);
 
@@ -54,9 +51,9 @@ nline = network1.lines.nline; % Number of lines
 %% Load parameters
 
 % Change ZIP parameters for all loads/demands
-network1.loads.aPQ = 0.75*ones(3,nnode).*(network1.loads.spu ~= 0);
-network1.loads.aI = 0.10*ones(3,nnode).*(network1.loads.spu ~= 0);
-network1.loads.aZ = 0.15*ones(3,nnode).*(network1.loads.spu ~= 0);
+% network1.loads.aPQ = 0.75*ones(3,nnode).*(network1.loads.spu ~= 0);
+% network1.loads.aI = 0.10*ones(3,nnode).*(network1.loads.spu ~= 0);
+% network1.loads.aZ = 0.15*ones(3,nnode).*(network1.loads.spu ~= 0);
 
 %network1.loads.aPQ = 1.00*ones(3,nnode).*(network1.loads.spu ~= 0);
 %network1.loads.aI = 0.00*ones(3,nnode).*(network1.loads.spu ~= 0);
@@ -77,7 +74,6 @@ b = 0;
 c = 0;
 for phaseCount=1:length(network1.nodes.phases)
     curr = network1.nodes.phases{phaseCount};
-    
     if contains(curr, 'a') & a == 0
         phase_count = phase_count + 1;
         a = 1;
@@ -88,17 +84,21 @@ for phaseCount=1:length(network1.nodes.phases)
     end
     if contains(curr, 'c') & c == 0
         phase_count = phase_count+1;
-        c = 1;
-    
+        c = 1;    
     end
 end
 
 
-%% Adjusting spu
+%%
+[aPQ_noise, aZ_noise, aI_noise, spu_noise] =  readNoise();
+
+
+%% Adjustments (noise and profiles) & solve with NR3
 
 csv_file_count = 1;
-profiles= cell(3,nnode);
+profiles = cell(3,nnode);
 
+% Load profile matrix
 for ph = 1:3
     for kn = 1:nnode
         if (a == 1 & ph == 1) | (b == 1 & ph == 2) | (c == 1 & ph == 3)        
@@ -110,38 +110,22 @@ for ph = 1:3
     end
 end
 
-%Load noise applied to spu
-noise = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\PYTHON\spu_noise.txt');
+ts = 20; %length(csvfile)
 n_counter = 1;
 
-aPQ_noise = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\PYTHON\aPQ.txt');
-aPQ_noise = aPQ_noise(:, 1:end-1);
-
-aZ_noise = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\PYTHON\aZ.txt');
-aZ_noise = aZ_noise(:, 1:end-1);
-aI_noise = readmatrix('C:\Users\kathl\Desktop\LinDist3Flow\20180601\PYTHON\aI.txt');
-aI_noise = aI_noise(:, 1:end-1);
-
-%for kt = 1:length(csvfile) %time
-for kt = 1:2 %100 time steps
+for kt = 1:ts %time steps
     network1.loads.spu_nom = network1.loads.spu;
     for ph = 1:3 %no of phases
         for kn = 1:nnode %no of nodes
-            if (a == 1 & ph == 1) | (b == 1 & ph == 2) | (c == 1 & ph == 3)       
+            if (a == 1 && ph == 1) || (b == 1 && ph == 2) || (c == 1 && ph == 3)       
                 network1.loads.spu_nom(ph,kn) = ...
-                    network1.loads.spu(ph,kn)*profiles{ph,kn}(kt) * noise(n_counter);%(ph,kn,kt)
+                    network1.loads.spu(ph,kn)*profiles{ph,kn}(kt) * spu_noise(n_counter);%(ph,kn,kt)
                 n_counter = n_counter + 1;
             end
         end
     end
-    
-    for i =1:3
-        for j = 1:nnode
-            network1.loads.aPQ = aPQ_noise((3*kt-2):kt*3, :) .*(network1.loads.spu ~= 0);
-            network1.loads.aZ = aZ_noise((3*kt-2):kt*3, :) .*(network1.loads.spu ~= 0);
-            network1.loads.aI = aI_noise((3*kt-2):kt*3, :) .*(network1.loads.spu ~= 0);
-        end
-    end
+
+    network1 = addNoise(network1, kt, nnode, aPQ_noise, aZ_noise, aI_noise);
     
     network1.cons.wpu = zeros(3,nnode);
     network1.vvc.vvcpu = zeros(3,nnode);
