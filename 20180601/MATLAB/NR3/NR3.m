@@ -165,16 +165,18 @@ VNR = [VNR(1:nnode);
     VNR(nnode+1:2*nnode);
     VNR(2*nnode+1:end)];
 VNR(nodes.PH == 0) = 0;
-for ph = 1:3
-    for k1 = 1:nnode
-        if abs(real(VNR(ph,k1))) <= 1e-12
-            VNR(ph,k1) = 0 + 1j*imag(VNR(ph,k1));
-        end
-        if abs(imag(VNR(ph,k1))) <= 1e-12
-            VNR(ph,k1) = real(VNR(ph,k1)) + 0;
-        end        
-    end
-end
+% for ph = 1:3
+%     for k1 = 1:nnode
+%         if abs(real(VNR(ph,k1))) <= 1e-12
+%             VNR(ph,k1) = 0 + 1j*imag(VNR(ph,k1));
+%         end
+%         if abs(imag(VNR(ph,k1))) <= 1e-12
+%             VNR(ph,k1) = real(VNR(ph,k1)) + 0;
+%         end        
+%     end
+% end
+VNR(abs(real(VNR)) <= 1e-12) = 1j*imag(VNR(abs(real(VNR)) <= 1e-12));
+VNR(abs(imag(VNR)) <= 1e-12) = real(VNR(abs(imag(VNR)) <= 1e-12));
 
 % INR = XNR(2*3*nnode+1:2:2*3*nnode+2*3*nline-1) + 1j*XNR(2*3*nnode+2:2:2*3*nnode+2*3*nline)
 for k1 = 2:2:3*2*nline
@@ -184,16 +186,18 @@ INR = [INR(1:nline);
     INR(nline+1:2*nline);
     INR(2*nline+1:end)];
 INR(lines.PH == 0) = 0;
-for ph = 1:3
-    for k1 = 1:nline
-        if abs(real(INR(ph,k1))) <= 1e-12
-            INR(ph,k1) = 0 + 1j*imag(INR(ph,k1));
-        end
-        if abs(imag(INR(ph,k1))) <= 1e-12
-            INR(ph,k1) = real(INR(ph,k1)) + 0;
-        end        
-    end
-end
+% for ph = 1:3
+%     for k1 = 1:nline
+%         if abs(real(INR(ph,k1))) <= 1e-12
+%             INR(ph,k1) = 0 + 1j*imag(INR(ph,k1));
+%         end
+%         if abs(imag(INR(ph,k1))) <= 1e-12
+%             INR(ph,k1) = real(INR(ph,k1)) + 0;
+%         end        
+%     end
+% end
+INR(abs(real(INR)) <= 1e-12) = 1j*imag(INR(abs(real(INR)) <= 1e-12));
+INR(abs(imag(INR)) <= 1e-12) = real(INR(abs(imag(INR)) <= 1e-12));
 
 % STXNR_m^phi = V_m^phi (I_mn^phi)^*
 % SRXNR_n^phi = V_n^phi (I_mn^phi)^*
@@ -203,53 +207,59 @@ for k1 = 1:nline
 end
 STXNR(lines.PH == 0) = 0;
 SRXNR(lines.PH == 0) = 0;
-for ph = 1:3
-    for k1 = 1:nline
-        if abs(real(STXNR(ph,k1))) <= 1e-12
-            STXNR(ph,k1) = 0 + 1j*imag(STXNR(ph,k1));
-        end
-        if abs(imag(STXNR(ph,k1))) <= 1e-12
-            STXNR(ph,k1) = real(STXNR(ph,k1)) + 0;
-        end
-        if abs(real(SRXNR(ph,k1))) <= 1e-12
-            SRXNR(ph,k1) = 0 + 1j*imag(SRXNR(ph,k1));
-        end
-        if abs(imag(SRXNR(ph,k1))) <= 1e-12
-            SRXNR(ph,k1) = real(SRXNR(ph,k1)) + 0;
-        end
-    end
-end
+% for ph = 1:3
+%     for k1 = 1:nline
+%         if abs(real(STXNR(ph,k1))) <= 1e-12
+%             STXNR(ph,k1) = 0 + 1j*imag(STXNR(ph,k1));
+%         end
+%         if abs(imag(STXNR(ph,k1))) <= 1e-12
+%             STXNR(ph,k1) = real(STXNR(ph,k1)) + 0;
+%         end
+%         if abs(real(SRXNR(ph,k1))) <= 1e-12
+%             SRXNR(ph,k1) = 0 + 1j*imag(SRXNR(ph,k1));
+%         end
+%         if abs(imag(SRXNR(ph,k1))) <= 1e-12
+%             SRXNR(ph,k1) = real(SRXNR(ph,k1)) + 0;
+%         end
+%     end
+% end
+STXNR(abs(real(STXNR)) <= 1e-12) = 1j*imag(STXNR(abs(real(STXNR)) <= 1e-12));
+STXNR(abs(imag(STXNR)) <= 1e-12) = real(STXNR(abs(imag(STXNR)) <= 1e-12));
+SRXNR(abs(real(SRXNR)) <= 1e-12) = 1j*imag(SRXNR(abs(real(SRXNR)) <= 1e-12));
+SRXNR(abs(imag(SRXNR)) <= 1e-12) = real(SRXNR(abs(imag(SRXNR)) <= 1e-12));
 
 
 % Total node loads
 sNR = spu.*(aPQ + aI.*abs(VNR) + aZ.*abs(VNR).^2) - 1j*cappu + wpu + 1j*vvcpu;
 sNR(nodes.PH == 0) = 0;
-for ph = 1:3
-    for k1 = 1:nnode
-        if abs(real(sNR(ph,k1))) <= 1e-12
-            sNR(ph,k1) = 0 + 1j*imag(sNR(ph,k1));
-        end
-        if abs(imag(sNR(ph,k1))) <= 1e-12
-            sNR(ph,k1) = real(sNR(ph,k1)) + 0;
-        end        
-    end
-end
+% for ph = 1:3
+%     for k1 = 1:nnode
+%         if abs(real(sNR(ph,k1))) <= 1e-12
+%             sNR(ph,k1) = 0 + 1j*imag(sNR(ph,k1));
+%         end
+%         if abs(imag(sNR(ph,k1))) <= 1e-12
+%             sNR(ph,k1) = real(sNR(ph,k1)) + 0;
+%         end        
+%     end
+% end
+sNR(abs(real(sNR)) <= 1e-12) = 1j*imag(sNR(abs(real(sNR)) <= 1e-12));
+sNR(abs(imag(sNR)) <= 1e-12) = real(sNR(abs(imag(sNR)) <= 1e-12));
+
 % Total node current
 iNR = conj(sNR./VNR);
 iNR(nodes.PH == 0) = 0;
-for ph = 1:3
-    for k1 = 1:nnode
-        if abs(real(iNR(ph,k1))) <= 1e-12
-            iNR(ph,k1) = 0 + 1j*imag(iNR(ph,k1));
-        end
-        if abs(imag(iNR(ph,k1))) <= 1e-12
-            iNR(ph,k1) = real(iNR(ph,k1)) + 0;
-        end        
-    end
-end
-
-A(abs(real(A)) <= 0.5) = 1j*imag(A(abs(real(A)) <= 0.5))
-A(abs(imag(A)) <= 0.5) = real(A(abs(imag(A)) <= 0.5))
+% for ph = 1:3
+%     for k1 = 1:nnode
+%         if abs(real(iNR(ph,k1))) <= 1e-12
+%             iNR(ph,k1) = 0 + 1j*imag(iNR(ph,k1));
+%         end
+%         if abs(imag(iNR(ph,k1))) <= 1e-12
+%             iNR(ph,k1) = real(iNR(ph,k1)) + 0;
+%         end        
+%     end
+% end
+iNR(abs(real(iNR)) <= 1e-12) = 1j*imag(iNR(abs(real(iNR)) <= 1e-12));
+iNR(abs(imag(iNR)) <= 1e-12) = real(iNR(abs(imag(iNR)) <= 1e-12));
 
 NRRES.VNR = VNR;
 NRRES.INR = INR;
