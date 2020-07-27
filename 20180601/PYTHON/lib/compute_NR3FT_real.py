@@ -169,14 +169,14 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     FTKCL = np.zeros((2*3*(nnode-1),1))
     for ph in range(0,3):
         if ph == 0:
-            a = 1
-            b = 0
+            A0 = 1
+            B0 = 0
         elif ph == 1:
-            a = -1/2
-            b = -1 * np.sqrt(3)/2
+            A0 = -1/2
+            B0 = -1 * np.sqrt(3)/2
         elif ph == 2:
-            a = -1/2
-            b = np.sqrt(3)/2
+            A0 = -1/2
+            B0 = np.sqrt(3)/2
         for k1 in range(1,nnode):
             #if k1 != slackidx:
 
@@ -224,20 +224,33 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 # s_m^phi(V_m^phi) + w_m^phi - c_m^phi
                 # real: p_m^phi (A_{PQ,m}^phi + A_{Z,m}^phi ((A_m^phi)^2 + (B_m^phi)^2))) - u_m^phi
                 # imag: q_m^phi (A_{PQ,m}^phi + A_{Z,m}^phi ((A_m^phi)^2 + (B_m^phi)^2))) - v_m^phi + c_m^phi
+
+                dA = XNR[idxAm] - A0
+                dB = XNR[idxBm] - B0
+
+                gradient = np.array([[A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]])
+
+
+
+                # FTKCL[idxre] = FTKCL[idxre] \
+                #     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
+                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient, np.array([[dA, dB]]).T)) \
+                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+                #     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
+                #     - wpu[ph,k1].real
+                # FTKCL[idxim] = FTKCL[idxim] \
+                #     - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
+                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient, np.array([[dA, dB]]).T)) \
+                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+                #     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
+                #     + cappu[ph,k1].real - wpu[ph,k1].imag
+
                 FTKCL[idxre] = FTKCL[idxre] \
-                    - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
-                    ((a**2+b**2)**(1/2) + \
-                    a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
-                    b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
-                    #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+                    - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
                     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
                     - wpu[ph,k1].real
                 FTKCL[idxim] = FTKCL[idxim] \
-                    - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
-                    ((a**2+b**2)**(1/2) + \
-                    a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
-                    b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
-                    #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+                    - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
                     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
                     + cappu[ph,k1].real - wpu[ph,k1].imag
 

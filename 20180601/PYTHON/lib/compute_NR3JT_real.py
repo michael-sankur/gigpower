@@ -187,14 +187,14 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
     JKCL = np.zeros((2*3*(nnode-1),2*3*(nnode + nline)))
     for ph in range(0,3):
         if ph == 0:
-            a = 1
-            b = 0
+            A0 = 1
+            B0 = 0
         elif ph == 1:
-            a = -1/2
-            b = -np.sqrt(3)/2
+            A0 = -1/2
+            B0 = -np.sqrt(3)/2
         elif ph == 2:
-            a = -1/2
-            b = np.sqrt(3)/2
+            A0 = -1/2
+            B0 = np.sqrt(3)/2
         for k1 in range(1,nnode):
             #if k1 != slackidx:
 
@@ -215,33 +215,34 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
             # if phase does exist at node
             # sum_{l:(l,m) in Edges} V_m (I_lm^phi)^* = s_m^phi(V_m^phi) + w_m^phi - c_m^phi + sum_{n:(m,n) in Edges} V_m (I_mn^phi)^*
             elif NPH[ph,k1] == 1:
+                dA = XNR[idxAm] - A0
+                dB = XNR[idxBm] - B0
 
-                # derivates of real KVL residual with respect to real and imag voltage components
-                JKCL[idxre,idxAm] = -spu[ph,k1].real*(AI[ph,k1]*
-                                                        ((a**2+b**2)**(1/2) + \
-                                                        a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
-                                                        b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
-                                                        #XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                gradient = np.array([[A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]])
+
+                # derivates of real KCL residual with respect to real and imag voltage components
+                # 
+                # JKCL[idxre,idxAm] = -spu[ph,k1].real*(AI[ph,k1]* np.matmul(gradient, np.array([[dA, dB]]).T) \
+                #                     + 2*AZ[ph,k1]*XNR[idxAm])[0][0][0]
+                # JKCL[idxre,idxBm] = -spu[ph,k1].real*(AI[ph,k1]* gradient * np.matmul(gradient, np.array([[dA, dB]]).T) \
+                #                     + 2*AZ[ph,k1]*XNR[idxBm])[0][0][0]
+                #
+                # # derivates of imag KCL residual with respect to real and imag voltage components
+                # JKCL[idxim,idxAm] = -spu[ph,k1].imag*(AI[ph,k1] * np.matmul(gradient, np.array([[dA, dB]]).T) \
+                #                                     + 2*AZ[ph,k1]*XNR[idxAm])[0][0][0]
+                # JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1] * np.matmul(gradient, np.array([[dA, dB]]).T) \
+                #                                     + 2*AZ[ph,k1]*XNR[idxBm])[0][0][0]
+
+
+                JKCL[idxre,idxAm] = -spu[ph,k1].real*(AI[ph,k1]*XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
                                                       + 2*AZ[ph,k1]*XNR[idxAm])
-                JKCL[idxre,idxBm] = -spu[ph,k1].real*(AI[ph,k1]* \
-                                                        ((a**2+b**2)**(1/2) + \
-                                                        a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
-                                                        b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
-                                                        #XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                JKCL[idxre,idxBm] = -spu[ph,k1].real*(AI[ph,k1]*XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
                                                       + 2*AZ[ph,k1]*XNR[idxBm])
 
                 # derivates of imag KVL residual with respect to real and imag voltage components
-                JKCL[idxim,idxAm] = -spu[ph,k1].imag*(AI[ph,k1]* \
-                                                        ((a**2+b**2)**(1/2) + \
-                                                        a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
-                                                        b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
-                                                        #XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                JKCL[idxim,idxAm] = -spu[ph,k1].imag*(AI[ph,k1]*XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
                                                       + 2*AZ[ph,k1]*XNR[idxAm])
-                JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1]*
-                                                    ((a**2+b**2)**(1/2) + \
-                                                    a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
-                                                    b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
-                                                    #XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1]*XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
                                                       + 2*AZ[ph,k1]*XNR[idxBm])
 
                 # loop through incoming lines to node m - l:(l,m) in Edges
