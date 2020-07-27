@@ -1,7 +1,7 @@
 import numpy as np
 
 def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
-    
+
     # Michael Sankur - msankur@lbl.gov
     # 2018.01.01
 
@@ -27,7 +27,7 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
     # components
     # JTKVL - derivatives of residuals of KVL real and imaginary equation components
     # JTKCL - derivatives of residuals of KCL real and imaginary equation components
-        
+
     # slackidx is the node index of the slack bus, which is assigned a fixed
     # voltage reference of slackVnom.
 
@@ -148,11 +148,11 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
                 idxDmnc = 2*3*nnode + 2*2*nline + 2*k1+1
 
                  # set partial derivatives of residuals for KVL
-            
+
                 # real: A_m^phi - A_n^phi - sum_{psi} r_{mn}^{phi,psi} C_{mn}^psi - x_{mn}^{phi,psi} D_{mn}^psi = 0
-            
+
                 # derivatives of real KVl residual with respect to real component of node voltage
-                
+
                 JKVL[idxre,idxAmTx] = 1
                 JKVL[idxre,idxAnRx] = -1
 
@@ -167,7 +167,7 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
                 JKVL[idxre,idxDmnc] = FZpu[ph,3*k1+2].imag
 
                 # imag: B_m^phi - B_n^phi - sum_{psi} r_{mn}^{phi,psi} D_{mn}^psi + x_{mn}^{phi,psi} C_{mn}^psi = 0
-            
+
                 # derivatives of real KVl residual with respect to imag component of node voltage
                 JKVL[idxim,idxBmTx] = 1
                 JKVL[idxim,idxBnRx] = -1
@@ -186,9 +186,18 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
     # Jacobian for KCL at node m
     JKCL = np.zeros((2*3*(nnode-1),2*3*(nnode + nline)))
     for ph in range(0,3):
+        if ph == 0:
+            a = 1
+            b = 0
+        elif ph == 1:
+            a = -1/2
+            b = -np.sqrt(3)/2
+        elif ph == 2:
+            a = -1/2
+            b = np.sqrt(3)/2
         for k1 in range(1,nnode):
             #if k1 != slackidx:
-            
+
             # indexes of real and imaginary KCL residual
             idxre = 2*ph*(nnode-1) + 2*(k1-1)
             idxim = 2*ph*(nnode-1) + 2*(k1-1)+1
@@ -208,15 +217,31 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
             elif NPH[ph,k1] == 1:
 
                 # derivates of real KVL residual with respect to real and imag voltage components
-                JKCL[idxre,idxAm] = -spu[ph,k1].real*(AI[ph,k1]*XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                JKCL[idxre,idxAm] = -spu[ph,k1].real*(AI[ph,k1]*
+                                                        ((a**2+b**2)**(1/2) + \
+                                                        a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
+                                                        b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
+                                                        #XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
                                                       + 2*AZ[ph,k1]*XNR[idxAm])
-                JKCL[idxre,idxBm] = -spu[ph,k1].real*(AI[ph,k1]*XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                JKCL[idxre,idxBm] = -spu[ph,k1].real*(AI[ph,k1]* \
+                                                        ((a**2+b**2)**(1/2) + \
+                                                        a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
+                                                        b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
+                                                        #XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
                                                       + 2*AZ[ph,k1]*XNR[idxBm])
 
                 # derivates of imag KVL residual with respect to real and imag voltage components
-                JKCL[idxim,idxAm] = -spu[ph,k1].imag*(AI[ph,k1]*XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                JKCL[idxim,idxAm] = -spu[ph,k1].imag*(AI[ph,k1]* \
+                                                        ((a**2+b**2)**(1/2) + \
+                                                        a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
+                                                        b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
+                                                        #XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
                                                       + 2*AZ[ph,k1]*XNR[idxAm])
-                JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1]*XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1]*
+                                                    ((a**2+b**2)**(1/2) + \
+                                                    a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
+                                                    b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
+                                                    #XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
                                                       + 2*AZ[ph,k1]*XNR[idxBm])
 
                 # loop through incoming lines to node m - l:(l,m) in Edges
@@ -229,15 +254,15 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
                         idxClm = 2*3*nnode + 2*ph*nline + 2*inlines[k2,k1]
                         idxDlm = 2*3*nnode + 2*ph*nline + 2*inlines[k2,k1]+1
 
-                        # derivaties of real KVL residual
+                        # derivaties of real KCL residual
                         JKCL[idxre,idxAm] = JKCL[idxre,idxAm] + XNR[idxClm]
-                        JKCL[idxre,idxBm] = JKCL[idxre,idxBm] + XNR[idxDlm]                    
+                        JKCL[idxre,idxBm] = JKCL[idxre,idxBm] + XNR[idxDlm]
                         JKCL[idxre,idxClm] = XNR[idxAm]
                         JKCL[idxre,idxDlm] = XNR[idxBm]
 
-                        # derivaties of imag KVL residual
-                        JKCL[idxim,idxAm] = JKCL[idxim,idxAm] - XNR[idxDlm]                    
-                        JKCL[idxim,idxBm] = JKCL[idxim,idxBm] + XNR[idxClm]                 
+                        # derivaties of imag KCL residual
+                        JKCL[idxim,idxAm] = JKCL[idxim,idxAm] - XNR[idxDlm]
+                        JKCL[idxim,idxBm] = JKCL[idxim,idxBm] + XNR[idxClm]
                         JKCL[idxim,idxClm] = XNR[idxBm]
                         JKCL[idxim,idxDlm] = -XNR[idxAm]
 
@@ -251,13 +276,13 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
                         idxCmn = 2*3*nnode + 2*ph*nline + 2*outlines[k2,k1]
                         idxDmn = 2*3*nnode + 2*ph*nline + 2*outlines[k2,k1]+1
 
-                        # derivaties of real KVL residual
+                        # derivaties of real KCL residual
                         JKCL[idxre,idxAm] = JKCL[idxre,idxAm] - XNR[idxCmn]
                         JKCL[idxre,idxBm] = JKCL[idxre,idxBm] - XNR[idxDmn]
                         JKCL[idxre,idxCmn] = -XNR[idxAm]
                         JKCL[idxre,idxDmn] = -XNR[idxBm]
 
-                        # derivaties of imag KVL residual
+                        # derivaties of imag KCL residual
                         JKCL[idxim,idxAm] = JKCL[idxim,idxAm] + XNR[idxDmn]
                         JKCL[idxim,idxBm] = JKCL[idxim,idxBm] - XNR[idxCmn]
                         JKCL[idxim,idxCmn] = -XNR[idxBm]

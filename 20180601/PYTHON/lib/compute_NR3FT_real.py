@@ -1,7 +1,7 @@
 import numpy as np
 
 def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
-    
+
     # Michael Sankur - msankur@lbl.gov
     # 2018.01.01
 
@@ -84,7 +84,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
     # vvc parameters
     vvcpu = network.vvc.vvcpu
-    
+
     # Residuals for slack node voltage
     FTSUBV = np.zeros((6,1))
     FTSUBV[0] = XNR[2*slackidx] - Vslack[0].real
@@ -93,24 +93,25 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     FTSUBV[3] = XNR[2*nnode+2*slackidx+1] - Vslack[1].imag
     FTSUBV[4] = XNR[4*nnode+2*slackidx] - Vslack[2].real
     FTSUBV[5] = XNR[4*nnode+2*slackidx+1] - Vslack[2].imag
-    
+
     # Residuals for KVL across line (m,n)
     FTKVL = np.zeros((2*3*nline,1))
     for ph in range(0,3):
+
         for k1 in range(0,nline):
-            
+
             # indexes of real and imag parts of KVL equation for line (m,n)
             idxre = 2*ph*nline + 2*k1
             idxim = 2*ph*nline + 2*k1+1
-            
+
             # if phase does not exist on line
             # I_mn^phi = C_mn^phi + j D_mn^phi = 0
             if LPH[ph,k1] == 0:
-                
+
                 # indexes of C_mn^phi and D_mn^phi
                 idxCmn = 2*3*nnode + 2*ph*nline + 2*k1
-                
-                
+
+
                 idxDmn = 2*3*nnode + 2*ph*nline + 2*k1+1
 
                 # set residuals for KVL
@@ -122,13 +123,13 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
             # Real: A_m^phi = A_n^phi + sum_{psi} r_{mn}^{phi psi} C_{mn}^psi - x_{mn}^{phi psi} D_{mn}^psi
             # Imag: B_m^phi = B_n^phi + sum_{psi} r_{mn}^{phi psi} D_{mn}^psi + x_{mn}^{phi psi} C_{mn}^psi
             elif LPH[ph,k1] == 1:
-            
+
                 # indexes of V_m^phi = A_m^phi +j B_m^phi for TX node
                 idxAmTx = 2*ph*nnode + 2*TXnum[k1]
                 idxBmTx = 2*ph*nnode + 2*TXnum[k1]+1
 
                 # indexes of V_n^phi = A_n^phi +j B_n^phi for RX node
-                idxAnRx = 2*ph*nnode + 2*RXnum[k1]            
+                idxAnRx = 2*ph*nnode + 2*RXnum[k1]
                 idxBnRx = 2*ph*nnode + 2*RXnum[k1]+1
 
                 # indexes of I_mn^a = C_mn^a + j D_mn^a
@@ -144,7 +145,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 idxDmnc = 2*3*nnode + 2*2*nline + 2*k1+1
 
                 # set residuals for KVL
-            
+
                 # real: A_m^phi - A_n^phi - sum_{psi} [ r_{mn}^{phi,psi} C_{mn}^psi ...\
                 # - x_{mn}^{phi,psi} D_{mn}^psi ] = 0
                 FTKVL[idxre] = XNR[idxAmTx] - XNR[idxAnRx] \
@@ -158,7 +159,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                     - FZpu[ph,3*k1+0].real*XNR[idxDmna] - FZpu[ph,3*k1+0].imag*XNR[idxCmna] \
                     - FZpu[ph,3*k1+1].real*XNR[idxDmnb] - FZpu[ph,3*k1+1].imag*XNR[idxCmnb] \
                     - FZpu[ph,3*k1+2].real*XNR[idxDmnc] - FZpu[ph,3*k1+2].imag*XNR[idxCmnc]
-    
+
 
     # Residuals for KCL at node m
     # This algorithm assumes that the slack bus has a fixed voltage reference,
@@ -167,9 +168,18 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     # substation if the network configuration is as such - see note below
     FTKCL = np.zeros((2*3*(nnode-1),1))
     for ph in range(0,3):
+        if ph == 0:
+            a = 1
+            b = 0
+        elif ph == 1:
+            a = -1/2
+            b = -1 * np.sqrt(3)/2
+        elif ph == 2:
+            a = -1/2
+            b = np.sqrt(3)/2
         for k1 in range(1,nnode):
             #if k1 != slackidx:
-            
+
             # indexes of real and imag parts of KCL equation for node m
             idxre = 2*ph*(nnode-1) + 2*(k1-1)
             idxim = 2*ph*(nnode-1) + 2*(k1-1)+1
@@ -208,18 +218,26 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                         # sum_{l:(l,m) in Edges} A_m (I_lm^phi)^*
                         # real: A_m^phi C_lm^phi + B_m^phi D_lm^phi
                         # imag: -A_m^phi D_lm^phi + B_m^phi C_lm^phi
-                        FTKCL[idxre] = FTKCL[idxre] + XNR[idxAm]*XNR[idxClm] + XNR[idxBm]*XNR[idxDlm]                    
+                        FTKCL[idxre] = FTKCL[idxre] + XNR[idxAm]*XNR[idxClm] + XNR[idxBm]*XNR[idxDlm]
                         FTKCL[idxim] = FTKCL[idxim] - XNR[idxAm]*XNR[idxDlm] + XNR[idxBm]*XNR[idxClm]
 
                 # s_m^phi(V_m^phi) + w_m^phi - c_m^phi
                 # real: p_m^phi (A_{PQ,m}^phi + A_{Z,m}^phi ((A_m^phi)^2 + (B_m^phi)^2))) - u_m^phi
                 # imag: q_m^phi (A_{PQ,m}^phi + A_{Z,m}^phi ((A_m^phi)^2 + (B_m^phi)^2))) - v_m^phi + c_m^phi
                 FTKCL[idxre] = FTKCL[idxre] \
-                    - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+                    - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
+                    ((a**2+b**2)**(1/2) + \
+                    a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
+                    b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
+                    #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
                     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
                     - wpu[ph,k1].real
                 FTKCL[idxim] = FTKCL[idxim] \
-                    - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+                    - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
+                    ((a**2+b**2)**(1/2) + \
+                    a * ((a**2+b**2) ** (-1/2))* (XNR[idxAm]-a) + \
+                    b * ((a**2+b**2) ** (-1/2))* (XNR[idxBm]-b)) \
+                    #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
                     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
                     + cappu[ph,k1].real - wpu[ph,k1].imag
 
@@ -238,8 +256,8 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                         # imag: A_m^phi D_mn^phi - B_m^phi C_nm^phi
                         FTKCL[idxre] = FTKCL[idxre] - XNR[idxAm]*XNR[idxCmn] - XNR[idxBm]*XNR[idxDmn]
                         FTKCL[idxim] = FTKCL[idxim] + XNR[idxAm]*XNR[idxDmn] - XNR[idxBm]*XNR[idxCmn]
-                    
+
 
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
-    
+
     return FT
