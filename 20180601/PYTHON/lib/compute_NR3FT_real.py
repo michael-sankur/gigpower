@@ -97,7 +97,6 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     # Residuals for KVL across line (m,n)
     FTKVL = np.zeros((2*3*nline,1))
     for ph in range(0,3):
-
         for k1 in range(0,nline):
 
             # indexes of real and imag parts of KVL equation for line (m,n)
@@ -177,6 +176,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
         elif ph == 2:
             A0 = -1/2
             B0 = np.sqrt(3)/2
+
         for k1 in range(1,nnode):
             #if k1 != slackidx:
 
@@ -228,23 +228,61 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 dA = XNR[idxAm] - A0
                 dB = XNR[idxBm] - B0
 
-                gradient = np.array([[A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]])
+                dX = np.array([dA[0], dB[0]])
+                dX_t = np.array([dA[0], dB[0]]).T
 
+                gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))])
+                gradient_mag_sq = np.array([2 *A0, 2 * B0]) #gradient of magnitude squared
 
-
+                # # Applying first order Taylor Expansion to Magnitude Squared (done)
                 # FTKCL[idxre] = FTKCL[idxre] \
                 #     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
-                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient, np.array([[dA, dB]]).T)) \
+                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
+                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+                #     + AZ[ph,k1]* \
+                #     ((A0**2+B0**2) + np.matmul(gradient_mag_sq, dX_t))) \
+                #     - wpu[ph,k1].real
+                # FTKCL[idxim] = FTKCL[idxim] \
+                #     - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
+                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
+                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+                #     + AZ[ph,k1]*\
+                #     ((A0**2 + B0**2) + np.matmul(gradient_mag_sq, dX_t))) \
+                #     + cappu[ph,k1].real - wpu[ph,k1].imag
+
+                # # Applying second order Taylor Expansion to Magnitude Squared (done)
+                # FTKCL[idxre] = FTKCL[idxre] \
+                #     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
+                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
+                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+                #     + AZ[ph,k1] * \
+                #     ((A0**2+B0**2) + np.matmul(gradient_mag_sq, np.array(dX_t)) + \
+                #     (1/2) * np.matmul(dX_t,  2 * dX))) \
+                #     - wpu[ph,k1].real
+                # FTKCL[idxim] = FTKCL[idxim] \
+                #     - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
+                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
+                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+                #     + AZ[ph,k1]* \
+                #     ((A0**2+B0**2) + np.matmul(gradient_mag_sq, dX_t) + \
+                #     (1/2) * np.matmul(dX_t, 2 * dX)))  \
+                #     + cappu[ph,k1].real - wpu[ph,k1].imag
+
+                # Applying first order Taylor Expansion to the Magnitude
+                # FTKCL[idxre] = FTKCL[idxre] \
+                #     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
+                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, np.array([dA, dB]).T[0])) \
                 #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
                 #     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
                 #     - wpu[ph,k1].real
                 # FTKCL[idxim] = FTKCL[idxim] \
                 #     - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
-                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient, np.array([[dA, dB]]).T)) \
+                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, np.array([dA, dB]).T[0])) \
                 #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
                 #     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
                 #     + cappu[ph,k1].real - wpu[ph,k1].imag
 
+                # Not using Taylor Expansion
                 FTKCL[idxre] = FTKCL[idxre] \
                     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
                     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
