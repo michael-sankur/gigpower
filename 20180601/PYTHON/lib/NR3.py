@@ -113,9 +113,9 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-12,maxiter=100):
             
     elif len(I0) != 0:
         for ph in range(0,3):
-            for k1 in range(0,nnode):
-                XNR[(2*3*nnode) + 2*ph*nnode + 2*k1] = I0[ph,k1].real
-                XNR[(2*3*nnode) + 2*ph*nnode + 2*k1+1] = I0[ph,k1].imag
+            for k1 in range(0,nline):
+                XNR[(2*3*nnode) + 2*ph*nline + 2*k1] = I0[ph,k1].real
+                XNR[(2*3*nnode) + 2*ph*nline + 2*k1+1] = I0[ph,k1].imag
                 
     if tol == None:
         tol = 1e-9
