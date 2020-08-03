@@ -235,7 +235,7 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
                 # JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1] * gradient_mag[1] \
                 #                                     + 2*AZ[ph,k1]*gradient_mag_sq[0][1])
 
-                # #Using secpnd order Taylor Expansion on magnitude squared
+                # #Using second order Taylor Expansion on magnitude squared
                 # #derivates of real KCL residual with respect to real and imag voltage components
                 # hessian_fcn = np.array([[2, 0], [2,0]])
                 # dX = np.zeros((2,1))
