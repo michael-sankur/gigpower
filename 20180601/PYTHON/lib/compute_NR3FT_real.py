@@ -305,14 +305,14 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 #     + cappu[ph,k1].real - wpu[ph,k1].imag
 
                 # Not using Taylor Expansion
-                FTKCL[idxre] = FTKCL[idxre] \
-                    - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                    + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
-                    - wpu[ph,k1].real
-                FTKCL[idxim] = FTKCL[idxim] \
-                    - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                    + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
-                    + cappu[ph,k1].real - wpu[ph,k1].imag
+#                 FTKCL[idxre] = FTKCL[idxre] \
+#                     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+#                     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
+#                     - wpu[ph,k1].real
+#                 FTKCL[idxim] = FTKCL[idxim] \
+#                     - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
+#                     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
+#                     + cappu[ph,k1].real - wpu[ph,k1].imag
 
                 # loop through outgoing lines from node m - n:(m,n) in Edges
                 for k2 in range(0,network.nodes.outlines.shape[0]):
