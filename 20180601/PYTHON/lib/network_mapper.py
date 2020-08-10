@@ -93,15 +93,15 @@ def network_mapper_function(fp, fn):
     #########################
     # Base Values
     #########################
-    
+
     # Base values [V], [VAr], [A], [Ohm]
 
     # Iterate through base value lines
-    for k1 in range(0,len(baselinearray)):    
+    for k1 in range(0,len(baselinearray)):
         templine = baselinearray[k1]
 
         for k2 in range(0,len(templine)):
-            
+
             # Voltage base value [V]
             if templine[k2].split('=')[0] == 'Vbase':
                 Vbase = float(templine[k2].split('=')[1])
@@ -126,7 +126,7 @@ def network_mapper_function(fp, fn):
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
-    
+
     base.Vbase = Vbase
     base.Sbase = Sbase
     base.Ibase = Ibase
@@ -143,7 +143,7 @@ def network_mapper_function(fp, fn):
     #########################
     # Nodes
     #########################
-    
+
     # List of possible phases for nodes and corresponding matrix
     phlist = ['a','b','c','ab','bc','ac','abc']
     PHmat = np.array([[1, 0, 0], \
@@ -168,11 +168,11 @@ def network_mapper_function(fp, fn):
         templine = nodelinearray[k1]
 
         for k2 in range(0,len(templine)):
-            
+
             # Node names
             if templine[k2].split('=')[0] == 'nodename':
                 nodes.nodelist[k1] = templine[k2].split('=')[1]
-                
+
             # Node phase list and node phase matrix
             if templine[k2].split('=')[0] == 'phases':
                 nodes.phases[k1] = templine[k2].split('=')[1]
@@ -180,9 +180,9 @@ def network_mapper_function(fp, fn):
                 #print(phlist.index(templine[k2].split('=')[1]))
                 #print(PHmat[:,phlist.index(templine[k2].split('=')[1])])
                 nodes.PH[:,k1] = PHmat[:,phlist.index(templine[k2].split('=')[1])]
-               
+
     nodes.FM = np.zeros((nnode,nnode))
-    
+
     if printflag == 1:
         print()
         print('NODES')
@@ -218,23 +218,23 @@ def network_mapper_function(fp, fn):
                 lines.TXnode[k1] = templine[k2].split('=')[1]
                 # TX node number (index) placed in array
                 lines.TXnum[k1] = int(nodes.nodelist.index(templine[k2].split('=')[1]))
-                
+
             # Line RX (receiving) node
             if templine[k2].split('=')[0] == 'RXnode':
                 # RX node name placed into string array
                 lines.RXnode[k1] = templine[k2].split('=')[1]
                 # RX node number (index) placed into array
                 lines.RXnum[k1] = int(nodes.nodelist.index(templine[k2].split('=')[1]))
-                
+
             # Line phase list and matrix
             if templine[k2].split('=')[0] == 'phases':
                 lines.phases[k1] = templine[k2].split('=')[1]
                 lines.PH[:,k1] = PHmat[:,phlist.index(templine[k2].split('=')[1])]
-            
-            # Line configuration array    
+
+            # Line configuration array
             if templine[k2].split('=')[0] == 'config':
                 lines.config[k1] = templine[k2].split('=')[1]
-            
+
             # Line length [m]
             if templine[k2].split('=')[0] == 'length':
                 lines.length[k1] = float(templine[k2].split('=')[1])
@@ -247,7 +247,7 @@ def network_mapper_function(fp, fn):
                     lines.length[k1] = 0.3048*lines.length[k1]
                 if templine[k2].split('=')[1] == 'mi' or templine[k2].split('=')[1] == 'mile':
                     lines.length[k1] = 1609.34*lines.length[k1]
-                    
+
             nodes.FM[lines.TXnum[k1],lines.RXnum[k1]] = 1
             nodes.FM[lines.RXnum[k1],lines.TXnum[k1]] = -1
 
@@ -299,7 +299,7 @@ def network_mapper_function(fp, fn):
         print('NODES + LINES')
         print('inlines:\n', nodes.inlines)
         print('innodes:\n', nodes.innodes)
-        print('outlines:\n', nodes.outlines)        
+        print('outlines:\n', nodes.outlines)
         print('outnodes:\n', nodes.outnodes)
 
 
@@ -351,6 +351,8 @@ def network_mapper_function(fp, fn):
                             [rab + 1j*xab, rbb + 1j*xbb, rbc + 1j*xbc], \
                             [rac + 1j*xac, rbc + 1j*xbc, rcc + 1j*xcc]])
 
+        print(tempFZpupl)
+        print("\n")
         #print(k1, configs.conflist[k1], tempFZpl)
 
         # Impedance per unit length multiplying factor for given unit
@@ -363,7 +365,7 @@ def network_mapper_function(fp, fn):
                 if templine[k2].split('=')[1] == 'pu/ft' :
                     FZmult = 0.3048
                 if templine[k2].split('=')[1] == 'pu/mi':
-                    FZmult = 1/1609.34                
+                    FZmult = 1/1609.34
                 if templine[k2].split('=')[1] == 'ohm/m':
                     FZmult = 1/Zbase
                 if templine[k2].split('=')[1] == 'ohm/km':
@@ -372,9 +374,10 @@ def network_mapper_function(fp, fn):
                     FZmult = 0.3048/Zbase
                 if templine[k2].split('=')[1] == 'ohm/mi' or templine[k2].split('=')[1] == 'ohm/mile':
                     FZmult = 1/1609.34/Zbase
-        
+
         # 3x3 impedance per unit length matrix for current line config [pu/m]
         configs.FZpupl[:,3*k1:3*(k1+1)] = FZmult*tempFZpupl
+
 
     if printflag == 1:
         print()
@@ -445,7 +448,7 @@ def network_mapper_function(fp, fn):
         print('ADMITTANCE')
         #print('FZpl:', configs.FZpl)
         for k1 in range(lines.nline):
-            print(k1, '- FYpu:\n', lines.FYpu[:,3*k1:3*(k1+1)])    
+            print(k1, '- FYpu:\n', lines.FYpu[:,3*k1:3*(k1+1)])
 
 
     #########################
@@ -496,11 +499,11 @@ def network_mapper_function(fp, fn):
             # Load constant power coefficient
             if templine[k2].split('=')[0] == 'apq':
                 loads.aPQ[kph,knode] = float(templine[k2].split('=')[1])
-                
+
             # Load constant current coefficient
             if templine[k2].split('=')[0] == 'ai':
                 loads.aI[kph,knode] = float(templine[k2].split('=')[1])
-                
+
             # Load constant impedance coefficient
             if templine[k2].split('=')[0] == 'az':
                 loads.aZ[kph,knode] = float(templine[k2].split('=')[1])
@@ -532,13 +535,13 @@ def network_mapper_function(fp, fn):
     # Complex loads [pu]
     loads.spu = loads.ppu + 1j*loads.qpu
     loads.spu_nominal = loads.ppu +1j*loads.qpu
-    
- 
-    
+
+
+
 #     loads.ppu_n = np.abs(loads.ppu * np.random.normal(0, 1, loads.ppu.shape))
 #     loads.qpu_n = np.abs(loads.qpu * np.random.normal(0, 1, loads.ppu.shape))
 #     loads.spu_n = loads.ppu_n + loads.qpu_n
-    
+
 
     if printflag == 1:
         print()
@@ -564,7 +567,7 @@ def network_mapper_function(fp, fn):
         templine = capacitorlinearray[k1]
 
         for k2 in range(0,len(templine)):
-            
+
             # Capacitor node
             if templine[k2].split('=')[0] == 'nodename':
                 knode = nodes.nodelist.index(templine[k2].split('=')[1])
@@ -614,7 +617,7 @@ def network_mapper_function(fp, fn):
     # Controller parameters
     # Controller apparent power capacity [pu]
     cons.wmaxpu = np.zeros((3,nodes.nnode))
-    
+
     # ES controller frequency
     cons.fes = np.zeros((3,nodes.nnode))
     # ES controller high pass filter (hpf) frequency
@@ -628,7 +631,7 @@ def network_mapper_function(fp, fn):
         templine = controllerlinearray[k1]
 
         for k2 in range(0,len(templine)):
-            
+
             # Controller node
             if templine[k2].split('=')[0] == 'nodename':
                 knode = nodes.nodelist.index(templine[k2].split('=')[1])
@@ -679,7 +682,7 @@ def network_mapper_function(fp, fn):
             # Controller ES integrator gain
             if templine[k2].split('=')[0] == 'kintes':
                 cons.kintes[kph,knode] = float(templine[k2].split('=')[1])
-               
+
     # Controller dispatch [pu]
     cons.wpu = np.zeros((3,nodes.nnode))
 
@@ -709,12 +712,12 @@ def network_mapper_function(fp, fn):
     vvc.qminpu =np.zeros((3,nnode))
     # VVC maximum reactive power [pu]
     vvc.qmaxpu =np.zeros((3,nnode))
-    
+
     for k1 in range(0,len(controllerlinearray)):
         templine = controllerlinearray[k1]
 
         for k2 in range(0,len(templine)):
-            
+
             # VVC node
             if templine[k2].split('=')[0] == 'nodename':
                 knode = nodes.nodelist.index(templine[k2].split('=')[1])
@@ -744,7 +747,7 @@ def network_mapper_function(fp, fn):
             # VVC type
             if templine[k2].split('=')[0] == 'type':
                 vvc.type[kph,knode] = int(templine[k2].split('=')[1])
-            
+
             # VVC minimum voltage [pu]
             if templine[k2].split('=')[0] == 'Vmin':
                 vvc.Vminpu[kph,knode] = float(templine[k2].split('=')[1])
@@ -757,7 +760,7 @@ def network_mapper_function(fp, fn):
                         vvc.Vminpu[kph,knode] = vvc.Vminpu[kph,knode]*1e3/Vbase
                     if templine[k2+1].split('=')[1] == 'MV':
                         vvc.Vminpu[kph,knode] = vvc.Vminpu[kph,knode]*1e6/Vbase
-                    
+
             # VVC maximum voltage [pu]
             if templine[k2].split('=')[0] == 'Vmax':
                 vvc.Vmaxpu[kph,knode] = float(templine[k2].split('=')[1])
@@ -798,7 +801,7 @@ def network_mapper_function(fp, fn):
                     if templine[k2+1].split('=')[1] == 'MVAr':
                         vvc.qmaxpu[kph,knode] = vvc.qmaxpu[kph,knode]*1e6/Sbase
 
-                        
+
     # VVC dispatch [pu]
     vvc.vvcpu = np.zeros((3,nnode))
 
@@ -811,8 +814,8 @@ def network_mapper_function(fp, fn):
         print('Vmaxpu:\n', vvc.Vmaxpu)
         print('qminpu:\n', vvc.qminpu)
         print('qmaxpu:\n', vvc.qmaxpu)
-    
-    
+
+
     #########################
     # NETWORK
     #########################
@@ -827,4 +830,3 @@ def network_mapper_function(fp, fn):
     network.vvc = vvc
 
     return network
-    

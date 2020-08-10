@@ -1,5 +1,5 @@
 import numpy as np
-
+import opendssdirect as dss
 def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
     # Michael Sankur - msankur@lbl.gov
@@ -86,79 +86,185 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     vvcpu = network.vvc.vvcpu
 
     # Residuals for slack node voltage
-    FTSUBV = np.zeros((6,1))
-    FTSUBV[0] = XNR[2*slackidx] - Vslack[0].real
-    FTSUBV[1] = XNR[2*slackidx+1] - Vslack[0].imag
-    FTSUBV[2] = XNR[2*nnode+2*slackidx] - Vslack[1].real
-    FTSUBV[3] = XNR[2*nnode+2*slackidx+1] - Vslack[1].imag
-    FTSUBV[4] = XNR[4*nnode+2*slackidx] - Vslack[2].real
-    FTSUBV[5] = XNR[4*nnode+2*slackidx+1] - Vslack[2].imag
-   
-    # Residuals for KVL across line (m,n)
-    FTKVL = np.zeros((2*3*nline,1))
+
+    line_names = dss.Lines.AllNames()
+
+    A_m = np.array([])
+    B_m = np.array([])
+
+    C_mn = np.array([])
+    D_mn = np.array([])
+
+    R_matrix = np.zeros((nline,9))
+    X_matrix = np.zeros((nline,9))
+
+    dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
+    kV_base = dss.Bus.kVBase()
+
+
+    for k1 in range(len(dss.Circuit.AllBusNames())):
+        dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k1])
+        phases = bus_phase_dict[dss.Circuit.AllBusNames()[k1]]
+        volts = dss.Bus.PuVoltage() #get bus1's puVoltage
+        a_temp = np.zeros(3)
+        b_temp = np.zeros(3)
+
+        count = 0
+        for i in range(0, 3):
+            if phases[i] == 1:
+                a_temp[i] = volts[count]
+                b_temp[i] = volts[count+1]
+                count = count + 2
+
+        A_m = np.append(A_m, a_temp) #split into re/im parts
+        B_m = np.append(B_m, b_temp)
+
+
+    for k2 in range(len(dss.Lines.AllNames())):
+        dss.Lines.Name(dss.Lines.AllNames()[k2]) #set the line
+
+        linecode = dss.Lines.LineCode() #get the linecode
+        dss.LineCodes.Name(linecode) #set the linecode
+
+        xmat = dss.LineCodes.Xmatrix() #get the xmat
+        rmat = dss.LineCodes.Rmatrix() #get the rmat
+
+        for i in range(len(xmat)):
+            X_matrix[k2][i] = xmat[i] #fill x/r where they are shaped like nline x 9 (for 9 components)
+        for j in range(len(rmat)):
+            R_matrix[k2][i] = rmat[j]
+
+        c_temp = np.zeros(3) #retrieve line current
+        d_temp = np.zeros(3)
+
+        for i in range(0, 3): #len(dss.CktElement.Currents()), 2): #get the currents of the line
+
+            c_temp[i] = 0
+            d_temp[i] = 0
+
+    #         c_temp[i//2] = np.divide(dss.CktElement.Currents()[i], kV_base) #per unit-ify the currents
+    #         d_temp[i//2] = np.divide(dss.CktElement.Currents()[i+1], kV_base)
+        C_mn = np.append(C_mn, c_temp)
+        D_mn = np.append(D_mn, d_temp)
+
+    X = np.array([]) #make X, should be 2*3*(nline+nnode) long
+
     for ph in range(0,3):
-        for k1 in range(0,nline):
+        for nodes in range(nnode):
+            X = np.append(X, A_m[nodes*3 + ph]) #add a, b by node and then phase
+            X = np.append(X, B_m[nodes*3 + ph])
 
-            # indexes of real and imag parts of KVL equation for line (m,n)
-            idxre = 2*ph*nline + 2*k1
-            idxim = 2*ph*nline + 2*k1+1
+    for ph in range(0, 3):
+        for lines in range(nline):
+            X = np.append(X, C_mn[lines*3 + ph]) #add c, d by line and then phase
+            X = np.append(X, D_mn[lines*3 + ph])
 
-            # if phase does not exist on line
-            # I_mn^phi = C_mn^phi + j D_mn^phi = 0
-            if LPH[ph,k1] == 0:
+    g_SB = np.array([]) #assumes slack bus is at index 0
+    sb_idx = [0, 1, 2*nnode, 2*nnode+1, 3*nnode, 3*nnode+1]
+    for i in range(len(sb_idx)):
+        temp_row = np.zeros(len(X))
+        temp_row[sb_idx[i]] = 1
+        g_SB = np.append(g_SB, temp_row)
+    g_SB = np.reshape(g_SB, (6, len(g_SB) // 6))
 
-                # indexes of C_mn^phi and D_mn^phi
-                idxCmn = 2*3*nnode + 2*ph*nline + 2*k1
+    b_SB = np.array([])
+    sb_idx = [0, 1, 2*nnode, 2*nnode+1, 3*nnode, 3*nnode+1] #indices of real and im parts of sb voltage
+    for i in range(len(sb_idx)):
+        b_SB = np.append(b_SB, X[sb_idx[i]])
 
+    FTSUBV = (g_SB @ X) - b_SB
 
-                idxDmn = 2*3*nnode + 2*ph*nline + 2*k1+1
+    print('ftsubv \n')
+    print(FTSUBV)
 
-                # set residuals for KVL
-                FTKVL[idxre] = XNR[idxCmn]
-                FTKVL[idxim] = XNR[idxDmn]
+    # Residuals for KVL across line (m,n)
+    def get_bus_idx(bus):
+        k = -1
+        for n in range(len(dss.Circuit.AllBusNames())): #iterates over all the buses to see which index corresponds to bus
+            if dss.Circuit.AllBusNames()[n] in bus:
+                k = n
+        return k
+    dss.Lines.Name(dss.Lines.AllNames()[0]) #set the line
+    bus1 = dss.Lines.Bus1()
+    get_bus_idx(bus1)
 
-            # if phase does exist on line
-            # V_m^phi = V_n^phi + sum_{psi} Z_{mn}^{phi psi} I_{mn}^psi
-            # Real: A_m^phi = A_n^phi + sum_{psi} r_{mn}^{phi psi} C_{mn}^psi - x_{mn}^{phi psi} D_{mn}^psi
-            # Imag: B_m^phi = B_n^phi + sum_{psi} r_{mn}^{phi psi} D_{mn}^psi + x_{mn}^{phi psi} C_{mn}^psi
-            elif LPH[ph,k1] == 1:
+    def identify_bus_phases(bus): #figures out which phases correspond to the bus
+        #returns a list of the r/x matrix places that have those phase/s
+        k = np.zeros(3)
+        for i in range(1, 4):
+            pattern = r"\.%s" % (str(i))
+            m = re.findall(pattern, bus)
+            if m:
+                k[i - 1] = 1
+        if np.all(k == np.array([1,0,0])):
+            return [0]
+        elif np.all(k == np.array([0, 1, 0])):
+            return [4]
+        elif np.all(k == np.array([0, 0, 1])):
+            return [8]
+        elif np.all(k == np.array([1, 0, 1])):
+            return [0, 6,8]
+        elif np.all(k == np.array([1, 1, 0])):
+            return [0,3,4]
+        elif np.all(k == np.array([0, 1, 1])):
+            return [4,7,9]
+        else:
+            return [0,3,  4, 6, 7, 8]
 
-                # indexes of V_m^phi = A_m^phi +j B_m^phi for TX node
-                idxAmTx = 2*ph*nnode + 2*TXnum[k1]
-                idxBmTx = 2*ph*nnode + 2*TXnum[k1]+1
+    G_KVL = np.array([])
+    first_template = np.array([1, 0, -1, 0]) #first eqn coeff
+    second_template = np.array([0, 1, 0, -1]) #second eqn coeff
 
-                # indexes of V_n^phi = A_n^phi +j B_n^phi for RX node
-                idxAnRx = 2*ph*nnode + 2*RXnum[k1]
-                idxBnRx = 2*ph*nnode + 2*RXnum[k1]+1
+    kvl_derivatives = np.zeros((nline , 8))
+    kvl_derivatives[:,0] = 1
+    kvl_derivatives[:, 1] = -1
+    kvl_kvl_derivatives[:, 4] = 1
+    derivatives[:, 5] = -1
+    for ph in range(0, 3):
+        for line in range(len(dss.Lines.AllNames())):
+            dss.Lines.Name(dss.Lines.AllNames()[line]) #set the line
 
-                # indexes of I_mn^a = C_mn^a + j D_mn^a
-                idxCmna = 2*3*nnode + 2*k1
-                idxDmna = 2*3*nnode + 2*k1+1
+            bus1 = dss.Lines.Bus1()
+            bus2 = dss.Lines.Bus2()
 
-                # indexes of I_mn^b = C_mn^b + j D_mn^b
-                idxCmnb = 2*3*nnode + 2*nline + 2*k1
-                idxDmnb = 2*3*nnode + 2*nline + 2*k1+1
+            b1, b2 = dss.CktElement.BusNames() #the buses on a line should have the same phase
+            bus1_phases = identify_bus_phases(b1) #identifies which phase is associated with the bus
+            r_count = 0
+            x_count = 0
 
-                # indexes of I_mn^c = C_mn^c + j D_mn^c
-                idxCmnc = 2*3*nnode + 2*2*nline + 2*k1
-                idxDmnc = 2*3*nnode + 2*2*nline + 2*k1+1
+            for e in bus1_phases:
+                r_temp = r_count + R_matrix[line, e] #add up all the line resistance comp
+                x_temp = x_count + X_matrix[line, e] #add up all the line react comp
 
-                # set residuals for KVL
+            bus1_idx = get_bus_idx(bus1) #get the buses of the line
+            bus2_idx = get_bus_idx(bus2)
 
-                # real: A_m^phi - A_n^phi - sum_{psi} [ r_{mn}^{phi,psi} C_{mn}^psi ...\
-                # - x_{mn}^{phi,psi} D_{mn}^psi ] = 0
-                FTKVL[idxre] = XNR[idxAmTx] - XNR[idxAnRx] \
-                    - FZpu[ph,3*k1+0].real*XNR[idxCmna] + FZpu[ph,3*k1+0].imag*XNR[idxDmna] \
-                    - FZpu[ph,3*k1+1].real*XNR[idxCmnb] + FZpu[ph,3*k1+1].imag*XNR[idxDmnb] \
-                    - FZpu[ph,3*k1+2].real*XNR[idxCmnc] + FZpu[ph,3*k1+2].imag*XNR[idxDmnc]
+            temp_row = np.zeros(len(X))
 
-                # imag: B_m^phi - B_n^phi - sum_{psi} r_{mn}^{phi,psi} D_{mn}^psi ... \
-                # + x_{mn}^{phi,psi} C_{mn}^psi = 0
-                FTKVL[idxim] = XNR[idxBmTx] - XNR[idxBnRx] \
-                    - FZpu[ph,3*k1+0].real*XNR[idxDmna] - FZpu[ph,3*k1+0].imag*XNR[idxCmna] \
-                    - FZpu[ph,3*k1+1].real*XNR[idxDmnb] - FZpu[ph,3*k1+1].imag*XNR[idxCmnb] \
-                    - FZpu[ph,3*k1+2].real*XNR[idxDmnc] - FZpu[ph,3*k1+2].imag*XNR[idxCmnc]
+            temp_row[2*nnode*ph + 2*bus1_idx] = 1 #A_m
+            temp_row[2*nnode*ph + 2*bus2_idx] = -1 #A_n
+            temp_row[2*3*nnode + 2*line*ph] = -r_temp #C_mn
+            temp_row[2*3*nnode + 2*line*ph + 1] = x_temp #D_mn
+            kvl_derivatives[line, 2] = -r_temp
+            kvl_derivatives[line, 3] = x_temp
+            G_KVL = np.append(G_KVL, temp_row)
 
+            temp_row = np.zeros(len(X))
+            temp_row[2*nnode*ph + 2*bus1_idx + 1] = 1 #B_m
+            temp_row[2*nnode*ph + 2*bus2_idx + 1] = -1 #B_n
+            temp_row[2*3*nnode + 2*line*ph] = -x_temp #C_mn
+            temp_row[2*3*nnode + 2*line*ph + 1] = -r_temp #D_mn
+            kvl_derivatives[line, 7] = -r_temp
+            kvl_derivatives[line, 6] = -x_temp
+            G_KVL = np.append(G_KVL, temp_row)
+
+    G_KVL = np.reshape(G_KVL,(2*3*nline, len(X))) #shape to correct shape
+
+    b_kvl = np.zeros(len(G_KVL))
+    FTKVL = np.zeros((2*3*nline,1))
+    FTKVL = (G_KVL @ X) - b_kvl
+    print('ftkvl \n ')
+    print(FTKVL)
 
     # Residuals for KCL at node m
     # This algorithm assumes that the slack bus has a fixed voltage reference,
