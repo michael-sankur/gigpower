@@ -1,7 +1,10 @@
 import numpy as np
 import opendssdirect as dss
+import re
+import sys
 def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
+    np.set_printoptions(threshold=sys.maxsize)
     # Michael Sankur - msankur@lbl.gov
     # 2018.01.01
 
@@ -63,6 +66,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
     # line paramters
     nline = network.lines.nline
+
     LPH = network.lines.PH
     TXnum = network.lines.TXnum
     RXnum = network.lines.RXnum
@@ -85,9 +89,32 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     # vvc parameters
     vvcpu = network.vvc.vvcpu
 
+    dss.run_command('Redirect compare_opendss_05node_threephase_unbalanced_oscillation_03.dss')
+    dss.Solution.Solve()
+    nline = len(dss.Lines.AllNames())
     # Residuals for slack node voltage
 
-    line_names = dss.Lines.AllNames()
+    def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
+    #1 if phase exists, 0 o.w.
+    #list goes [a, b, c]
+    #key is the bus name (without the phase part)
+        dictionary = {}
+        for k2 in range(len(dss.Circuit.AllNodeNames())):
+            for i in range(1, 4):
+                pattern = r"\.%s" % (str(i))
+
+                m = re.findall(pattern, dss.Circuit.AllNodeNames()[k2])
+                a, b = dss.Circuit.AllNodeNames()[k2].split('.')
+                if m and a in dictionary:
+                    temp = dictionary[a]
+                    temp[i - 1] = 1
+                    dictionary[a] = temp
+                elif m and a not in dictionary:
+                    dictionary[a] = [0, 0, 0]
+                    temp = dictionary[a]
+                    temp[i - 1] = 1
+                    dictionary[a] = temp
+        return dictionary
 
     A_m = np.array([])
     B_m = np.array([])
@@ -101,6 +128,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
     kV_base = dss.Bus.kVBase()
 
+    bus_phase_dict = bus_phases()
 
     for k1 in range(len(dss.Circuit.AllBusNames())):
         dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k1])
@@ -111,7 +139,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
         count = 0
         for i in range(0, 3):
-            if phases[i] == 1:
+            if phases[i] == 1: #need to properly assign voltages based on what phases exist
                 a_temp[i] = volts[count]
                 b_temp[i] = volts[count+1]
                 count = count + 2
@@ -125,14 +153,44 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
         linecode = dss.Lines.LineCode() #get the linecode
         dss.LineCodes.Name(linecode) #set the linecode
-
         xmat = dss.LineCodes.Xmatrix() #get the xmat
         rmat = dss.LineCodes.Rmatrix() #get the rmat
 
-        for i in range(len(xmat)):
-            X_matrix[k2][i] = xmat[i] #fill x/r where they are shaped like nline x 9 (for 9 components)
-        for j in range(len(rmat)):
-            R_matrix[k2][i] = rmat[j]
+        if len(xmat) == 9:
+            for i in range(len(xmat)):
+                X_matrix[k2][i] = xmat[i] #fill x/r where they are shaped like nline x 9 (for 9 components)
+        elif len(xmat) == 1:
+            X_matrix[k2][0] = xmat[0]
+            X_matrix[k2][4] = xmat[0]
+            X_matrix[k2][8] = xmat[0]
+        elif len(xmat) == 4:
+            X_matrix[k2][0] = xmat[0]
+            X_matrix[k2][4] = xmat[0]
+            X_matrix[k2][8] = xmat[0]
+            X_matrix[k2][1] = xmat[1]
+            X_matrix[k2][2] = xmat[1]
+            X_matrix[k2][3] = xmat[1]
+            X_matrix[k2][5] = xmat[1]
+            X_matrix[k2][6] = xmat[1]
+            X_matrix[k2][7] = xmat[1]
+
+        if len(rmat) == 9:
+            for j in range(len(rmat)):
+                R_matrix[k2][j] = rmat[j]
+        elif len(rmat) == 1:
+            R_matrix[k2][0] = rmat[0]
+            R_matrix[k2][4] = rmat[0]
+            R_matrix[k2][8] = rmat[0]
+        elif len(xmat) == 4:
+            R_matrix[k2][0] = rmat[0]
+            R_matrix[k2][4] = rmat[0]
+            R_matrix[k2][8] = rmat[0]
+            R_matrix[k2][1] = rmat[1]
+            R_matrix[k2][2] = rmat[1]
+            R_matrix[k2][3] = rmat[1]
+            R_matrix[k2][5] = rmat[1]
+            R_matrix[k2][6] = rmat[1]
+            R_matrix[k2][7] = rmat[1]
 
         c_temp = np.zeros(3) #retrieve line current
         d_temp = np.zeros(3)
@@ -141,13 +199,12 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
             c_temp[i] = 0
             d_temp[i] = 0
-
     #         c_temp[i//2] = np.divide(dss.CktElement.Currents()[i], kV_base) #per unit-ify the currents
     #         d_temp[i//2] = np.divide(dss.CktElement.Currents()[i+1], kV_base)
         C_mn = np.append(C_mn, c_temp)
         D_mn = np.append(D_mn, d_temp)
 
-    X = np.array([]) #make X, should be 2*3*(nline+nnode) long
+    X = np.array([]) #make X, X.shape = (2*3*(nline+nnode), 1)
 
     for ph in range(0,3):
         for nodes in range(nnode):
@@ -158,6 +215,10 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
         for lines in range(nline):
             X = np.append(X, C_mn[lines*3 + ph]) #add c, d by line and then phase
             X = np.append(X, D_mn[lines*3 + ph])
+
+    X = np.reshape(XNR, (len(XNR), 1 ))
+    #X = np.reshape(X, (len(X), 1))
+    #------------ slack bus ------------------
 
     g_SB = np.array([]) #assumes slack bus is at index 0
     sb_idx = [0, 1, 2*nnode, 2*nnode+1, 3*nnode, 3*nnode+1]
@@ -171,109 +232,135 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     sb_idx = [0, 1, 2*nnode, 2*nnode+1, 3*nnode, 3*nnode+1] #indices of real and im parts of sb voltage
     for i in range(len(sb_idx)):
         b_SB = np.append(b_SB, X[sb_idx[i]])
+    b_SB = np.reshape(b_SB, (len(b_SB), 1))
 
     FTSUBV = (g_SB @ X) - b_SB
 
-    print('ftsubv \n')
-    print(FTSUBV)
-
+    #--------------------------------------------------
     # Residuals for KVL across line (m,n)
+
+    R_matrix = R_matrix/network.base.Zbase
+    X_matrix = X_matrix/network.base.Zbase
+
     def get_bus_idx(bus):
         k = -1
         for n in range(len(dss.Circuit.AllBusNames())): #iterates over all the buses to see which index corresponds to bus
             if dss.Circuit.AllBusNames()[n] in bus:
                 k = n
         return k
-    dss.Lines.Name(dss.Lines.AllNames()[0]) #set the line
-    bus1 = dss.Lines.Bus1()
-    get_bus_idx(bus1)
 
     def identify_bus_phases(bus): #figures out which phases correspond to the bus
-        #returns a list of the r/x matrix places that have those phase/s
+    #returns a list of the r/x matrix places that have those phase/s
         k = np.zeros(3)
         for i in range(1, 4):
             pattern = r"\.%s" % (str(i))
             m = re.findall(pattern, bus)
             if m:
                 k[i - 1] = 1
-        if np.all(k == np.array([1,0,0])):
-            return [0]
-        elif np.all(k == np.array([0, 1, 0])):
-            return [4]
-        elif np.all(k == np.array([0, 0, 1])):
-            return [8]
-        elif np.all(k == np.array([1, 0, 1])):
-            return [0, 6,8]
-        elif np.all(k == np.array([1, 1, 0])):
-            return [0,3,4]
-        elif np.all(k == np.array([0, 1, 1])):
-            return [4,7,9]
-        else:
-            return [0,3,  4, 6, 7, 8]
+        return k
 
     G_KVL = np.array([])
-    first_template = np.array([1, 0, -1, 0]) #first eqn coeff
-    second_template = np.array([0, 1, 0, -1]) #second eqn coeff
 
-    kvl_derivatives = np.zeros((nline , 8))
-    kvl_derivatives[:,0] = 1
-    kvl_derivatives[:, 1] = -1
-    kvl_kvl_derivatives[:, 4] = 1
-    derivatives[:, 5] = -1
     for ph in range(0, 3):
         for line in range(len(dss.Lines.AllNames())):
             dss.Lines.Name(dss.Lines.AllNames()[line]) #set the line
-
             bus1 = dss.Lines.Bus1()
             bus2 = dss.Lines.Bus2()
-
-            b1, b2 = dss.CktElement.BusNames() #the buses on a line should have the same phase
-            bus1_phases = identify_bus_phases(b1) #identifies which phase is associated with the bus
-            r_count = 0
-            x_count = 0
-
-            for e in bus1_phases:
-                r_temp = r_count + R_matrix[line, e] #add up all the line resistance comp
-                x_temp = x_count + X_matrix[line, e] #add up all the line react comp
 
             bus1_idx = get_bus_idx(bus1) #get the buses of the line
             bus2_idx = get_bus_idx(bus2)
 
+            b1, b2 = dss.CktElement.BusNames() #the buses on a line should have the same phase
+            bus1_phases = identify_bus_phases(b1) #identifies which phase is associated with the bus (which is the same as the line)
             temp_row = np.zeros(len(X))
+            #real part of KVL residual
+            #assigning the re voltage coefficients
 
-            temp_row[2*nnode*ph + 2*bus1_idx] = 1 #A_m
-            temp_row[2*nnode*ph + 2*bus2_idx] = -1 #A_n
-            temp_row[2*3*nnode + 2*line*ph] = -r_temp #C_mn
-            temp_row[2*3*nnode + 2*line*ph + 1] = x_temp #D_mn
-            kvl_derivatives[line, 2] = -r_temp
-            kvl_derivatives[line, 3] = x_temp
+            temp_row[2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
+            temp_row[2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n
+
+            #assigning the summation portion of the residual
+            temp_row[2*3*(nnode) + 2*line] = -R_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
+            temp_row[2*3*(nnode) + 2*line + 1] = X_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
+            temp_row[2*3*(nnode) + 2*nline + 2*line] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
+            temp_row[2*3*(nnode) + 2*nline + 2*line + 1] = X_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
+            temp_row[2*3*(nnode) + 4*nline + 2*line] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
+            temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = X_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
+            G_KVL = np.append(G_KVL, temp_row)
+            #same as above for imaginary part of KVL residual
+            temp_row = np.zeros(len(X))
+            temp_row[2*(nnode)*ph + 2*(bus1_idx) + 1] = 1 #B_m
+            temp_row[2*(nnode)*ph + 2*(bus2_idx) + 1] = -1 #B_n
+            temp_row[2*3*(nnode) + 2*line] = -X_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
+            temp_row[2*3*(nnode) + 2*line + 1] = -R_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
+            temp_row[2*3*(nnode) + 2*nline + 2*line] = -X_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
+            temp_row[2*3*(nnode) + 2*nline + 2*line + 1] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
+            temp_row[2*3*(nnode) + 4*nline + 2*line] = -X_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
+            temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
             G_KVL = np.append(G_KVL, temp_row)
 
-            temp_row = np.zeros(len(X))
-            temp_row[2*nnode*ph + 2*bus1_idx + 1] = 1 #B_m
-            temp_row[2*nnode*ph + 2*bus2_idx + 1] = -1 #B_n
-            temp_row[2*3*nnode + 2*line*ph] = -x_temp #C_mn
-            temp_row[2*3*nnode + 2*line*ph + 1] = -r_temp #D_mn
-            kvl_derivatives[line, 7] = -r_temp
-            kvl_derivatives[line, 6] = -x_temp
-            G_KVL = np.append(G_KVL, temp_row)
+    G_KVL = np.reshape(G_KVL,(2*3*nline, len(X)))
+    b_kvl = np.zeros((len(G_KVL), 1))
+    gx_term = np.reshape((G_KVL @ X), (len(G_KVL@X), 1) )
+    FTKVL = (gx_term) - b_kvl
 
-    G_KVL = np.reshape(G_KVL,(2*3*nline, len(X))) #shape to correct shape
-
-    b_kvl = np.zeros(len(G_KVL))
-    FTKVL = np.zeros((2*3*nline,1))
-    FTKVL = (G_KVL @ X) - b_kvl
-    print('ftkvl \n ')
-    print(FTKVL)
-
+    #---------------------------
     # Residuals for KCL at node m
     # This algorithm assumes that the slack bus has a fixed voltage reference,
     # and its power is "floating" and will be resolved. The slack bus is
     # assumed to be the first node, which respresents the transmission line, or
     # substation if the network configuration is as such - see note below
-    FTKCL = np.zeros((2*3*(nnode-1),1))
+    #
+    # X_cut = X[2:]
+    # X_cut = np.append(X_cut[:2*nnode - 2], X_cut[2*nnode:])
+    # X_cut = np.append(X_cut[:2*2*nnode -2], X_cut[2*2*nnode:])
+    #
+    def linelist(busname): #returns two lists of in and out lines at a bus
+        in_lines = np.array([])
+        out_lines = np.array([])
+        for k in range(len(dss.Lines.AllNames())):
+            dss.Lines.Name(dss.Lines.AllNames()[k])
+            if busname in dss.Lines.Bus1():
+                out_lines = np.append(out_lines, dss.Lines.AllNames()[k])
+            elif busname in dss.Lines.Bus2():
+                in_lines = np.append(in_lines,dss.Lines.AllNames()[k])
+        return in_lines,out_lines
+
+    def get_line_idx(line): #returns the index of a line as stored in dss.Lines.AllNames()
+        k = -1
+        for n in range(len(dss.Lines.AllNames())):
+            if dss.Lines.AllNames()[n] == line:
+                k = n
+        return k
+
+    def d_factor(busname, cplx):
+        factor = np.array([])
+        k = -1
+        for n in range(len(dss.Loads.AllNames())):
+            if busname in dss.Loads.AllNames()[n]:
+                k = n
+        dss.Loads.Name(dss.Loads.AllNames()[n])
+        if k == -1:
+
+            d_factor = 0
+        elif cplx == 0:
+            d_factor = (dss.Loads.kW() + dss.Loads.kvar())/ 1000
+
+        elif cplx == 1:
+            d_factor = dss.Loads.kvar() / 1000 #??
+            d_factor = .03125
+        return d_factor
+
+    beta_S = 0.75
+    beta_I = 0.1
+    beta_Z = 0.15
+
+    H = np.zeros((2 * 3 * (nnode + nline), 2 * 3* (nnode + nline), 2*3*(nnode-1)))
+    g = np.zeros((1, 2*3*(nnode+nline), 2*3*(nnode-1)))
+    b = np.zeros((1, 1, 2*3*(nnode-1)))
+
     for ph in range(0,3):
-        if ph == 0:
+        if ph == 0: #set nominal voltage based on phase
             A0 = 1
             B0 = 0
         elif ph == 1:
@@ -282,161 +369,120 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
         elif ph == 2:
             A0 = -1/2
             B0 = np.sqrt(3)/2
+        for k2 in range(1, len(dss.Circuit.AllBusNames())): #skip slack bus
+            dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k2])
+            in_lines, out_lines = linelist(dss.Circuit.AllBusNames()[k2]) #get in/out lines of bus
+            for cplx in range(0,2):
+                load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx)
+                gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
+                hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
+                                    [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
 
-        for k1 in range(1,nnode):
-            #if k1 != slackidx:
+                #quadratic terms
+                H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) #a**2
+                H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[1][1])) #b**2
+                H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * beta_I * hessian_mag[0][1] #cross quad. terms in taylor exp
+                H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] =  -load_val * beta_I * hessian_mag[0][1]
 
-            # indexes of real and imag parts of KCL equation for node m
-            idxre = 2*ph*(nnode-1) + 2*(k1-1)
-            idxim = 2*ph*(nnode-1) + 2*(k1-1)+1
+                for i in range(len(in_lines)): #fill in H for the inlines
+                    dss.Lines.Name(in_lines[i])
+                    line_idx = get_line_idx(in_lines[i])
+                    if cplx == 0: #real residual
+                        #A_m and C_lm
+                        H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                        #B_m and D_lm
+                        H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                    if cplx == 1: #complex residual
+                        #A_m, D_lm
+                        H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                        #B_m and C_lm
+                        H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
 
-            # indexes of A_m^phi and B_m^phi
-            idxAm = 2*ph*nnode + 2*k1
-            idxBm = 2*ph*nnode + 2*k1+1
+                for j in range(len(out_lines)): #fill in H for the outlines
+                    dss.Lines.Name(out_lines[j])
+                    line_idx = get_line_idx(out_lines[j])
+                    k = get_bus_idx(dss.Lines.Bus2())
+                    if cplx == 0:
+                        #A_m and C_mn
+                        H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                        #B_m and D_mn
+                        H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                    if cplx == 1:
+                        #A_m and D_mn
+                        H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                        #C_m and B_mn
+                        H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
 
-            #print(slackidx)
-            #print(ph, k1, idxre, idxAm)
+    #Linear Term
+    for ph in range(0,3):
+        if ph == 0: #set nominal voltage based on phase
+            A0 = 1
+            B0 = 0
+        elif ph == 1:
+            A0 = -1/2
+            B0 = -1 * np.sqrt(3)/2
+        elif ph == 2:
+            A0 = -1/2
+            B0 = np.sqrt(3)/2
+        # for k3 in range(len(dss.Lines.AllNames())):
+        for k2 in range(1, len(dss.Circuit.AllBusNames())):
+            for cplx in range(0,2):
+                load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx)
 
-            # if phase does not exist at node, set V_m^phi = A_m^phi + j B_m^phi = 0
-            if NPH[ph,k1] == 0:
+                #linear terms
+                g_temp = np.zeros(len(X))
+                g_temp[2*ph*nnode+ 2 * k2] = -load_val* beta_I* ((1/2 * (-2 * A0 * hessian_mag[0][0] - 2 * B0 * hessian_mag[0][1])) \
+                                       +   gradient_mag[0])
+                g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((1/2 * (-2* A0 *hessian_mag[0][1] - 2 * B0 * hessian_mag[1][1])) \
+                                           +  gradient_mag[1])
+                g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = g_temp
 
-                FTKCL[idxre] = XNR[idxAm]
-                FTKCL[idxim] = XNR[idxBm]
+                load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx)
+                #constant terms
+                b_factor = 0
+                Sk = dss.CktElement.Powers() #retrieve powers
+                if cplx == 1:
 
-            # if phase does exist at node
-            # sum_{l:(l,m) in Edges} A_m (I_lm^phi)^* = s_m^phi(V_m^phi) + w_m^phi - c_m^phi + sum_{n:(m,n) in Edges} A_m (I_mn^phi)^*
-            elif NPH[ph,k1] == 1:
+                    b_factor = dss.Capacitors.kvar() - Sk[1] #depends on if it's real or im residual
+                    b_factor = 0
 
-                # initialize residual as zero
-                FTKCL[idxre] = 0
-                FTKCL[idxim] = 0
+                elif cplx == 0:
+                    b_factor = - Sk[0]
+                    b_factor = 0
 
-                # loop through incoming lines to node m - l:(l,m) in Edges
-                for k2 in range(0,network.nodes.inlines.shape[0]):
+                b_temp = -load_val * (beta_S \
+                    + (beta_I) * (hessian_mag[0][1] * A0 * B0 + (1/2)*hessian_mag[0][0] * A0**2 + (1/2)*hessian_mag[1][1] * B0**2) \
+                    - beta_I * (A0 * gradient_mag[0] +B0* gradient_mag[1]) \
+                    + beta_I * (A0**2 + B0**2) ** (1/2)) \
+                    + b_factor #calculate out the constant term in the residual
+                b[0][0][2*(nnode-1)*ph + 2*(k2-1) + cplx] = b_temp #store the in the b matrix
 
-                    # incoming lines connected to node m
-                    if inlines[k2,k1] != -1:
+    Y = X.reshape(-1, 1)
+    enlarged_X = np.zeros((2*3*(nline+nnode), 1, 2*3*(nnode-1)))
+    X_T= np.zeros((1, 2*3*(nline+nnode), 2*3*(nnode-1)))
+    for n in range(2*3*nline):
+        enlarged_X[:, :, n] = Y
+        X_T[:, :, n] = Y.T
 
-                        # indexes of I_lm^phi = C_lm^phi + j D_lm^phi
-                        idxClm = 2*3*nnode + 2*ph*nline + 2*inlines[k2,k1]
-                        idxDlm = 2*3*nnode + 2*ph*nline + 2*inlines[k2,k1]+1
+    FTKCL = np.zeros((2*3*(nnode-1), 1))
 
-                        # sum_{l:(l,m) in Edges} A_m (I_lm^phi)^*
-                        # real: A_m^phi C_lm^phi + B_m^phi D_lm^phi
-                        # imag: -A_m^phi D_lm^phi + B_m^phi C_lm^phi
-                        FTKCL[idxre] = FTKCL[idxre] + XNR[idxAm]*XNR[idxClm] + XNR[idxBm]*XNR[idxDlm]
-                        FTKCL[idxim] = FTKCL[idxim] - XNR[idxAm]*XNR[idxDlm] + XNR[idxBm]*XNR[idxClm]
+    for i in range(2*3*(nnode-1)):
+        r = (X_T[:, :, i] @ (H[:, :, i] @ enlarged_X[:, :, i])) \
+        + (g[0,:,i] @ enlarged_X[:,:,i]) \
+        + b[0,0,i]
+        FTKCL[i,:] = r
 
-                # s_m^phi(V_m^phi) + w_m^phi - c_m^phi
-                # real: p_m^phi (A_{PQ,m}^phi + A_{Z,m}^phi ((A_m^phi)^2 + (B_m^phi)^2))) - u_m^phi
-                # imag: q_m^phi (A_{PQ,m}^phi + A_{Z,m}^phi ((A_m^phi)^2 + (B_m^phi)^2))) - v_m^phi + c_m^phi
-
-                dA = XNR[idxAm] - A0
-                dB = XNR[idxBm] - B0
-
-                dX = np.array([dA[0], dB[0]])
-                dX_t = np.array([dA[0], dB[0]]).T
-
-                gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))])
-                gradient_mag_sq = np.array([2 *A0, 2 * B0]) #gradient of magnitude squared
-
-                #Hessian_mag = np.array([[(-1/2) * ],\
-                #                        []]) some ratchet chain rule
-
-                # # Applying first order Taylor Expansion to Magnitude Squared (done)
-                # FTKCL[idxre] = FTKCL[idxre] \
-                #     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
-                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
-                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                #     + AZ[ph,k1]* \
-                #     ((A0**2+B0**2) + np.matmul(gradient_mag_sq, dX_t))) \
-                #     - wpu[ph,k1].real
-                # FTKCL[idxim] = FTKCL[idxim] \
-                #     - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
-                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
-                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                #     + AZ[ph,k1]*\
-                #     ((A0**2 + B0**2) + np.matmul(gradient_mag_sq, dX_t))) \
-                #     + cappu[ph,k1].real - wpu[ph,k1].imag
-
-                # # # Applying second order Taylor Expansion to Magnitude Squared (done)
-                # FTKCL[idxre] = FTKCL[idxre] \
-                #     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
-                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
-                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                #     + AZ[ph,k1] * \
-                #     ((A0**2+B0**2) + np.matmul(gradient_mag_sq, np.array(dX_t)) + \
-                #     (1/2) * np.matmul(dX_t,  2 * dX))) \
-                #     - wpu[ph,k1].real
-                # FTKCL[idxim] = FTKCL[idxim] \
-                #     - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
-                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
-                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                #     + AZ[ph,k1]* \
-                #     ((A0**2+B0**2) + np.matmul(gradient_mag_sq, dX_t) + \
-                #     (1/2) * np.matmul(dX_t, 2 * dX)))  \
-                #     + cappu[ph,k1].real - wpu[ph,k1].imag
-
-                # # Applying second order Taylor Expansion to Magnitude Squared and Magnitude
-                FTKCL[idxre] = FTKCL[idxre] \
-                    - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
-                    ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
-                    #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                    + AZ[ph,k1] * \
-                    ((A0**2+B0**2) + np.matmul(gradient_mag_sq, np.array(dX_t)) + \
-                    (1/2) * np.matmul(dX_t,  2 * dX))) \
-                    - wpu[ph,k1].real
-                FTKCL[idxim] = FTKCL[idxim] \
-                    - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
-                    ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) + \
-                    # (1/2) * np.matmul(dX_t, Hessian * dX) #how do you second order expand this
-                    #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                    + AZ[ph,k1]* \
-                    ((A0**2+B0**2) + np.matmul(gradient_mag_sq, dX_t) + \
-                    (1/2) * np.matmul(dX_t, 2 * dX)))  \
-                    + cappu[ph,k1].real - wpu[ph,k1].imag
-
-                # Applying first order Taylor Expansion to the Magnitude
-                # FTKCL[idxre] = FTKCL[idxre] \
-                #     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
-                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, np.array([dA, dB]).T[0])) \
-                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                #     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
-                #     - wpu[ph,k1].real
-                # FTKCL[idxim] = FTKCL[idxim] \
-                #     - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
-                #     ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, np.array([dA, dB]).T[0])) \
-                #     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                #     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
-                #     + cappu[ph,k1].real - wpu[ph,k1].imag
-
-                # Not using Taylor Expansion
-#                 FTKCL[idxre] = FTKCL[idxre] \
-#                     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-#                     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
-#                     - wpu[ph,k1].real
-#                 FTKCL[idxim] = FTKCL[idxim] \
-#                     - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-#                     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
-#                     + cappu[ph,k1].real - wpu[ph,k1].imag
-
-                # loop through outgoing lines from node m - n:(m,n) in Edges
-                for k2 in range(0,network.nodes.outlines.shape[0]):
-
-                    # outgoing lines connected to node m
-                    if outlines[k2,k1] != -1:
-
-                        # indexes of I_mn^phi = C_mn^phi + j D_mn^phi
-                        idxCmn = 2*3*nnode + 2*ph*nline + 2*outlines[k2,k1]
-                        idxDmn = 2*3*nnode + 2*ph*nline + 2*outlines[k2,k1]+1
-
-                        # sum_{n:(m,n) in Edges} A_m (I_mn^phi)^*
-                        # real: -A_m^phi C_mn^phi - B_m^phi D_mn^phi
-                        # imag: A_m^phi D_mn^phi - B_m^phi C_nm^phi
-                        FTKCL[idxre] = FTKCL[idxre] - XNR[idxAm]*XNR[idxCmn] - XNR[idxBm]*XNR[idxDmn]
-                        FTKCL[idxim] = FTKCL[idxim] + XNR[idxAm]*XNR[idxDmn] - XNR[idxBm]*XNR[idxCmn]
-
+#FT should be (2*3*1 + 2*3*nline + 2*3*(nnode-1)) x 1, and
+#JT should be (2*3*1 + 2*3*nline + 2*3*(nnode-1)) x (2*3*nnode + 2*3*nline)
 
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
-
-    return FT
+    return FT, g_SB, G_KVL, H, X_T, g
+    # return FT, g_SB, G_KVL, H, X_T, g

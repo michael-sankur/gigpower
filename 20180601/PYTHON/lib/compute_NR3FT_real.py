@@ -85,6 +85,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     # vvc parameters
     vvcpu = network.vvc.vvcpu
 
+
     # Residuals for slack node voltage
     FTSUBV = np.zeros((6,1))
     FTSUBV[0] = XNR[2*slackidx] - Vslack[0].real
@@ -93,7 +94,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     FTSUBV[3] = XNR[2*nnode+2*slackidx+1] - Vslack[1].imag
     FTSUBV[4] = XNR[4*nnode+2*slackidx] - Vslack[2].real
     FTSUBV[5] = XNR[4*nnode+2*slackidx+1] - Vslack[2].imag
-   
+
     # Residuals for KVL across line (m,n)
     FTKVL = np.zeros((2*3*nline,1))
     for ph in range(0,3):
@@ -329,7 +330,12 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                         # imag: A_m^phi D_mn^phi - B_m^phi C_nm^phi
                         FTKCL[idxre] = FTKCL[idxre] - XNR[idxAm]*XNR[idxCmn] - XNR[idxBm]*XNR[idxDmn]
                         FTKCL[idxim] = FTKCL[idxim] + XNR[idxAm]*XNR[idxDmn] - XNR[idxBm]*XNR[idxCmn]
+    # print('Slack Bus: \n')
+    # print(FTSUBV)
 
+# print("FTKCL: \n")
+    print(FTKCL)
+    # print(FTKCL.shape)
 
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
 

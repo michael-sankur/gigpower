@@ -351,8 +351,6 @@ def network_mapper_function(fp, fn):
                             [rab + 1j*xab, rbb + 1j*xbb, rbc + 1j*xbc], \
                             [rac + 1j*xac, rbc + 1j*xbc, rcc + 1j*xcc]])
 
-        print(tempFZpupl)
-        print("\n")
         #print(k1, configs.conflist[k1], tempFZpl)
 
         # Impedance per unit length multiplying factor for given unit
@@ -475,7 +473,7 @@ def network_mapper_function(fp, fn):
         for k2 in range(0,len(templine)):
             # Load node
             if templine[k2].split('=')[0] == 'nodename':
-                knode = nodes.nodelist.index(templine[k2].split('=')[1])
+                knode = nodes.nodelist.index(templine[k2].split('=')[1].upper())
             if templine[k2].split('=')[0] == 'nodenum':
                 knode = int(templine[k2].split('=')[1])
 

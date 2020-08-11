@@ -6,9 +6,6 @@ import re
 printflag = 1
 
 def network_mapper_function(fn):
-
-
-
     baselinearray = [];
     nodelinearray = [];
     linelinearray = [];
@@ -67,23 +64,19 @@ def network_mapper_function(fn):
     # Base values [V], [VAr], [A], [Ohm]
 
     # Iterate through base value lines
+    print(dss.Circuit.AllBusNames())
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
-    Vbase = dss.Bus.kVBase()
-    print(dss.Bus.kVBase())
+    Vbase = dss.Bus.kVBase() * 1000
     Sbase = 1000000.0
 
-    # Ibase = Sbase/Vbase
-    # Zbase = Vbase/Ibase
+    Ibase = Sbase/Vbase
+    Zbase = Vbase/Ibase
 
     base.Vbase = Vbase
-    base.Ibase = 360.8440864871107
-    base.Zbase = 7.679992838399998
-    base.Sbase = 1e6
-    Ibase = base.Ibase
-    Zbase = base.Zbase
-
-
+    base.Ibase = Ibase
+    base.Zbase = Zbase
+    base.Sbase = Sbase
 
     print('BASE')
     print('Vbase:', base.Vbase)
@@ -190,10 +183,10 @@ def network_mapper_function(fn):
                 temp[i - 1] = 1
                 line_phase_dict [dss.Lines.AllNames()[k2]] = temp
             elif m and dss.Lines.AllNames()[k2] not in line_phase_dict :
-                line_phase_dict [dss.Lines.AllNames()[k2]] = [0, 0, 0]
-                temp = line_phase_dict [dss.Lines.AllNames()[k2]]
+                line_phase_dict[dss.Lines.AllNames()[k2]] = [0, 0, 0]
+                temp = line_phase_dict[dss.Lines.AllNames()[k2]]
                 temp[i - 1] = 1
-                line_phase_dict [dss.Lines.AllNames()[k2]] = temp
+                line_phase_dict[dss.Lines.AllNames()[k2]] = temp
     count = 0
     for key, value in line_phase_dict.items():
         lines.PH[:, count] = value
@@ -246,6 +239,7 @@ def network_mapper_function(fn):
                 nodes.innodes[incount,k1] = lines.TXnum[k2]
                 incount+=1
             if k1 == lines.TXnum[k2]:
+
                 nodes.outlines[outcount,k1] = k2
                 nodes.outnodes[outcount,k1] = lines.RXnum[k2]
                 outcount+=1
@@ -270,7 +264,6 @@ def network_mapper_function(fn):
     # Impedance matrices for configs [pu/m]
     configs.FZpupl = np.zeros((3,3*nline), dtype='complex')
 
-    print(lines.PH)
     # Iterate through line configurations
     for k1 in range(0,len(lines.config)):
         dss.Lines.Name(dss.Lines.AllNames()[k1])
@@ -326,7 +319,6 @@ def network_mapper_function(fn):
 
         # 3x3 impedance per unit length matrix for current line config [pu/m]
         configs.FZpupl[:,3*k1:3*(k1+1)] = tempFZpupl/Zbase
-        print(Zbase)
     configs.conflist = lines.config
 
     if printflag == 1:
@@ -379,7 +371,6 @@ def network_mapper_function(fn):
             tempFYpu = np.insert(tempFYpu,1,[0, 0],0)
             tempFYpu = np.insert(tempFYpu,1,[0, 0, 0],1)
         elif lines.phases[k1] == 'abc':
-
             tempFYpu = np.linalg.inv(tempFZpu)
         lines.FYpu[:,3*k1:3*(k1+1)] = tempFYpu
     # Resistance, and reactance matrices for all lines [pu]
@@ -433,12 +424,9 @@ def network_mapper_function(fn):
             kph = 1
         elif kph[0] == 'c':
             kph = 2
-        loads.ppu[kph,knode] = dss.Loads.kW()
-        loads.qpu[kph,knode] = dss.Loads.kvar()
-
-    apq = 0.85
-    ai = 0.05
-    az = 0.1
+        loads.aPQ[kph, knode] = 1 #temporary
+        loads.ppu[kph,knode] = dss.Loads.kW() / 1000
+        loads.qpu[kph,knode] = dss.Loads.kvar() / 1000
 
         # if templine[k2].split('=')[0] == 'nodenum':
         #     knode = int(templine[k2].split('=')[1])

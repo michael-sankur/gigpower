@@ -22,7 +22,7 @@ line TXnode=A01 RXnode=A02 phases=abc config=a01_a02 length=1.0 unit=m
 line TXnode=A02 RXnode=A03 phases=abc config=a02_a03 length=1.0 unit=m
 line TXnode=A03 RXnode=A04 phases=ac config=a03_a04 length=1.0 unit=m
 line TXnode=A03 RXnode=A05 phases=ab config=a03_a05 length=1.0 unit=m
-line TXnode=A03 RXnode=A05 phases=b config=a05_a06 length=1.0 unit=m
+line TXnode=A05 RXnode=A06 phases=b config=a05_a06 length=1.0 unit=m
 
 
 ~~~~~ Configuration ~~~~~
