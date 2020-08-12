@@ -45,53 +45,10 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     # The NR algorithm variable
     # X = [V^a V^b V^c I^a I^b I^c]
 
-    '''
-    base = network.base
-    nodes = network.nodes
-    lines = network.lines
-    configs = network.configs
-    loads = network.loads
-    caps = network.caps
-    cons = network.cons
-    vvc = network.vvc
-    '''
-
-    # node parameters
-    nnode = network.nodes.nnode
-    NPH = network.nodes.PH
-    inlines = network.nodes.inlines
-    innodes = network.nodes.innodes
-    outlines = network.nodes.outlines
-    outnodes = network.nodes.outnodes
-
-    # line paramters
-    nline = network.lines.nline
-
-    LPH = network.lines.PH
-    TXnum = network.lines.TXnum
-    RXnum = network.lines.RXnum
-    FZpu = network.lines.FZpu
-    FRpu = network.lines.FRpu
-    FXpu = network.lines.FXpu
-
-    # load parameters
-    spu = network.loads.spu
-    APQ = network.loads.aPQ
-    AI = network.loads.aI
-    AZ = network.loads.aZ
-
-    # capacitor paramters
-    cappu = network.caps.cappu
-
-    # controller parameters
-    wpu = network.cons.wpu
-
-    # vvc parameters
-    vvcpu = network.vvc.vvcpu
-
     dss.run_command('Redirect compare_opendss_05node_threephase_unbalanced_oscillation_03.dss')
     dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
+    nnode = len(dss.Circuit.AllBusNames())
     # Residuals for slack node voltage
 
     def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
@@ -102,7 +59,6 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
         for k2 in range(len(dss.Circuit.AllNodeNames())):
             for i in range(1, 4):
                 pattern = r"\.%s" % (str(i))
-
                 m = re.findall(pattern, dss.Circuit.AllNodeNames()[k2])
                 a, b = dss.Circuit.AllNodeNames()[k2].split('.')
                 if m and a in dictionary:
@@ -133,7 +89,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     for k1 in range(len(dss.Circuit.AllBusNames())):
         dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k1])
         phases = bus_phase_dict[dss.Circuit.AllBusNames()[k1]]
-        volts = dss.Bus.PuVoltage() #get bus1's puVoltage
+        volts = dss.Bus.PuVoltage()
         a_temp = np.zeros(3)
         b_temp = np.zeros(3)
 
@@ -146,7 +102,6 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
         A_m = np.append(A_m, a_temp) #split into re/im parts
         B_m = np.append(B_m, b_temp)
-
 
     for k2 in range(len(dss.Lines.AllNames())):
         dss.Lines.Name(dss.Lines.AllNames()[k2]) #set the line
@@ -196,7 +151,6 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
         d_temp = np.zeros(3)
 
         for i in range(0, 3): #len(dss.CktElement.Currents()), 2): #get the currents of the line
-
             c_temp[i] = 0
             d_temp[i] = 0
     #         c_temp[i//2] = np.divide(dss.CktElement.Currents()[i], kV_base) #per unit-ify the currents
@@ -270,8 +224,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
             bus1_idx = get_bus_idx(bus1) #get the buses of the line
             bus2_idx = get_bus_idx(bus2)
 
-            b1, b2 = dss.CktElement.BusNames() #the buses on a line should have the same phase
-            bus1_phases = identify_bus_phases(b1) #identifies which phase is associated with the bus (which is the same as the line)
+            bus1_phases = identify_bus_phases(bus1) #identifies which phase is associated with the bus (which is the same as the line)
             temp_row = np.zeros(len(X))
             #real part of KVL residual
             #assigning the re voltage coefficients
@@ -299,11 +252,11 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
             temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
             G_KVL = np.append(G_KVL, temp_row)
 
-    G_KVL = np.reshape(G_KVL,(2*3*nline, len(X)))
+    G_KVL = np.reshape(G_KVL,(2*3*nline, (2*3*(nnode+nline))))
     b_kvl = np.zeros((len(G_KVL), 1))
     gx_term = np.reshape((G_KVL @ X), (len(G_KVL@X), 1) )
     FTKVL = (gx_term) - b_kvl
-
+    #print(FTKVL)
     #---------------------------
     # Residuals for KCL at node m
     # This algorithm assumes that the slack bus has a fixed voltage reference,
@@ -323,17 +276,14 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
             if busname in dss.Lines.Bus1():
                 out_lines = np.append(out_lines, dss.Lines.AllNames()[k])
             elif busname in dss.Lines.Bus2():
-                in_lines = np.append(in_lines, dss.Lines.AllNames()[k])
+                in_lines = np.append(in_lines,dss.Lines.AllNames()[k])
         return in_lines,out_lines
 
     def get_line_idx(line): #returns the index of a line as stored in dss.Lines.AllNames()
         k = -1
-
         for n in range(len(dss.Lines.AllNames())):
             if dss.Lines.AllNames()[n] == line:
-
                 k = n
-
         return k
 
     def d_factor(busname, cplx):
@@ -347,19 +297,18 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
             d_factor = 0
         elif cplx == 0:
             d_factor = (dss.Loads.kW() + dss.Loads.kvar())/ 1000
-
         elif cplx == 1:
             d_factor = dss.Loads.kvar() / 1000 #??
             d_factor = .03125
         return d_factor
 
-    beta_S = 0.75
-    beta_I = 0.1
+    beta_S = 0.85
+    beta_I = 0
     beta_Z = 0.15
 
-    H = np.zeros((2 * 3 * (nnode + nline), 2 * 3* (nnode + nline), 2*3*(nnode-1)))
-    g = np.zeros((1, 2*3*(nnode+nline), 2*3*(nnode-1)))
-    b = np.zeros((1, 1, 2*3*(nnode-1)))
+    H = np.zeros((2 * 3 * (nnode + nline), 2 * 3* (nnode + nline), 2 * 3 * (nnode-1)))
+    g = np.zeros((1, 2*3*(nnode + nline), 2 * 3 * (nnode-1)))
+    b = np.zeros((1, 1, 2 * 3 * (nnode-1)))
 
     for ph in range(0,3):
         if ph == 0: #set nominal voltage based on phase
@@ -373,23 +322,16 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
             B0 = np.sqrt(3)/2
         for k2 in range(1, len(dss.Circuit.AllBusNames())): #skip slack bus
             dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k2])
-            out_lines, in_lines = linelist(dss.Circuit.AllBusNames()[k2]) #get in/out lines of bus
+            in_lines, out_lines = linelist(dss.Circuit.AllBusNames()[k2]) #get in/out lines of bus
             for cplx in range(0,2):
                 load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx)
-                gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
-                hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
-                                    [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
-
                 #quadratic terms
-                H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) #a**2
-                H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[1][1])) #b**2
-                H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * beta_I * hessian_mag[0][1] #cross quad. terms in taylor exp
-                H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] =  -load_val * beta_I * hessian_mag[0][1]
+                H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z) #a**2
+                H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z) #b**2
 
-                for i in range(len(out_lines)): #fill in H for the inlines
-                    dss.Lines.Name(out_lines[i])
-                    line_idx = get_line_idx(out_lines[i])
-
+                for i in range(len(in_lines)): #fill in H for the inlines
+                    dss.Lines.Name(in_lines[i])
+                    line_idx = get_line_idx(in_lines[i])
                     if cplx == 0: #real residual
                         #A_m and C_lm
                         H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = 1/2
@@ -405,9 +347,9 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                         H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = 1/2
                         H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
 
-                for j in range(len(in_lines)): #fill in H for the outlines
-                    dss.Lines.Name(in_lines[j])
-                    line_idx = get_line_idx(in_lines[j])
+                for j in range(len(out_lines)): #fill in H for the outlines
+                    dss.Lines.Name(out_lines[j])
+                    line_idx = get_line_idx(out_lines[j])
 
                     if cplx == 0:
                         #A_m and C_mn
@@ -439,14 +381,8 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
         for k2 in range(1, len(dss.Circuit.AllBusNames())):
             for cplx in range(0,2):
                 load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx)
-
                 #linear terms
-                g_temp = np.zeros(len(X))
-                g_temp[2*ph*nnode+ 2 * k2] = -load_val* beta_I * ((1/2 * (-2 * A0 * hessian_mag[0][0] - 2 * B0 * hessian_mag[0][1])) \
-                                       +  gradient_mag[0])
-                g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((1/2 * (-2* A0 *hessian_mag[0][1] - 2 * B0 * hessian_mag[1][1])) \
-                                           +  gradient_mag[1])
-                g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = g_temp
+                g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = np.zeros(len(X))
 
                 #constant terms
                 b_factor = 0
@@ -457,18 +393,13 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 elif cplx == 0:
                     b_factor = - Sk[0]
                     b_factor = 0
-
-                b_temp = -load_val * (beta_S \
-                    + (beta_I) * (hessian_mag[0][1] * A0 * B0 + (1/2)*hessian_mag[0][0] * A0**2 + (1/2)*hessian_mag[1][1] * B0**2) \
-                    - beta_I * (A0 * gradient_mag[0] +B0* gradient_mag[1]) \
-                    + beta_I * (A0**2 + B0**2) ** (1/2)) \
-                    + b_factor #calculate out the constant term in the residual
-                b[0][0][2*(nnode-1)*ph + 2*(k2-1) + cplx] = b_temp #store the in the b matrix
+                b[0][0][2*(nnode-1)*ph + 2*(k2-1) + cplx] = -load_val * (beta_S) + b_factor
 
     Y = X.reshape(-1, 1)
+
     # enlarged_X = np.zeros((2*3*(nline+nnode), 1, 2*3*(nnode-1)))
     # X_T= np.zeros((1, 2*3*(nline+nnode), 2*3*(nnode-1)))
-    # for n in range(2*3*nline):
+    # for n in range(2*3*(nnode-1)):
     #     enlarged_X[:, :, n] = Y
     #     X_T[:, :, n] = Y.T
 
@@ -482,7 +413,8 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
 #FT should be (2*3*1 + 2*3*nline + 2*3*(nnode-1)) x 1, and
 #JT should be (2*3*1 + 2*3*nline + 2*3*(nnode-1)) x (2*3*nnode + 2*3*nline)
-    print(FTKCL)
+
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
+    print(FTKCL)
     return FT, g_SB, G_KVL, H, Y, g
     # return FT, g_SB, G_KVL, H, X_T, g

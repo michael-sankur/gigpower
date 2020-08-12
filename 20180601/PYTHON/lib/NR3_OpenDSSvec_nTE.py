@@ -1,9 +1,17 @@
 import numpy as np
-from lib.compute_NR3FT_real import compute_NR3FT_real_function
-from lib.compute_NR3JT_real import compute_NR3JT_real_function
+from lib.compute_NR3FT_real_OpenDSSvec_nTE import compute_NR3FT_real_function
+from lib.compute_NR3JT_real_OpenDSSvec_nTE import compute_NR3JT_real_function
+
+#from lib.compute_NR3JT_real import compute_NR3JT_real_function
+import opendssdirect as dss
+import re
 
 def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
 
+    dss.run_command('Redirect compare_opendss_05node_threephase_unbalanced_oscillation_03.dss')
+    dss.Solution.Solve()
+    nnode = len(dss.Circuit.AllBusNames())
+    nline = len(dss.Lines.AllNames())
     # This function runs a Newton-Raphson algorithm to solve power flow
 
     # INPUT(S)
@@ -45,52 +53,6 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     # The NR algorithm variable
     # X = [V^a V^b V^c I^a I^b I^c]
 
-    '''
-    base = network.base
-    nodes = network.nodes
-    lines = network.lines
-    configs = network.configs
-    loads = network.loads
-    caps = network.caps
-    cons = network.cons
-    vvc = network.vvc
-    '''
-
-    # node parameters
-    nnode = network.nodes.nnode
-    NPH = network.nodes.PH
-    inlines = network.nodes.inlines
-    innodes = network.nodes.innodes
-    outlines = network.nodes.outlines
-    outnodes = network.nodes.outnodes
-
-    # line paramters
-    nline = network.lines.nline
-    LPH = network.lines.PH
-    TXnum = network.lines.TXnum
-    RXnum = network.lines.RXnum
-    FZpu = network.lines.FZpu
-    FRpu = network.lines.FRpu
-    FXpu = network.lines.FXpu
-
-    # load parameters
-    #spu = network.loads.spu_nominal
-    #spu = network.loads.spu_n
-    spu = network.loads.spu
-    APQ = network.loads.aPQ
-
-
-    AI = network.loads.aI
-    AZ = network.loads.aZ
-
-    # capacitor paramters
-    cappu = network.caps.cappu
-
-    # controller parameters
-    wpu = network.cons.wpu
-
-    # vvc parameters
-    vvcpu = network.vvc.vvcpu
 
     XNR = np.zeros((2*3*(nnode + nline),1))
 
@@ -98,7 +60,7 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     if V0 == None or len(V0) == 0:
         for ph in range(0,3):
             for k1 in range(0,nnode):
-                #print(2*ph*nnode + 2*k1)
+
                 XNR[2*ph*nnode + 2*k1] = Vslack[ph].real
                 XNR[2*ph*nnode + 2*k1+1] = Vslack[ph].imag
 
@@ -120,7 +82,6 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
             for k1 in range(0,nline):
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1] = I0[ph,k1].real
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1+1] = I0[ph,k1].imag
-
     if tol == None:
         tol = 1e-9
 
@@ -129,22 +90,15 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
 
     FT = 1e99
     itercount = 0
-
     while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
 
-        """
-        VNR = np.zeros((3,nnode), dtype='complex')
-        for ph in range(0,3):
-            for k1 in range(0,nnode):
-                VNR[ph,k1] = XNR[2*ph*nnode + 2*k1] + 1j*XNR[2*ph*nnode + 2*k1+1]
-        # print(VNR)
-        """
 
-        FT = compute_NR3FT_real_function(XNR,network,slacknode,Vslack)
-        #print(FT)
-
-        JT = compute_NR3JT_real_function(XNR,network,slacknode,Vslack)
-        #print(JT)
+        # FT, g_SB, G_KVL, H, X_T, g = compute_NR3FT_real_function(XNR,network,slacknode,Vslack)
+        #
+        # JT = compute_NR3JT_real_function(g_SB, G_KVL, H, X_T, g)
+        #
+        FT, g_SB, G_KVL, H, X_T, g = compute_NR3FT_real_function(XNR,network,slacknode,Vslack)
+        JT = compute_NR3JT_real_function(g_SB, G_KVL, H, X_T, g)
 
         if JT.shape[0] >= JT.shape[1]:
             #XNR = XNR - inv(JT.'*JT)*JT.'*FT;
