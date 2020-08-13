@@ -184,8 +184,8 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
 
     # STXNR_n^phi = V_m^phi (I_mn^phi)^*
     # SRXNR_n^phi = V_n^phi (I_mn^phi)^*
-    STXNR = np.zeros((3,nnode), dtype='complex')
-    SRXNR = np.zeros((3,nnode), dtype='complex')
+    STXNR = np.zeros((3,nline), dtype='complex')
+    SRXNR = np.zeros((3,nline), dtype='complex')
     for ph in range(0,3):
         for k1 in range(0,nline):
             STXNR[ph,k1] = VNR[ph,network.lines.TXnum[k1]]*np.conj(INR[ph,k1])
