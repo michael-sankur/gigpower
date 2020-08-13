@@ -2,7 +2,7 @@
 
 ~~~~~ Base Values ~~~~~
 
-base Vbase=2.77128 unit=kV
+base Vbase=2.77128129211 unit=kV
 base Sbase=1 unit=MVAr
 
 ~~~~~ Nodes ~~~~~
