@@ -474,8 +474,10 @@ def network_mapper_function(fp, fn):
             # Load node
             if templine[k2].split('=')[0] == 'nodename':
                 knode = nodes.nodelist.index(templine[k2].split('=')[1].upper())
+
             if templine[k2].split('=')[0] == 'nodenum':
                 knode = int(templine[k2].split('=')[1])
+
 
             # Load connection - not used
             if templine[k2].split('=')[0] == 'conn':

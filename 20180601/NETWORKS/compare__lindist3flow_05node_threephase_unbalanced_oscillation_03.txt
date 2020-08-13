@@ -59,7 +59,7 @@ load nodename=a03 conn=wye phases=a type=cpq apq=1.00 ai=0.00 az=0.00 real=100 u
 load nodename=a03 conn=wye phases=b type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
 
 #New Load.load_A03_c_01 Bus1=A03.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
-load nodename=a02 conn=wye phases=c type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+load nodename=a03 conn=wye phases=c type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
 
 #New Load.load_A04_a_01 Bus1=A04.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
 load nodename=a04 conn=wye phases=a type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr

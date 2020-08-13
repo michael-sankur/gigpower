@@ -159,7 +159,6 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                     - FZpu[ph,3*k1+0].real*XNR[idxDmna] - FZpu[ph,3*k1+0].imag*XNR[idxCmna] \
                     - FZpu[ph,3*k1+1].real*XNR[idxDmnb] - FZpu[ph,3*k1+1].imag*XNR[idxCmnb] \
                     - FZpu[ph,3*k1+2].real*XNR[idxDmnc] - FZpu[ph,3*k1+2].imag*XNR[idxCmnc]
-    print(FTKVL)
 
     # Residuals for KCL at node m
     # This algorithm assumes that the slack bus has a fixed voltage reference,

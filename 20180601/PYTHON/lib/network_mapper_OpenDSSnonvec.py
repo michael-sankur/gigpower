@@ -424,6 +424,7 @@ def network_mapper_function(fn):
             kph = 1
         elif kph[0] == 'c':
             kph = 2
+
         loads.aPQ[kph, knode] = 1 #temporary
         loads.ppu[kph,knode] = dss.Loads.kW() / 1000
         loads.qpu[kph,knode] = dss.Loads.kvar() / 1000
