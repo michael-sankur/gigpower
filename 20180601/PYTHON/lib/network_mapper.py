@@ -524,10 +524,12 @@ def network_mapper_function(fp, fn):
             if templine[k2].split('=')[0] == 'reac':
                 loads.qpu[kph,knode] = float(templine[k2].split('=')[1])
                 if templine[k2+1].split('=')[1] == 'pu':
+                    print('apparently is pu')
                     pass
                 if templine[k2+1].split('=')[1] == 'VAr':
                     loads.qpu[kph,knode] = loads.qpu[kph,knode]/Sbase
                 elif templine[k2+1].split('=')[1] == 'kVAr':
+                    print(loads.qpu[kph,knode])
                     loads.qpu[kph,knode] = loads.qpu[kph,knode]*1e3/Sbase
                 if templine[k2+1].split('=')[1] == 'MVAr':
                     loads.qpu[kph,knode] = loads.qpu[kph,knode]*1e6/Sbase
