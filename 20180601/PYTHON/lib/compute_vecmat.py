@@ -126,7 +126,7 @@ def compute_vecmat(fn, Vslack):
             d_factor = (dss.Loads.kW() + dss.Loads.kvar())*1e3/Sbase
         elif cplx == 1:
             d_factor = dss.Loads.kvar()*1e3/Sbase
-            d_factor = .03125/Sbase
+            #d_factor = .03125/Sbase
         return d_factor
 
 
@@ -257,8 +257,8 @@ def compute_vecmat(fn, Vslack):
 
     b_SB = np.array([])
     for i in range(3):
-        b_SB = np.append(b_SB, Vslack[i].real)
-        b_SB = np.append(b_SB, Vslack[i].imag)
+        b_SB = np.append(b_SB, -Vslack[i].real)
+        b_SB = np.append(b_SB, -Vslack[i].imag)
     b_SB = np.reshape(b_SB, (6, 1))
 
 
@@ -267,8 +267,6 @@ def compute_vecmat(fn, Vslack):
 
     R_matrix = R_matrix/Zbase
     X_matrix = X_matrix/Zbase
-
-
 
     G_KVL = np.array([])
 
@@ -287,9 +285,9 @@ def compute_vecmat(fn, Vslack):
             #real part of KVL residual
             #assigning the re voltage coefficients
 
-            temp_row[2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
-            temp_row[2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n
             if bus1_phases[ph] == 1:
+                temp_row[2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
+                temp_row[2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n
                 #assigning the summation portion of the residual
                 temp_row[2*3*(nnode) + 2*line] = -R_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
                 temp_row[2*3*(nnode) + 2*line + 1] = X_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
@@ -300,12 +298,14 @@ def compute_vecmat(fn, Vslack):
                 G_KVL = np.append(G_KVL, temp_row)
             #same as above for imaginary part of KVL residual
             else:
+                temp_row[2*(nnode)*3 + 2*ph*nline + 2*line] = 1 #C_mn
                 G_KVL = np.append(G_KVL, temp_row)
 
-            temp_row[2*(nnode)*ph + 2*(bus1_idx) + 1] = 1 #B_m
-            temp_row[2*(nnode)*ph + 2*(bus2_idx) + 1] = -1 #B_n
+            
             if bus1_phases[ph] == 1:
                 temp_row = np.zeros(len(X))
+                temp_row[2*(nnode)*ph + 2*(bus1_idx) + 1] = 1 #B_m
+                temp_row[2*(nnode)*ph + 2*(bus2_idx) + 1] = -1 #B_n
                 temp_row[2*3*(nnode) + 2*line] = -X_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
                 temp_row[2*3*(nnode) + 2*line + 1] = -R_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
                 temp_row[2*3*(nnode) + 2*nline + 2*line] = -X_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
@@ -314,7 +314,8 @@ def compute_vecmat(fn, Vslack):
                 temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
                 G_KVL = np.append(G_KVL, temp_row)
             else:
-                temp_row = np.zeros(len(X))
+                temp_row = np.zeros(len(X)) 
+                temp_row[2*(nnode)*3 + 2*ph*nline + 2*line+1] = 1 #D_mn
                 G_KVL = np.append(G_KVL, temp_row)
     G_KVL = np.reshape(G_KVL,(2*3*nline, (2*3*(nnode+nline))))
     b_kvl = np.zeros((2*3*nline, 1))

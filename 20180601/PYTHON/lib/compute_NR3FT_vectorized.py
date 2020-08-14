@@ -10,7 +10,10 @@ def compute_NR3FT_vectorized(X, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode):
         + (g[0,:,i] @ X) \
         + b[0,0,i]
         FTKCL[i,:] = r
-
+    print(FTKCL)
+    print(FTSUBV)
+    print(FTKVL)
+    print('huuuh')
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
 
     return FT
