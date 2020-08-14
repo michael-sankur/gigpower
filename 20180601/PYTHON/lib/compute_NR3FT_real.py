@@ -1,7 +1,7 @@
 import numpy as np
 
 def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
-
+    print(XNR)
     # Michael Sankur - msankur@lbl.gov
     # 2018.01.01
 
@@ -272,23 +272,20 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 #     + cappu[ph,k1].real - wpu[ph,k1].imag
 
                 # # Applying second order Taylor Expansion to Magnitude Squared and Magnitude
-                FTKCL[idxre] = FTKCL[idxre] \
-                    - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*
-                    ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
+                FTKCL[idxre] = FTKCL[idxre] - spu[ph,k1].real*(APQ[ph,k1]) - wpu[ph,k1].real #* ((A0**2+B0**2) + np.matmul(gradient_mag_sq, np.array(dX_t)) + (1/2) * np.matmul(dX_t,  2 * dX))) - wpu[ph,k1].real
+                    #AI[ph,k1]*
+                    #(#(A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) \
                     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                    + AZ[ph,k1] * \
-                    ((A0**2+B0**2) + np.matmul(gradient_mag_sq, np.array(dX_t)) + \
-                    (1/2) * np.matmul(dX_t,  2 * dX))) \
-                    - wpu[ph,k1].real
-                FTKCL[idxim] = FTKCL[idxim] \
-                    - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph,k1]* \
-                    ((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) + \
+                    # + AZ[ph,k1] * ((A0**2+B0**2) + np.matmul(gradient_mag_sq, np.array(dX_t)) + (1/2) * np.matmul(dX_t,  2 * dX))) - wpu[ph,k1].real
+                FTKCL[idxim] = FTKCL[idxim] - spu[ph,k1].imag*(APQ[ph,k1]) + cappu[ph,k1].real - wpu[ph,k1].imag
+                    #AI[ph,k1]* \
+                    #((A0**2+B0**2)**(1/2) + np.matmul(gradient_mag, dX_t)) + \
                     # (1/2) * np.matmul(dX_t, Hessian * dX) #how do you second order expand this
                     #(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
-                    + AZ[ph,k1]* \
-                    ((A0**2+B0**2) + np.matmul(gradient_mag_sq, dX_t) + \
-                    (1/2) * np.matmul(dX_t, 2 * dX)))  \
-                    + cappu[ph,k1].real - wpu[ph,k1].imag
+                    # + AZ[ph,k1]* \
+                    # ((A0**2+B0**2) + np.matmul(gradient_mag_sq, dX_t) + \
+                    # # (1/2) * np.matmul(dX_t, 2 * dX)))  \
+                    # + cappu[ph,k1].real - wpu[ph,k1].imag
 
                 # Applying first order Taylor Expansion to the Magnitude
                 # FTKCL[idxre] = FTKCL[idxre] \

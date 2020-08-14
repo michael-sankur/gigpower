@@ -54,6 +54,9 @@ def compute_vecmat(XNR, network1, fn, Vslack):
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
+    # import os
+    # cwd = os.getcwd()
+
 
     def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
     #1 if phase exists, 0 o.w.
@@ -113,21 +116,23 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 k = n
         return k
 
-    def d_factor(busname, cplx):
-        factor = np.array([])
-        k = -1
+    def d_factor(busname, cplx, ph):
+        #factor = np.array([])
         for n in range(len(dss.Loads.AllNames())):
+            #dss.Loads.Name(dss.Loads.AllNames()[n])
             if busname in dss.Loads.AllNames()[n]:
-                k = n
-        dss.Loads.Name(dss.Loads.AllNames()[n])
-        if k == -1:
-            d_factor = 0
-        elif cplx == 0:
-            d_factor = dss.Loads.kW()*1e3/Sbase
-        elif cplx == 1:
-            d_factor = dss.Loads.kvar()*1e3/Sbase
-            #d_factor = .03125
-        return d_factor
+                dss.Loads.Name(dss.Loads.AllNames()[n])
+                dict = bus_phases()
+                if dict[busname][ph] == 0:
+                    return 0
+                if cplx == 0:
+                    return dss.Loads.kW()*1.25*1e3/Sbase
+                elif cplx == 1:
+
+                    return  dss.Loads.kvar()*1.25*1e3/Sbase
+        return 0
+
+
 
     def identify_line_phases(line): #figures out which phases correspond to a line
     #(for assigning rmatrix based on line code)
@@ -142,18 +147,16 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 k[i - 1] = 1
         return k
 
-    def get_power_based_on_bus(busname, cplx):
-        dss.Circuit.SetActiveBus(busname)
-        #print(busname)
-        for j in range(len(dss.Loads.AllNames())):
-            #print(dss.Loads.AllNames()[j])
-            if busname in dss.Loads.AllNames()[j]:
-                dss.Loads.Name(dss.Loads.AllNames()[j])
-                if cplx == 0:
-                    return dss.Loads.kW() * 1000 / Sbase
-                else:
-                    return dss.Loads.kvar() * 1000/Sbase
-        return 0
+    # def get_power_based_on_bus(busname, cplx):
+    #     dss.Circuit.SetActiveBus(busname)
+    #     for j in range(len(dss.Loads.AllNames())):
+    #         if busname in dss.Loads.AllNames()[j]:
+    #             dss.Loads.Name(dss.Loads.AllNames()[j])
+    #             if cplx == 0:
+    #                 return dss.Loads.kW() * 1000 / Sbase
+    #             else:
+    #                 return dss.Loads.kvar() * 1000/Sbase
+    #     return 0
 
 
     # Residuals for slack node voltage
@@ -217,7 +220,7 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 r_temp = np.vstack([np.zeros((1,2)),rmat[:,:]])
                 r_temp2 = np.hstack((np.zeros((3,1)), r_temp[:, :]))
                 R_matrix[k2, :] = r_temp2.flatten()
-            elif line_phases[1] == 0:
+            elif line_phases[1] == 0: #becomes [a, 0, c; 0, 0, 0; a, 0, c]
                 xmatt = np.vstack((np.vstack((xmat[0,:], np.zeros((1,2)))), xmat[len(xmat)-1,:]))
                 xmatt2 = np.hstack((np.hstack((np.reshape(xmatt[:, 0], (3, 1)), np.zeros((3,1)))), np.reshape(xmatt[:, len(xmatt[0])-1], (3,1))))
                 X_matrix[k2, :] = xmatt2.flatten()
@@ -257,24 +260,30 @@ def compute_vecmat(XNR, network1, fn, Vslack):
 
     X = np.reshape(X, (2*3*(nnode+nline), 1))
     X = np.reshape(XNR, (2*3*(nnode+nline), 1 ))
+    # for k1 in range(len(dss.Circuit.AllBusNames())):
+    #     phases = bus_phase_dict[dss.Circuit.AllBusNames()[k1]]
+    #     for i in range(0,3):
+    #         if phases[i] == 0:
+    #             X[2*nnode*i + 2*k1] = 0
+    #             X[2*nnode*i + 2*k1 + 1] = 0
 
     #------------ slack bus ------------------
+    print(Vslack)
 
     g_SB = np.array([]) #assumes slack bus is at index 0
-    sb_idx = [0, 1, 2*nnode, 2*nnode+1, 3*nnode, 3*nnode+1]
+    sb_idx = [0, 1, 2*nnode, (2*nnode)+1, 4*nnode, (4*nnode)+1]
     for i in range(len(sb_idx)):
         temp_row = np.zeros(len(X))
         temp_row[sb_idx[i]] = 1
         g_SB = np.append(g_SB, temp_row)
     g_SB = np.reshape(g_SB, (6, (2*3*(nnode+nline))))
 
+
     b_SB = np.array([])
     for i in range(3):
         b_SB = np.append(b_SB, Vslack[i].real)
         b_SB = np.append(b_SB, Vslack[i].imag)
-
     b_SB = np.reshape(b_SB, (6, 1))
-
 
     #--------------------------------------------------
     # Residuals for KVL across line (m,n)
@@ -338,10 +347,6 @@ def compute_vecmat(XNR, network1, fn, Vslack):
     # assumed to be the first node, which respresents the transmission line, or
     # substation if the network configuration is as such - see note below
     #
-    # X_cut = X[2:]
-    # X_cut = np.append(X_cut[:2*nnode - 2], X_cut[2*nnode:])
-    # X_cut = np.append(X_cut[:2*2*nnode -2], X_cut[2*2*nnode:])
-
 
     beta_S = 1
     beta_I = 0
@@ -365,16 +370,16 @@ def compute_vecmat(XNR, network1, fn, Vslack):
             dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k2])
             in_lines, out_lines = linelist(dss.Circuit.AllBusNames()[k2]) #get in/out lines of bus
             for cplx in range(0,2):
-                load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx)
+                load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx, ph)
                 gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
                 hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
                                     [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
 
                 #quadratic terms
-                H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) # TE replace right side of equality with -load_val * beta_Z #a**2
-                H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[1][1])) # TE -load_val * beta_Z #b**2
-                H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * beta_I * hessian_mag[0][1] #cross quad. terms in taylor exp,TE  remove
-                H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] =  -load_val * beta_I * hessian_mag[0][1] #TE remove
+                H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z) #+ (0.5 * beta_I* hessian_mag[0][0])) # TE replace right side of equality with -load_val * beta_Z #a**2
+                H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z)# + (0.5 * beta_I * hessian_mag[1][1])) # TE -load_val * beta_Z #b**2
+                #H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * beta_I * hessian_mag[0][1] #cross quad. terms in taylor exp,TE  remove
+                #H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] =  -load_val * beta_I * hessian_mag[0][1] #TE remove
 
                 for i in range(len(in_lines)): #fill in H for the inlines
                     dss.Lines.Name(in_lines[i])
@@ -428,35 +433,42 @@ def compute_vecmat(XNR, network1, fn, Vslack):
         # for k3 in range(len(dss.Lines.AllNames())):
         for k2 in range(1, len(dss.Circuit.AllBusNames())):
             for cplx in range(0,2):
-                load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx)
+                load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx, ph)
 
                 #linear terms
                 g_temp = np.zeros(len(X))
-                g_temp[2*ph*nnode+ 2 * k2] = -load_val* beta_I * ((1/2 * (-2 * A0 * hessian_mag[0][0] - 2 * B0 * hessian_mag[0][1])) #remove lines for TE\
-                                      +  gradient_mag[0]) # TE remove
-                g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((1/2 * (-2* A0 *hessian_mag[0][1] - 2 * B0 * hessian_mag[1][1])) #remove lines \
-                                          +  gradient_mag[1]) #TE remove
+                bp =  bus_phases()
+                #Sprint(bp)
+                available_phases = bp[dss.Circuit.AllBusNames()[k2]]
+
+                if available_phases[ph] == 0:
+                    g_temp[2*(ph)*nnode + 2*k2] =1
+                    g_temp[2*(ph)*nnode + 2*k2+1] =1
+
+                # g_temp[2*ph*nnode+ 2 * k2] = -load_val* beta_I * ((1/2 * (-2 * A0 * hessian_mag[0][0] - 2 * B0 * hessian_mag[0][1])) #remove lines for TE\
+                #                       +  gradient_mag[0]) # TE remove
+                # g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((1/2 * (-2* A0 *hessian_mag[0][1] - 2 * B0 * hessian_mag[1][1])) #remove lines \
+                #                           +  gradient_mag[1]) #TE remove
                 g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = g_temp
 
                 #constant terms
                 b_factor = 0
 
                 if cplx == 0:
-                    b_factor = get_power_based_on_bus(dss.Circuit.AllBusNames()[k2], cplx)
+                    b_factor = 0#-get_power_based_on_bus(dss.Circuit.AllBusNames()[k2], cplx)
 
                 elif cplx == 1:
-                    b_factor = (dss.Capacitors.kvar()*1000/Sbase) - \
-                    get_power_based_on_bus(dss.Circuit.AllBusNames()[k2], cplx) #depends on if it's real or im residual
-                    #b_factor = 0
+                    b_factor = (dss.Capacitors.kvar()*1000/Sbase)
+                    #get_power_based_on_bus(dss.Circuit.AllBusNames()[k2], cplx) #depends on if it's real or im residual
+                    b_factor = 0
+                b_temp = (-load_val * beta_S) + b_factor
 
-                b_temp = -load_val * (beta_S\
-                    + (beta_I) * (hessian_mag[0][1] * A0 * B0 + (1/2)*hessian_mag[0][0] * ((A0)**2) + (1/2)*hessian_mag[1][1] * (B0**2)) \
-                    - beta_I * (A0 * gradient_mag[0] +B0* gradient_mag[1]) \
-                    + beta_I * (A0**2 + B0**2) ** (1/2)) \
-                    + b_factor #calculate out the constant term in the residual
-                    #-load_val * beta_S + b_factor #TE version
+                #-load_val * (beta_S\ /
+                    # + (beta_I) * (hessian_mag[0][1] * A0 * B0 + (1/2)*hessian_mag[0][0] * ((A0)**2) + (1/2)*hessian_mag[1][1] * (B0**2)) \
+                    # - beta_I * (A0 * gradient_mag[0] +B0* gradient_mag[1]) \
+                    # + beta_I * (A0**2 + B0**2) ** (1/2)) \
+                    # + b_factor #calculate out the constant term in the residual
+                    ##-load_val * beta_S + b_factor #TE version
                 b[0][0][2*(nnode-1)*ph + 2*(k2-1) + cplx] = b_temp #store the in the b matrix
-
-
 
     return X, g_SB, b_SB, G_KVL, b_kvl, H, g, b

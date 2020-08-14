@@ -31,6 +31,7 @@ fp = 'C:\Users\kathl\Desktop\LinDist3Flow\20180601\NETWORKS\';
 %fn = 'ieee_13node_mesh_open.txt';
 %fn = 'ieee_13node_balance.txt';
 fn = 'ieee_34node.txt';
+fn = 'compare_lindist3flow_05node_threephase_unbalanced_oscillation_03.txt';
 %fn = '05node_fullphase_radial.txt'; 
 
 [network1] = network_mapper_function(fp, fn);
@@ -90,7 +91,7 @@ end
 
 
 %%
-[aPQ_noise, aZ_noise, aI_noise, spu_noise] =  readNoise();
+%[aPQ_noise, aZ_noise, aI_noise, spu_noise] =  readNoise();
 
 
 %% Adjustments (noise and profiles) & solve with NR3
