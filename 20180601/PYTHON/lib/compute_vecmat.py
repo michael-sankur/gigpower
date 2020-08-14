@@ -268,7 +268,7 @@ def compute_vecmat(XNR, network1, fn, Vslack):
     #             X[2*nnode*i + 2*k1 + 1] = 0
 
     #------------ slack bus ------------------
-    print(Vslack)
+
 
     g_SB = np.array([]) #assumes slack bus is at index 0
     sb_idx = [0, 1, 2*nnode, (2*nnode)+1, 4*nnode, (4*nnode)+1]
@@ -434,34 +434,38 @@ def compute_vecmat(XNR, network1, fn, Vslack):
         for k2 in range(1, len(dss.Circuit.AllBusNames())):
             for cplx in range(0,2):
                 load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx, ph)
-
                 #linear terms
                 g_temp = np.zeros(len(X))
                 bp =  bus_phases()
-                #Sprint(bp)
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]]
+                if cplx == 0:
+                    if available_phases[ph] == 0:
+                        g_temp[2*(ph)*nnode + 2*k2] =1
 
-                if available_phases[ph] == 0:
-                    g_temp[2*(ph)*nnode + 2*k2] =1
-                    g_temp[2*(ph)*nnode + 2*k2+1] =1
 
-                # g_temp[2*ph*nnode+ 2 * k2] = -load_val* beta_I * ((1/2 * (-2 * A0 * hessian_mag[0][0] - 2 * B0 * hessian_mag[0][1])) #remove lines for TE\
-                #                       +  gradient_mag[0]) # TE remove
-                # g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((1/2 * (-2* A0 *hessian_mag[0][1] - 2 * B0 * hessian_mag[1][1])) #remove lines \
-                #                           +  gradient_mag[1]) #TE remove
-                g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = g_temp
+                    # g_temp[2*ph*nnode+ 2 * k2] = -load_val* beta_I * ((1/2 * (-2 * A0 * hessian_mag[0][0] - 2 * B0 * hessian_mag[0][1])) #remove lines for TE\
+                    #                       +  gradient_mag[0]) # TE remove
+                    # g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((1/2 * (-2* A0 *hessian_mag[0][1] - 2 * B0 * hessian_mag[1][1])) #remove lines \
+                    #                           +  gradient_mag[1]) #TE remove
+                    g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = g_temp
+                else:
+                    if available_phases[ph] == 0:
+                        g_temp[2*(ph)*nnode + 2*k2+1] = 1
 
+                    g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = g_temp
                 #constant terms
                 b_factor = 0
-
                 if cplx == 0:
                     b_factor = 0#-get_power_based_on_bus(dss.Circuit.AllBusNames()[k2], cplx)
-
                 elif cplx == 1:
                     b_factor = (dss.Capacitors.kvar()*1000/Sbase)
                     #get_power_based_on_bus(dss.Circuit.AllBusNames()[k2], cplx) #depends on if it's real or im residual
                     b_factor = 0
-                b_temp = (-load_val * beta_S) + b_factor
+                    
+                if available_phases[ph] == 0:
+                    b_temp = 0
+                else:
+                    b_temp = (-load_val * beta_S) + b_factor
 
                 #-load_val * (beta_S\ /
                     # + (beta_I) * (hessian_mag[0][1] * A0 * B0 + (1/2)*hessian_mag[0][0] * ((A0)**2) + (1/2)*hessian_mag[1][1] * (B0**2)) \

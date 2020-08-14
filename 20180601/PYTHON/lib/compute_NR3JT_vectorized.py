@@ -10,5 +10,9 @@ def compute_NR3JT_vectorized(X, g_SB, G_KVL, H, g, nnode, nline):
         JKCL[i,:] = r
 
     JT = np.r_[JSUBV, JKVL, JKCL]
+    print(JSUBV)
+    print(JKVL)
+    print(JKCL)
+    print('next iter \n')
 
     return JT

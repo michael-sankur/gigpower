@@ -1,8 +1,10 @@
 import numpy as np
+import sys
 from lib.compute_NR3FT_real import compute_NR3FT_real_function
 from lib.compute_NR3JT_real import compute_NR3JT_real_function
 
 def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
+    np.set_printoptions(threshold=sys.maxsize)
 
     # This function runs a Newton-Raphson algorithm to solve power flow
 

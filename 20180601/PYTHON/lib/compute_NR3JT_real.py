@@ -326,5 +326,9 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
                         JKCL[idxim,idxDmn] = XNR[idxAm]
 
     JT = np.r_[JSUBV, JKVL, JKCL]
+    print(JSUBV)
+    print(JKVL)
+    print(JKCL)
+    print('next iter \n')
 
     return JT

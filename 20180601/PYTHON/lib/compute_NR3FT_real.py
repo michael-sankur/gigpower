@@ -328,9 +328,6 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                         FTKCL[idxim] = FTKCL[idxim] + XNR[idxAm]*XNR[idxDmn] - XNR[idxBm]*XNR[idxCmn]
 
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
-    print(FTKCL)
-    print(FTKVL)
-    print(FTSUBV)
-    print("\n")
+
 
     return FT
