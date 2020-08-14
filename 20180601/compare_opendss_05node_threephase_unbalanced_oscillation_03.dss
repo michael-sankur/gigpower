@@ -109,6 +109,7 @@ CalcVoltageBases
 ! BusCoords IEEE37_BusXY.csv
 
 ! solve mode=direct
+set tolerance=0.000000001
 set maxiterations=100
 solve
 
