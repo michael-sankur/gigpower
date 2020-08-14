@@ -54,9 +54,9 @@ def compute_vecmat(XNR, network1, fn, Vslack):
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
-    # import os
-    # cwd = os.getcwd()
-
+    import os
+    cwd = os.getcwd()
+    print(cwd)
 
     def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
     #1 if phase exists, 0 o.w.
@@ -126,10 +126,10 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 if dict[busname][ph] == 0:
                     return 0
                 if cplx == 0:
-                    return dss.Loads.kW()*1.25*1e3/Sbase
+                    return dss.Loads.kW()*1*1e3/Sbase
                 elif cplx == 1:
 
-                    return  dss.Loads.kvar()*1.25*1e3/Sbase
+                    return  dss.Loads.kvar()*1*1e3/Sbase
         return 0
 
 
@@ -461,7 +461,7 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                     b_factor = (dss.Capacitors.kvar()*1000/Sbase)
                     #get_power_based_on_bus(dss.Circuit.AllBusNames()[k2], cplx) #depends on if it's real or im residual
                     b_factor = 0
-                    
+
                 if available_phases[ph] == 0:
                     b_temp = 0
                 else:
