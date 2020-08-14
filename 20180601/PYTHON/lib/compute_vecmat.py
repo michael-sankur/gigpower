@@ -54,9 +54,9 @@ def compute_vecmat(XNR, network1, fn, Vslack):
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
-    import os
-    cwd = os.getcwd()
-    print(cwd)
+    # import os
+    # cwd = os.getcwd()
+    # print(cwd)
 
     def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
     #1 if phase exists, 0 o.w.

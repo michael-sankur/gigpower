@@ -329,7 +329,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
 
-    a_file = open("not-vectorized.txt", "w+")
+    a_file = open("not-vectorized.txt", "a+")
     a_file.write('FTSUBV: \n')
     for row in FTSUBV:
         np.savetxt(a_file, row)

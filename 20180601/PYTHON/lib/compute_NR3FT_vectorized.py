@@ -12,7 +12,7 @@ def compute_NR3FT_vectorized(X, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode):
         FTKCL[i,:] = r
 
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
-    a_file = open("vectorized.txt", "w+")
+    a_file = open("vectorized.txt", "a+")
     a_file.write('FTSUBV: \n')
     for row in FTSUBV:
         np.savetxt(a_file, row)
