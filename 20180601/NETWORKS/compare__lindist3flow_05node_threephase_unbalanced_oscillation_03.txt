@@ -1,0 +1,83 @@
+05node_fullphase_radial
+
+~~~~~ Base Values ~~~~~
+
+base Vbase=2.77128 unit=kV
+base Sbase=1 unit=MVAr
+
+~~~~~ Nodes ~~~~~
+
+node nodename=sub phases=abc
+node nodename=A01 phases=abc
+node nodename=A02 phases=abc
+node nodename=A03 phases=abc
+node nodename=A04 phases=ac
+node nodename=A05 phases=ab
+node nodename=A06 phases=b
+
+~~~~~ Lines ~~~~~
+
+line TXnode=sub RXnode=A01 phases=abc config=sub_a01 length=1.0 unit=m
+line TXnode=A01 RXnode=A02 phases=abc config=a01_a02 length=1.0 unit=m
+line TXnode=A02 RXnode=A03 phases=abc config=a02_a03 length=1.0 unit=m
+line TXnode=A03 RXnode=A04 phases=ac config=a03_a04 length=1.0 unit=m
+line TXnode=A03 RXnode=A05 phases=ab config=a03_a05 length=1.0 unit=m
+line TXnode=A05 RXnode=A06 phases=b config=a05_a06 length=1.0 unit=m
+
+
+~~~~~ Configuration ~~~~~
+
+#[0.015, 0.005, 0.005, 0.005, 0.015, 0.005, 0.005, 0.005, 0.015]
+#[0.01, 0.04, 0.04, 0.04, 0.01, 0.04, 0.04, 0.04, 0.01]
+#
+#[0.03, 0.01, 0.01, 0.01, 0.03, 0.01, 0.01, 0.01, 0.03]
+#[0.02, 0.08, 0.08, 0.08, 0.02, 0.08, 0.08, 0.08, 0.02]
+
+config config=sub_a01 unit=ohm/m raa=0.015 xaa=0.010 rab=0.005 xab=0.040 rac=0.005 xac=0.040 rbb=0.015 xbb=0.010 rbc=0.005 xbc=0.040 rcc=0.015 xcc=0.010
+config config=a01_a02 unit=ohm/m raa=0.015 xaa=0.010 rab=0.005 xab=0.040 rac=0.005 xac=0.040 rbb=0.015 xbb=0.010 rbc=0.005 xbc=0.040 rcc=0.015 xcc=0.010
+config config=a02_a03 unit=ohm/m raa=0.030 xaa=0.020 rab=0.010 xab=0.080 rac=0.010 xac=0.080 rbb=0.030 xbb=0.020 rbc=0.010 xbc=0.080 rcc=0.030 xcc=0.020
+config config=a03_a04 unit=ohm/m raa=0.030 xaa=0.020 rab=0.000 xab=0.000 rac=0.010 xac=0.080 rbb=0.000 xbb=0.000 rbc=0.000 xbc=0.000 rcc=0.030 xcc=0.020
+config config=a03_a05 unit=ohm/m raa=0.030 xaa=0.020 rab=0.010 xab=0.080 rac=0.000 xac=0.000 rbb=0.030 xbb=0.020 rbc=0.000 xbc=0.000 rcc=0.000 xcc=0.000
+config config=a05_a06 unit=ohm/m raa=0.000 xaa=0.000 rab=0.000 xab=0.000 rac=0.000 xac=0.000 rbb=0.030 xbb=0.020 rbc=0.000 xbc=0.000 rcc=0.000 xcc=0.000
+
+
+~~~~~ Loads ~~~~~
+
+#New Load.load_A02_a_01 Bus1=A02.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a02 conn=wye phases=a type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+#New Load.load_A02_b_01 Bus1=A02.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a02 conn=wye phases=b type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+New Load.load_A02_c_01 Bus1=A02.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a02 conn=wye phases=c type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+#New Load.load_A03_a_01 Bus1=A03.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a03 conn=wye phases=a type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+#New Load.load_A03_b_01 Bus1=A03.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a03 conn=wye phases=b type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+#New Load.load_A03_c_01 Bus1=A03.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a03 conn=wye phases=c type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+#New Load.load_A04_a_01 Bus1=A04.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a04 conn=wye phases=a type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+#New Load.load_A04_c_01 Bus1=A04.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a04 conn=wye phases=c type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+#New Load.load_A05_a_01 Bus1=A05.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a05 conn=wye phases=a type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+#New Load.load_A05_b_01 Bus1=A05.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a05 conn=wye phases=b type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+#New Load.load_A06_b_01 Bus1=A06.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+load nodename=a06 conn=wye phases=b type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+
+~~~~~ Capacitors ~~~~~
+
+#capacitor nodename=A2 conn=wye phase=a reac=1 unit=kVAr
+#capacitor nodename=A53conn=wye phase=a reac=2 unit=kVAr
+
