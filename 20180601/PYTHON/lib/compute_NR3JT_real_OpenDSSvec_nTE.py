@@ -1,7 +1,7 @@
 import numpy as np
 import opendssdirect as dss
 
-def compute_NR3JT_real_function(g_SB, G_KVL, H, X_T, g):
+def compute_NR3JT_real_function(g_SB, G_KVL, H, X, g):
 
     dss.run_command('Redirect compare_opendss_05node_threephase_unbalanced_oscillation_03.dss')
     dss.Solution.Solve()
@@ -16,7 +16,7 @@ def compute_NR3JT_real_function(g_SB, G_KVL, H, X_T, g):
     JKCL = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline)))
 
     for i in range(2*3*(nnode-1)):
-        r = (2 * (X_T.T @ H[:, :, i])) \
+        r = (2 * (X.T @ H[:, :, i])) \
         + (g[0,:,i])
         JKCL[i,:] = r
 

@@ -7,7 +7,7 @@ from lib.compute_vecmat import compute_vecmat
 import opendssdirect as dss
 import re
 
-def NR3_function(fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
+def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
 
     dss.run_command('Redirect ' + fn)
     dss.Solution.Solve()
@@ -53,6 +53,39 @@ def NR3_function(fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
 
     # The NR algorithm variable
     # X = [V^a V^b V^c I^a I^b I^c]
+    XNR = np.zeros((2*3*(nnode + nline),1))
+
+    # intialize node voltage portion of XNR
+    if V0 == None or len(V0) == 0:
+        for ph in range(0,3):
+            for k1 in range(0,nnode):
+
+                XNR[2*ph*nnode + 2*k1] = Vslack[ph].real
+                XNR[2*ph*nnode + 2*k1+1] = Vslack[ph].imag
+
+    # If initial V is given (usually from CVX)
+    elif len(V0) != 0:
+        for ph in range(0,3):
+            for k1 in range(0,nnode):
+                XNR[2*ph*nnode + 2*k1] = V0[ph,k1].real
+                XNR[2*ph*nnode + 2*k1+1] = V0[ph,k1].imag
+
+
+    # intialize line current portion of XNR
+    if I0 == None or len(I0) == 0:
+        for k1 in range(0,nnode):
+            XNR[(2*3*nnode):] = 0.0*np.ones((6*nline,1))
+
+    elif len(I0) != 0:
+        for ph in range(0,3):
+            for k1 in range(0,nline):
+                XNR[(2*3*nnode) + 2*ph*nline + 2*k1] = I0[ph,k1].real
+                XNR[(2*3*nnode) + 2*ph*nline + 2*k1+1] = I0[ph,k1].imag
+    if tol == None:
+        tol = 1e-9
+
+    if maxiter == None:
+        maxiter = 100
 
 
     FT = 1e99
@@ -60,7 +93,7 @@ def NR3_function(fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     Vslack = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
 
 
-    XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b = compute_vecmat(fn, Vslack)
+    XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b = compute_vecmat(XNR, network, fn, Vslack)
     while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
         FT = compute_NR3FT_vectorized(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode)
         JT = compute_NR3JT_vectorized(XNR, g_SB, G_KVL, H, g, nnode, nline)
@@ -135,7 +168,7 @@ def NR3_function(fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
             if np.abs(sNR[ph,k1].imag) <= 1e-12:
                 sNR[ph,k1] = sNR[ph,k1].real + 0
     # Total node current
-    iNR[network.nodes.PH != 0] = np.conj(sNR[network.nodes.PH != 0]/VNR[network.nodes.PH != 0]); #also needs to be updated... 
+    iNR[network.nodes.PH != 0] = np.conj(sNR[network.nodes.PH != 0]/VNR[network.nodes.PH != 0]); #also needs to be updated...
     iNR[network.nodes.PH == 0] = 0;
     for ph in range(0,3):
         for k1 in range(0,nnode):

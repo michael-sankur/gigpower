@@ -182,6 +182,8 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
             R_matrix[k2][4] = rmat[0]
             R_matrix[k2][8] = rmat[0]
         elif len(xmat) == 4:
+            xmat = np.reshape(xmat, (2,2))
+            rmat = np.reshape(rmat, (2,2))
             if line_phases[0] == 0:
                 xmatt = np.vstack([np.zeros((1,2)),xmat[:,:]])
                 xmatt2 = np.hstack((np.zeros((3,1)), xmatt[:, :]))
@@ -228,8 +230,8 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
             X = np.append(X, C_mn[lines*3 + ph]) #add c, d by line and then phase
             X = np.append(X, D_mn[lines*3 + ph])
 
-    #X = np.reshape(XNR, (2*3*(nnode+nline), 1 ))
-    X = np.reshape(X, (2*3*(nnode+nline), 1))
+    X = np.reshape(XNR, (2*3*(nnode+nline), 1 ))
+    #X = np.reshape(X, (2*3*(nnode+nline), 1))
     #------------ slack bus ------------------
 
     g_SB = np.array([]) #assumes slack bus is at index 0
@@ -498,6 +500,8 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 #FT should be (2*3*1 + 2*3*nline + 2*3*(nnode-1)) x 1, and
 #JT should be (2*3*1 + 2*3*nline + 2*3*(nnode-1)) x (2*3*nnode + 2*3*nline)
     print(FTKCL)
+    print(FTKVL)
+    print(FTSUBV)
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
     return FT, g_SB, G_KVL, H, Y, g
     # return FT, g_SB, G_KVL, H, X_T, g

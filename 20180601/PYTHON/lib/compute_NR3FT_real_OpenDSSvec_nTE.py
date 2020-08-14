@@ -72,6 +72,36 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                     dictionary[a] = temp
         return dictionary
 
+    def get_bus_idx(bus):
+        k = -1
+        for n in range(len(dss.Circuit.AllBusNames())): #iterates over all the buses to see which index corresponds to bus
+            if dss.Circuit.AllBusNames()[n] in bus:
+                k = n
+        return k
+
+    def identify_bus_phases(bus): #figures out which phases correspond to the bus
+    #returns a list of the r/x matrix places that have those phase/s
+        k = np.zeros(3)
+        for i in range(1, 4):
+            pattern = r"\.%s" % (str(i))
+            m = re.findall(pattern, bus)
+            if m:
+                k[i - 1] = 1
+        return k
+
+    def identify_line_phases(line): #figures out which phases correspond to a line
+    #(for assigning rmatrix based on line code)
+    #returns list of 0's 1's whether or not phase exists in line
+        k = np.zeros(3)
+        dss.Lines.Name(line)
+        bus = dss.Lines.Bus1()
+        for i in range(1, 4):
+            pattern = r"\.%s" % (str(i))
+            m = re.findall(pattern, bus)
+            if m:
+                k[i - 1] = 1
+        return k
+
     A_m = np.array([])
     B_m = np.array([])
 
@@ -110,42 +140,43 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
         dss.LineCodes.Name(linecode) #set the linecode
         xmat = dss.LineCodes.Xmatrix() #get the xmat
         rmat = dss.LineCodes.Rmatrix() #get the rmat
-
+        line_phases = identify_line_phases(dss.Lines.AllNames()[k2])
         if len(xmat) == 9:
             for i in range(len(xmat)):
                 X_matrix[k2][i] = xmat[i] #fill x/r where they are shaped like nline x 9 (for 9 components)
+                R_matrix[k2][i] = rmat[i]
         elif len(xmat) == 1:
             X_matrix[k2][0] = xmat[0]
-            X_matrix[k2][4] = xmat[0]
+            X_matrix[k2][4] = xmat[0] #set the diagonals to the value
             X_matrix[k2][8] = xmat[0]
+            R_matrix[k2][0] = rmat[0]
+            R_matrix[k2][4] = rmat[0]
+            R_matrix[k2][8] = rmat[0]
         elif len(xmat) == 4:
-            X_matrix[k2][0] = xmat[0]
-            X_matrix[k2][4] = xmat[0]
-            X_matrix[k2][8] = xmat[0]
-            X_matrix[k2][1] = xmat[1]
-            X_matrix[k2][2] = xmat[1]
-            X_matrix[k2][3] = xmat[1]
-            X_matrix[k2][5] = xmat[1]
-            X_matrix[k2][6] = xmat[1]
-            X_matrix[k2][7] = xmat[1]
+            xmat = np.reshape(xmat, (2,2))
+            rmat = np.reshape(rmat, (2,2))
+            if line_phases[0] == 0: #becomes [0, 0, 0; 0, b, c; 0, d, e]
+                xmatt = np.vstack([np.zeros((1,2)),xmat[:,:]])
+                xmatt2 = np.hstack((np.zeros((3,1)), xmatt[:, :]))
+                X_matrix[k2, :] = xmatt2.flatten()
+                r_temp = np.vstack([np.zeros((1,2)),rmat[:,:]])
+                r_temp2 = np.hstack((np.zeros((3,1)), r_temp[:, :]))
+                R_matrix[k2, :] = r_temp2.flatten()
+            elif line_phases[1] == 0:
+                xmatt = np.vstack((np.vstack((xmat[0,:], np.zeros((1,2)))), xmat[len(xmat)-1,:]))
+                xmatt2 = np.hstack((np.hstack((np.reshape(xmatt[:, 0], (3, 1)), np.zeros((3,1)))), np.reshape(xmatt[:, len(xmatt[0])-1], (3,1))))
+                X_matrix[k2, :] = xmatt2.flatten()
+                r_temp = np.vstack([np.vstack([rmat[0,:], np.zeros((1,2))]), rmat[len(xmat)-1,:]])
+                r_temp2 = np.hstack((np.hstack((np.reshape(r_temp[:, 0], (3, 1)), np.zeros((3,1)))), np.reshape(r_temp[:, len(r_temp[0])-1], (3,1))))
+                R_matrix[k2, :] = r_temp2.flatten()
+            else:
+                xmatt = np.vstack([xmat[:,:],np.zeros((1,2))])
+                xmatt2 = np.hstack((xmatt[:, :], np.zeros((3,1))))
+                X_matrix[k2, :] = xmatt2.flatten()
+                r_temp = np.vstack([rmat[:,:],np.zeros((1,2))])
+                r_temp2 = np.hstack((r_temp[:, :], np.zeros((3,1))))
+                R_matrix[k2, :] = r_temp2.flatten()
 
-        if len(rmat) == 9:
-            for j in range(len(rmat)):
-                R_matrix[k2][j] = rmat[j]
-        elif len(rmat) == 1:
-            R_matrix[k2][0] = rmat[0]
-            R_matrix[k2][4] = rmat[0]
-            R_matrix[k2][8] = rmat[0]
-        elif len(xmat) == 4:
-            R_matrix[k2][0] = rmat[0]
-            R_matrix[k2][4] = rmat[0]
-            R_matrix[k2][8] = rmat[0]
-            R_matrix[k2][1] = rmat[1]
-            R_matrix[k2][2] = rmat[1]
-            R_matrix[k2][3] = rmat[1]
-            R_matrix[k2][5] = rmat[1]
-            R_matrix[k2][6] = rmat[1]
-            R_matrix[k2][7] = rmat[1]
 
         c_temp = np.zeros(3) #retrieve line current
         d_temp = np.zeros(3)
@@ -180,38 +211,20 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
         temp_row = np.zeros(len(X))
         temp_row[sb_idx[i]] = 1
         g_SB = np.append(g_SB, temp_row)
-    g_SB = np.reshape(g_SB, (6, len(g_SB) // 6))
+    g_SB = np.reshape(g_SB, (6, (2*3*(nnode+nline))))
 
     b_SB = np.array([])
-    sb_idx = [0, 1, 2*nnode, 2*nnode+1, 3*nnode, 3*nnode+1] #indices of real and im parts of sb voltage
-    for i in range(len(sb_idx)):
-        b_SB = np.append(b_SB, X[sb_idx[i]])
-    b_SB = np.reshape(b_SB, (len(b_SB), 1))
+    for i in range(3):
+        b_SB = np.append(b_SB, Vslack[i].real)
+        b_SB = np.append(b_SB, Vslack[i].imag)
+    b_SB = np.reshape(b_SB, (6, 1))
 
     FTSUBV = (g_SB @ X) - b_SB
-
     #--------------------------------------------------
     # Residuals for KVL across line (m,n)
 
     R_matrix = R_matrix/network.base.Zbase
     X_matrix = X_matrix/network.base.Zbase
-
-    def get_bus_idx(bus):
-        k = -1
-        for n in range(len(dss.Circuit.AllBusNames())): #iterates over all the buses to see which index corresponds to bus
-            if dss.Circuit.AllBusNames()[n] in bus:
-                k = n
-        return k
-
-    def identify_bus_phases(bus): #figures out which phases correspond to the bus
-    #returns a list of the r/x matrix places that have those phase/s
-        k = np.zeros(3)
-        for i in range(1, 4):
-            pattern = r"\.%s" % (str(i))
-            m = re.findall(pattern, bus)
-            if m:
-                k[i - 1] = 1
-        return k
 
     G_KVL = np.array([])
 
@@ -228,29 +241,39 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
             temp_row = np.zeros(len(X))
             #real part of KVL residual
             #assigning the re voltage coefficients
-
-            temp_row[2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
-            temp_row[2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n
-
-            #assigning the summation portion of the residual
-            temp_row[2*3*(nnode) + 2*line] = -R_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
-            temp_row[2*3*(nnode) + 2*line + 1] = X_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
-            temp_row[2*3*(nnode) + 2*nline + 2*line] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
-            temp_row[2*3*(nnode) + 2*nline + 2*line + 1] = X_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
-            temp_row[2*3*(nnode) + 4*nline + 2*line] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
-            temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = X_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
-            G_KVL = np.append(G_KVL, temp_row)
-            #same as above for imaginary part of KVL residual
             temp_row = np.zeros(len(X))
-            temp_row[2*(nnode)*ph + 2*(bus1_idx) + 1] = 1 #B_m
-            temp_row[2*(nnode)*ph + 2*(bus2_idx) + 1] = -1 #B_n
-            temp_row[2*3*(nnode) + 2*line] = -X_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
-            temp_row[2*3*(nnode) + 2*line + 1] = -R_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
-            temp_row[2*3*(nnode) + 2*nline + 2*line] = -X_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
-            temp_row[2*3*(nnode) + 2*nline + 2*line + 1] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
-            temp_row[2*3*(nnode) + 4*nline + 2*line] = -X_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
-            temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
-            G_KVL = np.append(G_KVL, temp_row)
+            #real part of KVL residual
+            #assigning the re voltage coefficients
+
+            if bus1_phases[ph] == 1:
+                temp_row[2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
+                temp_row[2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n
+                #assigning the summation portion of the residual
+                temp_row[2*3*(nnode) + 2*line] = -R_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
+                temp_row[2*3*(nnode) + 2*line + 1] = X_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
+                temp_row[2*3*(nnode) + 2*nline + 2*line] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
+                temp_row[2*3*(nnode) + 2*nline + 2*line + 1] = X_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
+                temp_row[2*3*(nnode) + 4*nline + 2*line] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
+                temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = X_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
+                G_KVL = np.append(G_KVL, temp_row)
+                temp_row = np.zeros(len(X))
+                temp_row[2*(nnode)*ph + 2*(bus1_idx) + 1] = 1 #B_m
+                temp_row[2*(nnode)*ph + 2*(bus2_idx) + 1] = -1 #B_n
+                temp_row[2*3*(nnode) + 2*line] = -X_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
+                temp_row[2*3*(nnode) + 2*line + 1] = -R_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
+                temp_row[2*3*(nnode) + 2*nline + 2*line] = -X_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
+                temp_row[2*3*(nnode) + 2*nline + 2*line + 1] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
+                temp_row[2*3*(nnode) + 4*nline + 2*line] = -X_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
+                temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
+                G_KVL = np.append(G_KVL, temp_row)
+            #same as above for imaginary part of KVL residual
+            else:
+                temp_row[2*(nnode)*3 + 2*ph*nline + 2*line] = 1 #C_mn
+                G_KVL = np.append(G_KVL, temp_row)
+                temp_row = np.zeros(len(X))
+                temp_row[2*(nnode)*3 + 2*ph*nline + 2*line+1] = 1 #D_mn
+                G_KVL = np.append(G_KVL, temp_row)
+
 
     G_KVL = np.reshape(G_KVL,(2*3*nline, (2*3*(nnode+nline))))
     b_kvl = np.zeros((len(G_KVL), 1))
@@ -296,9 +319,9 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
         if k == -1:
             d_factor = 0
         elif cplx == 0:
-            d_factor = (dss.Loads.kW() + dss.Loads.kvar())/ 1000
+            d_factor = (dss.Loads.kW() + dss.Loads.kvar()) * 1000 / network.base.Sbase
         elif cplx == 1:
-            d_factor = dss.Loads.kvar() / 1000 #??
+            d_factor = dss.Loads.kvar() * 1000 / network.base.Sbase #??
             d_factor = .03125
         return d_factor
 
@@ -395,7 +418,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                     b_factor = 0
                 b[0][0][2*(nnode-1)*ph + 2*(k2-1) + cplx] = -load_val * (beta_S) + b_factor
 
-    Y = X.reshape(-1, 1)
+    X_T = X.reshape(-1, 1)
 
     # enlarged_X = np.zeros((2*3*(nline+nnode), 1, 2*3*(nnode-1)))
     # X_T= np.zeros((1, 2*3*(nline+nnode), 2*3*(nnode-1)))
@@ -406,7 +429,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
     FTKCL = np.zeros((2*3*(nnode-1), 1))
 
     for i in range(2*3*(nnode-1)):
-        r = (Y.T @ (H[:, :, i] @ Y)) \
+        r = (X_T.T @ (H[:, :, i] @ X_T)) \
         + (g[0,:,i] @ Y) \
         + b[0,0,i]
         FTKCL[i,:] = r
@@ -416,5 +439,5 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
     print(FTKCL)
-    return FT, g_SB, G_KVL, H, Y, g
+    return FT, g_SB, G_KVL, H, X_T, g
     # return FT, g_SB, G_KVL, H, X_T, g

@@ -82,7 +82,7 @@ New Load.load_A05_b_01 Bus1=A05.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 
 ! New Load.SA05b Bus1=A05.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=300.0 kVAR=100.0
 ! New Load.SA05c Bus1=A05.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=300.0 kVAR=100.0
 
-New Load.load_A06_b_01 Bus1=A06.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=50.0
+New Load.load_A06_b_01 Bus1=A06.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
 ! New Load.SA06b Bus1=A06.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=300.0 kVAR=100.0
 ! New Load.SA06c Bus1=A06.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=300.0 kVAR=100.0
 

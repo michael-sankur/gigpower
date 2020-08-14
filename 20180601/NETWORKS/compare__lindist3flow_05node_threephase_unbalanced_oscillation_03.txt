@@ -73,8 +73,8 @@ load nodename=a05 conn=wye phases=a type=cpq apq=1.00 ai=0.00 az=0.00 real=100 u
 #New Load.load_A05_b_01 Bus1=A05.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
 load nodename=a05 conn=wye phases=b type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
 
-#New Load.load_A06_b_01 Bus1=A06.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
-load nodename=a06 conn=wye phases=b type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=25 unit=kVAr
+#New Load.load_A06_b_01 Bus1=A06.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=50.0
+load nodename=a06 conn=wye phases=b type=cpq apq=1.00 ai=0.00 az=0.00 real=100 unit=kW reac=50 unit=kVAr
 
 ~~~~~ Capacitors ~~~~~
 
