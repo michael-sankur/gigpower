@@ -128,7 +128,6 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 if cplx == 0:
                     return dss.Loads.kW()*1*1e3/Sbase
                 elif cplx == 1:
-
                     return  dss.Loads.kvar()*1*1e3/Sbase
         return 0
 
@@ -440,9 +439,7 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]]
                 if cplx == 0:
                     if available_phases[ph] == 0:
-                        g_temp[2*(ph)*nnode + 2*k2] =1
-
-
+                        g_temp[2*(ph)*nnode + 2*k2] = 1
                     # g_temp[2*ph*nnode+ 2 * k2] = -load_val* beta_I * ((1/2 * (-2 * A0 * hessian_mag[0][0] - 2 * B0 * hessian_mag[0][1])) #remove lines for TE\
                     #                       +  gradient_mag[0]) # TE remove
                     # g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((1/2 * (-2* A0 *hessian_mag[0][1] - 2 * B0 * hessian_mag[1][1])) #remove lines \

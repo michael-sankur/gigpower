@@ -24,4 +24,5 @@ def compute_NR3FT_vectorized(X, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode):
         np.savetxt(a_file, row)
 
     a_file.close()
+    
     return FT

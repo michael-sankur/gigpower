@@ -23,4 +23,5 @@ def compute_NR3JT_vectorized(X, g_SB, G_KVL, H, g, nnode, nline):
         np.savetxt(a_file, row)
 
     a_file.close()
+    
     return JT

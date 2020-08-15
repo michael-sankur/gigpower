@@ -1,7 +1,7 @@
 import numpy as np
 
 def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
-    print(XNR)
+    
     # Michael Sankur - msankur@lbl.gov
     # 2018.01.01
 
