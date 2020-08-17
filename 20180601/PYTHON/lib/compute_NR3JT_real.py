@@ -327,31 +327,26 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
 
     JT = np.r_[JSUBV, JKVL, JKCL]
 
-    print('jsubv')
-    print(JSUBV)
-    print('jkvl')
-    print(JKVL)
-    print('jkcl')
-    print(JKCL)
-
-    a_file = open("not-vectorized.txt", "a+")
-    a_file.write('JSUBV: \n')
-    for row in JSUBV:
-
-        np.savetxt(a_file, row)
-    a_file.write('JKVL: \n')
-    for row in JKVL:
-        np.savetxt(a_file, row)
-    a_file.write('JKCL: \n')
-    for row in JKCL:
-        np.savetxt(a_file, row)
-
-    a_file.close()
     # print('jsubv')
     # print(JSUBV)
     # print('jkvl')
     # print(JKVL)
-    # print('jkcl: ')
+    # print('jkcl')
     # print(JKCL)
+    #
+    # a_file = open("not-vectorized.txt", "a+")
+    # a_file.write('JSUBV: \n')
+    # for row in JSUBV:
+    #
+    #     np.savetxt(a_file, row)
+    # a_file.write('JKVL: \n')
+    # for row in JKVL:
+    #     np.savetxt(a_file, row)
+    # a_file.write('JKCL: \n')
+    # for row in JKCL:
+    #     np.savetxt(a_file, row)
+    #
+    # a_file.close()
+
 
     return JT
