@@ -110,7 +110,6 @@ def compute_vecmat(XNR, network1, fn, Vslack):
 
     def get_line_idx(line): #returns the index of a line as stored in dss.Lines.AllNames()
         k = -1
-
         for n in range(len(dss.Lines.AllNames())):
             if dss.Lines.AllNames()[n] == line:
                 k = n
@@ -145,18 +144,6 @@ def compute_vecmat(XNR, network1, fn, Vslack):
             if m:
                 k[i - 1] = 1
         return k
-
-    # def get_power_based_on_bus(busname, cplx):
-    #     dss.Circuit.SetActiveBus(busname)
-    #     for j in range(len(dss.Loads.AllNames())):
-    #         if busname in dss.Loads.AllNames()[j]:
-    #             dss.Loads.Name(dss.Loads.AllNames()[j])
-    #             if cplx == 0:
-    #                 return dss.Loads.kW() * 1000 / Sbase
-    #             else:
-    #                 return dss.Loads.kvar() * 1000/Sbase
-    #     return 0
-
 
     # Residuals for slack node voltage
     A_m = np.array([])
@@ -345,7 +332,6 @@ def compute_vecmat(XNR, network1, fn, Vslack):
     # and its power is "floating" and will be resolved. The slack bus is
     # assumed to be the first node, which respresents the transmission line, or
     # substation if the network configuration is as such - see note below
-    #
 
     beta_S = 1
     beta_I = 0
@@ -373,50 +359,51 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
                 hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
                                     [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
-
-                #quadratic terms
-                H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z) #+ (0.5 * beta_I* hessian_mag[0][0])) # TE replace right side of equality with -load_val * beta_Z #a**2
-                H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z)# + (0.5 * beta_I * hessian_mag[1][1])) # TE -load_val * beta_Z #b**2
-                #H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * beta_I * hessian_mag[0][1] #cross quad. terms in taylor exp,TE  remove
-                #H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] =  -load_val * beta_I * hessian_mag[0][1] #TE remove
+                bp =  bus_phases()
+                available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
+                if available_phases[ph] == 1:                 #quadratic terms
+                    H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z) #+ (0.5 * beta_I* hessian_mag[0][0])) # TE replace right side of equality with -load_val * beta_Z #a**2
+                    H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * (beta_Z)# + (0.5 * beta_I * hessian_mag[1][1])) # TE -load_val * beta_Z #b**2
+                    #H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * beta_I * hessian_mag[0][1] #cross quad. terms in taylor exp,TE  remove
+                    #H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] =  -load_val * beta_I * hessian_mag[0][1] #TE remove
 
                 for i in range(len(in_lines)): #fill in H for the inlines
                     dss.Lines.Name(in_lines[i])
                     line_idx = get_line_idx(in_lines[i])
-
-                    if cplx == 0: #real residual
-                        #A_m and C_lm
-                        H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = 1/2
-                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = 1/2
-                        #B_m and D_lm
-                        H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
-                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
-                    if cplx == 1: #complex residual
-                        #A_m, D_lm
-                        H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
-                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -1/2
-                        #B_m and C_lm
-                        H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = 1/2
-                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                    if available_phases[ph] == 1:
+                        if cplx == 0: #real residual
+                            #A_m and C_lm
+                            H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                            H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                            #B_m and D_lm
+                            H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                            H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                        if cplx == 1: #complex residual
+                            #A_m, D_lm
+                            H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                            H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                            #B_m and C_lm
+                            H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                            H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
 
                 for j in range(len(out_lines)): #fill in H for the outlines
                     dss.Lines.Name(out_lines[j])
                     line_idx = get_line_idx(out_lines[j])
-
-                    if cplx == 0:
-                        #A_m and C_mn
-                        H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = -1/2
-                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -1/2
-                        #B_m and D_mn
-                        H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
-                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
-                    if cplx == 1:
-                        #A_m and D_mn
-                        H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
-                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = 1/2
-                        #C_m and B_mn
-                        H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = -1/2
-                        H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                    if available_phases[ph] == 1:
+                        if cplx == 0:
+                            #A_m and C_mn
+                            H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                            H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                            #B_m and D_mn
+                            H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                            H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                        if cplx == 1:
+                            #A_m and D_mn
+                            H[2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                            H[2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] = 1/2
+                            #C_m and B_mn
+                            H[2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*ph*(nnode-1) + (k2-1)*2] = -1/2
+                            H[2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -1/2
 
     #Linear Term
     for ph in range(0,3):
@@ -434,32 +421,31 @@ def compute_vecmat(XNR, network1, fn, Vslack):
             for cplx in range(0,2):
                 load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx, ph)
                 #linear terms
-                g_temp = np.zeros(len(X))
-                bp =  bus_phases()
-                available_phases = bp[dss.Circuit.AllBusNames()[k2]]
+                g_temp = np.zeros(len(X)) #preallocate g
+                bp =  bus_phases() #dictionary {key = bus: value = 3x1 binary array of array existence}
+                available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                 if cplx == 0:
-                    if available_phases[ph] == 0:
+                    if available_phases[ph] == 0: #if phase does not exist
                         g_temp[2*(ph)*nnode + 2*k2] = 1
                     # g_temp[2*ph*nnode+ 2 * k2] = -load_val* beta_I * ((1/2 * (-2 * A0 * hessian_mag[0][0] - 2 * B0 * hessian_mag[0][1])) #remove lines for TE\
                     #                       +  gradient_mag[0]) # TE remove
                     # g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((1/2 * (-2* A0 *hessian_mag[0][1] - 2 * B0 * hessian_mag[1][1])) #remove lines \
                     #                           +  gradient_mag[1]) #TE remove
-                    g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = g_temp
+                    g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = g_temp #o.w.
                 else:
-                    if available_phases[ph] == 0:
+                    if available_phases[ph] == 0: #if phase does not exist
                         g_temp[2*(ph)*nnode + 2*k2+1] = 1
+                    g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = g_temp #o.w.
 
-                    g[0,:,2*(nnode-1)*ph + 2*(k2-1) + cplx] = g_temp
                 #constant terms
                 b_factor = 0
                 if cplx == 0:
-                    b_factor = 0#-get_power_based_on_bus(dss.Circuit.AllBusNames()[k2], cplx)
+                    b_factor = 0 #DER term
                 elif cplx == 1:
-                    b_factor = (dss.Capacitors.kvar()*1000/Sbase)
-                    #get_power_based_on_bus(dss.Circuit.AllBusNames()[k2], cplx) #depends on if it's real or im residual
+                    b_factor = (dss.Capacitors.kvar()*1000/Sbase) #DER term
                     b_factor = 0
 
-                if available_phases[ph] == 0:
+                if available_phases[ph] == 0: #if phase does not exist at bus, set b = 0
                     b_temp = 0
                 else:
                     b_temp = (-load_val * beta_S) + b_factor

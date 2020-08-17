@@ -1,7 +1,7 @@
 import numpy as np
 
 def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
-    
+
     # Michael Sankur - msankur@lbl.gov
     # 2018.01.01
 
@@ -328,6 +328,15 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                         FTKCL[idxim] = FTKCL[idxim] + XNR[idxAm]*XNR[idxDmn] - XNR[idxBm]*XNR[idxCmn]
 
     FT = np.r_[FTSUBV, FTKVL, FTKCL]
+    print(len(FTSUBV))
+    print(FTKVL.shape)
+    print(FTKCL.shape)
+    print('ftsubv')
+    print(FTSUBV)
+    print('ftkvl')
+    print(FTKVL)
+    print('ftkcl')
+    print(FTKCL)
 
     a_file = open("not-vectorized.txt", "a+")
     a_file.write('FTSUBV: \n')

@@ -23,5 +23,11 @@ def compute_NR3JT_vectorized(X, g_SB, G_KVL, H, g, nnode, nline):
         np.savetxt(a_file, row)
 
     a_file.close()
-    
+    print('jsubv')
+    print(JSUBV)
+    print('jkvl')
+    print(JKVL)
+    print('jkcl: ')
+    print(JKCL)
+
     return JT

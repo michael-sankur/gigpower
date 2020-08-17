@@ -21,5 +21,6 @@ def compute_NR3JT_real_function(g_SB, G_KVL, H, X_T, g):
         JKCL[i,:] = r
 
     JT = np.r_[JSUBV, JKVL, JKCL]
+    
 
     return JT
