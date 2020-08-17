@@ -111,8 +111,10 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     if maxiter == None:
         maxiter = 100
 
-    XNR_deep_vec[:, 0, iter_count] = XNR[0]
-    XNR_deep_notvec[:, 0, iter_count] = XNR[0]
+
+    XNR_deep_vec[:, 0, iter_count] = XNR[:, 0]
+    XNR_deep_notvec[:, 0, iter_count] = XNR[:, 0]
+
     #iter_count += 1
     FT = 1e99
     itercount = 0
@@ -123,13 +125,14 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
         FT1 = ft1(XNR1, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode) #vectorized
         FT_deep_vec[:, :, iter_count] = FT1
+        
         FTSUBV_vec[:, 0, iter_count] = np.reshape(FT1[0:6], (6))
         FTKVL_vec[:, 0, iter_count] = np.reshape(FT1[6:42], (36))
         FTKCL_vec[:, 0, iter_count] = np.reshape(FT1[42:], (36))
 
         JT1 = jt1(XNR1, g_SB, G_KVL, H, g, nnode, nline)
         JT_deep_vec[:, :, iter_count] = JT1
-        print(JT1.shape)
+
         JSUBV_vec[:, :, iter_count] = np.reshape(JT1[0:6], (6, 78))
         JKVL_vec[:, :, iter_count] = np.reshape(JT1[6:42], (36, 78))
         JKCL_vec[:, :, iter_count] = np.reshape(JT1[42:], (36, 78))
@@ -161,8 +164,8 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
             XNR1 = XNR1 - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
 
         #dump xnr into the mega-XNR matrix
-        XNR_deep_vec[:, 0, iter_count] = XNR1[0]
-        XNR_deep_notvec[:, 0, iter_count] = XNR[0]
+        XNR_deep_vec[:, 0, iter_count] = XNR1[:, 0]
+        XNR_deep_notvec[:, 0, iter_count] = XNR[:, 0]
 
         #print(itercount)
         itercount+=1 #diff from the other iter_count

@@ -457,5 +457,5 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                     # + b_factor #calculate out the constant term in the residual
                     ##-load_val * beta_S + b_factor #TE version
                 b[0][0][2*(nnode-1)*ph + 2*(k2-1) + cplx] = b_temp #store the in the b matrix
-
+    
     return X, g_SB, b_SB, G_KVL, b_kvl, H, g, b
