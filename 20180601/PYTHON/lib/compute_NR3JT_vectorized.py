@@ -9,8 +9,7 @@ def compute_NR3JT_vectorized(X, g_SB, G_KVL, H, g, nnode, nline):
         r = (2 * (X.T @ H[i, :, :])) \
         + (g[i, 0, :])
         JKCL[i,:] = r
-    print(JKCL.shape)
-    print(r.shape)
+
 
     JT = np.r_[JSUBV, JKVL, JKCL]
 

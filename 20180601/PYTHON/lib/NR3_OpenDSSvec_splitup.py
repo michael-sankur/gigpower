@@ -109,6 +109,7 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
         #pass
     #print(XNR)
 
+
     #THIS NEEDS TO BE ADJUSTED Because I got rid of the network.
 
     # remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR

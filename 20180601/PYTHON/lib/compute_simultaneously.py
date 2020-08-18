@@ -55,7 +55,7 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
 
     # The NR algorithm variable
     # X = [V^a V^b V^c I^a I^b I^c]
-    iter = 4 #uncertain how many
+    iter = 14 #uncertain how many
     iter_count = 0
     XNR_deep_vec = np.zeros((iter, 2*3*(nnode+nline), 1))
     XNR_deep_notvec = np.zeros((iter, 2*3*(nnode+nline), 1))
@@ -152,12 +152,12 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
         JKCL_nonvec[ iter_count,:, :] = np.reshape(JT[42:], (36, 78))
 
         iter_count += 1
-        if iter_count == 3: #exit because I think there are only 4 iterations or 3 or sth ??
-            return FT_deep_vec, FT_deep_nonvec, JT_deep_vec, JT_deep_nonvec, XNR_deep_vec, XNR_deep_notvec, \
-            FTSUBV_nonvec, FTKVL_nonvec, FTKCL_nonvec, \
-            FTSUBV_vec, FTKVL_vec, FTKCL_vec, \
-            JSUBV_nonvec, JKVL_nonvec, JKCL_nonvec, \
-            JSUBV_vec, JKVL_vec, JKCL_vec
+        # if iter_count == 4: #exit because I think there are only 4 iterations or 3 or sth ??
+        #     return FT_deep_vec, FT_deep_nonvec, JT_deep_vec, JT_deep_nonvec, XNR_deep_vec, XNR_deep_notvec, \
+        #     FTSUBV_nonvec, FTKVL_nonvec, FTKCL_nonvec, \
+        #     FTSUBV_vec, FTKVL_vec, FTKCL_vec, \
+        #     JSUBV_nonvec, JKVL_nonvec, JKCL_nonvec, \
+        #     JSUBV_vec, JKVL_vec, JKCL_vec
 
         if JT.shape[0] >= JT.shape[1]: #non-vectorized
             XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
@@ -170,6 +170,12 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
 
         #print(itercount)
         itercount+=1 #diff from the other iter_count
+        print(iter_count)
+    return FT_deep_vec, FT_deep_nonvec, JT_deep_vec, JT_deep_nonvec, XNR_deep_vec, XNR_deep_notvec, \
+        FTSUBV_nonvec, FTKVL_nonvec, FTKCL_nonvec, \
+        FTSUBV_vec, FTKVL_vec, FTKCL_vec, \
+        JSUBV_nonvec, JKVL_nonvec, JKCL_nonvec, \
+        JSUBV_vec, JKVL_vec, JKCL_vec
 
         #pass
     #print(XNR)

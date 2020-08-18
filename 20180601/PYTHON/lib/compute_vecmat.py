@@ -333,28 +333,14 @@ def compute_vecmat(XNR, network1, fn, Vslack):
     # assumed to be the first node, which respresents the transmission line, or
     # substation if the network configuration is as such - see note below
 
-    beta_S = 1
+    beta_S = 0.9
     beta_I = 0
-    beta_Z = 0
+    beta_Z = 0.1
 
-    H = np.zeros(( 2*3*(nnode-1), 2 * 3 * (nnode + nline), 2 * 3* (nnode + nline)))
-    g = np.zeros(( 2*3*(nnode-1), 1, 2*3*(nnode+nline)))
-    b = np.zeros(( 2*3*(nnode-1), 1, 1))
-    s = np.zeros((2, 3, 4))
-    print("START ")
-    print(s)
-    s[0, 0, 0] = 1
-    print(s)
-    s[0][0][0] = 2
-    print(s)
-    s[1, 2, 1] = 5
-    print(s)
-    s[0, 1, 3] = 7
-    print(s)
-    s[0][1][3] = 8
-    print(s)
-    s[0, :, 0] = np.ones((3))
-    print(s)
+    H = np.zeros((2*3*(nnode-1), 2 * 3 * (nnode + nline), 2 * 3* (nnode + nline)))
+    g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline)))
+    b = np.zeros((2*3*(nnode-1), 1, 1))
+
     for ph in range(0,3):
         if ph == 0: #set nominal voltage based on phase
             A0 = 1
@@ -366,7 +352,7 @@ def compute_vecmat(XNR, network1, fn, Vslack):
             A0 = -1/2
             B0 = np.sqrt(3)/2
         for k2 in range(1, len(dss.Circuit.AllBusNames())): #skip slack bus
-            dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k2])
+            dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k2]) #set the bus
             in_lines, out_lines = linelist(dss.Circuit.AllBusNames()[k2]) #get in/out lines of bus
             for cplx in range(0,2):
                 load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx, ph)
@@ -387,37 +373,38 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                     if available_phases[ph] == 1:
                         if cplx == 0: #real residual
                             #A_m and C_lm
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = 1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = 1/2
                             #B_m and D_lm
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = 1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = 1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 1/2
                         if cplx == 1: #complex residual
                             #A_m, D_lm
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = -1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = -1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = -1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = -1/2
                             #B_m and C_lm
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
 
                 for j in range(len(out_lines)): #fill in H for the outlines
                     dss.Lines.Name(out_lines[j])
                     line_idx = get_line_idx(out_lines[j])
+
                     if available_phases[ph] == 1:
                         if cplx == 0:
                             #A_m and C_mn
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = -1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = -1/2
                             #B_m and D_mn
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = -1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = -1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = -1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = -1/2
                         if cplx == 1:
                             #A_m and D_mn
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1]= 1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = 1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1]= 1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = 1/2
                             #C_m and B_mn
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
+                            H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
 
     #Linear Term
     for ph in range(0,3):
