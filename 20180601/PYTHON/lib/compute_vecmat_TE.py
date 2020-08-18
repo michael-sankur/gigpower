@@ -293,9 +293,9 @@ def compute_vecmat_TE(XNR, network1, fn, Vslack):
     # assumed to be the first node, which respresents the transmission line, or
     # substation if the network configuration is as such - see note below
 
-    beta_S = 0.9
-    beta_I = 0
-    beta_Z = 0.1
+    beta_S = 0.85
+    beta_I = 0.15
+    beta_Z = 0.05
 
     H = np.zeros((2*3*(nnode-1), 2 * 3 * (nnode + nline), 2 * 3* (nnode + nline)))
     g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline)))

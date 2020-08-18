@@ -244,7 +244,7 @@ def compute_vecmat(XNR, network1, fn, Vslack):
             X = np.append(X, C_mn[lines*3 + ph]) #add c, d by line and then phase
             X = np.append(X, D_mn[lines*3 + ph])
 
-    X = np.reshape(X, (2*3*(nnode+nline), 1))
+    #X = np.reshape(X, (2*3*(nnode+nline), 1))
     X = np.reshape(XNR, (2*3*(nnode+nline), 1 ))
 
     #------------ slack bus ------------------
