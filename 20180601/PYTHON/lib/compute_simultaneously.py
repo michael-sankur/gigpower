@@ -3,9 +3,9 @@ import numpy as np
 from lib.compute_NR3FT_vectorized import compute_NR3FT_vectorized as ft1
 from lib.compute_NR3JT_vectorized import compute_NR3JT_vectorized as jt1
 #not vectorized
-# from lib.compute_NR3FT_real import compute_NR3FT_real_function as ft2
-# from lib.compute_NR3JT_real import compute_NR3JT_real_function as jt2
-from lib.compute_vecmat import compute_vecmat
+from lib.compute_NR3FT_real import compute_NR3FT_real_function as ft2
+from lib.compute_NR3JT_real import compute_NR3JT_real_function as jt2
+from lib.compute_vecmat_TE import compute_vecmat_TE
 
 from lib.relevant_openDSS_parameters import relevant_openDSS_parameters
 
@@ -13,14 +13,12 @@ from lib.relevant_openDSS_parameters import relevant_openDSS_parameters
 import opendssdirect as dss
 import re
 
-def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
+def NR3_function(network, fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
 
     dss.run_command('Redirect ' + fn)
     dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
-    # This function runs a Newton-Raphson algorithm to solve power flow
-    network = None
 
     # The NR algorithm variable
     # X = [V^a V^b V^c I^a I^b I^c]
@@ -92,51 +90,49 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
     # XNR_deep_vec[iter_count, :, 0] = XNR[:, 0]
     # XNR_deep_notvec[iter_count, :, 0] = XNR[:, 0]
 
-    FT1 = 1e99
+    FT = 1e99
     itercount = 0
 
-    Vslack = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
+    XNR1, g_SB, b_SB, G_KVL, b_KVL, H, g, b = compute_vecmat_TE(XNR, network, fn, Vslack)
 
-    XNR1, g_SB, b_SB, G_KVL, b_KVL, H, g, b = compute_vecmat(XNR, network, fn, Vslack)
-
-    XNR_deep_vec[iter_count, :, 0] = XNR[:, 0]
-    #XNR_deep_notvec[iter_count, :, 0] = XNR1[:, 0]
-    while np.amax(np.abs(FT1)) >= 1e-9 and itercount < maxiter:
-
-        FT1 = ft1(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode) #vectorized
+    XNR_deep_vec[iter_count, :, 0] = XNR1[:, 0]
+    XNR_deep_notvec[iter_count, :, 0] = XNR[:, 0]
+    while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
+        print(itercount)
+        FT1 = ft1(XNR1, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode) #vectorized
         FT_deep_vec[iter_count,:, :] = FT1
         FTSUBV_vec[iter_count, :, 0] = np.reshape(FT1[0:6], (6))
         FTKVL_vec[iter_count,:, 0] = np.reshape(FT1[6:42], (36))
         FTKCL_vec[iter_count, :, 0] = np.reshape(FT1[42:], (36))
 
-        JT1 = jt1(XNR, g_SB, G_KVL, H, g, nnode, nline)
+        JT1 = jt1(XNR1, g_SB, G_KVL, H, g, nnode, nline)
         JT_deep_vec[ iter_count,:, :] = JT1
         JSUBV_vec[ iter_count,:, :] = np.reshape(JT1[0:6], (6, 78))
         JKVL_vec[ iter_count,:, :] = np.reshape(JT1[6:42], (36, 78))
         JKCL_vec[ iter_count,:, :] = np.reshape(JT1[42:], (36, 78))
 
-        # FT = ft2(XNR,network,slacknode,Vslack) #not vectorized
-        # FT_deep_nonvec[ iter_count,:, :] = FT
-        # FTSUBV_nonvec[ iter_count,:, 0] = np.reshape(FT[0:6], (6))
-        # FTKVL_nonvec[ iter_count,:, 0] = np.reshape(FT[6:42], (36))
-        # FTKCL_nonvec[ iter_count,:, 0] = np.reshape(FT[42:], (36))
-        #
-        # JT = jt2(XNR,network,slacknode,Vslack)
-        # JT_deep_nonvec[ iter_count,:, :] = JT
-        # JSUBV_nonvec[ iter_count,:, :]= np.reshape(JT[0:6], (6, 78))
-        # JKVL_nonvec[ iter_count,:, :] = np.reshape(JT[6:42], (36, 78))
-        # JKCL_nonvec[ iter_count,:, :] = np.reshape(JT[42:], (36, 78))
+        FT = ft2(XNR,network,slacknode,Vslack) #not vectorized
+        FT_deep_nonvec[ iter_count,:, :] = FT
+        FTSUBV_nonvec[ iter_count,:, 0] = np.reshape(FT[0:6], (6))
+        FTKVL_nonvec[ iter_count,:, 0] = np.reshape(FT[6:42], (36))
+        FTKCL_nonvec[ iter_count,:, 0] = np.reshape(FT[42:], (36))
+
+        JT = jt2(XNR,network,slacknode,Vslack)
+        JT_deep_nonvec[ iter_count,:, :] = JT
+        JSUBV_nonvec[ iter_count,:, :]= np.reshape(JT[0:6], (6, 78))
+        JKVL_nonvec[ iter_count,:, :] = np.reshape(JT[6:42], (36, 78))
+        JKCL_nonvec[ iter_count,:, :] = np.reshape(JT[42:], (36, 78))
 
         iter_count += 1 #count up at this point (indexing should match)
 
-        # if JT.shape[0] >= JT.shape[1]: #non-vectorized
-        #     XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
+        if JT.shape[0] >= JT.shape[1]: #non-vectorized
+            XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
         if JT1.shape[0] >= JT1.shape[1]: #vectorized
-            XNR = XNR - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
+            XNR1 = XNR1 - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
 
         #dump xnr into the mega-XNR matrix
-        XNR_deep_vec[iter_count, :, 0] = XNR[:, 0]
-        #XNR_deep_notvec[ iter_count, :, 0] = XNR[:, 0]
+        XNR_deep_vec[iter_count, :, 0] = XNR1[:, 0]
+        XNR_deep_notvec[ iter_count, :, 0] = XNR[:, 0]
 
         itercount+=1 #diff from the other iter_count, limits # of iterations
 
@@ -149,10 +145,16 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
 
 
 
+
     TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(fn)
     #XNR = XNr1
     print(XNR)
+    print('split')
+    print(XNR1)
+    #XNR = XNR1
+
+    print(XNR-(XNR1))
     #remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
     #VNR = XNR(1:2:2*3*nnode-1).' + 1j*XNR(2:2:2*3*nnode).';
     VNR = np.zeros((3,nnode), dtype='complex')
@@ -216,7 +218,7 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
                 sNR[ph,k1] = 0 + sNR[ph,k1].imag
             if np.abs(sNR[ph,k1].imag) <= 1e-12:
                 sNR[ph,k1] = sNR[ph,k1].real + 0
-    sNR[PH == 0] = 0;
+
     # Total node current
 
     iNR[PH != 0] = np.conj(sNR[PH != 0]/VNR[PH != 0]); #also needs to be updated...
@@ -227,12 +229,12 @@ def NR3_function(network, fn, slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
                 iNR[ph,k1] = 0 + iNR[ph,k1].imag
             if np.abs(iNR[ph,k1].imag) <= 1e-12:
                 iNR[ph,k1] = iNR[ph,k1].real + 0
-    iNR[PH == 0] = 0;
-    # return FT_deep_vec, FT_deep_nonvec, JT_deep_vec, JT_deep_nonvec, XNR_deep_vec, XNR_deep_notvec, \
-    #     FTSUBV_nonvec, FTKVL_nonvec, FTKCL_nonvec, \
-    #     FTSUBV_vec, FTKVL_vec, FTKCL_vec, \
-    #     JSUBV_nonvec, JKVL_nonvec, JKCL_nonvec, \
-    #     JSUBV_vec, JKVL_vec, JKCL_vec
+
+    return FT_deep_vec, FT_deep_nonvec, JT_deep_vec, JT_deep_nonvec, XNR_deep_vec, XNR_deep_notvec, \
+        FTSUBV_nonvec, FTKVL_nonvec, FTKCL_nonvec, \
+        FTSUBV_vec, FTKVL_vec, FTKCL_vec, \
+        JSUBV_nonvec, JKVL_nonvec, JKCL_nonvec, \
+        JSUBV_vec, JKVL_vec, JKCL_vec
     print('iNR')
     print(iNR)
     print('sNR')

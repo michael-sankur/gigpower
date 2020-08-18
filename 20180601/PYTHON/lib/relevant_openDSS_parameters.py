@@ -51,10 +51,9 @@ def relevant_openDSS_parameters(fn):
         bus1 = dss.Lines.Bus1()
         bus2 = dss.Lines.Bus2()
         pattern = r"(\w+)."
+
         TXnode[line] = re.findall(pattern, bus1)[0]
         RXnode[line] = re.findall(pattern, bus2)[0]
-
-
         TXnum[line] = busIdx[TXnode[line]]
         RXnum[line] = busIdx[RXnode[line]]
     #spu, apq, ai, az
@@ -81,12 +80,12 @@ def relevant_openDSS_parameters(fn):
         elif kph[0] == 'c':
             kph = 2
 
-        aPQ[kph, knode] = 0.9 #temporary
-        #aI[kph,knode] = .5
-        aZ[kph, knode] = 0.1
-        ppu[kph,knode] = dss.Loads.kW() / 1000
-        qpu[kph,knode] = dss.Loads.kvar() / 1000
-    spu = ppu + 1j*qpu
+        aPQ[kph, knode] = 0.85 #temporary
+        aI[kph,knode] = 0.1
+        aZ[kph, knode] = 0.05
+        ppu[kph,knode] = dss.Loads.kW() * 1000 / 1000000.0
+        qpu[kph,knode] = dss.Loads.kvar() * 1000 / 1000000.0
+    spu = ppu + 1j * qpu
 
     #cappu, wpu, vvcpu
     cappu = np.zeros((3,nnode))
