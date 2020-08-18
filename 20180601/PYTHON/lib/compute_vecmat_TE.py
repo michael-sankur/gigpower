@@ -2,7 +2,7 @@ import numpy as np
 import opendssdirect as dss
 import re
 import sys
-def compute_vecmat(XNR, network1, fn, Vslack):
+def compute_vecmat_TE(XNR, network1, fn, Vslack):
 
     np.set_printoptions(threshold=sys.maxsize)
     # Michael Sankur - msankur@lbl.gov
@@ -54,9 +54,8 @@ def compute_vecmat(XNR, network1, fn, Vslack):
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
-    # import os
-    # cwd = os.getcwd()
-    # print(cwd)
+
+    #Helper Methods
 
     def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
     #1 if phase exists, 0 o.w.
@@ -87,9 +86,29 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 k = n
         return k
 
+    def get_line_idx(line): #returns the index of a line as stored in dss.Lines.AllNames()
+        k = -1
+        for n in range(len(dss.Lines.AllNames())):
+            if dss.Lines.AllNames()[n] == line:
+                k = n
+        return k
+
     def identify_bus_phases(bus): #figures out which phases correspond to the bus
     #returns a list of the r/x matrix places that have those phase/s
         k = np.zeros(3)
+        for i in range(1, 4):
+            pattern = r"\.%s" % (str(i))
+            m = re.findall(pattern, bus)
+            if m:
+                k[i - 1] = 1
+        return k
+
+    def identify_line_phases(line): #figures out which phases correspond to a line
+    #(for assigning rmatrix based on line code)
+    #returns list of 0's 1's whether or not phase exists in line
+        k = np.zeros(3)
+        dss.Lines.Name(line)
+        bus = dss.Lines.Bus1()
         for i in range(1, 4):
             pattern = r"\.%s" % (str(i))
             m = re.findall(pattern, bus)
@@ -108,12 +127,6 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 in_lines = np.append(in_lines, dss.Lines.AllNames()[k])
         return in_lines,out_lines
 
-    def get_line_idx(line): #returns the index of a line as stored in dss.Lines.AllNames()
-        k = -1
-        for n in range(len(dss.Lines.AllNames())):
-            if dss.Lines.AllNames()[n] == line:
-                k = n
-        return k
 
     def d_factor(busname, cplx, ph):
         #factor = np.array([])
@@ -130,22 +143,7 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                     return  dss.Loads.kvar()*1*1e3/Sbase
         return 0
 
-
-
-    def identify_line_phases(line): #figures out which phases correspond to a line
-    #(for assigning rmatrix based on line code)
-    #returns list of 0's 1's whether or not phase exists in line
-        k = np.zeros(3)
-        dss.Lines.Name(line)
-        bus = dss.Lines.Bus1()
-        for i in range(1, 4):
-            pattern = r"\.%s" % (str(i))
-            m = re.findall(pattern, bus)
-            if m:
-                k[i - 1] = 1
-        return k
-
-    # Residuals for slack node voltage
+    # X
     A_m = np.array([])
     B_m = np.array([])
 
@@ -154,6 +152,8 @@ def compute_vecmat(XNR, network1, fn, Vslack):
 
     R_matrix = np.zeros((nline,9))
     X_matrix = np.zeros((nline,9))
+
+    X = np.zeros((2*3*(nnode+nline), 1))
 
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
     kV_base = dss.Bus.kVBase() * 1000
@@ -164,18 +164,13 @@ def compute_vecmat(XNR, network1, fn, Vslack):
         dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k1])
         phases = bus_phase_dict[dss.Circuit.AllBusNames()[k1]]
         volts = dss.Bus.PuVoltage() #get bus1's puVoltage
-        a_temp = np.zeros(3)
-        b_temp = np.zeros(3)
-
         count = 0
-        for i in range(0, 3):
-            if phases[i] == 1: #need to properly assign voltages based on what phases exist
-                a_temp[i] = volts[count]
-                b_temp[i] = volts[count+1]
+        for ph in range(0, 3):
+            if phases[ph] == 1: #assign voltages based on what phases exist
+                X[2*nnode*ph + 2*k1] = volts[count]
+                X[2*nnode*ph + 2*k1 + 1] = volts[count + 1]
                 count = count + 2
-
-        A_m = np.append(A_m, a_temp) #split into re/im parts
-        B_m = np.append(B_m, b_temp)
+    X[2*3*nnode:] = 0
 
     for k2 in range(len(dss.Lines.AllNames())):
         dss.Lines.Name(dss.Lines.AllNames()[k2]) #set the line
@@ -221,57 +216,34 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 r_temp2 = np.hstack((r_temp[:, :], np.zeros((3,1))))
                 R_matrix[k2, :] = r_temp2.flatten()
 
-        c_temp = np.zeros(3) #retrieve line current
-        d_temp = np.zeros(3)
-
-        for i in range(0, 3): #len(dss.CktElement.Currents()), 2): #get the currents of the line
-            c_temp[i] = 0
-            d_temp[i] = 0
-    #         c_temp[i//2] = np.divide(dss.CktElement.Currents()[i], kV_base) #per unit-ify the currents
-    #         d_temp[i//2] = np.divide(dss.CktElement.Currents()[i+1], kV_base)
-        C_mn = np.append(C_mn, c_temp)
-        D_mn = np.append(D_mn, d_temp)
-
-    X = np.array([]) #make X, X.shape = (2*3*(nline+nnode), 1)
-
-    for ph in range(0,3):
-        for nodes in range(nnode):
-            X = np.append(X, A_m[nodes*3 + ph]) #add a, b by node and then phase
-            X = np.append(X, B_m[nodes*3 + ph])
-
-    for ph in range(0, 3):
-        for lines in range(nline):
-            X = np.append(X, C_mn[lines*3 + ph]) #add c, d by line and then phase
-            X = np.append(X, D_mn[lines*3 + ph])
-
-    X = np.reshape(X, (2*3*(nnode+nline), 1))
     X = np.reshape(XNR, (2*3*(nnode+nline), 1 ))
+
 
     #------------ slack bus ------------------
 
-
-    g_SB = np.array([]) #assumes slack bus is at index 0
+    g_SB = np.zeros((6, (2*3*(nnode+nline)))) #assumes slack bus is at index 0
     sb_idx = [0, 1, 2*nnode, (2*nnode)+1, 4*nnode, (4*nnode)+1]
-    for i in range(len(sb_idx)):
+    #temp_row = np.zeros(len(X))
+    for j in range(len(sb_idx)):
         temp_row = np.zeros(len(X))
-        temp_row[sb_idx[i]] = 1
-        g_SB = np.append(g_SB, temp_row)
-    g_SB = np.reshape(g_SB, (6, (2*3*(nnode+nline))))
+        temp_row[sb_idx[j]] = 1
+        g_SB[j, :] = temp_row
+
+    b_SB = np.zeros((6,1))
+    count = 0
+    for i in range(0, 3):
+        b_SB[count, 0] = Vslack[i].real
+        b_SB[count + 1, 0] =  Vslack[i].imag
+        count = count + 2
 
 
-    b_SB = np.array([])
-    for i in range(3):
-        b_SB = np.append(b_SB, Vslack[i].real)
-        b_SB = np.append(b_SB, Vslack[i].imag)
-    b_SB = np.reshape(b_SB, (6, 1))
+    # ---------KVL residual along line (m,n)-------------
 
-    #--------------------------------------------------
-    # Residuals for KVL across line (m,n)
 
-    R_matrix = R_matrix/Zbase
+    R_matrix = R_matrix/Zbase #pu-ify
     X_matrix = X_matrix/Zbase
 
-    G_KVL = np.array([])
+    G_KVL = np.zeros((2*3*nline, 2*3*(nnode+nline)))
 
     for ph in range(0, 3):
         for line in range(len(dss.Lines.AllNames())):
@@ -289,35 +261,29 @@ def compute_vecmat(XNR, network1, fn, Vslack):
             #assigning the re voltage coefficients
 
             if bus1_phases[ph] == 1:
-                temp_row[2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
-                temp_row[2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n
-                #assigning the summation portion of the residual
-                temp_row[2*3*(nnode) + 2*line] = -R_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
-                temp_row[2*3*(nnode) + 2*line + 1] = X_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
-                temp_row[2*3*(nnode) + 2*nline + 2*line] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
-                temp_row[2*3*(nnode) + 2*nline + 2*line + 1] = X_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
-                temp_row[2*3*(nnode) + 4*nline + 2*line] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
-                temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = X_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
-                G_KVL = np.append(G_KVL, temp_row)
-                temp_row = np.zeros(len(X))
-                temp_row[2*(nnode)*ph + 2*(bus1_idx) + 1] = 1 #B_m
-                temp_row[2*(nnode)*ph + 2*(bus2_idx) + 1] = -1 #B_n
-                temp_row[2*3*(nnode) + 2*line] = -X_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
-                temp_row[2*3*(nnode) + 2*line + 1] = -R_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
-                temp_row[2*3*(nnode) + 2*nline + 2*line] = -X_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
-                temp_row[2*3*(nnode) + 2*nline + 2*line + 1] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
-                temp_row[2*3*(nnode) + 4*nline + 2*line] = -X_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
-                temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
-                G_KVL = np.append(G_KVL, temp_row)
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n
+                G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 2*line] = -R_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
+                G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 2*line + 1] = X_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
+                G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 2*nline + 2*line] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
+                G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 2*nline + 2*line + 1] = X_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
+                G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 4*nline + 2*line] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
+                G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 4*nline + 2*line + 1] = X_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
+
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx) + 1] = 1 #B_m
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx) + 1] = -1 #B_n
+                G_KVL[2*ph*nline + 2*line + 1][2*3*(nnode) + 2*line] = -X_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
+                G_KVL[2*ph*nline + 2*line + 1][2*3*(nnode) + 2*line + 1] = -R_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
+                G_KVL[2*ph*nline + 2*line + 1][2*3*(nnode) + 2*nline + 2*line] = -X_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
+                G_KVL[2*ph*nline + 2*line + 1][2*3*(nnode) + 2*nline + 2*line + 1] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
+                G_KVL[2*ph*nline + 2*line + 1][2*3*(nnode) + 4*nline + 2*line] = -X_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
+                G_KVL[2*ph*nline + 2*line + 1][2*3*(nnode) + 4*nline + 2*line + 1] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
+
             #same as above for imaginary part of KVL residual
             else:
-                temp_row[2*(nnode)*3 + 2*ph*nline + 2*line] = 1 #C_mn
-                G_KVL = np.append(G_KVL, temp_row)
-                temp_row = np.zeros(len(X))
-                temp_row[2*(nnode)*3 + 2*ph*nline + 2*line+1] = 1 #D_mn
-                G_KVL = np.append(G_KVL, temp_row)
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*3 + 2*ph*nline + 2*line] = 1 #C_mn
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*3 + 2*ph*nline + 2*line+1] = 1 #D_mn
 
-    G_KVL = np.reshape(G_KVL, (2*3*nline, (2*3*(nnode+nline))))
     b_kvl = np.zeros((2*3*nline, 1))
 
     #---------------------------
@@ -356,10 +322,10 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 bp =  bus_phases()
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                 if available_phases[ph] == 1:                 #quadratic terms
-                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = -load_val * (beta_Z) #+ (0.5 * beta_I* hessian_mag[0][0])) # TE replace right side of equality with -load_val * beta_Z #a**2
-                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = -load_val * (beta_Z)# + (0.5 * beta_I * hessian_mag[1][1])) # TE -load_val * beta_Z #b**2
-                    #H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * beta_I * hessian_mag[0][1] #cross quad. terms in taylor exp,TE  remove
-                    #H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] =  -load_val * beta_I * hessian_mag[0][1] #TE remove
+                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = -load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) # TE replace assignment w/ -load_val * beta_Z; #a**2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = -load_val * (beta_Z  + (0.5 * beta_I * hessian_mag[1][1])) # TE replace assignment w/ -load_val * beta_Z; #b**2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1] = -load_val * beta_I * hessian_mag[0][1] #remove for TE
+                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] =  -load_val * beta_I * hessian_mag[1][0] #remove for TE
 
                 for i in range(len(in_lines)): #fill in H for the inlines
                     dss.Lines.Name(in_lines[i])
@@ -383,7 +349,6 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 for j in range(len(out_lines)): #fill in H for the outlines
                     dss.Lines.Name(out_lines[j])
                     line_idx = get_line_idx(out_lines[j])
-
                     if available_phases[ph] == 1:
                         if cplx == 0:
                             #A_m and C_mn
@@ -416,21 +381,20 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx, ph)
                 #linear terms
                 g_temp = np.zeros(len(X)) #preallocate g
-                bp =  bus_phases() #dictionary {key = bus: value = 3x1 binary array of array existence}
-                available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
-
+                available_phases = bus_phases()[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                 if available_phases[ph] == 0: #if phase does not exist
                     g_temp[2*(ph)*nnode + 2*k2 + cplx] = 1
-                    # g_temp[2*ph*nnode+ 2 * k2] = -load_val* beta_I * ((1/2 * (-2 * A0 * hessian_mag[0][0] - 2 * B0 * hessian_mag[0][1])) #remove lines for TE\
-                    #                       +  gradient_mag[0]) # TE remove
-                    # g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((1/2 * (-2* A0 *hessian_mag[0][1] - 2 * B0 * hessian_mag[1][1])) #remove lines \
-                    #                           +  gradient_mag[1]) #TE remove
-                g[2*(nnode-1)*ph + 2*(k2-1) + cplx, 0,:] = g_temp #o.w.
+                else:
+                    g_temp[2*ph*nnode+ 2 * k2] = -load_val* beta_I * ((1/2 * (-2 * A0 * hessian_mag[0][0] - 2 * B0 * hessian_mag[0][1])) \
+                                           +  gradient_mag[0]) #remove for TE
+                    g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((1/2 * (-2* A0 *hessian_mag[0][1] - 2 * B0 * hessian_mag[1][1])) \
+                                               +  gradient_mag[1]) #remove for TE
+                g[2*(nnode-1)*ph + 2*(k2-1) + cplx, 0,:] = g_temp
 
                 #constant terms
-                b_factor = 0
+                b_factor = 0 #DER term
                 if cplx == 0:
-                    b_factor = 0 #DER term
+                    b_factor = 0
                 elif cplx == 1:
                     b_factor = (dss.Capacitors.kvar()*1000/Sbase) #DER term
                     b_factor = 0
@@ -438,14 +402,13 @@ def compute_vecmat(XNR, network1, fn, Vslack):
                 if available_phases[ph] == 0: #if phase does not exist at bus, set b = 0
                     b_temp = 0
                 else:
-                    b_temp = (-load_val * beta_S) + b_factor
+                    #b_temp = (-load_val * beta_S) + b_factor #TE version
+                    b_temp = -load_val * (beta_S \
+                    + (beta_I) * (hessian_mag[0][1] * A0 * B0 + (1/2)*hessian_mag[0][0] * ((A0)**2) + (1/2)*hessian_mag[1][1] * (B0**2)) \
+                    - beta_I * (A0 * gradient_mag[0] +B0* gradient_mag[1]) \
+                    + beta_I * (A0**2 + B0**2) ** (1/2)) \
+                    + b_factor #calculate out the constant term in the residual
 
-                #-load_val * (beta_S\ /
-                    # + (beta_I) * (hessian_mag[0][1] * A0 * B0 + (1/2)*hessian_mag[0][0] * ((A0)**2) + (1/2)*hessian_mag[1][1] * (B0**2)) \
-                    # - beta_I * (A0 * gradient_mag[0] +B0* gradient_mag[1]) \
-                    # + beta_I * (A0**2 + B0**2) ** (1/2)) \
-                    # + b_factor #calculate out the constant term in the residual
-                    ##-load_val * beta_S + b_factor #TE version
                 b[2*(nnode-1)*ph + 2*(k2-1) + cplx][0][0] = b_temp #store the in the b matrix
 
     return X, g_SB, b_SB, G_KVL, b_kvl, H, g, b
