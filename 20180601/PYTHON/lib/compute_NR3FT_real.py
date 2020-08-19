@@ -235,15 +235,12 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 dX_t = np.reshape(dX, (1, 2))
 
                 gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))])
-                gradient_mag = np.reshape(gradient_mag, ( 1,2))
+                gradient_mag = np.reshape(gradient_mag, (1,2))
                 gradient_mag_sq = np.array([2 *A0, 2 * B0]) #gradient of magnitude squared
-                gradient_mag_sq = np.reshape(gradient_mag_sq, ( 1,2))
+                gradient_mag_sq = np.reshape(gradient_mag_sq, (1,2))
 
                 hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
                                     [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
-        
-
-                #print(hessian_mag @ dX_t)
 
                 #second order TE of magnitude and no TE of mag sq
                 FTKCL[idxre] = FTKCL[idxre] - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1] * \
@@ -254,7 +251,8 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
 
                 FTKCL[idxim] = FTKCL[idxim] - spu[ph,k1].imag*(APQ[ph,k1] + AI[ph, k1] * \
                 ((A0**2+B0**2)**(1/2) + (gradient_mag @ dX) + \
-                (1/2) * (dX_t @ (hessian_mag @ dX))) + AZ[ph, k1] * (XNR[idxAm]**2 + XNR[idxBm]**2)) \
+                (1/2) * (dX_t @ (hessian_mag @ dX))) \
+                + AZ[ph, k1] * (XNR[idxAm]**2 + XNR[idxBm]**2)) \
                  + cappu[ph,k1].real - wpu[ph,k1].imag
 
                 #Hessian_mag = np.array([[(-1/2) * ],\
@@ -309,9 +307,6 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 #     ((A0**2+B0**2) + np.matmul(gradient_mag_sq, dX_t) + \
                 #     # (1/2) * np.matmul(dX_t, 2 * dX)))  \
                 #     + cappu[ph,k1].real - wpu[ph,k1].imag
-
-
-
 
                 # Applying first order Taylor Expansion to the Magnitude
                 # FTKCL[idxre] = FTKCL[idxre] \

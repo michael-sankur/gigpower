@@ -294,7 +294,7 @@ def compute_vecmat_TE(XNR, network1, fn, Vslack):
     # substation if the network configuration is as such - see note below
 
     beta_S = 0.85
-    beta_I = 0.1
+    beta_I = 0.10
     beta_Z = 0.05
 
     H = np.zeros((2*3*(nnode-1), 2 * 3 * (nnode + nline), 2 * 3* (nnode + nline)))
@@ -404,9 +404,9 @@ def compute_vecmat_TE(XNR, network1, fn, Vslack):
                 else:
                     #b_temp = (-load_val * beta_S) + b_factor #TE version
                     b_temp = -load_val * (beta_S \
-                    + (beta_I) * (hessian_mag[0][1] * A0 * B0 + (1/2)*hessian_mag[0][0] * ((A0)**2) + (1/2)*hessian_mag[1][1] * (B0**2)) \
-                    - beta_I * (A0 * gradient_mag[0] +B0* gradient_mag[1]) \
-                    + beta_I * (A0**2 + B0**2) ** (1/2)) \
+                    + (beta_I) * (((hessian_mag[0][1] * A0 * B0) + ((1/2)*hessian_mag[0][0] * ((A0)**2)) + ((1/2)*hessian_mag[1][1] * (B0**2))) \
+                    -  (A0 * gradient_mag[0] + B0* gradient_mag[1]) \
+                    +  (A0**2 + B0**2) ** (1/2))) \
                     + b_factor #calculate out the constant term in the residual
 
                 b[2*(nnode-1)*ph + 2*(k2-1) + cplx][0][0] = b_temp #store the in the b matrix

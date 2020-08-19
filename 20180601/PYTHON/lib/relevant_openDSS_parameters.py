@@ -81,7 +81,7 @@ def relevant_openDSS_parameters(fn):
             kph = 2
 
         aPQ[kph, knode] = 0.85 #temporary
-        aI[kph,knode] = 0.1
+        aI[kph,knode] = 0.10
         aZ[kph, knode] = 0.05
         ppu[kph,knode] = dss.Loads.kW() * 1000 / 1000000.0
         qpu[kph,knode] = dss.Loads.kvar() * 1000 / 1000000.0
