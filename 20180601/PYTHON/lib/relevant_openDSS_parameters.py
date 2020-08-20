@@ -80,9 +80,9 @@ def relevant_openDSS_parameters(fn):
         elif kph[0] == 'c':
             kph = 2
 
-        aPQ[kph, knode] = 0.85 #temporary
-        aI[kph,knode] = 0.10
-        aZ[kph, knode] = 0.05
+        aPQ[kph, knode] = 1 #temporary
+        aI[kph,knode] = 0.00
+        aZ[kph, knode] = 0.00
         ppu[kph,knode] = dss.Loads.kW() * 1000 / 1000000.0
         qpu[kph,knode] = dss.Loads.kvar() * 1000 / 1000000.0
     spu = ppu + 1j * qpu
