@@ -83,7 +83,6 @@ def NR3_function(fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
     times = np.linspace(0, 2*np.pi, 102)
 
     XNR, g_SB, b_SB, G_KVL, b_KVL = compute_vecmat_TE(XNR, fn, Vslack)
-    H, g, b = compute_KCL_matrices(fn, 0, 0, 0)
     XNR_deep_vec[iter_count, :, 0] = XNR[:, 0]
 
     while np.amax(np.abs(FT1)) >= 1e-9 and itercount < maxiter:
