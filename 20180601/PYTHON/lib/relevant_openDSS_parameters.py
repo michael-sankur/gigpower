@@ -11,8 +11,8 @@ def relevant_openDSS_parameters(fn):
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
     #BASE values
-    Vbase = dss.Bus.kVBase() * 1000 / np.sqrt(3) #@mike edit
-    Sbase = 1000000.0 / np.sqrt(3) #@mike edit
+    Vbase = dss.Bus.kVBase() * 1000  #@mike edit
+    Sbase = 1000000.0  #@mike edit
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
 
@@ -94,11 +94,14 @@ def relevant_openDSS_parameters(fn):
                                 load_phases[i - 1] = 1
                         knode = get_bus_idx(dss.Circuit.AllBusNames()[k])
                         if sum(load_phases) == 1:
-                            aPQ[kph, knode] = 1 #temporary
+
+                            aPQ[kph, knode] = 0.85 #temporary
+                            aZ[kph,knode] = .15
                             ppu[kph,knode] = dss.Loads.kW() * 1e3 / Sbase
                             qpu[kph,knode] = dss.Loads.kvar() * 1e3 / Sbase
                         else:
-                            aPQ[kph, knode] = 1 #temporary
+                            aPQ[kph, knode] = 0.85 #temporary
+                            aZ[kph,knode] = .15
                             ppu[kph,knode] =( dss.Loads.kW() + dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
                             qpu[kph,knode] = ( dss.Loads.kW() + dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
 

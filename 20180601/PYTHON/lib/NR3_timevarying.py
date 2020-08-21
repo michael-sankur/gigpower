@@ -3,112 +3,37 @@ import numpy as np
 from lib.compute_NR3FT_vectorized import compute_NR3FT_vectorized as ft1
 from lib.compute_NR3JT_vectorized import compute_NR3JT_vectorized as jt1
 from lib.compute_vecmat import compute_vecmat
-from lib.compute_KCL_matrices import compute_KCL_matrices
+from lib.change_KCL_matrices import change_KCL_matrices
 from lib.relevant_openDSS_parameters import relevant_openDSS_parameters
 import opendssdirect as dss
 import re
 
-def NR3_function(fn, slacknode, Vslack, V0, I0, t, der, capacitance,tol=1e-9,maxiter=100 ):
-
+def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, der, capacitance, time):
     dss.run_command('Redirect ' + fn)
     #dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
 
-    # The NR algorithm variable
-    # X = [V^a V^b V^c I^a I^b I^c]
-    iter = 101 #preallocate # of iterations
-    iter_count = 0 #count # of iterations
-    #XNR
-    XNR_deep_vec = np.zeros((iter, 2*3*(nnode+nline), 1))
-    #FT
-    FT_deep_vec = np.zeros((iter,2*3*(nnode+nline), 1))
-    #JT
-    JT_deep_vec = np.zeros((iter,2*3*(nnode+nline), 2*3*(nnode+nline)))
-    #FT Slack Bus
-    FTSUBV_vec = np.zeros((iter,6, 1))
-    #FTKVL
-    FTKVL_vec = np.zeros((iter,2*3*nline, 1))
-    #FTKCL
-    FTKCL_vec = np.zeros((iter,(2*3*(nnode-1)), 1))
-    #J Slack Bus
-    JSUBV_vec = np.zeros((iter,6,2*3*(nline+ nnode) ))
-    #JKVL
-    JKVL_vec = np.zeros((iter,2*3*nline, 2*3*(nline+ nnode)))
-    #JKCL
-    JKCL_vec = np.zeros((iter,2*3*(nnode-1), 2*3*(nline+ nnode)))
-
-    XNR = np.zeros((2*3*(nnode + nline),1))
-
-    # intialize node voltage portion of XNR
-    if V0 == None or len(V0) == 0:
-        for ph in range(0,3):
-            for k1 in range(0,nnode):
-
-                XNR[2*ph*nnode + 2*k1] = Vslack[ph].real
-                XNR[2*ph*nnode + 2*k1+1] = Vslack[ph].imag
-
-    # If initial V is given (usually from CVX)
-    elif len(V0) != 0:
-        for ph in range(0,3):
-            for k1 in range(0,nnode):
-                XNR[2*ph*nnode + 2*k1] = V0[ph,k1].real
-                XNR[2*ph*nnode + 2*k1+1] = V0[ph,k1].imag
-
-
-    # intialize line current portion of XNR
-    if I0 == None or len(I0) == 0:
-        for k1 in range(0,nnode):
-            XNR[(2*3*nnode):] = 0.0*np.ones((6*nline,1))
-
-    elif len(I0) != 0:
-        for ph in range(0,3):
-            for k1 in range(0,nline):
-                XNR[(2*3*nnode) + 2*ph*nline + 2*k1] = I0[ph,k1].real
-                XNR[(2*3*nnode) + 2*ph*nline + 2*k1+1] = I0[ph,k1].imag
     if tol == None:
         tol = 1e-9
 
     if maxiter == None:
         maxiter = 100
 
-    #Fill XNR at iteration 0
-    # XNR_deep_vec[iter_count, :, 0] = XNR[:, 0]
-    # XNR_deep_notvec[iter_count, :, 0] = XNR[:, 0]
-
     FT1 = 1e99
     itercount = 0
 
 
-
-    XNR, g_SB, b_SB, G_KVL, b_KVL = compute_vecmat(XNR, fn, Vslack)
-    H, g, b = compute_KCL_matrices(fn,  t, der, capacitance)
-    XNR_deep_vec[iter_count, :, 0] = XNR[:, 0]
-
+    if der != 0 or capacitance != 0 or time != 1:
+        H, g, b = change_KCL_matrices(fn, H, g, b, time, der, capacitance)
     while np.amax(np.abs(FT1)) >= 1e-9 and itercount < maxiter:
         print("Iteration number %f" % (itercount))
         # H, g, b = compute_KCL_matrices(fn, times[itercount], 0, 0)
         FT1 = ft1(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode) #vectorized
-        FT_deep_vec[iter_count,:, :] = FT1
-        #print(FT1.shape)
-        FTSUBV_vec[iter_count, :, 0] = np.reshape(FT1[0:6], (6))
-        FTKVL_vec[iter_count,:, 0] = np.reshape(FT1[6:(6+(2*3*nline))], (2*3*nline))
-        FTKCL_vec[iter_count, :, 0] = np.reshape(FT1[(6+(2*3*(nnode-1))):], (2*3*(nnode-1)))
-
         JT1 = jt1(XNR, g_SB, G_KVL, H, g, nnode, nline)
-
-        JT_deep_vec[ iter_count,:, :] = JT1
-        JSUBV_vec[ iter_count,:, :] = np.reshape(JT1[0:6, :], (6, 2*3*(nnode+nline)))
-        JKVL_vec[ iter_count,:, :] = np.reshape(JT1[6:(6+(2*3*(nline))), :], ((2*3*(nline)), 2*3*(nnode+nline)))
-        JKCL_vec[ iter_count,:, :] = np.reshape(JT1[(6+(2*3*(nnode-1))):, :], (2*3*(nnode-1), 2*3*(nnode+nline)))
-
-        iter_count += 1 #count up at this point (indexing should match)
 
         if JT1.shape[0] >= JT1.shape[1]: #vectorized
             XNR = XNR - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
-
-        #dump xnr into the mega-XNR matrix
-        XNR_deep_vec[iter_count, :, 0] = XNR[:, 0]
 
         itercount+=1 #diff from the other iter_count, limits # of iterations
 
@@ -193,4 +118,5 @@ def NR3_function(fn, slacknode, Vslack, V0, I0, t, der, capacitance,tol=1e-9,max
     print(iNR)
     print('sNR')
     print(sNR)
+
     return VNR, INR, STXNR, SRXNR, iNR, sNR, itercount

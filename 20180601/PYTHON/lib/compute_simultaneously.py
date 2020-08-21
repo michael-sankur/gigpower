@@ -135,19 +135,14 @@ def NR3_function(network, fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
 
         itercount+=1 #diff from the other iter_count, limits # of iterations
 
-    # print('IT CONVERGED !! ')
     # return FT_deep_vec, FT_deep_nonvec, JT_deep_vec, JT_deep_nonvec, XNR_deep_vec, XNR_deep_notvec, \
     #     FTSUBV_nonvec, FTKVL_nonvec, FTKCL_nonvec, \
     #     FTSUBV_vec, FTKVL_vec, FTKCL_vec, \
     #     JSUBV_nonvec, JKVL_nonvec, JKCL_nonvec, \
     #     JSUBV_vec, JKVL_vec, JKCL_vec
 
-
-
-
     TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(fn)
-    #XNR = XNr1
 
     XNR = XNR1
 
@@ -174,7 +169,7 @@ def NR3_function(network, fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
                 INR[ph,k1] = 0 + INR[ph,k1].imag
             if np.abs(INR[ph,k1].imag) <= 1e-12:
                 INR[ph,k1] = INR[ph,k1].real + 0
-    # print('inr')
+
     print("INR:")
     print(INR)
 
@@ -195,13 +190,10 @@ def NR3_function(network, fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
             if np.abs(SRXNR[ph,k1].imag) <= 1e-12:
                 SRXNR[ph,k1] = SRXNR[ph,k1].real + 0
 
-    # print('stxnr and srxnr')
     print("STXNR:")
     print(STXNR)
     print("SRXNR:")
     print(SRXNR)
-    # print("\n")
-
 
     sNR = np.zeros((3,nnode), dtype='complex')
     iNR = np.zeros((3,nnode), dtype='complex')
@@ -216,7 +208,6 @@ def NR3_function(network, fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
                 sNR[ph,k1] = sNR[ph,k1].real + 0
 
     # Total node current
-
     iNR[PH != 0] = np.conj(sNR[PH != 0]/VNR[PH != 0]); #also needs to be updated...
     iNR[PH == 0] = 0;
     for ph in range(0,3):
@@ -226,11 +217,11 @@ def NR3_function(network, fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
             if np.abs(iNR[ph,k1].imag) <= 1e-12:
                 iNR[ph,k1] = iNR[ph,k1].real + 0
 
-    # return FT_deep_vec, FT_deep_nonvec, JT_deep_vec, JT_deep_nonvec, XNR_deep_vec, XNR_deep_notvec, \
-    #     FTSUBV_nonvec, FTKVL_nonvec, FTKCL_nonvec, \
-    #     FTSUBV_vec, FTKVL_vec, FTKCL_vec, \
-    #     JSUBV_nonvec, JKVL_nonvec, JKCL_nonvec, \
-    #     JSUBV_vec, JKVL_vec, JKCL_vec
+    return FT_deep_vec, FT_deep_nonvec, JT_deep_vec, JT_deep_nonvec, XNR_deep_vec, XNR_deep_notvec, \
+        FTSUBV_nonvec, FTKVL_nonvec, FTKCL_nonvec, \
+        FTSUBV_vec, FTKVL_vec, FTKCL_vec, \
+        JSUBV_nonvec, JKVL_nonvec, JKCL_nonvec, \
+        JSUBV_vec, JKVL_vec, JKCL_vec
     print('iNR')
     print(iNR)
     print('sNR')

@@ -67,8 +67,8 @@ def network_mapper_function(fn):
     print(dss.Circuit.AllBusNames())
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
-    Vbase = dss.Bus.kVBase() * 1000 / np.sqrt(3) #@mike edit
-    Sbase = 1000000.0 / np.sqrt(3) #@mike edit
+    Vbase = dss.Bus.kVBase() * 1000  #@mike edit
+    Sbase = 1000000.0  #@mike edit
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase

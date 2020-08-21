@@ -255,8 +255,6 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 + AZ[ph, k1] * (XNR[idxAm]**2 + XNR[idxBm]**2)) \
                  + cappu[ph,k1].real - wpu[ph,k1].imag
 
-                #Hessian_mag = np.array([[(-1/2) * ],\
-                #                        []]) some ratchet chain rule
 
                 # # Applying first order Taylor Expansion to Magnitude Squared (done)
                 # FTKCL[idxre] = FTKCL[idxre] \
@@ -322,7 +320,7 @@ def compute_NR3FT_real_function(XNR,network,slackidx,Vslack):
                 #     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \
                 #     + cappu[ph,k1].real - wpu[ph,k1].imag
 
-                # Not using Taylor Expansion
+                # # Not using Taylor Expansion
                 # FTKCL[idxre] = FTKCL[idxre] \
                 #     - spu[ph,k1].real*(APQ[ph,k1] + AI[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(1/2) \
                 #     + AZ[ph,k1]*(XNR[idxAm]**2 + XNR[idxBm]**2)) \

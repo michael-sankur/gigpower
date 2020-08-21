@@ -49,8 +49,9 @@ def compute_vecmat(XNR, fn, Vslack):
     dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
-    Vbase = dss.Bus.kVBase() * 1000 / np.sqrt(3) ##LL to LN
-    Sbase = 1000000.0 / np.sqrt(3) ##@mike edit
+    dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
+    Vbase = dss.Bus.kVBase() * 1000  ##LL to LN
+    Sbase = 1000000.0 ##@mike edit
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase

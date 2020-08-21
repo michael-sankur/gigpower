@@ -257,14 +257,15 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
                 #                                     + 2*AZ[ph,k1]*second_order_term[0][0])
                 # JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1] * gradient_mag[1] \
                 #                                     + 2*AZ[ph,k1]*second_order_term[0][1])
+
+                #Voltage magnitude - second order, squared - not TE
                 hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
-                                    [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
-                #hessian_mag = np.reshape(hessian_mag, (2, 2))
+                                     [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
+
                 dX = np.zeros((2,1))
                 dX[0] = dA
                 dX[1] = dB
                 dX = np.reshape(dX, (1, 2))
-
 
                 second_order_term = (gradient_mag + (dX @ hessian_mag)/2)[0]
 
@@ -278,6 +279,19 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
                                                     + 2*AZ[ph,k1]*XNR[idxAm])
                 JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1] * second_order_term[1] \
                                                     + 2*AZ[ph,k1]*XNR[idxAm])
+
+
+                # # derivates of real KVL residual with respect to real and imag voltage components
+                # JKCL[idxre,idxAm] = -spu[ph,k1].real*(AI[ph,k1]*XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                #                                       + 2*AZ[ph,k1]*XNR[idxAm])
+                # JKCL[idxre,idxBm] = -spu[ph,k1].real*(AI[ph,k1]*XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                #                                       + 2*AZ[ph,k1]*XNR[idxBm])
+                #
+                # # derivates of imag KVL residual with respect to real and imag voltage components
+                # JKCL[idxim,idxAm] = -spu[ph,k1].imag*(AI[ph,k1]*XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                #                                       + 2*AZ[ph,k1]*XNR[idxAm])
+                # JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1]*XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                #                                       + 2*AZ[ph,k1]*XNR[idxBm])
 
                 # #Using first order Taylor Expansion on magnitude
                 # #derivates of real KCL residual with respect to real and imag voltage components
