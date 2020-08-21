@@ -5,6 +5,13 @@ import scipy as sp
 import scipy.sparse.csgraph as cg
 import scipy.sparse.linalg as linalg
 from typing import Iterable, List
+import 
+
+def init_from_dss(network: Network, dss_fp: str) -> None:
+    """define Network attributes from a dss file"""
+    dss.run_command('Redirect ' + dss_fp)
+    # set base values
+    # make nodes
 
 
 def is_acyclic(dss_fp: str) -> bool:
@@ -12,10 +19,7 @@ def is_acyclic(dss_fp: str) -> bool:
     dss.run_command('Redirect ' + dss_fp)
     return dss.Topology.NumLoops == 0
     
-def get_network(dss_fp: str) -> Iterable :
-    """ returns a Compressed Sparse Column (CSC) representation of the network"""
-    dss.run_command('Redirect ' + dss_fp)
-    return sp.sparse.csc_matrix(dss.YMatrix.getYsparse())
+
 
 def get_node_names(dss_fp: str) -> List :
     """ 

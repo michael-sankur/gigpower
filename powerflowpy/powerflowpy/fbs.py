@@ -19,6 +19,10 @@ def fbs(dss_fp) -> None:
     # atthebuswhereislocatedatlineterminalorabranch intersection. 
     # Start the proposed procedure from the farthestbusobtainedbystep2.
 
+
+def _update(self, source_node: Node, target_node: Node) -> None:
+    pass
+
 if __name__ == '__main__':
     # run fbs from command line with path to dss file as an argument
     dss_file = sys.argv[1]
