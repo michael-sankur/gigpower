@@ -231,11 +231,11 @@ class LinDist3Flow:
                 A0 = -1/2
                 B0 = np.sqrt(3)/2
             for k2 in range(1, self.nnode): #skip slack bus
-                in_lines = self.in_lines[k2]
-                out_lines = self.out_lines[k2]
+                in_lines = self.in_lines[k2-1]
+                out_lines = self.out_lines[k2-1]
 
                 for cplx in range(0,2):
-                    load_val = self.bus_load(k2, cplx, ph)
+                    load_val = self.bus_load[k2, ph, cplx]
                     gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
                     hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
                                         [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
@@ -297,7 +297,7 @@ class LinDist3Flow:
                 B0 = np.sqrt(3)/2
             for k2 in range(1, len(dss.Circuit.AllBusNames())):
                 for cplx in range(0,2):
-                    load_val = self.bus_load(k2, cplx, ph)
+                    load_val = self.bus_load[k2, ph, cplx]
                     #linear terms
                     g_temp = np.zeros(len(self.XNR)) #preallocate g
                     available_phases = self.bus_phases[self.all_bus_names[k2]] #phase array at specific bus
@@ -331,6 +331,7 @@ class LinDist3Flow:
                         ##-load_val * beta_S + b_factor #TE version
                     b[2*(self.nnode-1)*ph + 2*(k2-1) + cplx][0][0] = b_temp #store the in the b matrix
 
+        return H, g, b
 
     def _bus_phases(self): #goes through all the buses and saves their phases to a list stored in a dictionary
         #1 if phase exists, 0 o.w.
