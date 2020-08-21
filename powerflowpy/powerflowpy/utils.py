@@ -2,13 +2,15 @@ import numpy as np
 import opendssdirect as dss
 import sys
 from typing import Iterable, List
-from network import Node, Line, Load, Controller, Capacitor
+from . network import Network, Node, Line, Load, Controller, Capacitor
 
-def init_from_dss(network: Network, dss_fp: str) -> None:
-    """define Network attributes from a dss file"""
+def init_from_dss(dss_fp: str) -> None:
+    """define a Network attributes from a dss file"""
     dss.run_command('Redirect ' + dss_fp)
     # set base values
     #TODO: figure out how to get Vbase, units and Sbase, units from opendss
+
+    network = Network()
 
     # make Nodes
     for node_name in dss.Circuit.AllNodeNames():
@@ -18,7 +20,7 @@ def init_from_dss(network: Network, dss_fp: str) -> None:
             network.nodes[name] = Node(name)
         node = network.nodes[name]
         phase_idx = int(phase) - 1 # shift to 0-indexing
-        self.phases[phase_idx] = 1 # add this phase to the node
+        node.phases[phase_idx] = 1 # add this phase to the node
     
     #make Lines
     line_codes = dss.LineCodes.AllNames()
@@ -42,7 +44,8 @@ def init_from_dss(network: Network, dss_fp: str) -> None:
         node_name, phase_char, load_idx = load_name.split('_')[1:]
         try:
             node = network.nodes[node_name]
-        except KeyError ("Node assigned to load not yet defined.")
+        except KeyError:
+            print("Node assigned to load not defined for this network.")
         load = Load(load_name + '_' + load_idx)
         load.phases[get_phase_idx(phase_char)] = 1 # indicate this load's phase
         node.load = load #assign this load to its node
@@ -56,7 +59,11 @@ def init_from_dss(network: Network, dss_fp: str) -> None:
 
     # make Capacitors
     cap_names = dss.Capacitors.AllNames()
-    for cap_name in 
+    for cap_name in cap_names:
+        cap = Capacitor(cap_name)
+        #TODO: figure out how to parse these names from an example
+    
+    return network
 
 def get_phase_idx(phase_char: str) -> int:
     """
