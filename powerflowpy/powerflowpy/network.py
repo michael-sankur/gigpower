@@ -2,7 +2,7 @@
 # LBNL GIG
 # File created: 20 August 2020
 # Object model for networks
-from typing import Any, List, Dict, Iterable
+from typing import Any, List, Dict, Iterable, Tuple
 import numpy as np
 import opendssdirect as dss
 import sys
@@ -41,6 +41,25 @@ class Network:
     def _dfs(self)-> None:
         """traverse network by dfs, store traversal information on self._nodes"""
         pass
-    
+
+class Node:
+    def __init__(self, name: str = None, num_phases:int = 3, ):
+        self.name = name
+        self.phases = [0] * num_phases
+        self.load = None
+        self.controller = None
+
+class Line:
+    def __init__(self, key: tuple = None, num_phases:int = 3):
+        self.key = key
+        self.phases = [0] * num_phases
+        self.config = None
+        self.length = None
+        self.FZpu = np.zeroes((3,3), dtype = 'float')
+        self.FRpu = np.zeroes((3, 3), dtype='float')
+        self.FXpu = np.zeroes((3, 3), dtype='float')
+        self.FYpu = np.zeroes((3, 3), dtype='float')
+        self.FGpu = np.zeroes((3, 3), dtype='float')
+        self.FBpu = np.zeroes((3, 3), dtype='float')
     
     
