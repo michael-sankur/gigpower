@@ -21,6 +21,9 @@ def init_from_dss(dss_fp: str) -> None:
         node = network.nodes[name]
         phase_idx = int(phase) - 1 # shift to 0-indexing
         node.phases[phase_idx] = 1 # add this phase to the node
+        # initalize this node's adjacency list to the empty list
+        # note: this means that every node has an entry. Nodes with no children will hav an empty list.
+        network.adj[name] = []
     
     #make Lines
     line_codes = dss.LineCodes.AllNames()
@@ -29,10 +32,15 @@ def init_from_dss(dss_fp: str) -> None:
     
     for line_code,length in line_zip:
         tx, rx = line_code.split('_')
+        tx = 'sourcebus' if tx == 'sub' else tx # TODO: figure out: is 'sub' the same as 'sourcebus?'
         if (tx, rx) not in network.lines.keys():
             network.lines[(tx,rx)] = Line((tx,rx))
         line = network.lines[(tx,rx)]
         line.length = length
+
+        # add directed line to adjacency list, adj[tx] += rx
+        network.adj[tx].append(rx)
+
     # TODO: figure out how to get 3x3 impedance per unit matrix. 
     # probably something using dss.Lines, 'XMatrix' and 'RMatrix'
     # TODO: handle unit conversions
