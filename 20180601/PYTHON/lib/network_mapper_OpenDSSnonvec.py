@@ -67,8 +67,8 @@ def network_mapper_function(fn):
     print(dss.Circuit.AllBusNames())
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
-    Vbase = dss.Bus.kVBase() * 1000
-    Sbase = 1000000.0
+    Vbase = dss.Bus.kVBase() * 1000 / np.sqrt(3) #@mike edit
+    Sbase = 1000000.0 / np.sqrt(3) #@mike edit
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
@@ -103,7 +103,6 @@ def network_mapper_function(fn):
     for k2 in range(len(dss.Circuit.AllNodeNames())):
         for i in range(1, 4):
             pattern = r"\.%s" % (str(i))
-
             m = re.findall(pattern, dss.Circuit.AllNodeNames()[k2])
             a, b = dss.Circuit.AllNodeNames()[k2].split('.')
             if m and a in dictionary:
@@ -115,6 +114,7 @@ def network_mapper_function(fn):
                 temp = dictionary[a]
                 temp[i - 1] = 1
                 dictionary[a] = temp
+
     for key, value in dictionary.items():
         nodes.nodelist[count] = key
         phase_str = ""
@@ -318,7 +318,7 @@ def network_mapper_function(fn):
         tempFZpupl = rtemp + 1j*xtemp
 
         # 3x3 impedance per unit length matrix for current line config [pu/m]
-        configs.FZpupl[:,3*k1:3*(k1+1)] = tempFZpupl/Zbase
+        configs.FZpupl[:,3*k1:3*(k1+1)] = tempFZpupl/Zbase/1609.34
     configs.conflist = lines.config
 
     if printflag == 1:
@@ -409,28 +409,38 @@ def network_mapper_function(fn):
     # Load constant impedance coefficient
     loads.aZ = np.zeros((3,nodes.nnode))
 
+    def get_bus_idx(bus):
+        k = -1
+        for n in range(len(dss.Circuit.AllBusNames())): #iterates over all the buses to see which index corresponds to bus
+            if dss.Circuit.AllBusNames()[n] in bus:
+                k = n
+        return k
+
     # Iterate through loads in configuration
-    for k in range(len(dss.Loads.AllNames())):
-        dss.Loads.Name(dss.Loads.AllNames()[k])
-        no_pattern = r"_([\w]+?)_"
-        knode = re.findall(no_pattern, dss.Loads.Name())
-        knode = nodes.nodelist.index(knode[0])
-        ph_pattern = r"_([\w]?)_"
-        kph = re.findall(ph_pattern, dss.Loads.Name())
-
-        if kph[0] == 'a':
-            kph = 0
-        elif kph[0] == 'b':
-            kph = 1
-        elif kph[0] == 'c':
-            kph = 2
-
-        loads.aPQ[kph, knode] = 1 #temporary
-        loads.ppu[kph,knode] = dss.Loads.kW() / 1000
-        loads.qpu[kph,knode] = dss.Loads.kvar() / 1000
-
-        # if templine[k2].split('=')[0] == 'nodenum':
-        #     knode = int(templine[k2].split('=')[1])
+    #accomodate multiphase
+    for kph in range(0, 3):
+        for k in range(len(dss.Circuit.AllBusNames())):
+            for n in range(len(dss.Loads.AllNames())): #go through the loads
+                dss.Loads.Name(dss.Loads.AllNames()[n]) #set the load
+                if dss.Circuit.AllBusNames()[k] in dss.CktElement.BusNames()[0]: #check is the busname in the busname of the load
+                    pattern =  r"\.%s" % (str(kph + 1)) #if it is, is the phase present?
+                    m = re.findall(pattern, dss.CktElement.BusNames()[0])
+                    if m:
+                        load_phases = [0, 0, 0]
+                        for i in range(1, 4): #if the phase is present, what other phases are
+                            pattern = r"\.%s" % (str(i))
+                            m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
+                            if m2:
+                                load_phases[i - 1] = 1
+                        knode = get_bus_idx(dss.Circuit.AllBusNames()[k])
+                        if sum(load_phases) == 1:
+                            loads.aPQ[kph, knode] = 1 #temporary
+                            loads.ppu[kph,knode] = dss.Loads.kW() * 1e3 / Sbase
+                            loads.qpu[kph,knode] = dss.Loads.kvar() * 1e3 / Sbase
+                        else:
+                            loads.aPQ[kph, knode] = 1 #temporary
+                            loads.ppu[kph,knode] =( dss.Loads.kW() + dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
+                            loads.qpu[kph,knode] = ( dss.Loads.kW() + dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
 
     # Complex loads [pu]
     loads.spu = loads.ppu + 1j*loads.qpu

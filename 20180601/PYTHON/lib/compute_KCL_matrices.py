@@ -5,33 +5,43 @@ import sys
 def compute_KCL_matrices(fn, t, der, capacitance):
 
     dss.run_command('Redirect ' + fn)
-    dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
-    Vbase = dss.Bus.kVBase() * 1000
-    Sbase = 1000000.0
+    Vbase = dss.Bus.kVBase() * 1000 / np.sqrt(3) #@mike
+    Sbase = 1000000.0 / np.sqrt(3) #@mike
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
 
-    def d_factor(busname, cplx, ph):
-        #factor = np.array([])
-        for n in range(len(dss.Loads.AllNames())):
-            #dss.Loads.Name(dss.Loads.AllNames()[n])
-            if busname in dss.Loads.AllNames()[n]:
-                dss.Loads.Name(dss.Loads.AllNames()[n])
-                dict = bus_phases()
-                var = 0
-                if t == -1:
-                    var = 1
-                else:
-                    var = (1 + 0.1*np.sin(2*np.pi*0.01*t))
-                if dict[busname][ph] == 0:
-                    return 0
-                if cplx == 0:
-                    return dss.Loads.kW()*1*var*1e3/Sbase
-                elif cplx == 1:
-                    return  dss.Loads.kvar()*1*var*1e3/Sbase
+    def d_factor(busname, cplx, ph): #pass in bus phase, re/im, phase
+        #hsould work for multiphase
+        for n in range(len(dss.Loads.AllNames())): #go through the loads
+            dss.Loads.Name(dss.Loads.AllNames()[n]) #set the load
+            if busname in dss.CktElement.BusNames()[0]: #check is the busname in the busname of the load
+                pattern =  r"\.%s" % (str(ph + 1)) #if it is, is the phase present?
+                m = re.findall(pattern, dss.CktElement.BusNames()[0])
+                if m:
+                    load_phases = [0, 0, 0]
+                    for i in range(1, 4): #if the phase is present, what other phases are
+                        pattern = r"\.%s" % (str(i))
+                        m = re.findall(pattern, dss.CktElement.BusNames()[0])
+                        if m:
+                            load_phases[i - 1] = 1
+                    if t == -1:
+                        var = 1
+                    else:
+                        var = 0 #adjust this later
+                    if cplx == 0: #figure it out for multiphase
+                        if sum(load_phases) == 1:
+                            return dss.Loads.kW()*1*var*1e3/Sbase/sum(load_phases)
+                        else:
+                            return (dss.Loads.kW() + dss.Loads.kvar())*1*var*1e3/Sbase/sum(load_phases)
+                    else:
+                        if sum(load_phases) == 1:
+                            return dss.Loads.kvar()*1*var*1e3/Sbase/sum(load_phases)
+                        else:
+                            return (dss.Loads.kW() + dss.Loads.kvar())*1*var*1e3/Sbase/sum(load_phases)
+
         return 0
 
     def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
@@ -42,7 +52,6 @@ def compute_KCL_matrices(fn, t, der, capacitance):
         for k2 in range(len(dss.Circuit.AllNodeNames())):
             for i in range(1, 4):
                 pattern = r"\.%s" % (str(i))
-
                 m = re.findall(pattern, dss.Circuit.AllNodeNames()[k2])
                 a, b = dss.Circuit.AllNodeNames()[k2].split('.')
                 if m and a in dictionary:
@@ -73,12 +82,13 @@ def compute_KCL_matrices(fn, t, der, capacitance):
             elif busname in dss.Lines.Bus2():
                 in_lines = np.append(in_lines, dss.Lines.AllNames()[k])
         return in_lines,out_lines
-#
 
-    beta_S =1.00
+    # ----------Residuals for KCL at a bus (m) ----------
+    bp = bus_phases()
+
+    beta_S = 1.00
     beta_I = 0.0
     beta_Z = 0.00
-
 
     H = np.zeros((2*3*(nnode-1), 2 * 3 * (nnode + nline), 2 * 3* (nnode + nline)))
     g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline)))
@@ -102,7 +112,6 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                 gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
                 hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
                                     [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
-                bp =  bus_phases()
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                 if available_phases[ph] == 1:                 #quadratic terms
                     H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = -load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) # TE replace assignment w/ -load_val * beta_Z; #a**2
@@ -111,7 +120,6 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                     H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] =  -load_val * beta_I * hessian_mag[1][0] / 2 #remove for TE
 
                 for i in range(len(in_lines)): #fill in H for the inlines
-                    dss.Lines.Name(in_lines[i])
                     line_idx = get_line_idx(in_lines[i])
                     if available_phases[ph] == 1:
                         if cplx == 0: #real residual
@@ -130,7 +138,6 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                             H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
 
                 for j in range(len(out_lines)): #fill in H for the outlines
-                    dss.Lines.Name(out_lines[j])
                     line_idx = get_line_idx(out_lines[j])
                     if available_phases[ph] == 1:
                         if cplx == 0:
@@ -164,7 +171,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                 load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx, ph)
                 #linear terms
                 g_temp = np.zeros(2*3*(nnode+nline)) #preallocate g
-                available_phases = bus_phases()[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
+                available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                 if available_phases[ph] == 0: #if phase does not exist
                     g_temp[2*(ph)*nnode + 2*k2 + cplx] = 1
                 else:
@@ -184,7 +191,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                 elif cplx == 1:
                     #add line about capacitance & reactive portion (v) der.imag
                     if capacitance != 0 or der.imag != 0:
-                        b_factor = capacitance - der.imag 
+                        b_factor = capacitance - der.imag
                     b_factor = (dss.Capacitors.kvar()*1000/Sbase) #DER term
                     b_factor = 0
 

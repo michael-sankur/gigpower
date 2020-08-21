@@ -4,11 +4,20 @@ import numpy as np
 def relevant_openDSS_parameters(fn):
 
     dss.run_command('Redirect ' + fn)
-    dss.Solution.Solve()
+    #dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
-    nodelist = [None]*nnode
 
+    dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
+
+    #BASE values
+    Vbase = dss.Bus.kVBase() * 1000 / np.sqrt(3) #@mike edit
+    Sbase = 1000000.0 / np.sqrt(3) #@mike edit
+    Ibase = Sbase/Vbase
+    Zbase = Vbase/Ibase
+
+    nodelist = [None]*nnode
+    #NODE indexing
     TXnum = np.zeros((nline), dtype='int') #int value, do as dict
     RXnum = np.zeros((nline), dtype='int') #int value
     TXnode = [None]*nline #name of incoming line's bus
@@ -21,12 +30,10 @@ def relevant_openDSS_parameters(fn):
         busIdx[dss.Circuit.AllBusNames()[i]] = i
 
     #PH
-    count = 0
     dictionary = {}
     for k2 in range(len(dss.Circuit.AllNodeNames())):
         for i in range(1, 4):
             pattern = r"\.%s" % (str(i))
-
             m = re.findall(pattern, dss.Circuit.AllNodeNames()[k2])
             a, b = dss.Circuit.AllNodeNames()[k2].split('.')
             if m and a in dictionary:
@@ -39,11 +46,11 @@ def relevant_openDSS_parameters(fn):
                 temp[i - 1] = 1
                 dictionary[a] = temp
     count = 0
+
     for key, value in dictionary.items():
         nodelist[count] = key
         PH[:, count] = value
         count += 1
-
 
     #TXnum and RXnum
     for line in range(len(dss.Lines.AllNames())):
@@ -64,27 +71,37 @@ def relevant_openDSS_parameters(fn):
     aI = np.zeros((3,nnode))
     aZ = np.zeros((3,nnode))
 
+    def get_bus_idx(bus):
+        k = -1
+        for n in range(len(dss.Circuit.AllBusNames())): #iterates over all the buses to see which index corresponds to bus
+            if dss.Circuit.AllBusNames()[n] in bus:
+                k = n
+        return k
 
-    for k in range(len(dss.Loads.AllNames())):
-        dss.Loads.Name(dss.Loads.AllNames()[k])
-        no_pattern = r"_([\w]+?)_"
-        knode = re.findall(no_pattern, dss.Loads.Name())
-        knode = nodelist.index(knode[0])
-        ph_pattern = r"_([\w]?)_"
-        kph = re.findall(ph_pattern, dss.Loads.Name())
+    for kph in range(0, 3):
+        for k in range(len(dss.Circuit.AllBusNames())):
+            for n in range(len(dss.Loads.AllNames())): #go through the loads
+                dss.Loads.Name(dss.Loads.AllNames()[n]) #set the load
+                if dss.Circuit.AllBusNames()[k] in dss.CktElement.BusNames()[0]: #check is the busname in the busname of the load
+                    pattern =  r"\.%s" % (str(kph + 1)) #if it is, is the phase present?
+                    m = re.findall(pattern, dss.CktElement.BusNames()[0])
+                    if m:
+                        load_phases = [0, 0, 0]
+                        for i in range(1, 4): #if the phase is present, what other phases are
+                            pattern = r"\.%s" % (str(i))
+                            m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
+                            if m2:
+                                load_phases[i - 1] = 1
+                        knode = get_bus_idx(dss.Circuit.AllBusNames()[k])
+                        if sum(load_phases) == 1:
+                            aPQ[kph, knode] = 1 #temporary
+                            ppu[kph,knode] = dss.Loads.kW() * 1e3 / Sbase
+                            qpu[kph,knode] = dss.Loads.kvar() * 1e3 / Sbase
+                        else:
+                            aPQ[kph, knode] = 1 #temporary
+                            ppu[kph,knode] =( dss.Loads.kW() + dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
+                            qpu[kph,knode] = ( dss.Loads.kW() + dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
 
-        if kph[0] == 'a':
-            kph = 0
-        elif kph[0] == 'b':
-            kph = 1
-        elif kph[0] == 'c':
-            kph = 2
-
-        aPQ[kph, knode] = 1 #temporary
-        aI[kph,knode] = 0.00
-        aZ[kph, knode] = 0.00
-        ppu[kph,knode] = dss.Loads.kW() * 1000 / 1000000.0
-        qpu[kph,knode] = dss.Loads.kvar() * 1000 / 1000000.0
     spu = ppu + 1j * qpu
 
     #cappu, wpu, vvcpu

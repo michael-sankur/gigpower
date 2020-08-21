@@ -46,10 +46,10 @@ def compute_vecmat_TE(XNR, fn, Vslack):
     # X = [V^a V^b V^c I^a I^b I^c]
 
     dss.run_command('Redirect ' + fn)
-    dss.Solution.Solve()
+    #dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
-    Vbase = dss.Bus.kVBase() * 1000
+    Vbase = dss.Bus.kVBase() * 1000 #/ np.sqrt(3) ##LL to LN
     Sbase = 1000000.0
 
     Ibase = Sbase/Vbase
@@ -152,7 +152,7 @@ def compute_vecmat_TE(XNR, fn, Vslack):
     X = np.zeros((2*3*(nnode+nline), 1))
 
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
-    kV_base = dss.Bus.kVBase() * 1000
+    #kV_base = dss.Bus.kVBase() * 1000 #/ np.sqrt(3) ##LL to LN
 
     bus_phase_dict = bus_phases()
 

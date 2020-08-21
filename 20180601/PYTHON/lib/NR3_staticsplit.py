@@ -2,13 +2,13 @@ import numpy as np
 #vectorized
 from lib.compute_NR3FT_vectorized import compute_NR3FT_vectorized as ft1
 from lib.compute_NR3JT_vectorized import compute_NR3JT_vectorized as jt1
-from lib.compute_vecmat_TE import compute_vecmat_TE
-from lib.compute_H import compute_KCL_matrices
+from lib.compute_vecmat import compute_vecmat
+from lib.compute_KCL_matrices import compute_KCL_matrices
 from lib.relevant_openDSS_parameters import relevant_openDSS_parameters
 import opendssdirect as dss
 import re
 
-def NR3_function(fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
+def NR3_function(fn, slacknode, Vslack, V0, I0, t, der, capacitance,tol=1e-9,maxiter=100 ):
 
     dss.run_command('Redirect ' + fn)
     #dss.Solution.Solve()
@@ -29,15 +29,15 @@ def NR3_function(fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
     #FT Slack Bus
     FTSUBV_vec = np.zeros((iter,6, 1))
     #FTKVL
-    FTKVL_vec = np.zeros((iter,36, 1))
+    FTKVL_vec = np.zeros((iter,2*3*nline, 1))
     #FTKCL
-    FTKCL_vec = np.zeros((iter,36, 1))
+    FTKCL_vec = np.zeros((iter,(2*3*(nnode-1)), 1))
     #J Slack Bus
-    JSUBV_vec = np.zeros((iter,6, 78 ))
+    JSUBV_vec = np.zeros((iter,6,2*3*(nline+ nnode) ))
     #JKVL
-    JKVL_vec = np.zeros((iter,36, 78))
+    JKVL_vec = np.zeros((iter,2*3*nline, 2*3*(nline+ nnode)))
     #JKCL
-    JKCL_vec = np.zeros((iter,36, 78))
+    JKCL_vec = np.zeros((iter,2*3*(nnode-1), 2*3*(nline+ nnode)))
 
     XNR = np.zeros((2*3*(nnode + nline),1))
 
@@ -80,9 +80,10 @@ def NR3_function(fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
     FT1 = 1e99
     itercount = 0
 
-    times = np.linspace(0, 2*np.pi, 102)
 
-    XNR, g_SB, b_SB, G_KVL, b_KVL = compute_vecmat_TE(XNR, fn, Vslack)
+
+    XNR, g_SB, b_SB, G_KVL, b_KVL = compute_vecmat(XNR, fn, Vslack)
+    H, g, b = compute_KCL_matrices(fn,  t, capacitance, der)
     XNR_deep_vec[iter_count, :, 0] = XNR[:, 0]
 
     while np.amax(np.abs(FT1)) >= 1e-9 and itercount < maxiter:
@@ -90,15 +91,17 @@ def NR3_function(fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
         # H, g, b = compute_KCL_matrices(fn, times[itercount], 0, 0)
         FT1 = ft1(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode) #vectorized
         FT_deep_vec[iter_count,:, :] = FT1
+        #print(FT1.shape)
         FTSUBV_vec[iter_count, :, 0] = np.reshape(FT1[0:6], (6))
-        FTKVL_vec[iter_count,:, 0] = np.reshape(FT1[6:42], (36))
-        FTKCL_vec[iter_count, :, 0] = np.reshape(FT1[42:], (36))
+        FTKVL_vec[iter_count,:, 0] = np.reshape(FT1[6:(6+(2*3*nline))], (2*3*nline))
+        FTKCL_vec[iter_count, :, 0] = np.reshape(FT1[(6+(2*3*(nnode-1))):], (2*3*(nnode-1)))
 
         JT1 = jt1(XNR, g_SB, G_KVL, H, g, nnode, nline)
+
         JT_deep_vec[ iter_count,:, :] = JT1
-        JSUBV_vec[ iter_count,:, :] = np.reshape(JT1[0:6], (6, 78))
-        JKVL_vec[ iter_count,:, :] = np.reshape(JT1[6:42], (36, 78))
-        JKCL_vec[ iter_count,:, :] = np.reshape(JT1[42:], (36, 78))
+        JSUBV_vec[ iter_count,:, :] = np.reshape(JT1[0:6, :], (6, 2*3*(nnode+nline)))
+        JKVL_vec[ iter_count,:, :] = np.reshape(JT1[6:(6+(2*3*(nline))), :], ((2*3*(nline)), 2*3*(nnode+nline)))
+        JKCL_vec[ iter_count,:, :] = np.reshape(JT1[(6+(2*3*(nnode-1))):, :], (2*3*(nnode-1), 2*3*(nnode+nline)))
 
         iter_count += 1 #count up at this point (indexing should match)
 
