@@ -14,9 +14,10 @@ def fbs(dss_fp) -> None:
 
     network = get_network(dss_fp) # get network as a compressed matrix
     node_names = get_node_names(dss_fp) # get node names corresponding to network indices
-
-
-
+    
+    # Settheinitialvoltagetobebalancedthree-phasevoltage 
+    # atthebuswhereislocatedatlineterminalorabranch intersection. 
+    # Start the proposed procedure from the farthestbusobtainedbystep2.
 
 if __name__ == '__main__':
     # run fbs from command line with path to dss file as an argument
