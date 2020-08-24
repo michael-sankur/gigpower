@@ -18,6 +18,7 @@ jobs:
 # use pyflakes to check for syntax errors. 
 # use mypy to check ./powerflowpy for type hints. See ./setup.cfg for mypy settings    
     lint:
+        needs: build
         runs-on: ubuntu-latest
         steps:
         - uses: actions/checkout@v2
@@ -32,6 +33,7 @@ jobs:
             mypy .
 # use pytest to run all tests in ./powerflowpy/tests
     test:
+        needs: build
         runs-on: ubuntu-latest
         steps:
         - uses: actions/checkout@v2
