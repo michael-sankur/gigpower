@@ -8,7 +8,6 @@ jobs:
 # Install depndencies in requirements.txt. TODO: figure out how to cache dependencies
     build:
         runs-on: ubuntu-latest
-
         steps:
         - uses: actions/checkout@v2
         - name: Install Dependencies
