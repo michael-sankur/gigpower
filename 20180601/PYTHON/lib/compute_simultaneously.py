@@ -217,11 +217,11 @@ def NR3_function(network, fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
             if np.abs(iNR[ph,k1].imag) <= 1e-12:
                 iNR[ph,k1] = iNR[ph,k1].real + 0
 
-    return FT_deep_vec, FT_deep_nonvec, JT_deep_vec, JT_deep_nonvec, XNR_deep_vec, XNR_deep_notvec, \
-        FTSUBV_nonvec, FTKVL_nonvec, FTKCL_nonvec, \
-        FTSUBV_vec, FTKVL_vec, FTKCL_vec, \
-        JSUBV_nonvec, JKVL_nonvec, JKCL_nonvec, \
-        JSUBV_vec, JKVL_vec, JKCL_vec
+    # return FT_deep_vec, FT_deep_nonvec, JT_deep_vec, JT_deep_nonvec, XNR_deep_vec, XNR_deep_notvec, \
+    #     FTSUBV_nonvec, FTKVL_nonvec, FTKCL_nonvec, \
+    #     FTSUBV_vec, FTKVL_vec, FTKCL_vec, \
+    #     JSUBV_nonvec, JKVL_nonvec, JKCL_nonvec, \
+    #     JSUBV_vec, JKVL_vec, JKCL_vec
     print('iNR')
     print(iNR)
     print('sNR')

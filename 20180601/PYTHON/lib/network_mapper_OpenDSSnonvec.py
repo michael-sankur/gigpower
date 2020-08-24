@@ -5,7 +5,7 @@ import re
 
 printflag = 1
 
-def network_mapper_function(fn):
+def network_mapper_function(fn, t):
     baselinearray = [];
     nodelinearray = [];
     linelinearray = [];
@@ -14,6 +14,7 @@ def network_mapper_function(fn):
     capacitorlinearray = [];
     controllerlinearray = [];
     vvclinearray = [];
+
 
     dss.run_command('Redirect ' + str(fn))
     #########################
@@ -67,8 +68,8 @@ def network_mapper_function(fn):
     print(dss.Circuit.AllBusNames())
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
-    Vbase = dss.Bus.kVBase() * 1000  #@mike edit
-    Sbase = 1000000.0  #@mike edit
+    Vbase = dss.Bus.kVBase() * 1000
+    Sbase = 1000000.0
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
@@ -158,7 +159,6 @@ def network_mapper_function(fn):
     for i in range(len(dss.Circuit.AllBusNames())):
         busIdx[dss.Circuit.AllBusNames()[i]] = i
 
-    print(busIdx)
     for line in range(len(dss.Lines.AllNames())):
         dss.Lines.Name(dss.Lines.AllNames()[line]) #set the line
         bus1 = dss.Lines.Bus1()
@@ -169,7 +169,8 @@ def network_mapper_function(fn):
         lines.RXnode[line] = re.findall(pattern, bus2)[0]
         lines.TXnum[line] = busIdx[lines.TXnode[line]]
         lines.RXnum[line] = busIdx[lines.RXnode[line]]
-        lines.length[line] = dss.Lines.Length()
+        lines.length[line] = dss.Lines.Length() *0.3048
+        #print(dss.Lines.Length())
         lines.config[line] = dss.Lines.LineCode()
 
     line_phase_dict = {}
@@ -268,8 +269,9 @@ def network_mapper_function(fn):
     for k1 in range(0,len(lines.config)):
         dss.Lines.Name(dss.Lines.AllNames()[k1])
         linecode = dss.Lines.LineCode()
-        rmat = dss.Lines.RMatrix()
-        xmat = dss.Lines.XMatrix()
+        dss.LineCodes.Name(linecode)
+        rmat = dss.LineCodes.Rmatrix()
+        xmat = dss.LineCodes.Xmatrix()
 
         rtemp = np.zeros((3, 3))
         xtemp = np.zeros((3, 3))
@@ -339,10 +341,12 @@ def network_mapper_function(fn):
     # Iterate through lines
     for k1 in range(0,nline):
         # Find configuration for current line
+        dss.Lines.Name(dss.Lines.AllNames()[k1])
         confnum = configs.conflist.index(lines.config[k1])
 
         # Multiply 3x3 per unit length impedance matrix [ohm/m] by line length [m]
         # to obtain 3x3 line impdance matrix [pu]
+
         tempFZpu = lines.length[k1]*configs.FZpupl[:,3*confnum:3*(confnum+1)].reshape((3,3))
 
         for kph in range(0,3):
@@ -351,8 +355,8 @@ def network_mapper_function(fn):
                 tempFZpu[kph,:] = 0
 
         lines.FZpu[:,3*k1:3*(k1+1)] = tempFZpu
-        tempFYpu = np.zeros((3,3), dtype='complex')
 
+        tempFYpu = np.zeros((3,3), dtype='complex')
         if lines.phases[k1] == 'a':
             tempFYpu[0,0] = 1/tempFZpu[0,0]
         elif lines.phases[k1] == 'b':
@@ -373,6 +377,7 @@ def network_mapper_function(fn):
         elif lines.phases[k1] == 'abc':
             tempFYpu = np.linalg.inv(tempFZpu)
         lines.FYpu[:,3*k1:3*(k1+1)] = tempFYpu
+
     # Resistance, and reactance matrices for all lines [pu]
     lines.FRpu = lines.FZpu.real
     lines.FXpu = lines.FZpu.imag
@@ -438,12 +443,17 @@ def network_mapper_function(fn):
                             loads.ppu[kph,knode] = dss.Loads.kW() * 1e3 / Sbase
                             loads.qpu[kph,knode] = dss.Loads.kvar() * 1e3 / Sbase
                         else:
-                            loads.aPQ[kph, knode] = 1 #temporary
-                            loads.ppu[kph,knode] =( dss.Loads.kW() + dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
-                            loads.qpu[kph,knode] = ( dss.Loads.kW() + dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
+                             loads.aPQ[kph, knode] = 1 #temporary
+                             loads.ppu[kph,knode] = (dss.Loads.kW())* 1e3 / Sbase / sum(load_phases)
+                             loads.qpu[kph,knode] = (dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
 
     # Complex loads [pu]
-    loads.spu = loads.ppu + 1j*loads.qpu
+
+    if t == -1:
+        var = 1
+    else:
+        var = (1 + 0.1*np.sin(2*np.pi*0.01*t))
+    loads.spu = (loads.ppu + 1j*loads.qpu)*var
     loads.spu_nominal = loads.ppu +1j*loads.qpu
 
     if printflag == 1:
@@ -462,9 +472,30 @@ def network_mapper_function(fn):
 
     # Capacitor parameters
     # Capacitor matrix [pu]
+
+    def cap_dict():
+        cap_dict_kvar = {}
+        cap_dict_kv = {}
+        for n in range(len(dss.Capacitors.AllNames())):
+            dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
+            #print(dss.CktElement.BusNames()[0])
+            pattern =  r"(\w+)\."  #if it is, is the phase present?
+            m = re.findall(pattern, dss.CktElement.BusNames()[0])
+            cap_dict_kvar[m[0]] = dss.Capacitors.kvar()
+            cap_dict_kv[m[0]] = dss.Capacitors.kV()
+            #print(dss.Capacitors.kvar()*1000/Sbase)
+        return cap_dict_kvar, cap_dict_kv
+        #print(cap_dict)
+    cap_dict_kvar, cap_dict_kv = cap_dict()
+
     caps.cappu = np.zeros((3,nodes.nnode))
 
     # # Iterate through capacitors in configuration file
+    for ph in range(0, 3):
+        for bus in range(len(dss.Circuit.AllBusNames())):
+            if dss.Circuit.AllBusNames()[bus] in cap_dict_kvar.keys():
+                caps.cappu[ph, bus] = cap_dict_kvar[dss.Circuit.AllBusNames()[bus]] * 1000 / Sbase
+    
     # for k1 in range(0,len(dss.Capacitors.AllNames())):
     #     dss.Capacitors.Name(dss.Capacitors.AllNames()[k1])
     #     knode = dss.Capacitors.Name()

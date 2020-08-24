@@ -216,13 +216,13 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
             # sum_{l:(l,m) in Edges} V_m (I_lm^phi)^* = s_m^phi(V_m^phi) + w_m^phi - c_m^phi + sum_{n:(m,n) in Edges} V_m (I_mn^phi)^*
             elif NPH[ph,k1] == 1:
 
-                dA = XNR[idxAm] - A0
-                dB = XNR[idxBm] - B0
-
-                gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))])
-                gradient_mag_sq = np.array([[2 * A0, 2 * B0]])
-                gradient_mag_sq = np.reshape(gradient_mag_sq, (1,2))
-                gradient_mag = np.reshape(gradient_mag, (1, 2))
+                # dA = XNR[idxAm] - A0
+                # dB = XNR[idxBm] - B0
+                #
+                # gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))])
+                # gradient_mag_sq = np.array([[2 * A0, 2 * B0]])
+                # gradient_mag_sq = np.reshape(gradient_mag_sq, (1,2))
+                # gradient_mag = np.reshape(gradient_mag, (1, 2))
 
                 # # #Using first order Taylor Expansion on magnitude squared (done)
                 # #derivates of real KCL residual with respect to real and imag voltage components
@@ -258,27 +258,27 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
                 # JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1] * gradient_mag[1] \
                 #                                     + 2*AZ[ph,k1]*second_order_term[0][1])
 
-                #Voltage magnitude - second order, squared - not TE
-                hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
-                                     [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
-
-                dX = np.zeros((2,1))
-                dX[0] = dA
-                dX[1] = dB
-                dX = np.reshape(dX, (1, 2))
-
-                second_order_term = (gradient_mag + (dX @ hessian_mag)/2)[0]
-
-                JKCL[idxre,idxAm] = -spu[ph,k1].real*(AI[ph,k1]* second_order_term[0] \
-                                    + 2*AZ[ph,k1]*XNR[idxAm])
-                JKCL[idxre,idxBm] = -spu[ph,k1].real*(AI[ph,k1] * second_order_term[1] \
-                                    + 2*AZ[ph,k1]*XNR[idxBm])
-
-                # derivates of imag KCL residual with respect to real and imag voltage components
-                JKCL[idxim,idxAm] = -spu[ph,k1].imag*(AI[ph,k1] * second_order_term[0] \
-                                                    + 2*AZ[ph,k1]*XNR[idxAm])
-                JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1] * second_order_term[1] \
-                                                    + 2*AZ[ph,k1]*XNR[idxAm])
+                # #Voltage magnitude - second order, squared - not TE
+                # hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
+                #                      [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
+                #
+                # dX = np.zeros((2,1))
+                # dX[0] = dA
+                # dX[1] = dB
+                # dX = np.reshape(dX, (1, 2))
+                #
+                # second_order_term = (gradient_mag + (dX @ hessian_mag)/2)[0]
+                #
+                # JKCL[idxre,idxAm] = -spu[ph,k1].real*(AI[ph,k1]* second_order_term[0] \
+                #                     + 2*AZ[ph,k1]*XNR[idxAm])
+                # JKCL[idxre,idxBm] = -spu[ph,k1].real*(AI[ph,k1] * second_order_term[1] \
+                #                     + 2*AZ[ph,k1]*XNR[idxBm])
+                #
+                # # derivates of imag KCL residual with respect to real and imag voltage components
+                # JKCL[idxim,idxAm] = -spu[ph,k1].imag*(AI[ph,k1] * second_order_term[0] \
+                #                                     + 2*AZ[ph,k1]*XNR[idxAm])
+                # JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1] * second_order_term[1] \
+                #                                     + 2*AZ[ph,k1]*XNR[idxAm])
 
 
                 # # derivates of real KVL residual with respect to real and imag voltage components
@@ -307,17 +307,17 @@ def compute_NR3JT_real_function(XNR,network,slackidx,Vslack):
                 #                                     + 2*AZ[ph,k1]*XNR[idxBm])
 
 
-                # #Not Using Taylor Expansion
-                # JKCL[idxre,idxAm] = -spu[ph,k1].real*(AI[ph,k1]*XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
-                #                                       + 2*AZ[ph,k1]*XNR[idxAm])
-                # JKCL[idxre,idxBm] = -spu[ph,k1].real*(AI[ph,k1]*XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
-                #                                       + 2*AZ[ph,k1]*XNR[idxBm])
-                #
-                # # derivates of imag KVL residual with respect to real and imag voltage components
-                # JKCL[idxim,idxAm] = -spu[ph,k1].imag*(AI[ph,k1]*XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
-                #                                       + 2*AZ[ph,k1]*XNR[idxAm])
-                # JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1]*XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
-                #                                       + 2*AZ[ph,k1]*XNR[idxBm])
+                #Not Using Taylor Expansion
+                JKCL[idxre,idxAm] = -spu[ph,k1].real*(AI[ph,k1]*XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                                                      + 2*AZ[ph,k1]*XNR[idxAm])
+                JKCL[idxre,idxBm] = -spu[ph,k1].real*(AI[ph,k1]*XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                                                      + 2*AZ[ph,k1]*XNR[idxBm])
+
+                # derivates of imag KVL residual with respect to real and imag voltage components
+                JKCL[idxim,idxAm] = -spu[ph,k1].imag*(AI[ph,k1]*XNR[idxAm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                                                      + 2*AZ[ph,k1]*XNR[idxAm])
+                JKCL[idxim,idxBm] = -spu[ph,k1].imag*(AI[ph,k1]*XNR[idxBm]*(XNR[idxAm]**2 + XNR[idxBm]**2)**(-1/2) \
+                                                      + 2*AZ[ph,k1]*XNR[idxBm])
 
                 # loop through incoming lines to node m - l:(l,m) in Edges
                 for k2 in range(0,network.nodes.inlines.shape[0]):

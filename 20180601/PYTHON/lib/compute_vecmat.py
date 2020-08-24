@@ -46,12 +46,11 @@ def compute_vecmat(XNR, fn, Vslack):
     # X = [V^a V^b V^c I^a I^b I^c]
 
     dss.run_command('Redirect ' + fn)
-    dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
-    Vbase = dss.Bus.kVBase() * 1000  ##LL to LN
-    Sbase = 1000000.0 ##@mike edit
+    Vbase = dss.Bus.kVBase() * 1000
+    Sbase = 1000000.0
 
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
@@ -83,7 +82,8 @@ def compute_vecmat(XNR, fn, Vslack):
         return k
 
     def identify_bus_phases(bus): #figures out which phases correspond to the bus
-    #returns a list of the r/x matrix places that have those phase/s
+
+    #this appears to work
         k = np.zeros(3)
         for i in range(1, 4):
             pattern = r"\.%s" % (str(i))
@@ -95,6 +95,8 @@ def compute_vecmat(XNR, fn, Vslack):
     def identify_line_phases(line): #figures out which phases correspond to a line
     #(for assigning rmatrix based on line code)
     #returns list of 0's 1's whether or not phase exists in line
+
+    #appears to work
         k = np.zeros(3)
         dss.Lines.Name(line)
         bus = dss.Lines.Bus1()
@@ -115,11 +117,11 @@ def compute_vecmat(XNR, fn, Vslack):
 
     for k2 in range(len(dss.Lines.AllNames())):
         dss.Lines.Name(dss.Lines.AllNames()[k2]) #set the line
-
         linecode = dss.Lines.LineCode() #get the linecode
         dss.LineCodes.Name(linecode) #set the linecode
         xmat = dss.LineCodes.Xmatrix() #get the xmat
         rmat = dss.LineCodes.Rmatrix() #get the rmat
+
         line_phases = identify_line_phases(dss.Lines.AllNames()[k2])
         if len(xmat) == 9:
             for i in range(len(xmat)):
@@ -157,6 +159,8 @@ def compute_vecmat(XNR, fn, Vslack):
                 r_temp2 = np.hstack((r_temp[:, :], np.zeros((3,1))))
                 R_matrix[k2, :] = r_temp2.flatten()
 
+        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() * 0.3048 #in feet for IEEE13
+        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() * 0.3048
 
     X = np.reshape(XNR, (2*3*(nnode+nline), 1 ))
 
@@ -180,8 +184,8 @@ def compute_vecmat(XNR, fn, Vslack):
 
     #--------Residuals for KVL across line (m,n)-----------
 
-    R_matrix = R_matrix/Zbase/1609.34 #@mike edit
-    X_matrix = X_matrix/Zbase/1609.34 #@mike edit
+    R_matrix = R_matrix/Zbase/1609.34 #in miles for IEEE 13
+    X_matrix = X_matrix/Zbase/1609.34 #
 
     G_KVL = np.array([])
 
@@ -210,6 +214,7 @@ def compute_vecmat(XNR, fn, Vslack):
                 temp_row[2*3*(nnode) + 2*nline + 2*line + 1] = X_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
                 temp_row[2*3*(nnode) + 4*nline + 2*line] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
                 temp_row[2*3*(nnode) + 4*nline + 2*line + 1] = X_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
+
                 G_KVL = np.append(G_KVL, temp_row)
                 temp_row = np.zeros(len(X))
                 temp_row[2*(nnode)*ph + 2*(bus1_idx) + 1] = 1 #B_m

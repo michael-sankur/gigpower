@@ -387,7 +387,7 @@ def network_mapper_function(fp, fn):
 
     # Reconcile Lines and Configurations
 
-    # Impednace matrices for line [pu]
+    # Impedance matrices for line [pu]
     lines.FZpu = np.zeros((3,3*nline), dtype='complex')
     # Admittance matrices for line [pu]
     lines.FYpu = np.zeros((3,3*nline), dtype='complex')

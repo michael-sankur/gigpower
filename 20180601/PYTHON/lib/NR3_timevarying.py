@@ -23,12 +23,10 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     FT1 = 1e99
     itercount = 0
 
-
-    if der != 0 or capacitance != 0 or time != 1:
+    if der != 0 or capacitance != 0 or time != -1:
         H, g, b = change_KCL_matrices(fn, H, g, b, time, der, capacitance)
     while np.amax(np.abs(FT1)) >= 1e-9 and itercount < maxiter:
-        print("Iteration number %f" % (itercount))
-        # H, g, b = compute_KCL_matrices(fn, times[itercount], 0, 0)
+        print("Iteration number %f" % (itercount))    
         FT1 = ft1(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode) #vectorized
         JT1 = jt1(XNR, g_SB, G_KVL, H, g, nnode, nline)
 
@@ -38,7 +36,7 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
         itercount+=1 #diff from the other iter_count, limits # of iterations
 
     TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = \
-        relevant_openDSS_parameters(fn)
+        relevant_openDSS_parameters(fn, time)
 
     #remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
     #VNR = XNR(1:2:2*3*nnode-1).' + 1j*XNR(2:2:2*3*nnode).';

@@ -1,7 +1,7 @@
 import opendssdirect as dss
 import re
 import numpy as np
-def relevant_openDSS_parameters(fn):
+def relevant_openDSS_parameters(fn, t):
 
     dss.run_command('Redirect ' + fn)
     #dss.Solution.Solve()
@@ -11,18 +11,17 @@ def relevant_openDSS_parameters(fn):
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
     #BASE values
-    Vbase = dss.Bus.kVBase() * 1000  #@mike edit
-    Sbase = 1000000.0  #@mike edit
+    Vbase = dss.Bus.kVBase() * 1000
+    Sbase = 1000000.0
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
 
     nodelist = [None]*nnode
     #NODE indexing
-    TXnum = np.zeros((nline), dtype='int') #int value, do as dict
-    RXnum = np.zeros((nline), dtype='int') #int value
-    TXnode = [None]*nline #name of incoming line's bus
+    TXnum = np.zeros((nline), dtype='int')
+    RXnum = np.zeros((nline), dtype='int')
+    TXnode = [None]*nline
     RXnode = [None]*nline #name of outgoing bus on line
-    #PH = np.zeros((3,nline), dtype='int')
     PH = np.zeros((3,nnode), dtype='int')
     #bus indexes
     busIdx = {}
@@ -46,7 +45,6 @@ def relevant_openDSS_parameters(fn):
                 temp[i - 1] = 1
                 dictionary[a] = temp
     count = 0
-
     for key, value in dictionary.items():
         nodelist[count] = key
         PH[:, count] = value
@@ -57,7 +55,7 @@ def relevant_openDSS_parameters(fn):
         dss.Lines.Name(dss.Lines.AllNames()[line]) #set the line
         bus1 = dss.Lines.Bus1()
         bus2 = dss.Lines.Bus2()
-        pattern = r"(\w+)."
+        pattern = r"(\w+)." #this appears to wrok
 
         TXnode[line] = re.findall(pattern, bus1)[0]
         RXnode[line] = re.findall(pattern, bus2)[0]
@@ -93,19 +91,22 @@ def relevant_openDSS_parameters(fn):
                             if m2:
                                 load_phases[i - 1] = 1
                         knode = get_bus_idx(dss.Circuit.AllBusNames()[k])
-                        if sum(load_phases) == 1:
-
-                            aPQ[kph, knode] = 0.85 #temporary
-                            aZ[kph,knode] = .15
-                            ppu[kph,knode] = dss.Loads.kW() * 1e3 / Sbase
-                            qpu[kph,knode] = dss.Loads.kvar() * 1e3 / Sbase
+                        if t == -1:
+                            var = 1
                         else:
-                            aPQ[kph, knode] = 0.85 #temporary
-                            aZ[kph,knode] = .15
-                            ppu[kph,knode] =( dss.Loads.kW() + dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
-                            qpu[kph,knode] = ( dss.Loads.kW() + dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
+                            var = (1 + 0.1*np.sin(2*np.pi*0.01*t))
+                        if sum(load_phases) == 1:
+                            aPQ[kph, knode] = 1 #temporary
+                            aZ[kph,knode] = 0
+                            ppu[kph,knode] = dss.Loads.kW() * 1e3 * var / Sbase
+                            qpu[kph,knode] = dss.Loads.kvar() * 1e3 * var / Sbase
+                        else:
+                            aPQ[kph, knode] = 1 #temporary
+                            aZ[kph,knode] = 0
+                            ppu[kph,knode] =(dss.Loads.kW())* 1e3 * var / Sbase / sum(load_phases)
+                            qpu[kph,knode] = (dss.Loads.kvar())* 1e3 * var / Sbase / sum(load_phases)
 
-    spu = ppu + 1j * qpu
+    spu = (ppu + 1j * qpu)
 
     #cappu, wpu, vvcpu
     cappu = np.zeros((3,nnode))

@@ -34,16 +34,29 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                         var = (1 + 0.1*np.sin(2*np.pi*0.01*t))#adjust this later
                     if cplx == 0: #figure it out for multiphase
                         if sum(load_phases) == 1:
-                            return dss.Loads.kW()*1*var*1e3/Sbase/sum(load_phases)
+                            return dss.Loads.kW()*1*var*1e3/Sbase
                         else:
-                            return (dss.Loads.kW() + dss.Loads.kvar())*1*var*1e3/Sbase/sum(load_phases)
+                            return (dss.Loads.kW())*1*var*1e3/Sbase/sum(load_phases)
                     else:
                         if sum(load_phases) == 1:
-                            return dss.Loads.kvar()*1*var*1e3/Sbase/sum(load_phases)
+                            return dss.Loads.kvar()*1*var*1e3/Sbase
                         else:
-                            return (dss.Loads.kW() + dss.Loads.kvar())*1*var*1e3/Sbase/sum(load_phases)
-
+                            return (dss.Loads.kvar())*1*var*1e3/Sbase/sum(load_phases)
         return 0
+    def cap_dict():
+        cap_dict_kvar = {}
+        cap_dict_kv = {}
+        for n in range(len(dss.Capacitors.AllNames())):
+            dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
+            #print(dss.CktElement.BusNames()[0])
+            pattern =  r"(\w+)\."  #if it is, is the phase present?
+            m = re.findall(pattern, dss.CktElement.BusNames()[0])
+            cap_dict_kvar[m[0]] = dss.Capacitors.kvar()
+            cap_dict_kv[m[0]] = dss.Capacitors.kV()
+            #print(dss.Capacitors.kvar()*1000/Sbase)
+        return cap_dict_kvar, cap_dict_kv
+        #print(cap_dict)
+    cap_dict_kvar, cap_dict_kv = cap_dict()
 
     def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
     #1 if phase exists, 0 o.w.
@@ -87,9 +100,9 @@ def compute_KCL_matrices(fn, t, der, capacitance):
     # ----------Residuals for KCL at a bus (m) ----------
     bp = bus_phases()
 
-    beta_S = 0.85
+    beta_S = 1
     beta_I = 0.0
-    beta_Z = 0.15
+    beta_Z = 0.0
 
     H = np.zeros((2*3*(nnode-1), 2 * 3 * (nnode + nline), 2 * 3* (nnode + nline)))
     g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline)))
@@ -115,10 +128,10 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                                     [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                 if available_phases[ph] == 1:                 #quadratic terms
-                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = -load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) # TE replace assignment w/ -load_val * beta_Z; #a**2
-                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = -load_val * (beta_Z  + (0.5 * beta_I * hessian_mag[1][1])) # TE replace assignment w/ -load_val * beta_Z; #b**2
-                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1] = -load_val * beta_I * hessian_mag[0][1] / 2 #remove for TE
-                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] =  -load_val * beta_I * hessian_mag[1][0] / 2 #remove for TE
+                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = -load_val * (beta_Z)# + (0.5 * beta_I* hessian_mag[0][0])) # TE replace assignment w/ -load_val * beta_Z; #a**2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = -load_val * (beta_Z)#  + (0.5 * beta_I * hessian_mag[1][1])) # TE replace assignment w/ -load_val * beta_Z; #b**2
+                    #H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1] = -load_val * beta_I * hessian_mag[0][1] / 2 #remove for TE
+                    #H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] =  -load_val * beta_I * hessian_mag[1][0] / 2 #remove for TE
 
                 for i in range(len(in_lines)): #fill in H for the inlines
                     line_idx = get_line_idx(in_lines[i])
@@ -176,10 +189,11 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                 if available_phases[ph] == 0: #if phase does not exist
                     g_temp[2*(ph)*nnode + 2*k2 + cplx] = 1
                 else:
-                    g_temp[2*ph*nnode+ 2 * k2] = -load_val * beta_I * ((-(A0 * hessian_mag[0][0] + B0 * hessian_mag[0][1])) \
-                                           +  gradient_mag[0]) #remove for TE
-                    g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((-(A0 * hessian_mag[0][1] + B0 * hessian_mag[1][1])) \
-                                               +  gradient_mag[1]) #remove for TE
+                    h = 5
+                    #g_temp[2*ph*nnode+ 2 * k2] = -load_val * beta_I * ((-(A0 * hessian_mag[0][0] + B0 * hessian_mag[0][1])) \
+                                          # +  gradient_mag[0]) #remove for TE
+                    #g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((-(A0 * hessian_mag[0][1] + B0 * hessian_mag[1][1])) \
+                                        #       +  gradient_mag[1]) #remove for TE
                 g[2*(nnode-1)*ph + 2*(k2-1) + cplx, 0,:] = g_temp
 
                 #constant terms
@@ -188,25 +202,37 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                     #add line about u der.real
                     if der.real != 0:
                         b_factor = der.real
+                        b_factor = 0
                     else:
                         b_factor = 0
                 elif cplx == 1:
                     #add line about capacitance & reactive portion (v) der.imag
                     if capacitance != 0 or der.imag != 0:
+                        print(' a mistake is abound! ')
                         b_factor = capacitance - der.imag
-                    else:
-                        b_factor = (dss.Capacitors.kvar()*1000/Sbase) #DER term
                         b_factor = 0
+                    else:
+                        if dss.Circuit.AllBusNames()[k2] in cap_dict_kvar.keys():
+                            print('wow says postmalone <3')
+                            if dss.Circuit.AllBusNames()[k2] == '675':
+                                print('679 classic song')
+                                b_factor = cap_dict_kvar[dss.Circuit.AllBusNames()[k2]] * 1000 / Sbase / 3
+
+                            else:
+                                b_factor = cap_dict_kvar[dss.Circuit.AllBusNames()[k2]] * 1000 / Sbase
+                        #b_factor = (dss.Capacitors.kvar()*1000/Sbase) #DER term
+                        else:
+                            b_factor = 0
 
                 if available_phases[ph] == 0: #if phase does not exist at bus, set b = 0
                     b_temp = 0
                 else:
-                    #b_temp = (-load_val * beta_S) + b_factor #TE version
-                    b_temp = -load_val * (beta_S \
-                    + (beta_I) * (((hessian_mag[0][1] * A0 * B0) + ((1/2)*hessian_mag[0][0] * ((A0)**2)) + ((1/2)*hessian_mag[1][1] * (B0**2))) \
-                    -  (A0 * gradient_mag[0] + B0* gradient_mag[1]) \
-                    +  (A0**2 + B0**2) ** (1/2))) \
-                    + b_factor #calculate out the constant term in the residual
+                    b_temp = (-load_val * beta_S) + b_factor #TE version
+                    # b_temp = -load_val * (beta_S \
+                    # + (beta_I) * (((hessian_mag[0][1] * A0 * B0) + ((1/2)*hessian_mag[0][0] * ((A0)**2)) + ((1/2)*hessian_mag[1][1] * (B0**2))) \
+                    # -  (A0 * gradient_mag[0] + B0* gradient_mag[1]) \
+                    # +  (A0**2 + B0**2) ** (1/2))) \
+                    # + b_factor #calculate out the constant term in the residual
 
                 b[2*(nnode-1)*ph + 2*(k2-1) + cplx][0][0] = b_temp #store the in the b matrix
 
