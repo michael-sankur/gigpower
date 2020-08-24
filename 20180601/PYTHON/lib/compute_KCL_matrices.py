@@ -23,7 +23,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                 m = re.findall(pattern, dss.CktElement.BusNames()[0])
                 if m:
                     load_phases = [0, 0, 0]
-                    for i in range(1, 4): #if the phase is present, what other phases are
+                    for i in range(1, 4):
                         pattern = r"\.%s" % (str(i))
                         m = re.findall(pattern, dss.CktElement.BusNames()[0])
                         if m:
@@ -31,8 +31,8 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                     if t == -1:
                         var = 1
                     else:
-                        var = (1 + 0.1*np.sin(2*np.pi*0.01*t))#adjust this later
-                    if cplx == 0: #figure it out for multiphase
+                        var = (1 + 0.1*np.sin(2*np.pi*0.01*t))
+                    if cplx == 0:
                         if sum(load_phases) == 1:
                             return dss.Loads.kW()*1*var*1e3/Sbase
                         else:
@@ -46,22 +46,25 @@ def compute_KCL_matrices(fn, t, der, capacitance):
     def cap_dict():
         cap_dict_kvar = {}
         cap_dict_kv = {}
+        cap_ph_dict = {}
         for n in range(len(dss.Capacitors.AllNames())):
             dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
-            #print(dss.CktElement.BusNames()[0])
-            pattern =  r"(\w+)\."  #if it is, is the phase present?
+            pattern =  r"(\w+)\."
             m = re.findall(pattern, dss.CktElement.BusNames()[0])
             cap_dict_kvar[m[0]] = dss.Capacitors.kvar()
             cap_dict_kv[m[0]] = dss.Capacitors.kV()
-            #print(dss.Capacitors.kvar()*1000/Sbase)
-        return cap_dict_kvar, cap_dict_kv
-        #print(cap_dict)
-    cap_dict_kvar, cap_dict_kv = cap_dict()
+            load_phases = [0, 0, 0]
+            for i in range(1, 4):
+                pattern = r"\.%s" % (str(i))
+                m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
+                if m2:
+                    load_phases[i - 1] = 1
+            cap_ph_dict[m[0]] = load_phases
+        return cap_dict_kvar, cap_dict_kv, cap_ph_dict
 
-    def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
-    #1 if phase exists, 0 o.w.
-    #list goes [a, b, c]
-    #key is the bus name (without the phase part)
+    cap_dict_kvar, cap_dict_kv, cap_ph_dict = cap_dict()
+
+    def bus_phases():
         dictionary = {}
         for k2 in range(len(dss.Circuit.AllNodeNames())):
             for i in range(1, 4):
@@ -199,30 +202,26 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                 #constant terms
                 b_factor = 0 #DER term
                 if cplx == 0:
-                    #add line about u der.real
                     if der.real != 0:
                         b_factor = der.real
                         b_factor = 0
                     else:
                         b_factor = 0
                 elif cplx == 1:
-                    #add line about capacitance & reactive portion (v) der.imag
                     if capacitance != 0 or der.imag != 0:
-                        print(' a mistake is abound! ')
                         b_factor = capacitance - der.imag
                         b_factor = 0
                     else:
                         if dss.Circuit.AllBusNames()[k2] in cap_dict_kvar.keys():
-                            
-                            if dss.Circuit.AllBusNames()[k2] == '675':
-
-                                b_factor = cap_dict_kvar[dss.Circuit.AllBusNames()[k2]] * 1000 / Sbase / 3
-
+                            if cap_ph_dict[dss.Circuit.AllBusNames()[k2]][ph] == 1:
+                                if sum(cap_ph_dict[dss.Circuit.AllBusNames()[k2]]) == 3:
+                                    b_factor = cap_dict_kvar[dss.Circuit.AllBusNames()[k2]] * 1000 / Sbase / 3
+                                elif sum(cap_ph_dict[dss.Circuit.AllBusNames()[k2]]) == 2:
+                                    b_factor = cap_dict_kvar[dss.Circuit.AllBusNames()[k2]] * 1000 / Sbase / 2
+                                else:
+                                    b_factor = cap_dict_kvar[dss.Circuit.AllBusNames()[k2]] * 1000 / Sbase
                             else:
-                                b_factor = cap_dict_kvar[dss.Circuit.AllBusNames()[k2]] * 1000 / Sbase
-                        #b_factor = (dss.Capacitors.kvar()*1000/Sbase) #DER term
-                        else:
-                            b_factor = 0
+                                b_factor = 0
 
                 if available_phases[ph] == 0: #if phase does not exist at bus, set b = 0
                     b_temp = 0

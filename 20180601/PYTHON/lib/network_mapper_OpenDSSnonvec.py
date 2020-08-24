@@ -287,7 +287,7 @@ def network_mapper_function(fn, t):
             xtemp[1, 1] = xmat[3]
         elif np.all(lines.PH[:, k1]==[1, 0, 1]):
             rtemp[0, 0] = rmat[0]
-            rtemp[2, 0 ] = rmat[2]
+            rtemp[2, 0] = rmat[2]
             rtemp[0, 2] = rmat[1]
             rtemp[2, 2] = rmat[3]
             xtemp[0, 0] = xmat[0]
@@ -296,7 +296,7 @@ def network_mapper_function(fn, t):
             xtemp[2, 2] = xmat[3]
         elif np.all(lines.PH[:, k1]== [0,1, 1]):
             rtemp[1, 1] = rmat[0]
-            rtemp[1, 2 ] = rmat[2]
+            rtemp[1, 2] = rmat[2]
             rtemp[2, 1] = rmat[1]
             rtemp[2, 2] = rmat[3]
             xtemp[1, 1] = xmat[0]
@@ -438,14 +438,9 @@ def network_mapper_function(fn, t):
                             if m2:
                                 load_phases[i - 1] = 1
                         knode = get_bus_idx(dss.Circuit.AllBusNames()[k])
-                        if sum(load_phases) == 1:
-                            loads.aPQ[kph, knode] = 1 #temporary
-                            loads.ppu[kph,knode] = dss.Loads.kW() * 1e3 / Sbase
-                            loads.qpu[kph,knode] = dss.Loads.kvar() * 1e3 / Sbase
-                        else:
-                             loads.aPQ[kph, knode] = 1 #temporary
-                             loads.ppu[kph,knode] = (dss.Loads.kW())* 1e3 / Sbase / sum(load_phases)
-                             loads.qpu[kph,knode] = (dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
+                        loads.aPQ[kph,knode] = 1 #temporary
+                        loads.ppu[kph,knode] = (dss.Loads.kW())* 1e3 / Sbase / sum(load_phases)
+                        loads.qpu[kph,knode] = (dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
 
     # Complex loads [pu]
 
@@ -476,6 +471,7 @@ def network_mapper_function(fn, t):
     def cap_dict():
         cap_dict_kvar = {}
         cap_dict_kv = {}
+        cap_ph_dict = {}
         for n in range(len(dss.Capacitors.AllNames())):
             dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
             #print(dss.CktElement.BusNames()[0])
@@ -484,9 +480,16 @@ def network_mapper_function(fn, t):
             cap_dict_kvar[m[0]] = dss.Capacitors.kvar()
             cap_dict_kv[m[0]] = dss.Capacitors.kV()
             #print(dss.Capacitors.kvar()*1000/Sbase)
-        return cap_dict_kvar, cap_dict_kv
+            load_phases = [0, 0, 0]
+            for i in range(1, 4): #if the phase is present, what other phases are
+                pattern = r"\.%s" % (str(i))
+                m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
+                if m2:
+                    load_phases[i - 1] = 1
+            cap_ph_dict[m[0]] = load_phases
+        return cap_dict_kvar, cap_dict_kv, cap_ph_dict
         #print(cap_dict)
-    cap_dict_kvar, cap_dict_kv = cap_dict()
+    cap_dict_kvar, cap_dict_kv, cap_ph_dict = cap_dict()
 
     caps.cappu = np.zeros((3,nodes.nnode))
 
@@ -494,8 +497,10 @@ def network_mapper_function(fn, t):
     for ph in range(0, 3):
         for bus in range(len(dss.Circuit.AllBusNames())):
             if dss.Circuit.AllBusNames()[bus] in cap_dict_kvar.keys():
-                caps.cappu[ph, bus] = cap_dict_kvar[dss.Circuit.AllBusNames()[bus]] * 1000 / Sbase
-    
+                if cap_ph_dict[dss.Circuit.AllBusNames()[bus]][ph] == 1:
+                    caps.cappu[ph, bus] = cap_dict_kvar[dss.Circuit.AllBusNames()[bus]] * 1000 / Sbase / sum(cap_ph_dict[dss.Circuit.AllBusNames()[bus]])
+    #caps.cappu = np.multiply(caps.cappu,nodes.PH)
+    print(caps.cappu)
     # for k1 in range(0,len(dss.Capacitors.AllNames())):
     #     dss.Capacitors.Name(dss.Capacitors.AllNames()[k1])
     #     knode = dss.Capacitors.Name()
