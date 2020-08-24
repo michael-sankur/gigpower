@@ -1,0 +1,45 @@
+# Main workflow for linting and testing
+name: CI
+
+# Triggers this workflow on push or pull request events
+on: [push, pull_request]
+
+jobs:
+# Install depndencies in requirements.txt. TODO: figure out how to cache dependencies
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+        - uses: actions/checkout@v2
+        - name: Install Dependencies
+        - run: |
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
+# use pyflakes to check for syntax errors. 
+# use mypy to check ./powerflowpy for type hints. See ./setup.cfg for mypy settings    
+#     lint:
+#         needs: build
+#         runs-on: ubuntu-latest
+
+#         steps:
+#         - uses: actions/checkout@v2
+#         - name: Run pyflakes
+#         - run: |
+#             ./powerflowpy venv/bin/activate
+#             pyflakes *.py
+#         - name: Run mypy
+#         - run: |
+#             ./powerflowpy venv/bin/activate
+#             mypy .
+# # use pytest to run all tests in ./powerflowpy/tests
+#     test:
+#         needs: build
+#         runs-on: ubuntu-latest
+        
+#         steps:
+#         - uses: actions/checkout@v2
+#         - name: Run Tests
+#         - run: |
+#             ./powerflowpy venv/bin/activate
+#             python -m pytest -v .
