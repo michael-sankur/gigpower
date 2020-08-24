@@ -8,7 +8,9 @@ jobs:
 # Install depndencies in requirements.txt. TODO: figure out how to cache dependencies
     build:
         runs-on: ubuntu-latest
+
         steps:
+        - uses: actions/checkout@v2
         - name: Install Dependencies
         - run: |
                 python3 -m venv venv
@@ -20,6 +22,7 @@ jobs:
         needs: build
         runs-on: ubuntu-latest
         steps:
+        - uses: actions/checkout@v2
         - name: Run pyflakes
         - run: |
             ./powerflowpy venv/bin/activate
@@ -33,6 +36,7 @@ jobs:
         needs: build
         runs-on: ubuntu-latest
         steps:
+        - uses: actions/checkout@v2
         - name: Run Tests
         - run: |
             ./powerflowpy venv/bin/activate
