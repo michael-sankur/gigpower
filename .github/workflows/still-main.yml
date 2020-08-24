@@ -9,7 +9,6 @@ jobs:
     build:
         runs-on: ubuntu-latest
         steps:
-        - uses: actions/checkout@v2
         - name: Install Dependencies
         - run: |
                 python3 -m venv venv
@@ -21,12 +20,10 @@ jobs:
         needs: build
         runs-on: ubuntu-latest
         steps:
-        - uses: actions/checkout@v2
         - name: Run pyflakes
         - run: |
             ./powerflowpy venv/bin/activate
             pyflakes *.py
-        - uses: actions/checkout@v2
         - name: Run mypy
         - run: |
             ./powerflowpy venv/bin/activate
@@ -36,7 +33,6 @@ jobs:
         needs: build
         runs-on: ubuntu-latest
         steps:
-        - uses: actions/checkout@v2
         - name: Run Tests
         - run: |
             ./powerflowpy venv/bin/activate
