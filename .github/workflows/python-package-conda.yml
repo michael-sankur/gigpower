@@ -1,4 +1,5 @@
 name: Python Package using Conda
+# based on this workflow : https://github.com/actions/starter-workflows/blob/af51c4b131dbf613bdf369873b9575612522433b/ci/python-package-conda.yml
 
 on: [push, pull_request]
 
@@ -28,8 +29,9 @@ jobs:
         $CONDA/bin/flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Check types in ./powerflowpy with mypy
       run: |
+        $CONDA/bin/conda install mypy
         $CONDA/bin/mypy ./powerflowpy
     - name: Test with pytest
       run: |
-        conda install pytest
+        $CONDA/bin/conda install pytest
         $CONDA/bin/pytest
