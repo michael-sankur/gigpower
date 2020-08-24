@@ -1,0 +1,72 @@
+version: 2.1
+
+jobs:
+  lint:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - powerflowpy-v1-{{ arch }}-{{ checksum "requirements.txt" }}
+            - powerflowpy-v1-{{ arch }}-
+
+      - run:
+          name: Install Dependencies
+          command: |
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
+
+      - save_cache:
+          key: powerflowpy-v1-{{ arch }}-{{ checksum "requirements.txt" }}
+          paths:
+            - venv
+
+      - run:
+          name: Pyflakes
+          command: |
+            ./powerflowpy venv/bin/activate
+            # Run pyflakes against all python files in this directory and
+            # against all directories except `venv`. (We will not lint dependencies)
+            pyflakes *.py *[^env]/
+
+      - run:
+          name: MyPy
+          command: |
+            ./powerflowpy venv/bin/activate
+            mypy .
+
+  test:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - powerflowpy-v1-{{ arch }}-{{ checksum "requirements.txt" }}
+            - powerflowpy-v1-{{ arch }}-
+
+      - run:
+          name: Install Dependencies
+          command: |
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
+
+      - save_cache:
+          key: powerflowpy-v1-{{ arch }}-{{ checksum "requirements.txt" }}
+          paths:
+            - env
+
+      - run:
+          name: Run Tests
+          command: |
+            ./powerflowpy venv/bin/activate
+            python -m pytest -v .
+
+workflows:
+  build:
+    jobs:
+      - lint
+      - test
