@@ -13,9 +13,9 @@ jobs:
         - uses: actions/checkout@v2
         - name: Install Dependencies
         - run: |
-                python3 -m venv venv
-                source venv/bin/activate
-                pip install -r requirements.txt
+            python3 -m venv venv
+            source venv/bin/activate
+            pip install -r requirements.txt
 # use pyflakes to check for syntax errors. 
 # use mypy to check ./powerflowpy for type hints. See ./setup.cfg for mypy settings    
     lint:
