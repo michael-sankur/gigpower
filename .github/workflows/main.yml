@@ -26,6 +26,7 @@ jobs:
         - run: |
             ./powerflowpy venv/bin/activate
             pyflakes *.py
+        - uses: actions/checkout@v2
         - name: Run mypy
         - run: |
             ./powerflowpy venv/bin/activate
