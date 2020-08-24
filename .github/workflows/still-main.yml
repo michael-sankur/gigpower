@@ -21,6 +21,7 @@ jobs:
     lint:
         needs: build
         runs-on: ubuntu-latest
+
         steps:
         - uses: actions/checkout@v2
         - name: Run pyflakes
@@ -35,6 +36,7 @@ jobs:
     test:
         needs: build
         runs-on: ubuntu-latest
+        
         steps:
         - uses: actions/checkout@v2
         - name: Run Tests
