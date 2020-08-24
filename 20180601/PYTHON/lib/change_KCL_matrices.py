@@ -159,7 +159,7 @@ def change_KCL_matrices(fn, H, g, b, t, der, capacitance):
                         else:
                             if dss.Circuit.AllBusNames()[k2] in cap_dict_kvar.keys():
                                 if dss.Circuit.AllBusNames()[k2] == '675':
-                                    print('679 classic song')
+                                    
                                     b_factor = cap_dict_kvar[dss.Circuit.AllBusNames()[k2]] * 1000 / Sbase /3
                                 else:
                                     b_factor = cap_dict_kvar[dss.Circuit.AllBusNames()[k2]] * 1000 / Sbase

@@ -213,9 +213,9 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                         b_factor = 0
                     else:
                         if dss.Circuit.AllBusNames()[k2] in cap_dict_kvar.keys():
-                            print('wow says postmalone <3')
+                            
                             if dss.Circuit.AllBusNames()[k2] == '675':
-                                print('679 classic song')
+
                                 b_factor = cap_dict_kvar[dss.Circuit.AllBusNames()[k2]] * 1000 / Sbase / 3
 
                             else:
