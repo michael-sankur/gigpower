@@ -1,72 +1,41 @@
-version: 2.1
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Triggers this workflow on push or pull request events
+on: [push, pull_request]
 
 jobs:
-  lint:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - powerflowpy-v1-{{ arch }}-{{ checksum "requirements.txt" }}
-            - powerflowpy-v1-{{ arch }}-
-
-      - run:
-          name: Install Dependencies
-          command: |
-            python3 -m venv venv
-            source venv/bin/activate
-            pip install -r requirements.txt
-
-      - save_cache:
-          key: powerflowpy-v1-{{ arch }}-{{ checksum "requirements.txt" }}
-          paths:
-            - venv
-
-      - run:
-          name: Pyflakes
-          command: |
+# Install depndencies in requirements.txt. TODO: figure out how to cache dependencies
+    build:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v2
+        - name: Install Dependencies
+            run: |
+                python3 -m venv venv
+                source venv/bin/activate
+                pip install -r requirements.txt
+# use pyflakes to check for syntax errors. 
+# use mypy to check ./powerflowpy for type hints. See ./setup.cfg for mypy settings    
+    lint:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+        - name: Run pyflakes
+        - run: |
             ./powerflowpy venv/bin/activate
-            # Run pyflakes against all python files in this directory and
-            # against all directories except `venv`. (We will not lint dependencies)
-            pyflakes *.py *[^env]/
-
-      - run:
-          name: MyPy
-          command: |
+            pyflakes *.py
+        - name: Run mypy
+        - run: |
             ./powerflowpy venv/bin/activate
             mypy .
-
-  test:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - powerflowpy-v1-{{ arch }}-{{ checksum "requirements.txt" }}
-            - powerflowpy-v1-{{ arch }}-
-
-      - run:
-          name: Install Dependencies
-          command: |
-            python3 -m venv venv
-            source venv/bin/activate
-            pip install -r requirements.txt
-
-      - save_cache:
-          key: powerflowpy-v1-{{ arch }}-{{ checksum "requirements.txt" }}
-          paths:
-            - env
-
-      - run:
-          name: Run Tests
-          command: |
+# use pytest to run all tests in ./powerflowpy/tests
+    test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v2
+        - name: Run Tests
+        - run: |
             ./powerflowpy venv/bin/activate
             python -m pytest -v .
-
-workflows:
-  build:
-    jobs:
-      - lint
-      - test
