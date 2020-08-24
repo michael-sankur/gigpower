@@ -1,0 +1,6 @@
+name: pfp-env
+dependencies:
+    - matplotlib
+    - numpy
+    - pandas
+    - scipy

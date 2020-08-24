@@ -1,9 +1,0 @@
-dss-python==0.10.6
-mypy==0.770
-numpy==1.18.2
-OpenDSSDirect.py==0.5.0
-pandas==0.25.3
-pip==20.2.2
-pyflakes==2.2.0
-pytest==5.4.3
-scipy==1.4.1
