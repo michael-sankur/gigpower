@@ -4,8 +4,8 @@
 # Implement FBS to solve Power Flow for a radial distribution network.
 import sys
 from typing import Iterable, List
-from utils import is_acyclic, init_from_dss
-from network import *
+from . utils import init_from_dss
+from . network import *
 
 def fbs(dss_fp) -> None:
     if not is_acyclic(dss_fp):
@@ -13,10 +13,10 @@ def fbs(dss_fp) -> None:
     network = init_from_dss(dss_fp)
     # TODO: write fpb!
 
-def _update(network: Network, source_node: Node, target_node: Node) -> None:
+def update(network: Network, source_node: Node, target_node: Node) -> None:
     pass
 
-def _topo_sort(network: Network) -> List:
+def topo_sort(network: Network) -> List:
     """
     Returns a list of Nodes in a topological order.
     Raises error if it finds a cycle
@@ -29,7 +29,7 @@ def _topo_sort(network: Network) -> List:
     # clock will be used as an index to topo_order. the strategy is to insert
     # nodes in the topo_order array in reverse order of dfs finishing times.
     topo_order = [None] * clock  # array to store topo order
-    nodes = { node[name]: 'new' for node in network.nodes } # initialize all nodes' statuses to 'New'
+    nodes = { node_name: 'new' for node_name in network.nodes.keys()} # initialize all nodes' statuses to 'New'
 
     # top level call to _topo_sort_dfs for each node
     #TODO: also return a list of connected commponents, in case we need to know
@@ -43,16 +43,15 @@ def _topo_sort(network: Network) -> List:
                 clock -= 1 # decrement clock for a reverse post-order over the vertices
                 topo_order[clock] = curr
                 for child in network.adj[curr]:
-                    if status[child] is 'new':
+                    if nodes[child] is 'new':
                         dfs_stack.append(child)
-                    elif status[child] is 'active':
+                    elif nodes[child] is 'active':
                     # child's status is 'active', meaning we have found a back edge
                     # and there is a cycle from child to curr
                         raise ValueError('Network contains a cycle.')
                     # implicit else: child's status is 'finished', so we already assigned the child to topo_order
-                status[curr] = 'finished'
+                nodes[curr] = 'finished'
             # when the stack is exhausted, we have finished a traversal.
-
     return topo_order
 
 
