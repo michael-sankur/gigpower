@@ -24,12 +24,12 @@ def init_from_dss(dss_fp: str) -> None:
         # initalize this node's adjacency list to the empty list
         # note: this means that every node has an entry. Nodes with no children will hav an empty list.
         network.adj[name] = []
-    
+
     #make Lines
     line_codes = dss.LineCodes.AllNames()
     lengths = [i() for i in dss.utils.Iterator(dss.Lines, 'Length')]
     line_zip = zip(line_codes, lengths)
-    
+
     for line_code,length in line_zip:
         tx, rx = line_code.split('_')
         tx = 'sourcebus' if tx == 'sub' else tx # TODO: figure out: is 'sub' the same as 'sourcebus?'
@@ -41,14 +41,14 @@ def init_from_dss(dss_fp: str) -> None:
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
 
-    # TODO: figure out how to get 3x3 impedance per unit matrix. 
+    # TODO: figure out how to get 3x3 impedance per unit matrix.
     # probably something using dss.Lines, 'XMatrix' and 'RMatrix'
     # TODO: handle unit conversions
 
     # make Loads
     load_names = dss.Loads.AllNames()
     for load_name in load_names:
-        # TODO: handle multiple loads on a node 
+        # TODO: handle multiple loads on a node
         node_name, phase_char, load_idx = load_name.split('_')[1:]
         try:
             node = network.nodes[node_name]
@@ -58,7 +58,7 @@ def init_from_dss(dss_fp: str) -> None:
         load.phases[get_phase_idx(phase_char)] = 1 # indicate this load's phase
         node.load = load #assign this load to its node
     #TODO: get aPQ, aI, ppu, qpu, spu for each load
-    #TODO: figure out how to get connection information (wye or delta). 
+    #TODO: figure out how to get connection information (wye or delta).
     # Is this info determined by Capacitors?
     # Or can we use Loads.IsDelta?
 
@@ -70,11 +70,11 @@ def init_from_dss(dss_fp: str) -> None:
     for cap_name in cap_names:
         cap = Capacitor(cap_name)
         #TODO: figure out how to parse these names from an example
-    
+
     return network
 
 def get_phase_idx(phase_char: str) -> int:
     """
     helper function to turn a phase letter into an index, where 'a' = 0
     """
-    return ord(phase_char.lower()) - ord('a') 
+    return ord(phase_char.lower()) - ord('a')

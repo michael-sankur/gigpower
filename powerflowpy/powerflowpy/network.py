@@ -14,8 +14,8 @@ import scipy as sp
 
 class Network:
     def __init__(self, dss_fp: str = '', num_phases = 3):
-        """ 
-        Initialize a Network instance. 
+        """
+        Initialize a Network instance.
         Optional dss_file is the full path to a dss file.
         """
         self.nodes = dict()
@@ -26,7 +26,6 @@ class Network:
         self.Ibase = None
         self.Zbase = None
         self.units = None
-        self._nodes = dict() # stores topology info from dfs
         self.phases = [0] * num_phases
         if dss_fp:
             init_from_dss(self, dss_fp)
@@ -112,10 +111,10 @@ class Solution:
             node_dict = { var : [0] * len(node.phases) for var in Solution.solution_vars }
     def __str__(self):
         return '\n'.join(
-            [ 
+            [
                 f'itertations to convergence: {self.iterations}',
                 f'tolerance at convergence: {self.tolerance}',
-                f'solution: \n {self.solved_nodes}'        
+                f'solution: \n {self.solved_nodes}'
             ]
         )
 
