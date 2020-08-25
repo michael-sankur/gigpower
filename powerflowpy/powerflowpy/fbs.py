@@ -8,10 +8,17 @@ from . utils import init_from_dss
 from . network import *
 
 def fbs(dss_fp) -> None:
-    if not is_acyclic(dss_fp):
-        raise ValueError('Not a radial network.')
     network = init_from_dss(dss_fp)
-    # TODO: write fpb!
+    topo_order = topo_sort(network)
+    solution = Solution()
+    # while not converged
+        # for node in topo_order:
+            # forward sweep
+        # check convergence
+        # for node in reverse topo_order:
+            # backward sweep
+    # return Solution
+    pass
 
 def update(network: Network, source_node: Node, target_node: Node) -> None:
     pass
