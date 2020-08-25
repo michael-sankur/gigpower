@@ -1,0 +1,22 @@
+# Smoke tests for pre-requisites to running fbs.
+# These are: reading network attributes from opendss, and topo-sort
+
+def test_init_from_dss() -> None:
+    """ Compare opendss.circuit to our Network object"""
+    pass
+    # number of nodes
+    # number of lines
+
+    # nodes x phases
+
+    # lines x phases
+
+def test_topo_sort() -> None:
+    pass
+    # topo sort fails on a network that has a cycle
+    # every node precedes its children in the ordering
+
+def test_network_topo() -> None:
+    # check that the first node of topo sort is the source node in the dss file
+    # check that opendss' assesment of cycles is the same as toposort
+    pass
