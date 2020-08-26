@@ -7,10 +7,14 @@ from . network import Network, Node, Line, Load, Controller, Capacitor
 def init_from_dss(dss_fp: str) -> None:
     """define a Network attributes from a dss file"""
     dss.run_command('Redirect ' + dss_fp)
-    # set base values
-    #TODO: figure out how to get Vbase, units and Sbase, units from opendss
-
     network = Network()
+
+    # set base values
+    dss.Solution.Solve()
+    Vbase = dss.Bus.kVBase() * 1000
+    Sbase = 1000000.0
+    Ibase = Sbase/Vbase
+    Zbase = Vbase/Ibase
 
     # make Nodes
     for node_name in dss.Circuit.AllNodeNames():
@@ -24,6 +28,7 @@ def init_from_dss(dss_fp: str) -> None:
         # initalize this node's adjacency list to the empty list
         # note: this means that every node has an entry. Nodes with no children will hav an empty list.
         network.adj[name] = []
+
     #make Lines
     line_codes = dss.LineCodes.AllNames()
     lengths = [i() for i in dss.utils.Iterator(dss.Lines, 'Length')]
@@ -35,7 +40,6 @@ def init_from_dss(dss_fp: str) -> None:
             network.lines[(tx,rx)] = Line((tx,rx))
         line = network.lines[(tx,rx)]
         line.length = length
-
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
 
