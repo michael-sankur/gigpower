@@ -1,5 +1,8 @@
 __pycache__/
 .mypy_cache/
+<<<<<<< HEAD
 .pytest_cache/
+=======
+>>>>>>> toan_dev_clean_with_ci
 .DS_Store
 .vscode
