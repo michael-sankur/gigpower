@@ -65,7 +65,7 @@ def network_mapper_function(fn, t):
     # Base values [V], [VAr], [A], [Ohm]
 
     # Iterate through base value lines
-    print(dss.Circuit.AllBusNames())
+    #print(dss.Circuit.AllBusNames())
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
     Vbase = dss.Bus.kVBase() * 1000
@@ -198,7 +198,7 @@ def network_mapper_function(fn, t):
             phase_str = phase_str + "b"
         if value[2] == 1:
             phase_str = phase_str + "c"
-        print(value)
+
 
         lines.phases[count] = phase_str
         count += 1
@@ -474,12 +474,10 @@ def network_mapper_function(fn, t):
         cap_ph_dict = {}
         for n in range(len(dss.Capacitors.AllNames())):
             dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
-            #print(dss.CktElement.BusNames()[0])
             pattern =  r"(\w+)\."  #if it is, is the phase present?
             m = re.findall(pattern, dss.CktElement.BusNames()[0])
             cap_dict_kvar[m[0]] = dss.Capacitors.kvar()
             cap_dict_kv[m[0]] = dss.Capacitors.kV()
-            #print(dss.Capacitors.kvar()*1000/Sbase)
             load_phases = [0, 0, 0]
             for i in range(1, 4): #if the phase is present, what other phases are
                 pattern = r"\.%s" % (str(i))
@@ -488,7 +486,6 @@ def network_mapper_function(fn, t):
                     load_phases[i - 1] = 1
             cap_ph_dict[m[0]] = load_phases
         return cap_dict_kvar, cap_dict_kv, cap_ph_dict
-        #print(cap_dict)
     cap_dict_kvar, cap_dict_kv, cap_ph_dict = cap_dict()
 
     caps.cappu = np.zeros((3,nodes.nnode))
@@ -500,7 +497,6 @@ def network_mapper_function(fn, t):
                 if cap_ph_dict[dss.Circuit.AllBusNames()[bus]][ph] == 1:
                     caps.cappu[ph, bus] = cap_dict_kvar[dss.Circuit.AllBusNames()[bus]] * 1000 / Sbase / sum(cap_ph_dict[dss.Circuit.AllBusNames()[bus]])
     #caps.cappu = np.multiply(caps.cappu,nodes.PH)
-    print(caps.cappu)
     # for k1 in range(0,len(dss.Capacitors.AllNames())):
     #     dss.Capacitors.Name(dss.Capacitors.AllNames()[k1])
     #     knode = dss.Capacitors.Name()

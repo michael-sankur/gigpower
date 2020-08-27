@@ -1,0 +1,82 @@
+ieee_13node
+
+~~~~~ Base Values ~~~~~
+
+base Vbase=2.40177711983 unit=kV
+base Sbase=1000.000 unit=kVAr
+
+~~~~~ Nodes ~~~~~
+
+node nodename=SUB phases=abc
+node nodename=671 phases=abc
+node nodename=634 phases=abc
+node nodename=645 phases=bc
+node nodename=646 phases=bc
+node nodename=692 phases=abc
+node nodename=675 phases=abc
+node nodename=611 phases=c
+node nodename=652 phases=a
+node nodename=670 phases=abc
+node nodename=650 phases=abc
+node nodename=632 phases=abc
+node nodename=680 phases=abc
+node nodename=633 phases=abc
+node nodename=684 phases=ac
+
+~~~~~ Lines ~~~~~
+
+line TXnode=SUB RXnode=650 phases=abc config=mtx601 length=100 unit=ft
+line TXnode=650 RXnode=632 phases=abc config=mtx601 length=2000 unit=ft
+line TXnode=632 RXnode=670 phases=abc config=mtx601 length=667 unit=ft
+line TXnode=670 RXnode=671 phases=abc config=mtx601 length=1333 unit=ft
+line TXnode=671 RXnode=680 phases=abc config=mtx601 length=1000 unit=ft
+line TXnode=632 RXnode=633 phases=abc config=mtx602 length=500 unit=ft
+line TXnode=633 RXnode=634 phases=abc config=mtx602 length=500 unit=ft
+line TXnode=632 RXnode=645 phases=bc config=mtx603 length=500 unit=ft
+line TXnode=645 RXnode=646 phases=bc config=mtx603 length=300 unit=ft
+line TXnode=671 RXnode=692 phases=abc config=mtx606 length=500 unit=ft
+line TXnode=692 RXnode=675 phases=abc config=mtx606 length=500 unit=ft
+line TXnode=671 RXnode=684 phases=ac config=mtx604 length=300 unit=ft
+line TXnode=684 RXnode=611 phases=c config=mtx605 length=300 unit=ft
+line TXnode=684 RXnode=652 phases=a config=mtx607 length=800 unit=ft
+
+~~~~~ Configuration ~~~~~
+
+config config=mtx601 unit=ohm/mile raa=0.3465 xaa=1.0179 rab=0.1560 xab=0.5017 rac=0.1580 xac=0.4236 rbb=0.3375 xbb=1.0478 rbc=0.1535 xbc=0.3849 rcc=0.3414 xcc=1.0348
+config config=mtx602 unit=ohm/mile raa=0.7526 xaa=1.1814 rab=0.1580 xab=0.4236 rac=0.1560 xac=0.5017 rbb=0.7475 xbb=1.1983 rbc=0.1535 xbc=0.3849 rcc=0.7436 xcc=1.2112
+config config=mtx603 unit=ohm/mile raa=0.000 xaa=0.000 rab=0.000 xab=0.000 rac=0.000 xac=0.000 rbb=1.3238 xbb=1.3569 rbc=0.2066 xbc=0.4591 rcc=1.3294 xcc=1.3471
+config config=mtx604 unit=ohm/mile raa=1.3238 xaa=1.3569 rab=0.0000 xab=0.0000 rac=0.2066 xac=0.4591 rbb=0.0000 xbb=0.0000 rbc=0.0000 xbc=0.0000 rcc=1.3294 xcc=1.3471
+config config=mtx605 unit=ohm/mile raa=0.0000 xaa=0.0000 rab=0.0000 xab=0.0000 rac=0.0000 xac=0.00000 rbb=0.0000 xbb=0.0000 rbc=0.0000 xbc=0.0000 rcc=1.3292 xcc=1.3475
+config config=mtx606 unit=ohm/mile raa=0.791721 xaa=0.438352 rab=0.318476 xab=0.0276838 rac=0.28345 xac=-0.0184204 rbb=0.781649 xbb=0.396697 rbc=0.318476 xbc=0.0276838 rcc=0.791721 xcc=0.438352
+config config=mtx607 unit=ohm/mile raa=1.3425 xaa=0.5124 rab=0.0000 xab=0.0000 rac=0.0000 xac=0.0000 rbb=0.0000 xbb=0.0000 rbc=0.0000 xbc=0.0000 rcc=0.0000 xcc=0.0000
+
+
+~~~~~ Loads ~~~~~
+
+load nodename=671 conn=wye phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=385.0000 unit=kW reac=220.0000 unit=kVAr
+load nodename=671 conn=wye phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=385.0000 unit=kW reac=220.0000 unit=kVAr
+load nodename=671 conn=wye phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=385.0000 unit=kW reac=220.0000 unit=kVAr
+load nodename=634 conn=wye phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=160.0000 unit=kW reac=110.0000 unit=kVAr
+load nodename=634 conn=wye phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=120.0000 unit=kW reac=90.0000 unit=kVAr
+load nodename=634 conn=wye phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=120.0000 unit=kW reac=90.0000 unit=kVAr
+load nodename=645 conn=wye phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=170.0000 unit=kW reac=125.0000 unit=kVAr
+load nodename=646 conn=wye phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=115.0000 unit=kW reac=66.0000 unit=kVAr
+load nodename=646 conn=wye phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=115.0000 unit=kW reac=66.0000 unit=kVAr
+load nodename=692 conn=wye phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=85.0000 unit=kW reac=75.5000 unit=kVAr
+load nodename=692 conn=wye phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=85.0000 unit=kW reac=75.5000 unit=kVAr
+load nodename=675 conn=wye phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=485.0000 unit=kW reac=190.0000 unit=kVAr
+load nodename=675 conn=wye phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=68.0000 unit=kW reac=60.0000 unit=kVAr
+load nodename=675 conn=wye phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=290.0000 unit=kW reac=212.0000 unit=kVAr
+load nodename=611 conn=wye phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=170.0000 unit=kW reac=80.0000 unit=kVAr
+load nodename=652 conn=wye phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=128.0000 unit=kW reac=86.0000 unit=kVAr
+load nodename=670 conn=wye phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=17.0000 unit=kW reac=10.0000 unit=kVAr
+load nodename=670 conn=wye phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=66.0000 unit=kW reac=38.0000 unit=kVAr
+load nodename=670 conn=wye phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=117.0000 unit=kW reac=68.0000 unit=kVAr
+
+
+~~~~~ Capacitors ~~~~~
+
+capacitor nodename=675 conn=wye phase=a reac=200.0000 unit=kVAr
+capacitor nodename=675 conn=wye phase=b reac=200.0000 unit=kVAr
+capacitor nodename=675 conn=wye phase=c reac=200.0000 unit=kVAr
+capacitor nodename=611 conn=wye phase=c reac=100.0000 unit=kVAr

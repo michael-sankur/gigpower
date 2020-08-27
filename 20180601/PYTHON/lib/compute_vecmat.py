@@ -82,7 +82,6 @@ def compute_vecmat(XNR, fn, Vslack):
         return k
 
     def identify_bus_phases(bus): #figures out which phases correspond to the bus
-
     #this appears to work
         k = np.zeros(3)
         for i in range(1, 4):
@@ -113,7 +112,6 @@ def compute_vecmat(XNR, fn, Vslack):
 
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
     bus_phase_dict = bus_phases()
-
 
     for k2 in range(len(dss.Lines.AllNames())):
         dss.Lines.Name(dss.Lines.AllNames()[k2]) #set the line

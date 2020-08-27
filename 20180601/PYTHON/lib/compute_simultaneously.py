@@ -34,23 +34,23 @@ def NR3_function(network, fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
     JT_deep_vec = np.zeros((iter,2*3*(nnode+nline), 2*3*(nnode+nline)))
     JT_deep_nonvec = np.zeros((iter,2*3*(nnode+nline), 2*3*(nnode+nline)))
     #FT Slack Bus
-    FTSUBV_vec = np.zeros((iter,6, 1))
-    FTSUBV_nonvec = np.zeros((iter,6,1))
-    #FTKVL
-    FTKVL_vec = np.zeros((iter,36, 1))
-    FTKVL_nonvec = np.zeros((iter,36,1))
-    #FTKCL
-    FTKCL_vec = np.zeros((iter,36, 1))
-    FTKCL_nonvec = np.zeros((iter,36, 1))
-    #J Slack Bus
-    JSUBV_vec = np.zeros((iter,6, 78 ))
-    JSUBV_nonvec = np.zeros((iter,6,78))
-    #JKVL
-    JKVL_vec = np.zeros((iter,36, 78))
-    JKVL_nonvec = np.zeros((iter,36,78))
-    #JKCL
-    JKCL_vec = np.zeros((iter,36, 78))
-    JKCL_nonvec = np.zeros((iter,36, 78))
+    # FTSUBV_vec = np.zeros((iter,6, 1))
+    # FTSUBV_nonvec = np.zeros((iter,6,1))
+    # #FTKVL
+    # FTKVL_vec = np.zeros((iter,36, 1))
+    # FTKVL_nonvec = np.zeros((iter,36,1))
+    # #FTKCL
+    # FTKCL_vec = np.zeros((iter,36, 1))
+    # FTKCL_nonvec = np.zeros((iter,36, 1))
+    # #J Slack Bus
+    # JSUBV_vec = np.zeros((iter,6, 78 ))
+    # JSUBV_nonvec = np.zeros((iter,6,78))
+    # #JKVL
+    # JKVL_vec = np.zeros((iter,36, 78))
+    # JKVL_nonvec = np.zeros((iter,36,78))
+    # #JKCL
+    # JKCL_vec = np.zeros((iter,36, 78))
+    # JKCL_nonvec = np.zeros((iter,36, 78))
 
     XNR = np.zeros((2*3*(nnode + nline),1))
 
@@ -89,49 +89,49 @@ def NR3_function(network, fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
     # XNR_deep_vec[iter_count, :, 0] = XNR[:, 0]
     # XNR_deep_notvec[iter_count, :, 0] = XNR[:, 0]
 
-    FT1 = 1e99
+    FT = 1e99
     itercount = 0
 
-    XNR1, g_SB, b_SB, G_KVL, b_KVL = compute_vecmat_TE(XNR, fn, Vslack)
-    H, g, b = compute_KCL_matrices(fn, -1, 0, 0)
-    XNR_deep_vec[iter_count, :, 0] = XNR1[:, 0]
-    XNR_deep_notvec[iter_count, :, 0] = XNR[:, 0]
-    while np.amax(np.abs(FT1)) >= 1e-9 and itercount < maxiter:
-        print(itercount)
-        FT1 = ft1(XNR1, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode) #vectorized
-        FT_deep_vec[iter_count,:, :] = FT1
-        FTSUBV_vec[iter_count, :, 0] = np.reshape(FT1[0:6], (6))
-        FTKVL_vec[iter_count,:, 0] = np.reshape(FT1[6:42], (36))
-        FTKCL_vec[iter_count, :, 0] = np.reshape(FT1[42:], (36))
-
-        JT1 = jt1(XNR1, g_SB, G_KVL, H, g, nnode, nline)
-        JT_deep_vec[ iter_count,:, :] = JT1
-        JSUBV_vec[ iter_count,:, :] = np.reshape(JT1[0:6], (6, 78))
-        JKVL_vec[ iter_count,:, :] = np.reshape(JT1[6:42], (36, 78))
-        JKCL_vec[ iter_count,:, :] = np.reshape(JT1[42:], (36, 78))
+    # XNR1, g_SB, b_SB, G_KVL, b_KVL = compute_vecmat_TE(XNR, fn, Vslack)
+    # H, g, b = compute_KCL_matrices(fn, -1, 0, 0)
+    # XNR_deep_vec[iter_count, :, 0] = XNR1[:, 0]
+    # XNR_deep_notvec[iter_count, :, 0] = XNR[:, 0]
+    while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
+        
+        # FT1 = ft1(XNR1, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode) #vectorized
+        # # FT_deep_vec[iter_count,:, :] = FT1
+        # # FTSUBV_vec[iter_count, :, 0] = np.reshape(FT1[0:6], (6))
+        # # FTKVL_vec[iter_count,:, 0] = np.reshape(FT1[6:42], (36))
+        # # FTKCL_vec[iter_count, :, 0] = np.reshape(FT1[42:], (36))
+        #
+        # JT1 = jt1(XNR1, g_SB, G_KVL, H, g, nnode, nline)
+        # JT_deep_vec[ iter_count,:, :] = JT1
+        # JSUBV_vec[ iter_count,:, :] = np.reshape(JT1[0:6], (6, 78))
+        # JKVL_vec[ iter_count,:, :] = np.reshape(JT1[6:42], (36, 78))
+        # JKCL_vec[ iter_count,:, :] = np.reshape(JT1[42:], (36, 78))
 
         FT = ft2(XNR,network,slacknode,Vslack) #not vectorized
-        FT_deep_nonvec[ iter_count,:, :] = FT
-        FTSUBV_nonvec[ iter_count,:, 0] = np.reshape(FT[0:6], (6))
-        FTKVL_nonvec[ iter_count,:, 0] = np.reshape(FT[6:42], (36))
-        FTKCL_nonvec[ iter_count,:, 0] = np.reshape(FT[42:], (36))
+        # FT_deep_nonvec[ iter_count,:, :] = FT
+        # FTSUBV_nonvec[ iter_count,:, 0] = np.reshape(FT[0:6], (6))
+        # FTKVL_nonvec[ iter_count,:, 0] = np.reshape(FT[6:42], (36))
+        # FTKCL_nonvec[ iter_count,:, 0] = np.reshape(FT[42:], (36))
 
         JT = jt2(XNR,network,slacknode,Vslack)
-        JT_deep_nonvec[ iter_count,:, :] = JT
-        JSUBV_nonvec[ iter_count,:, :]= np.reshape(JT[0:6], (6, 78))
-        JKVL_nonvec[ iter_count,:, :] = np.reshape(JT[6:42], (36, 78))
-        JKCL_nonvec[ iter_count,:, :] = np.reshape(JT[42:], (36, 78))
+        # JT_deep_nonvec[ iter_count,:, :] = JT
+        # JSUBV_nonvec[ iter_count,:, :]= np.reshape(JT[0:6], (6, 78))
+        # JKVL_nonvec[ iter_count,:, :] = np.reshape(JT[6:42], (36, 78))
+        # JKCL_nonvec[ iter_count,:, :] = np.reshape(JT[42:], (36, 78))
 
         iter_count += 1 #count up at this point (indexing should match)
 
         if JT.shape[0] >= JT.shape[1]: #non-vectorized
             XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
-        if JT1.shape[0] >= JT1.shape[1]: #vectorized
-            XNR1 = XNR1 - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
+        # if JT1.shape[0] >= JT1.shape[1]: #vectorized
+        #     XNR1 = XNR1 - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
 
         #dump xnr into the mega-XNR matrix
-        XNR_deep_vec[iter_count, :, 0] = XNR1[:, 0]
-        XNR_deep_notvec[ iter_count, :, 0] = XNR[:, 0]
+        # XNR_deep_vec[iter_count, :, 0] = XNR1[:, 0]
+        # XNR_deep_notvec[ iter_count, :, 0] = XNR[:, 0]
 
         itercount+=1 #diff from the other iter_count, limits # of iterations
 
@@ -142,9 +142,9 @@ def NR3_function(network, fn, slacknode, Vslack, V0, I0,tol=1e-9,maxiter=100):
     #     JSUBV_vec, JKVL_vec, JKCL_vec
 
     TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = \
-        relevant_openDSS_parameters(fn)
+        relevant_openDSS_parameters(fn, -1)
 
-    XNR = XNR1
+    #XNR = XNR1
 
     #remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
     #VNR = XNR(1:2:2*3*nnode-1).' + 1j*XNR(2:2:2*3*nnode).';
