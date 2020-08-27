@@ -52,7 +52,7 @@ class Network:
         # TODO: could define a network object superclass that creates a dataframe from dict
         params_df = pd.DataFrame([self.Vbase, self.Sbase, self.Ibase, self.Zbase, self.units, self.phases], ['Vbase', 'Sbase', 'Ibase', 'Zbase', 'units', 'phases'])
         nodes_df = pd.DataFrame.from_dict( {node.name: node.to_series() for node in self.nodes.values()}).transpose()
-        lines_df = pd.DataFrame.from_dict( { line.key:line.to_series()  for line in self.lines.values()}).transpose()
+        lines_df = pd.DataFrame.from_dict( { str(line.key):line.to_series()  for line in self.lines.values()}).transpose()
         return({'Params': params_df, 'Nodes': nodes_df, 'Lines': lines_df, 'Adj List': self.adj})
 
 
@@ -81,7 +81,7 @@ class Line:
         self.length = None
         self.FZpu = np.zeros((3,3), dtype = 'complex')
     def __str__(self):
-        return self.key
+        return str(self.key)
     def to_series(self):
         data = [self.key, self.name, self.phases, self.config, self.length, self.FZpu]
         return pd.Series(data, self.series_index)
