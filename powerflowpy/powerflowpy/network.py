@@ -26,8 +26,7 @@ class Network:
         self.Sbase = None
         self.Ibase = None
         self.Zbase = None
-        self.units = None
-        self.phases = (False, False, False)
+        self.num_phases = num_phases
         if dss_fp:
             init_from_dss(self, dss_fp)
 
@@ -50,7 +49,7 @@ class Network:
         Except for adjacency matrix, which is returned as a list of lists
         """
         # TODO: could define a network object superclass that creates a dataframe from dict
-        params_df = pd.DataFrame([self.Vbase, self.Sbase, self.Ibase, self.Zbase, self.units, self.phases], ['Vbase', 'Sbase', 'Ibase', 'Zbase', 'units', 'phases'])
+        params_df = pd.DataFrame([self.Vbase, self.Sbase, self.Ibase, self.Zbase, self.num_phases], ['Vbase', 'Sbase', 'Ibase', 'Zbase', 'num_phases'])
         nodes_df = pd.DataFrame.from_dict( {node.name: node.to_series() for node in self.nodes.values()}).transpose()
         lines_df = pd.DataFrame.from_dict( { str(line.key):line.to_series()  for line in self.lines.values()}).transpose()
         return({'Params': params_df, 'Nodes': nodes_df, 'Lines': lines_df, 'Adj List': self.adj})
@@ -71,7 +70,7 @@ class Node:
 
 class Line:
     series_index = ['(tx,rx)', 'name', 'phases', 'config', 'length', 'FZpu']
-    # TODO: might be helpful to include a list of pointers to all Lines in the class
+    # TODO: might be helpful to include a list of pointers to all Lines in the class, and do the same for Node, etc.
     # see: http://effbot.org/pyfaq/how-do-i-get-a-list-of-all-instances-of-a-given-class.htm
     def __init__(self, key: Tuple[str] = None, name: str = '', num_phases:int = 3):
         self.key = key # tuple of (txnode_name, rxnode_name)

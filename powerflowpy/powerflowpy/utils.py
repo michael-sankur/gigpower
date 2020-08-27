@@ -11,11 +11,13 @@ def init_from_dss(dss_fp: str) -> None:
     network = Network()
 
     # set base values
+    # TODO: make it possible to set the base from a given bus
     dss.Solution.Solve()
     Vbase = dss.Bus.kVBase() * 1000
     Sbase = 1000000.0
     Ibase = Sbase/Vbase
-    Zbase = Vbase/Ibase
+    network.Zbase = Vbase/Ibase
+    network.Vbase, network.Sbase, network.Ibase = Vbase, Sbase, Ibase
 
     # make Nodes
     for node_name in dss.Circuit.AllNodeNames():
