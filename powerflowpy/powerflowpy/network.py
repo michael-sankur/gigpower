@@ -31,7 +31,7 @@ class Network:
         if dss_fp:
             init_from_dss(self, dss_fp)
 
-    def __str__(self):
+    def __str__(self) -> str:
         """return something informative"""
         df_dict = self.to_data_frames()
         return_str = ''
@@ -44,7 +44,7 @@ class Network:
                 return_str += f"\n\n{k}\n{v}\n"
         return return_str
 
-    def to_data_frames(self):
+    def to_data_frames(self) -> Dict[str,Any]:
         """
         returns a dictionary of data frames
         Except for adjacency matrix, which is returned as a list of lists
