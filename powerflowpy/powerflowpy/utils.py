@@ -1,7 +1,7 @@
 import numpy as np
 import opendssdirect as dss
 import sys
-from typing import Iterable, List, Any
+from typing import Iterable, List, Tuple, Any
 from . network import Network, Node, Line, Load, Controller, Capacitor
 import scipy.linalg as spla
 
@@ -42,8 +42,7 @@ def init_from_dss(dss_fp: str) -> None:
             raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
         line = Line((tx, rx)) # initialize line
         for phase in tx_phases: # set phases according to tx
-            line.phases[get_phase_idx(phase)] = 1
-
+            line.phases =
         network.lines[(tx,rx)] = line # add line to network.line
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
@@ -81,6 +80,18 @@ def init_from_dss(dss_fp: str) -> None:
         #TODO: figure out how to parse these names from an example
     return network
 
+
+def parse_phases(phase_char_lst):
+    """
+    helper function to return a list of phase characters into a boolean triple
+    ex: ['1', '3'] -> (True, False True)
+    ex: ['a','b'] -> (True, True, False)
+    """
+    phase_list = [False, False, False]
+    for p in phase_char_lst:
+        phase_list[get_phase_idx(p)] = True
+    return tuple(phase_list)
+
 def get_phase_idx(phase_char: str) -> int:
     """
     helper function to turn a phase letter into an index, where 'a' = 0
@@ -92,13 +103,27 @@ def get_phase_idx(phase_char: str) -> int:
     else:
         raise ValueError(f'Invalid argument for get_phase_idx {phase_char}')
 
-def get_Z_from_Y(yp: Iterable, phases : List ) -> Iterable:
+def get_Z_from_Y(YP: Iterable, phase_list : Tuple ) -> Iterable:
     """
-    helper function to get the Z matrix from the flattened Yprim matrix.
-    Returns a numpy array.
+    helper function to get the Z matrix by inverting corresponding elements of the
+    Yprim matrix available from dss.lines.to_dataframe()
+    Returns an ndarray.
     """
-    #TODO: use phases to pad Y matrix as necessary [phases = [1 1 0]]
-    yp = np.asarray(yp, dtype='complex')
-    yp = yp[0:-1:2] + 1j*yp[1::2]
-    yp = np.reshape(yp, (int(yp.shape[0]**(1/2)), int(yp.shape[0]**(1/2))))
-    return spla.inv(yp)
+    num_phases = phase_list.count(True)
+    YP = np.asarray(this_line['Yprim'])
+    YP = YP[0:-1:2] + 1j*YP[1::2]  # reshape into pairs, real and complex
+    # reshape based on phases
+    YP = np.reshape(YP, (YP.shape[0]//num_phases, num_phases))
+    YP = YP[0:num_phases*2:2]  # take the rows corresponding to ZPrime phases
+    invY = spla.inv(YP)
+    # pad the Y matrix
+    yp_padded = np.zeros((3, 3), dtype=complex)
+    yp_vals = iter(invY.flatten())
+    for row_idx in range(3):
+        for col_idx in range(3):
+            if phase_list[row_idx] and phase_list[col_idx]:
+                try:
+                    yp_padded[row_idx][col_idx] = next(yp_vals)
+                except StopIteration:
+                    (f"There is a mismatch in phases between line {line_name} and the dss.YPrim matrix. \n Here is the line data: {this_line}")
+    return yp_padded

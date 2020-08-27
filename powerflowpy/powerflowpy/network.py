@@ -26,7 +26,7 @@ class Network:
         self.Ibase = None
         self.Zbase = None
         self.units = None
-        self.phases = [0] * num_phases
+        self.phases = (False, False, False)
         if dss_fp:
             init_from_dss(self, dss_fp)
 
@@ -41,7 +41,7 @@ class Network:
 class Node:
     def __init__(self, name: str = '', num_phases:int = 3, ):
         self.name = name
-        self.phases = [0] * num_phases
+        self.phases = (False, False, False)
         self.load = None
         self.controller = None
     def __str__(self):
@@ -51,7 +51,7 @@ class Line:
     def __init__(self, key: Tuple[str] = None, num_phases:int = 3):
         self.key = key # tuple of (txnode_name, rxnode_name)
         self.name = name # string, the name DSS uses to refer to this line
-        self.phases = [0] * num_phases
+        self.phases = (False, False, False)
         self.config = None
         self.length = None
         self.FZpu = np.zeros((3,3), dtype = 'complex')
@@ -62,7 +62,7 @@ class Load:
     def __init__(self, name: str = '', num_phases=3):
         self.name = name
         self.conn = None
-        self.phases = [0] * num_phases
+        self.phases = (False, False, False)
         self.type = None
         self.aPQ = None
         self.aI = None
@@ -75,7 +75,7 @@ class Controller:
     def __init__(self, name: str = '', num_phases:int = 3):
         self.node = None
         self.name = None
-        self.phases = [0] * num_phases
+        self.phases = (False, False, False)
         self.wmaxpu = [0] * num_phases
         self.fes = [0] * num_phases
         self.hpfes = [0] * num_phases
@@ -87,7 +87,7 @@ class Controller:
 class Capacitor:
     def __init__(self, name: str = '', num_phases:int = 3):
         self.name = name
-        self.phases = [0] * num_phases
+        self.phases = (False, False, False)
         self.conn = None
         self.cappu = np.zeros((3, 3), dtype='float')
     def __str__(self):
