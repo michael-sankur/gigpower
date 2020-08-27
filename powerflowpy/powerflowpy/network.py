@@ -7,6 +7,7 @@ import numpy as np
 import opendssdirect as dss
 import sys
 import scipy as sp
+import pandas as pd
 
 #TODO: determine appropriate precision for attributes. Right now everything is either floats or ints.
 # Decimal has alterable precision (defaults to 28 places), and numpy.float128 can have 64-bit precision
@@ -32,23 +33,47 @@ class Network:
 
     def __str__(self):
         """return something informative"""
-        node_str = 'Nodes: ' + ', '.join([k for k  in self.nodes.keys()])
-        lines_str = 'Lines: ' + ', '.join([ str(k) for k in self.lines.keys()])
-        adj_str = f'Adjacency List: {self.adj}'
-        params_str = f'Vbase: {self.Vbase}, Sbase: {self.Sbase}, Ibase: {self.Ibase}, Zbase: {self.Zbase}, phases: {len(self.phases)}, units: {self.units}'
-        return '\n'.join([params_str, node_str, lines_str, adj_str]) + '\n'
+        df_dict = self.to_data_frames()
+        return_str = ''
+        for k,v in df_dict.items():
+            if k == 'Adj List':
+                return_str += '\nAdjacency List:\n'
+                for n,l in v.items():
+                    return_str += f"{n}: {', '.join(l)}\n"
+            else:
+                return_str += f"\n\n{k}\n{v}\n"
+        return return_str
+
+    def to_data_frames(self):
+        """
+        returns a dictionary of data frames
+        Except for adjacency matrix, which is returned as a list of lists
+        """
+        # TODO: could define a network object superclass that creates a dataframe from dict
+        params_df = pd.DataFrame([self.Vbase, self.Sbase, self.Ibase, self.Zbase, self.units, self.phases], ['Vbase', 'Sbase', 'Ibase', 'Zbase', 'units', 'phases'])
+        nodes_df = pd.DataFrame.from_dict( {node.name: node.to_series() for node in self.nodes.values()}).transpose()
+        lines_df = pd.DataFrame.from_dict( { line.key:line.to_series()  for line in self.lines.values()}).transpose()
+        return({'Params': params_df, 'Nodes': nodes_df, 'Lines': lines_df, 'Adj List': self.adj})
+
 
 class Node:
+    series_index = ['name', 'phases', 'load', 'controller']
     def __init__(self, name: str = '', num_phases:int = 3, ):
         self.name = name
         self.phases = (False, False, False)
         self.load = None
         self.controller = None
     def __str__(self):
-        return self.name
+        return f"{self.name}, {self.phases}"
+    def to_series(self):
+        data = [self.name, self.phases, self.load, self.controller]
+        return pd.Series(data, self.series_index)
 
 class Line:
-    def __init__(self, key: Tuple[str] = None, num_phases:int = 3):
+    series_index = ['(tx,rx)', 'name', 'phases', 'config', 'length', 'FZpu']
+    # TODO: might be helpful to include a list of pointers to all Lines in the class
+    # see: http://effbot.org/pyfaq/how-do-i-get-a-list-of-all-instances-of-a-given-class.htm
+    def __init__(self, key: Tuple[str] = None, name: str = '', num_phases:int = 3):
         self.key = key # tuple of (txnode_name, rxnode_name)
         self.name = name # string, the name DSS uses to refer to this line
         self.phases = (False, False, False)
@@ -57,6 +82,11 @@ class Line:
         self.FZpu = np.zeros((3,3), dtype = 'complex')
     def __str__(self):
         return self.key
+    def to_series(self):
+        data = [self.key, self.name, self.phases, self.config, self.length, self.FZpu]
+        return pd.Series(data, self.series_index)
+
+
 
 class Load:
     def __init__(self, name: str = '', num_phases=3):

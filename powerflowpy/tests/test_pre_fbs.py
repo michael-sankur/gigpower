@@ -4,24 +4,17 @@
 from powerflowpy.utils import init_from_dss
 from powerflowpy.fbs import topo_sort
 
-# dss_file = 'powerflowpy/tests/test_cases_dss/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
+dss_file = 'powerflowpy/tests/test_cases_dss/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
 # dss_file = 'powerflowpy/tests/test_cases_dss/02node_threephase_unbalanced.dss'
 
 def test_init_from_dss() -> None:
     """ Compare opendss.circuit to our Network object"""
-    pass
-    # number of nodes
-    # number of lines
-
-    # nodes x phases
-
-    # lines x phases
+    network = init_from_dss(dss_file)
+    print(network)
 
 def test_topo_sort() -> None:
     network = init_from_dss(dss_file)
-    print(topo_sort(network))
-    # make sure that topo_sort fails on a network with a cycle
-
+    # TODO: make sure that topo_sort fails on a network with a cycle
     # if any node is preceded by one of its children assert False
     sort = topo_sort(network)
     for idx,node in enumerate(sort):

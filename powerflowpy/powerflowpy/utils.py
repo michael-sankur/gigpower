@@ -24,15 +24,13 @@ def init_from_dss(dss_fp: str) -> None:
         if name not in network.nodes.keys():
             network.nodes[name] = Node(name)
         node = network.nodes[name]
-        phase_idx = int(phase) - 1 # shift to 0-indexing
-        node.phases[phase_idx] = 1 # add this phase to the node
-        # initalize this node's adjacency list to the empty list
+        node.phases = parse_phases([phase])
         # note: this means that every node has an entry. Nodes with no children will hav an empty list.
         network.adj[name] = []
 
     #make Lines
     all_lines_data = dss.utils.lines_to_dataframe().transpose() # get dss line data indexed by line_code
-    line_codes = all_lines_data['LineCode'].keys()
+    line_codes = all_lines_data.keys()
 
     for line_code in line_codes:
         line_data = all_lines_data[line_code]
@@ -40,9 +38,9 @@ def init_from_dss(dss_fp: str) -> None:
         rx, *rx_phases = line_data['Bus2'].split('.')
         if tx_phases != rx_phases:
             raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
-        line = Line((tx, rx)) # initialize line
+        line = Line((tx, rx), line_code) # initialize line
         for phase in tx_phases: # set phases according to tx
-            line.phases =
+            line.phases = parse_phases(tx_phases)
         network.lines[(tx,rx)] = line # add line to network.line
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
@@ -50,7 +48,7 @@ def init_from_dss(dss_fp: str) -> None:
         #parse line attributes from dss line data
         line.name = line_code
         line.length = line_data['Length']
-        line.FZpu = get_Z_from_Y(line_data['YPrim'], line.phases)
+        line.FZpu = get_Z_from_Y(line_data['Yprim'], line.phases)
 
 
     # make Loads
@@ -63,7 +61,7 @@ def init_from_dss(dss_fp: str) -> None:
         except KeyError:
             print("Node assigned to load not defined for this network.")
         load = Load(load_name + '_' + load_idx)
-        load.phases[get_phase_idx(phase_char)] = 1 # indicate this load's phase
+        load.phases = parse_phases([phase_char])
         node.load = load #assign this load to its node
     #TODO: get aPQ, aI, ppu, qpu, spu for each load
     #TODO: figure out how to get connection information (wye or delta).
@@ -110,7 +108,7 @@ def get_Z_from_Y(YP: Iterable, phase_list : Tuple ) -> Iterable:
     Returns an ndarray.
     """
     num_phases = phase_list.count(True)
-    YP = np.asarray(this_line['Yprim'])
+    YP = np.asarray(YP)
     YP = YP[0:-1:2] + 1j*YP[1::2]  # reshape into pairs, real and complex
     # reshape based on phases
     YP = np.reshape(YP, (YP.shape[0]//num_phases, num_phases))
