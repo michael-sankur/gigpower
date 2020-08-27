@@ -1,8 +1,9 @@
 import numpy as np
 import opendssdirect as dss
 import sys
-from typing import Iterable, List
+from typing import Iterable, List, Any
 from . network import Network, Node, Line, Load, Controller, Capacitor
+import scipy.linalg as spla
 
 def init_from_dss(dss_fp: str) -> None:
     """define a Network attributes from a dss file"""
@@ -30,22 +31,28 @@ def init_from_dss(dss_fp: str) -> None:
         network.adj[name] = []
 
     #make Lines
-    line_codes = dss.LineCodes.AllNames()
-    lengths = [i() for i in dss.utils.Iterator(dss.Lines, 'Length')]
-    line_zip = zip(line_codes, lengths)
-    for line_code,length in line_zip:
-        tx, rx = line_code.split('_')
-        tx = 'sourcebus' if tx == 'sub' else tx # TODO: figure out: is 'sub' the same as 'sourcebus?'
-        if (tx, rx) not in network.lines.keys():
-            network.lines[(tx,rx)] = Line((tx,rx))
-        line = network.lines[(tx,rx)]
-        line.length = length
+    all_lines_data = dss.utils.lines_to_dataframe().transpose() # get dss line data indexed by line_code
+    line_codes = all_lines_data['LineCode'].keys()
+
+    for line_code in line_codes:
+        line_data = all_lines_data[line_code]
+        tx, *tx_phases = line_data['Bus1'].split('.')
+        rx, *rx_phases = line_data['Bus2'].split('.')
+        if tx_phases != rx_phases:
+            raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
+        line = Line((tx, rx)) # initialize line
+        for phase in tx_phases: # set phases according to tx
+            line.phases[get_phase_idx(phase)] = 1
+
+        network.lines[(tx,rx)] = line # add line to network.line
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
 
-    # TODO: figure out how to get 3x3 impedance per unit matrix.
-    # probably something using dss.Lines, 'XMatrix' and 'RMatrix'
-    # TODO: handle unit conversions
+        #parse line attributes from dss line data
+        line.name = line_code
+        line.length = line_data['Length']
+        line.FZpu = get_Z_from_Y(line_data['YPrim'], line.phases)
+
 
     # make Loads
     load_names = dss.Loads.AllNames()
@@ -78,4 +85,20 @@ def get_phase_idx(phase_char: str) -> int:
     """
     helper function to turn a phase letter into an index, where 'a' = 0
     """
-    return ord(phase_char.lower()) - ord('a')
+    if phase_char in ['a', 'b', 'c']:
+        return ord(phase_char.lower()) - ord('a')
+    elif phase_char in ['1', '2', '3']:
+        return int(phase_char) - 1
+    else:
+        raise ValueError(f'Invalid argument for get_phase_idx {phase_char}')
+
+def get_Z_from_Y(yp: Iterable, phases : List ) -> Iterable:
+    """
+    helper function to get the Z matrix from the flattened Yprim matrix.
+    Returns a numpy array.
+    """
+    #TODO: use phases to pad Y matrix as necessary [phases = [1 1 0]]
+    yp = np.asarray(yp, dtype='complex')
+    yp = yp[0:-1:2] + 1j*yp[1::2]
+    yp = np.reshape(yp, (int(yp.shape[0]**(1/2)), int(yp.shape[0]**(1/2))))
+    return spla.inv(yp)
