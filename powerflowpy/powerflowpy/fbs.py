@@ -10,15 +10,18 @@ from . network import *
 def fbs(dss_fp) -> None:
     network = init_from_dss(dss_fp)
     topo_order = topo_sort(network)
-    solution = Solution()
-    # while not converged
+    solution = Solution(network)
+    #TODO: figure out how best to set tolerance
+    solution.tolerance = abs( (solution.Vref[1]) * 10**-9) # set tolerance at phase B
+
+    converged = max(abs(Vtest - Vref)) >= solution.tol
+    while not converged:
         # for node in topo_order:
             # forward sweep
-        # check convergence
+        converged = max(abs(Vtest - Vref)) >= solution.tol
         # for node in reverse topo_order:
             # backward sweep
-    # return Solution
-    pass
+    return Solution
 
 def update(network: Network, source_node: Node, target_node: Node) -> None:
     pass
@@ -59,18 +62,28 @@ def topo_sort_dfs(start_node:str, node_status: Dict[str,str], adj_matrix: Iterab
 
 
 class Solution:
-    # class variable: list of solution variables
-    solution_vars = ['V', 'I', 'Inode', 'S', 'sV']
 
-    def __init__(self, nodes: Iterable[Node], iterations: int = -1, tol: float = -1) -> Dict[str, Dict]:
-        self.iterations = iterations  # number of iterations of FBS until convergence
-        self.tolerance = tol  # tolerance at convergence
+    def __init__(self, network: Network, tol: float = -1, max_iter: int = -1) -> None:
+        self.iterations = -1  # stores number of iterations of FBS until convergence
+        self.Vtest = np.zeros(3, dtype='complex')
+        self.Vref = network.Vbase * np.ones(3, dtype='complex')
         self.solved_nodes = dict()
-        for node in self.nodes:
-            # initialize a zeroed out num_phases x 1 array for each solution var
-            # for each node
-            node_dict = {var: [0] * len(node.phases)
-                         for var in Solution.solution_vars}
+        self.solved_lines = dict()
+        self.tolerance = -1 # stores the tolerance
+        self.diff = -1  # stores the final value of Vtest - Vref at convergence
+
+        """ Set up voltages and currents for all nodes """
+        for node in network.get_nodes():
+            node_dict = dict()
+            self.solved_nodes[node.name] = node_dict
+            # initialize a zeroed out array for each solution var
+            node_dict['V'] = network.Vbase * np.ones(3, dtype='complex')
+            node_dict['Inode'] = np.zeros(3, dtype='complex')
+            node_dict['S'] =
+        for line in network.get_lines():
+            line_dict = dict()
+            self.solved_lines[line.name] = line_dict
+            line_dict['I'] = np.zeros(3s, dtype='complex')
 
     def __str__(self):
         return '\n'.join(
