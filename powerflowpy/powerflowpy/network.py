@@ -57,7 +57,7 @@ class Network:
 
 class Node:
     series_index = ['name', 'phases', 'load', 'controller']
-    def __init__(self, name: str = '', num_phases:int = 3, ):
+    def __init__(self, name: str = ''):
         self.name = name
         self.phases = (False, False, False)
         self.load = None
@@ -72,7 +72,7 @@ class Line:
     series_index = ['(tx,rx)', 'name', 'phases', 'config', 'length', 'FZpu']
     # TODO: might be helpful to include a list of pointers to all Lines in the class, and do the same for Node, etc.
     # see: http://effbot.org/pyfaq/how-do-i-get-a-list-of-all-instances-of-a-given-class.htm
-    def __init__(self, key: Tuple[str] = None, name: str = '', num_phases:int = 3):
+    def __init__(self, key: Tuple[str] = None, name: str = ''):
         self.key = key # tuple of (txnode_name, rxnode_name)
         self.name = name # string, the name DSS uses to refer to this line
         self.phases = (False, False, False)
@@ -88,7 +88,7 @@ class Line:
 
 
 class Load:
-    def __init__(self, name: str = '', num_phases=3):
+    def __init__(self, name: str = ''):
         self.name = name
         self.conn = None
         self.phases = (False, False, False)
@@ -101,7 +101,7 @@ class Load:
         return self.name
 
 class Controller:
-    def __init__(self, name: str = '', num_phases:int = 3):
+    def __init__(self, name: str = ''):
         self.node = None
         self.name = None
         self.phases = (False, False, False)
@@ -114,7 +114,7 @@ class Controller:
         return self.name
 
 class Capacitor:
-    def __init__(self, name: str = '', num_phases:int = 3):
+    def __init__(self, name: str = ''):
         self.name = name
         self.phases = (False, False, False)
         self.conn = None
