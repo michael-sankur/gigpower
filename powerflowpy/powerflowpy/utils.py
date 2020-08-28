@@ -55,7 +55,7 @@ def init_from_dss(dss_fp: str) -> None:
         #parse line attributes from dss line data
         line.name = line_code
         line.length = line_data['Length']
-        line.FZpu = get_Z_from_Y(line_data['Yprim'], line.phases)
+        line.FZpu = get_Z(line_data, line.phases)
 
 
     # make Loads
@@ -108,27 +108,26 @@ def get_phase_idx(phase_char: str) -> int:
     else:
         raise ValueError(f'Invalid argument for get_phase_idx {phase_char}')
 
-def get_Z_from_Y(YP: Iterable, phase_list : Tuple ) -> Iterable:
+def get_Z(dss_data: Any, phase_list : Tuple ) -> Iterable:
     """
-    helper function to get the Z matrix by inverting corresponding elements of the
-    Yprim matrix available from dss.lines.to_dataframe()
+    helper function to get the Z matrix from dss.lines.to_dataframe()
     Returns an ndarray.
     """
     num_phases = phase_list.count(True)
-    YP = np.asarray(YP)
-    YP = YP[0:-1:2] + 1j*YP[1::2]  # reshape into pairs, real and complex
+    RM = np.asarray(dss_data['RMatrix'])
+    XM = np.asarray(dss_data['XMatrix'])
     # reshape based on phases
-    YP = np.reshape(YP, (YP.shape[0]//num_phases, num_phases))
-    YP = YP[0:num_phases*2:2]  # take the rows corresponding to ZPrime phases
-    invY = spla.inv(YP)
-    # pad the Y matrix
-    yp_padded = np.zeros((3, 3), dtype=complex)
-    yp_vals = iter(invY.flatten())
+    phases = int(dss_data['Phases'])
+    ZM = RM + 1j*XM
+    ZM = np.reshape(ZM, (ZM.shape[0]//phases, phases))  # reshape
+    # pad the Z matrix
+    z_padded = np.zeros((3, 3), dtype=complex)
+    z_vals = iter(ZM.flatten())
     for row_idx in range(3):
         for col_idx in range(3):
             if phase_list[row_idx] and phase_list[col_idx]:
                 try:
-                    yp_padded[row_idx][col_idx] = next(yp_vals)
+                    z_padded[row_idx][col_idx] = next(z_vals)
                 except StopIteration:
-                    (f"There is a mismatch in phases between line {line_name} and the dss.YPrim matrix.")
-    return yp_padded
+                    (f"There is a mismatch in phases between line {line_name} and the Z matrix")
+    return z_padded
