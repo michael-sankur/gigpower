@@ -4,27 +4,40 @@
 # Implement FBS to solve Power Flow for a radial distribution network.
 import sys
 from typing import Iterable, List, Dict
-from . utils import init_from_dss
+from . utils import init_from_dss, mask_phases
 from . network import *
 
 def fbs(dss_fp) -> None:
     network = init_from_dss(dss_fp)
     topo_order = topo_sort(network)
     solution = Solution(network)
-    #TODO: figure out how best to set tolerance
-    solution.tolerance = abs( (solution.Vref[1]) * 10**-9) # set tolerance at phase B
 
-    converged = max(abs(Vtest - Vref)) >= solution.tol
+    #TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
+    solution.tolerance = abs( (solution.Vref[1]) * 10**-9) # set tolerance with phase B reference voltage
+
+    converged = max(abs(solution.Vtest - solution.Vref)) >= solution.tol
     while not converged:
-        # for node in topo_order:
-            # forward sweep
-        converged = max(abs(Vtest - Vref)) >= solution.tol
-        # for node in reverse topo_order:
-            # backward sweep
-    return Solution
+        # FORWARD SWEEP: for node in topo_order:
+        for node in topo_order:
+            children = network.adj[node.name]
+            for child in children:
+                line_out = network.lines[(node, child)]
+                solution.update_voltage(node, child, 'forward')
+        #update voltage dependent load
+        solution.update_voltage_dependent_load(network)
+        #check convergence after each forward sweep
+        converged = max(abs(solution.Vtest - solution.Vref)) >= solution.tol
+        if converged:
+            break
 
-def update(network: Network, source_node: Node, target_node: Node) -> None:
-    pass
+        # BACKWARD SWEEP: for node in reverse topo_order:
+        for node in reversed(topo_order):
+            # get line to parent
+            line_in = network.lines([node.parent.name, node])
+            #update voltage dependent load
+            solution.update_voltage_dependent_load(network)
+
+    return Solution
 
 def topo_sort(network: Network) -> List:
     """
@@ -59,42 +72,5 @@ def topo_sort_dfs(start_node:str, node_status: Dict[str,str], adj_matrix: Iterab
     node_status[start_node] = 'finished'
     topo_order[clock-1] = start_node
     return clock - 1
-
-
-class Solution:
-
-    def __init__(self, network: Network, tol: float = -1, max_iter: int = -1) -> None:
-        self.iterations = -1  # stores number of iterations of FBS until convergence
-        self.Vtest = np.zeros(3, dtype='complex')
-        self.Vref = network.Vbase * np.ones(3, dtype='complex')
-        self.solved_nodes = dict()
-        self.solved_lines = dict()
-        self.tolerance = -1 # stores the tolerance
-        self.diff = -1  # stores the final value of Vtest - Vref at convergence
-
-        """ Set up voltages and currents for all nodes """
-        for node in network.get_nodes():
-            node_dict = dict()
-            self.solved_nodes[node.name] = node_dict
-            # initialize a zeroed out array for each solution var
-            node_dict['V'] = network.Vbase * np.ones(3, dtype='complex')
-            node_dict['Inode'] = np.zeros(3, dtype='complex')
-            node_dict['S'] =
-        for line in network.get_lines():
-            line_dict = dict()
-            self.solved_lines[line.name] = line_dict
-            line_dict['I'] = np.zeros(3s, dtype='complex')
-
-    def __str__(self):
-        return '\n'.join(
-            [
-                f'itertations to convergence: {self.iterations}',
-                f'tolerance at convergence: {self.tolerance}',
-                f'solution: \n {self.solved_nodes}'
-            ]
-        )
-
-
-
 
 

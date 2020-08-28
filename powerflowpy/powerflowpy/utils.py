@@ -51,6 +51,8 @@ def init_from_dss(dss_fp: str) -> None:
         network.lines[(tx,rx)] = line # add line to network.line
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
+        # set rx's parent to tx
+        network.nodes[rx].parent = tx
 
         #parse line attributes from dss line data
         line.name = line_code
@@ -131,3 +133,21 @@ def get_Z(dss_data: Any, phase_list : Tuple ) -> Iterable:
                 except StopIteration:
                     (f"There is a mismatch in phases between line {line_name} and the Z matrix")
     return z_padded
+
+def mask_phases(matrix: Iterable, phases: tuple) -> Iterable:
+    """
+    Zeroes out values in input matrix for phases set to FALSE in the phases tuple.
+    Input:
+        matrix: a 3x3 ndarray
+        phases: a tuple of booleans corresponding to phases to set on this matrix (A: T/F, B: T/F, C: T/F)
+    Output:
+        input matrix with 0's for all row/column indices corresponding to phases set to FALSE
+    """
+    # create a 3x3 phase matrix of 1's and 0's base on phases
+    phase_matrix = np.zeros((3, 3), dtype=complex)
+    for row_idx in range(3):
+        for col_idx in range(3):
+            if phases[row_idx] and phase_list[col_idx]:
+                phase_matrix[row_idx, column_index] = 1
+
+    return np.matmul(matrix, phase_matrix)
