@@ -32,8 +32,6 @@ def test_init_from_dss(get_network) -> None:
     network_lines = len(network.lines)
     network_edges = sum([ len(node_list) for node_list in network.adj.values() ])
     line_check = (dss_lines == network_lines) and (dss_lines == network_edges)
-    print(dss.Circuit.AllNodeNames())
-    print(network.to_dataframes()['Nodes'])
     assert node_check and line_check
 
 def test_topo_sort() -> None:

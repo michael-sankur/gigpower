@@ -58,6 +58,28 @@ def topo_sort_dfs(start_node:str, node_status: Dict[str,str], adj_matrix: Iterab
     return clock - 1
 
 
+class Solution:
+    # class variable: list of solution variables
+    solution_vars = ['V', 'I', 'Inode', 'S', 'sV']
+
+    def __init__(self, nodes: Iterable[Node], iterations: int = -1, tol: float = -1) -> Dict[str, Dict]:
+        self.iterations = iterations  # number of iterations of FBS until convergence
+        self.tolerance = tol  # tolerance at convergence
+        self.solved_nodes = dict()
+        for node in self.nodes:
+            # initialize a zeroed out num_phases x 1 array for each solution var
+            # for each node
+            node_dict = {var: [0] * len(node.phases)
+                         for var in Solution.solution_vars}
+
+    def __str__(self):
+        return '\n'.join(
+            [
+                f'itertations to convergence: {self.iterations}',
+                f'tolerance at convergence: {self.tolerance}',
+                f'solution: \n {self.solved_nodes}'
+            ]
+        )
 
 
 
