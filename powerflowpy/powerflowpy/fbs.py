@@ -6,6 +6,7 @@ import sys
 from typing import Iterable, List, Dict
 from . utils import init_from_dss, mask_phases
 from . network import *
+from Solution import *
 
 def fbs(dss_fp) -> None:
     network = init_from_dss(dss_fp)
@@ -36,6 +37,13 @@ def fbs(dss_fp) -> None:
             line_in = network.lines([node.parent.name, node])
             #update voltage dependent load
             solution.update_voltage_dependent_load(network)
+            # update segment current
+            solution.update_current(network, line_in)
+            # update voltage at parent
+            # get parent node
+            parent = network.nodes[ node.parent.name ]
+            solution.update_voltage(node, parent, 'backwards')
+
 
     return Solution
 

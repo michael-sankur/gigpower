@@ -29,7 +29,7 @@ class Solution:
         for line in network.get_lines():
             line_dict = dict()
             self.solved_lines[line.name] = line_dict
-            line_dict['I'] = np.zeros(3s, dtype='complex')
+            line_dict['I'] = np.zeros(3, dtype='complex')
 
     def update_voltage(network: Network, source_node: Node, target_node: Node, direction: str) -> None:
         """
@@ -48,12 +48,23 @@ class Solution:
 
         # target node voltage = source node voltage +/- current(target_node, source_node)
         new_target_V = source_V + sign * np.matmul(FZpu, I)
-        # zero out voltages for not existant phases at node
-        tarvet_node_dict['V'] = mask_phases(new_target_V, target_node.phases)
+        # zero out voltages for not existent phases at target node
+        # ELAINE: move this out or toggle for forward/backward
+        target_node_dict['V'] = mask_phases(new_target_V, target_node.phases)
         return None
 
-    def update_current(network: Network, line_in: Line, s: Iterable) -> None:
+    def update_current(network: Network, line_in: Line) -> None:
+        downstr_node_name = line_in.key[1]
+        solved_line_dict = self.solved_lines[line_in.key]
+        downstr_node_dict = self.solved_nodes[ downstr_node_name ]
+        downstr_node_phases = network.nodes[ downstr_node_name ].phases
+        line_I = solved_line_dict['I']
+        line_s = solved_line_dict['s']
+        downstr_node_V = downstr_node_dict['V']
 
+        new_line_I = np.conj(np.divide(line_s, downstr_node_V))
+        # TODO: confirm that np.divide is the same as matlab right divide './'
+        new_line_I = mask_phases(new_line_I, downstr_node_phases)
 
     def update_voltage_dependent_load(network: Network) -> None:
         """
