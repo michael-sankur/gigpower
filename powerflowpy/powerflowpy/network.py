@@ -30,6 +30,14 @@ class Network:
         if dss_fp:
             init_from_dss(self, dss_fp)
 
+    def get_nodes(self) -> List[Any] :
+        """return a list of network Node objects"""
+        return self.nodes.values()
+
+    def get_lines(self) -> List[Any] :
+        """return a list of network Line objects"""
+        return self.lines.values()
+
     def __str__(self) -> str:
         """return something informative"""
         df_dict = self.to_data_frames()

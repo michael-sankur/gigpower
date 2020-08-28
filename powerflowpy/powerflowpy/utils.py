@@ -25,10 +25,15 @@ def init_from_dss(dss_fp: str) -> None:
         # get the node corresponding to this name, or make a new one
         if name not in network.nodes.keys():
             network.nodes[name] = Node(name)
+            network.nodes[name].phases = [] # replace default tuple with empty list so we can mutate it
         node = network.nodes[name]
-        node.phases = parse_phases([phase])
-        # note: this means that every node has an entry. Nodes with no children will hav an empty list.
+        # store phases as characters in phase list for now
+        node.phases.append(phase)
+        # Add node to adjacency lisst. note: this means that every node has an entry. Nodes with no children will have an empty list.
         network.adj[name] = []
+    # iterate through nodes to parse phase lists
+    for node in network.get_nodes():
+        node.phases = parse_phases(node.phases)
 
     #make Lines
     all_lines_data = dss.utils.lines_to_dataframe().transpose() # get dss line data indexed by line_code
@@ -125,5 +130,5 @@ def get_Z_from_Y(YP: Iterable, phase_list : Tuple ) -> Iterable:
                 try:
                     yp_padded[row_idx][col_idx] = next(yp_vals)
                 except StopIteration:
-                    (f"There is a mismatch in phases between line {line_name} and the dss.YPrim matrix. \n Here is the line data: {this_line}")
+                    (f"There is a mismatch in phases between line {line_name} and the dss.YPrim matrix.")
     return yp_padded
