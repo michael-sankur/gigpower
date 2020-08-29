@@ -77,19 +77,24 @@ def init_from_dss(dss_fp: str) -> None:
         load.ppu = load_data['kW'] / 1000
         load.qpu = load_data['kvar']  / 1000
         load.spu = ppu + 1j*qpu
-    #TODO: get aPQ, aI for each load
-    #TODO: figure out how to get connection information (wye or delta).
-    # Is this info determined by Capacitors?
-    # Or can we use Loads.IsDelta?
+        load.conn = load_data['IsDelta'] ? 'delta' : 'wye' #TODO: figure out if delta/wye are mutually exclusive
+        #TODO: set load.type
+        #TODO: get aPQ, aI for each load
 
     # make Controllers
     # TODO: implement this. No idea how opendssdirect maps this info. Which class is it even?
 
     # make Capacitors
-    cap_names = dss.Capacitors.AllNames()
+    all_cap_data = dss.utils.capacitors_to_dataframe().transpose()
+    cap_names = all_cap_data.keys()
     for cap_name in cap_names:
+        cap_data = all_cap_data[cap_name]
         cap = Capacitor(cap_name)
-        #TODO: figure out how to parse these names from an example
+        # TODO: figure out if delta/wye are mutually exclusive]
+        cap.conn = cap_data['IsDelta'] ? 'delta': 'wye'
+        cap.cappu = cap_data['kvar'] * 1000 / self.Sbase
+        #TODO: get phases on capacitor
+
     return network
 
 

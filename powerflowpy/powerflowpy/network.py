@@ -21,6 +21,8 @@ class Network:
         """
         self.nodes = dict()
         self.lines = dict()
+        self.loads = dict()
+        self.capacitors = dict()
         self.adj = dict()
         self.Vbase = None
         self.Sbase = None
@@ -115,11 +117,12 @@ class Controller:
         self.node = None
         self.name = None
         self.phases = (False, False, False)
-        self.wmaxpu = [0] * num_phases
-        self.fes = [0] * num_phases
-        self.hpfes = [0] * num_phases
-        self.lpfes = [0] * num_phases
-        self.kintes = [0] * num_phases
+        self.wpu = np.zeroes(3)
+        self.wmaxpu = np.zeroes(3)
+        self.fes = np.zeroes(3)
+        self.hpfes = np.zeroes(3)
+        self.lpfes = np.zeroes(3)
+        self.kintes = np.zeroes(3)
     def __str__(self):
         return self.name
 
