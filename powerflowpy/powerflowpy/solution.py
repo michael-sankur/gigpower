@@ -33,26 +33,40 @@ class Solution:
             self.solved_lines[line.name] = line_dict
             line_dict['I'] = np.zeros(3, dtype='complex')
 
-    def update_voltage(network: Network, source_node: Node, target_node: Node, direction: str) -> None:
+    def update_voltage_forward(network: Network, parent: Node, child: Node) -> None:
         """
-        updates voltage at target_node based on source_node according to:
-        target_node_dict['V'] = source_node_dict['V'] - (source,target).FZpu * (source,target).I
+        updates voltage at child based on parent according to:
+        child_node_dict['V'] = parent_dict['V'] - (parent,child).FZpu * (parent,child).I
         """
-        source_node_dict = self.solved_nodes[source_node.name]
-        target_node_dict = self.solved_nodes[target_node.name]
-        line_key = (source_node.name, target_node.name)
-        source_V = source_node_dict['V']
-        target_V = target_node_dict['V']
+        parent_dict = self.solved_nodes[parent.name]
+        child_node_dict = self.solved_nodes[child_node.name]
+        line_key = (parent.name, child_node.name)
+        parent_V = parent_dict['V']
+        child_V = child_node_dict['V']
         FZpu = network.lines[line_key].FZpu
         I = self.solved_lines[line_key]['I']
-        # if forward, subtract Z*I, otherwise add Z*I
-        sign = -1 if direction == 'forward' else 1
 
-        # target node voltage = source node voltage +/- current(target_node, source_node)
-        new_target_V = source_V + sign * np.matmul(FZpu, I)
-        # zero out voltages for not existent phases at target node
-        # ELAINE: move this out or toggle for forward/backward
-        target_node_dict['V'] = mask_phases(new_target_V, target_node.phases)
+        # child node voltage = parent node voltage - current(child_node, parent)
+        new_child_V = parent_V - np.matmul(FZpu, I)
+        # zero out voltages for not existent phases at child node
+        child_node_dict['V'] = mask_phases(new_child_V, child_node.phases)
+        return None
+
+    def update_voltage_backward(network: Network, child: Node, parent: Node) -> None:
+        """
+        updates voltage at parent node only for nodes existing on child node.
+        """
+        parent_dict = self.solved_nodes[parent.name]
+        child_dict = self.solved_nodes[child.name]
+        child_V = child_node_dict['V']
+        line_key = (parent.name, child.name)
+        FZpu = network.lines[line_key].FZpu
+        I = self.solved_lines[line_key]['I']
+        for phase_idx in range(3):
+            if child.phases[phase_idx]: # if this phase is present on child
+                parent_dict['V'][phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
+        # zero out voltages for not existent phases at parent node
+        parent_dict['V'] = mask_phases(parent_dict['V'], parent.phases)
         return None
 
     def update_current(network: Network, line_in: Line) -> None:

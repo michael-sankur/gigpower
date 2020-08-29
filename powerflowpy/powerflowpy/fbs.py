@@ -12,11 +12,10 @@ def fbs(dss_fp) -> None:
     network = init_from_dss(dss_fp)
     topo_order = topo_sort(network)
     solution = Solution(network)
-
     #TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
     solution.tolerance = abs( (solution.Vref[1]) * 10**-9) # set tolerance with phase B reference voltage
-
     converged = max(abs(solution.Vtest - solution.Vref)) >= solution.tolerance
+
     while not converged:
         # FORWARD SWEEP: for node in topo_order:
         for node in topo_order:
