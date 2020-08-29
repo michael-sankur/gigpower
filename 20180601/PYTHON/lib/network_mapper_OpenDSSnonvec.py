@@ -169,8 +169,7 @@ def network_mapper_function(fn, t):
         lines.RXnode[line] = re.findall(pattern, bus2)[0]
         lines.TXnum[line] = busIdx[lines.TXnode[line]]
         lines.RXnum[line] = busIdx[lines.RXnode[line]]
-        lines.length[line] = dss.Lines.Length() *0.3048
-        #print(dss.Lines.Length())
+        lines.length[line] = dss.Lines.Length() #* 0.3048
         lines.config[line] = dss.Lines.LineCode()
 
     line_phase_dict = {}
@@ -320,7 +319,7 @@ def network_mapper_function(fn, t):
         tempFZpupl = rtemp + 1j*xtemp
 
         # 3x3 impedance per unit length matrix for current line config [pu/m]
-        configs.FZpupl[:,3*k1:3*(k1+1)] = tempFZpupl/Zbase/1609.34
+        configs.FZpupl[:,3*k1:3*(k1+1)] = tempFZpupl/Zbase#/1609.34
     configs.conflist = lines.config
 
     if printflag == 1:
@@ -415,34 +414,69 @@ def network_mapper_function(fn, t):
     loads.aZ = np.zeros((3,nodes.nnode))
 
     def get_bus_idx(bus):
-        k = -1
-        for n in range(len(dss.Circuit.AllBusNames())): #iterates over all the buses to see which index corresponds to bus
-            if dss.Circuit.AllBusNames()[n] in bus:
-                k = n
+        pattern =  r"(\w+)\."
+        bus_ph_free = re.findall(pattern, bus)
+        k =  dss.Circuit.AllBusNames().index(bus_ph_free[0])
         return k
 
     # Iterate through loads in configuration
-    #accomodate multiphase
-    for kph in range(0, 3):
-        for k in range(len(dss.Circuit.AllBusNames())):
-            for n in range(len(dss.Loads.AllNames())): #go through the loads
-                dss.Loads.Name(dss.Loads.AllNames()[n]) #set the load
-                if dss.Circuit.AllBusNames()[k] in dss.CktElement.BusNames()[0]: #check is the busname in the busname of the load
-                    pattern =  r"\.%s" % (str(kph + 1)) #if it is, is the phase present?
-                    m = re.findall(pattern, dss.CktElement.BusNames()[0])
-                    if m:
-                        load_phases = [0, 0, 0]
-                        for i in range(1, 4): #if the phase is present, what other phases are
-                            pattern = r"\.%s" % (str(i))
-                            m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
-                            if m2:
-                                load_phases[i - 1] = 1
-                        knode = get_bus_idx(dss.Circuit.AllBusNames()[k])
-                        loads.aPQ[kph,knode] = 1 #temporary
-                        loads.ppu[kph,knode] = (dss.Loads.kW())* 1e3 / Sbase / sum(load_phases)
-                        loads.qpu[kph,knode] = (dss.Loads.kvar())* 1e3 / Sbase / sum(load_phases)
+    # accomodate multiphase and multiple loads at 1 bus
+    def load_order_f(): #dict {bus: no_loads}
+        load_order = {}
+        for n in range(len(dss.Loads.AllNames())):
+            dss.Loads.Name(dss.Loads.AllNames()[n])
+            pattern =  r"(\w+)\."
+            load_bus = re.findall(pattern, dss.CktElement.BusNames()[0])
+            if load_bus[0] not in load_order: #if bus DNE in dict
+                load_order[load_bus[0]] = 1
+            elif load_bus[0] in load_order: #if bus E in dict
+                load_order[load_bus[0]] += 1 #add 1 onto count of loads
+        return load_order
+    load_order_list = load_order_f()
 
-    # Complex loads [pu]
+    def load_values():
+        load_ph_arr = np.zeros((nnode, max(load_order_list.values()), 3))
+        # load_kw_arr = np.zeros((nnode, max(load_order_list.values())))
+        # load_kvar_arr = np.zeros((nnode, max(load_order_list.values())))
+        load_kw_arr_ph = np.zeros((3, nnode))
+        load_kvar_arr_ph = np.zeros((3, nnode))
+        loads_apq = np.zeros((3, nnode))
+        loads_az = np.zeros((3,nnode))
+
+        for load in range(len(dss.Loads.AllNames())):
+            dss.Loads.Name(dss.Loads.AllNames()[load])
+            pattern =  r"(\w+)\."
+            load_bus = re.findall(pattern, dss.CktElement.BusNames()[0]) #bus name for load
+            load_ph_arr_temp = [0, 0, 0] #ph of load
+            for i in range(1, 4): #update existing ph of load
+                pattern = r"\.%s" % (str(i))
+                load_ph = re.findall(pattern, dss.CktElement.BusNames()[0])
+                if load_ph:
+                    load_ph_arr_temp[i - 1] = 1
+            for j in range(max(load_order_list.values())):
+                idxbs = dss.Circuit.AllBusNames().index(load_bus[0]) #what index is bus at in allbusnames()
+                if np.all(load_ph_arr[idxbs, j,:] == [0, 0, 0]): #if row is empty
+                    load_ph_arr[idxbs, j, :] = load_ph_arr_temp #place ph array there
+                    # load_kw_arr[idxbs, j] = dss.Loads.kW() / sum(load_ph_arr_temp)
+                    # load_kvar_arr[idxbs, j] = dss.Loads.kvar() / sum(load_ph_arr_temp)
+                    for i in range(len(load_ph_arr_temp)):
+                        if load_ph_arr_temp[i] == 1:
+                            load_kw_arr_ph[i,idxbs] += (dss.Loads.kW() * 1e3 / Sbase / sum(load_ph_arr_temp))
+                            load_kvar_arr_ph[i,idxbs] += (dss.Loads.kvar() * 1e3 / Sbase / sum(load_ph_arr_temp))
+                            loads_apq[i,idxbs] = 1.0
+                            loads_az[i, idxbs] = 0.0
+                    break
+        #return load_ph_arr, load_kw_arr, load_kvar_arr, load_kw_arr_ph, load_kvar_arr_ph, loads_apq, loads_az
+        return load_kw_arr_ph, load_kvar_arr_ph, loads_apq, loads_az
+    #load_ph_arr, load_kw_arr, load_kvar_arr,
+    load_kw_arr_ph, load_kvar_arr_ph,loads_apq, loads_az = load_values()
+
+    loads.ppu = load_kw_arr_ph
+    loads.qpu = load_kvar_arr_ph
+    loads.aPQ = loads_apq
+    loads.aZ = loads_az
+
+    #Complex loads [pu]
 
     if t == -1:
         var = 1
@@ -468,50 +502,67 @@ def network_mapper_function(fn, t):
     # Capacitor parameters
     # Capacitor matrix [pu]
 
-    def cap_dict():
-        cap_dict_kvar = {}
-        cap_dict_kv = {}
-        cap_ph_dict = {}
-        for n in range(len(dss.Capacitors.AllNames())):
-            dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
-            pattern =  r"(\w+)\."  #if it is, is the phase present?
-            m = re.findall(pattern, dss.CktElement.BusNames()[0])
-            cap_dict_kvar[m[0]] = dss.Capacitors.kvar()
-            cap_dict_kv[m[0]] = dss.Capacitors.kV()
-            load_phases = [0, 0, 0]
-            for i in range(1, 4): #if the phase is present, what other phases are
-                pattern = r"\.%s" % (str(i))
-                m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
-                if m2:
-                    load_phases[i - 1] = 1
-            cap_ph_dict[m[0]] = load_phases
-        return cap_dict_kvar, cap_dict_kv, cap_ph_dict
-    cap_dict_kvar, cap_dict_kv, cap_ph_dict = cap_dict()
-
+    # def cap_dict():
+    #     cap_dict_kvar = {}
+    #     cap_dict_kv = {}
+    #     cap_ph_dict = {}
+    #     for n in range(len(dss.Capacitors.AllNames())):
+    #         dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
+    #         pattern =  r"(\w+)\."  #if it is, is the phase present?
+    #         m = re.findall(pattern, dss.CktElement.BusNames()[0])
+    #         cap_dict_kvar[m[0]] = dss.Capacitors.kvar()
+    #         cap_dict_kv[m[0]] = dss.Capacitors.kV()
+    #         load_phases = [0, 0, 0]
+    #         print(m)
+    #         for i in range(1, 4): #if the phase is present, what other phases are
+    #             pattern = r"\.%s" % (str(i))
+    #             m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
+    #             print(m2)
+    #             if m2:
+    #                  if m[0] not in cap_ph_dict.keys():
+    #                     cap_ph_dict[m[0]] = [0, 0, 0]
+    #                     cap_ph_dict[m[0]][i-1] = 1
+    #                  else:
+    #                     cap_ph_dict[m[0]][i-1] = 1
+    #         #cap_ph_dict[m[0]] = load_phases
+    #     return cap_dict_kvar, cap_dict_kv, cap_ph_dict
+    # cap_dict_kvar, cap_dict_kv, cap_ph_dict = cap_dict()
+    # print(cap_dict_kvar)
+    # print(cap_ph_dict)
     caps.cappu = np.zeros((3,nodes.nnode))
 
-    # # Iterate through capacitors in configuration file
-    for ph in range(0, 3):
-        for bus in range(len(dss.Circuit.AllBusNames())):
-            if dss.Circuit.AllBusNames()[bus] in cap_dict_kvar.keys():
-                if cap_ph_dict[dss.Circuit.AllBusNames()[bus]][ph] == 1:
-                    caps.cappu[ph, bus] = cap_dict_kvar[dss.Circuit.AllBusNames()[bus]] * 1000 / Sbase / sum(cap_ph_dict[dss.Circuit.AllBusNames()[bus]])
-    #caps.cappu = np.multiply(caps.cappu,nodes.PH)
-    # for k1 in range(0,len(dss.Capacitors.AllNames())):
-    #     dss.Capacitors.Name(dss.Capacitors.AllNames()[k1])
-    #     knode = dss.Capacitors.Name()
-    #         # if templine[k2].split('=')[0] == 'nodenum':
-    #         #     knode = int(templine[k2].split('=')[1])
-    #         # # Capacitor phase(s)
-    #         # if templine[k2].split('=')[0] == 'phase':
-    #         #     if templine[k2].split('=')[1] == 'a':
-    #         #         kph = 0
-    #         #     elif templine[k2].split('=')[1] == 'b':
-    #         #         kph = 1
-    #         #     elif templine[k2].split('=')[1] == 'c':
-    #         #         kph = 2
-    #
-    #     caps.cappu[kph, knode] = dss.Capacitors.kvar()
+    # # # Iterate through capacitors in configuration file
+    # #print(dss.Circuit.AllBusNames())
+    # for ph in range(0, 3):
+    #     for bus in range(len(dss.Circuit.AllBusNames())):
+    #         if dss.Circuit.AllBusNames()[bus] in cap_dict_kvar.keys():
+    #             #print(bus)
+    #             if cap_ph_dict[dss.Circuit.AllBusNames()[bus]][ph] == 1:
+    #                 caps.cappu[ph, bus] = cap_dict_kvar[dss.Circuit.AllBusNames()[bus]] * 1000 / Sbase / sum(cap_ph_dict[dss.Circuit.AllBusNames()[bus]])
+    # #print(caps.cappu)
+
+#-------------
+    cap_dict = {} #dict {bus_name: kvar}
+    cap_ph_dict = {} #dict {bus_name:1x3 ph array}
+    for capname in range(len(dss.Capacitors.AllNames())):
+        dss.Capacitors.Name(dss.Capacitors.AllNames()[capname])
+        pattern =  r"(\w+)\."
+        load_phases = [0, 0, 0] #what phases exist in capacitor
+        for i in range(1, 4): #if the phase is present, what other phases are
+            pattern = r"\.%s" % (str(i))
+            m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
+            if m2:
+                load_phases[i - 1] = 1 #update phase array
+        cap_ph_dict[dss.CktElement.BusNames()[0]] = load_phases
+        cap_dict[dss.CktElement.BusNames()[0]] = dss.Capacitors.kvar() * 1e3 / Sbase / sum(load_phases)
+
+    for bus in cap_ph_dict.keys(): #update caps.cappu
+        pattern =  r"(\w+)\."
+        cap_bus = re.findall(pattern, bus)
+        idxbs = dss.Circuit.AllBusNames().index(cap_bus[0]) #locate bus idx in allbusnames()
+        for ph in range(3):
+            if cap_ph_dict[bus][ph] == 1: #if the ph at bus == 1
+                caps.cappu[ph, idxbs] += cap_dict[bus]
 
     if printflag == 1:
         print()

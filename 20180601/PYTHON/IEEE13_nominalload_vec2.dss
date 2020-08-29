@@ -95,10 +95,11 @@ New LineGeometry.606 nconds=3 nphases=3 units=ft
 
 ****End Comment******/ 
 
-New Linecode.mtx606 nphases=3  Units=mi
-~ Rmatrix=[0.791721  |0.318476  0.781649  |0.28345  0.318476  0.791721  ]
-~ Xmatrix=[0.438352  |0.0276838  0.396697  |-0.0184204  0.0276838  0.438352  ]
-!~ Cmatrix=[383.948  |0  383.948  |0  0  383.948  ]
+New Linecode.mtx606 nphases=3 BaseFreq=60
+~ rmatrix=[0.791721  |0.318476  0.781649  |0.28345  0.318476  0.791721  ]
+~ xmatrix=[0.438352  |0.0276838  0.396697  |-0.0184204  0.0276838  0.438352  ]
+!~ cmatrix=[383.948  |0  383.948  |0  0  383.948  ]
+~ units=mi
 New linecode.mtx607 nphases=1 BaseFreq=60 
 ~ rmatrix = (1.3425 ) 
 ~ xmatrix = (0.5124 )
@@ -107,31 +108,35 @@ New linecode.mtx607 nphases=1 BaseFreq=60
 
 
 !LOAD DEFINITIONS 
-New Load.671 Bus1=671.1.2.3  Phases=3 Conn=Wye Model=1 kV=4.16  kW=1155 kvar=660 
-New Load.634a Bus1=634.1     Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=160   kvar=110 
-New Load.634b Bus1=634.2     Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=120   kvar=90 
-New Load.634c Bus1=634.3     Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=120   kvar=90 
-New Load.645 Bus1=645.2       Phases=1 Conn=Wye  Model=1 kV=2.40177711983      kW=170   kvar=125 
-New Load.646 Bus1=646.2.3    Phases=2 Conn=Wye Model=1 kV=4.16   kW=230   kvar=132 
-New Load.692 Bus1=692.3.1    Phases=2 Conn=Wye Model=1 kV=4.16    kW=170   kvar=151 
-New Load.675a Bus1=675.1    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=485   kvar=190 
-New Load.675b Bus1=675.2    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=68   kvar=60 
-New Load.675c Bus1=675.3    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=290   kvar=212 
-New Load.611 Bus1=611.3      Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=170   kvar=80 
-New Load.652 Bus1=652.1      Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=128   kvar=86 
-New Load.670a Bus1=670.1    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=17    kvar=10 
-New Load.670b Bus1=670.2    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=66    kvar=38 
-New Load.670c Bus1=670.3    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=117  kvar=68 
+New Load.671a Bus1=671.1  Phases=1 Conn=Wye Model=1 kV=2.40177711983  kW=380.5518938737119 kvar=217.44656000876287
+New Load.671b Bus1=671.2 Phases=1 Conn=Wye Model=1 kV=2.40177711983 kW=385.0098463329164 kvar=220.02009203398524
+New Load.671c Bus1=671.3  Phases=1 Conn=Wye Model=1 kV=2.40177711983 kW=366.9269336604891 kvar=209.67805949791753 
+!New Load.634a Bus1=634.1 Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=160.00188455140855 kvar=109.99740239181223
+!New Load.634b Bus1=634.2 Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=120.00186887559389 kvar=90.00536344625732
+!New Load.634c Bus1=634.3  Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=119.99788815072714 kvar=89.9995627171943
+!New Load.645 Bus1=645.2   Phases=1 Conn=Wye  Model=1 kV=2.40177711983 kW=170.00306352368148 kvar=125.00774594718878
+!New Load.646b Bus1=646.2    Phases=1 Conn=Wye Model=1 kV=2.40177711983 kW=115.0025596604606 kvar=66.0047352217159
+!New Load.692a Bus1=692.1    Phases=1 Conn=Wye Model=1 kV=2.40177711983    kW=81.03434551507547 kvar=71.97922199748174
+!New Load.646c Bus1=646.3    Phases=1 Conn=Wye Model=1 kV=2.40177711983  kW=114.99799405568335  kvar=65.9998405176346  
+!New Load.692c Bus1=692.3    Phases=1 Conn=Wye Model=1 kV=2.40177711983   kW= 82.81128603836682  kvar=73.55250691678616 
+!New Load.675a Bus1=675.1    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=467.65456747307866   kvar=183.19256529356275
+!New Load.675b Bus1=675.2    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=69.06609421850611   kvar=60.94410374433814
+!New Load.675c Bus1=675.3    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=277.282275972788   kvar=202.70781559857173
+!New Load.611 Bus1=611.3      Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=160.4554497282578   kvar=75.51067756238035
+!New Load.652 Bus1=652.1      Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=124.28435602050253  kvar=83.49941081895575 
+!New Load.670a Bus1=670.1    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=17    kvar=10 
+!New Load.670b Bus1=670.2    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=66    kvar=38 
+!New Load.670c Bus1=670.3    Phases=1 Conn=Wye  Model=1 kV=2.40177711983  kW=116.19  kvar=67.53
 
 !CAPACITOR DEFINITIONS
-New Capacitor.Cap1 Bus1=675.1.2.3 phases=3 kVAR=600 kV=4.16
-New Capacitor.Cap2 Bus1=611.3 phases=1 kVAR=100 kV=2.40177711983
+!New Capacitor.Cap1 Bus1=675.1.2.3 phases=3 kVAR=600 kV=2.40177711983 
+!New Capacitor.Cap2 Bus1=611.3 phases=1 kVAR=100 kV=2.40177711983
 
 !Bus 670 is the concentrated point load of the distributed load on line 632 to 671 located at 1/3 the distance from node 632
 
 !LINE DEFINITIONS
 New Line.sbs_650    Phases=3 Bus1=sourcebus.1.2.3   Bus2=650.1.2.3  LineCode=mtx601 Length=100 units=ft
-New Line.650_632    Phases=3 Bus1=650.1.2.3   Bus2=632.1.2.3  LineCode=mtx601 Length=2000 units=ft
+New Line.650_632    Phases=3 Bus1=650.1.2.3    Bus2=632.1.2.3  LineCode=mtx601 Length=2000 units=ft
 New Line.632_670    Phases=3 Bus1=632.1.2.3    Bus2=670.1.2.3  LineCode=mtx601 Length=667  units=ft
 New Line.670_671    Phases=3 Bus1=670.1.2.3    Bus2=671.1.2.3  LineCode=mtx601 Length=1333 units=ft
 New Line.671_680    Phases=3 Bus1=671.1.2.3    Bus2=680.1.2.3  LineCode=mtx601 Length=1000 units=ft

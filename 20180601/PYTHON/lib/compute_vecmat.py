@@ -75,10 +75,9 @@ def compute_vecmat(XNR, fn, Vslack):
         return dictionary
 
     def get_bus_idx(bus):
-        k = -1
-        for n in range(len(dss.Circuit.AllBusNames())): #iterates over all the buses to see which index corresponds to bus
-            if dss.Circuit.AllBusNames()[n] in bus:
-                k = n
+        pattern =  r"(\w+)\."
+        bus_ph_free = re.findall(pattern, bus)
+        k =  dss.Circuit.AllBusNames().index(bus_ph_free[0])
         return k
 
     def identify_bus_phases(bus): #figures out which phases correspond to the bus
@@ -157,10 +156,13 @@ def compute_vecmat(XNR, fn, Vslack):
                 r_temp2 = np.hstack((r_temp[:, :], np.zeros((3,1))))
                 R_matrix[k2, :] = r_temp2.flatten()
 
-        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() * 0.3048 #in feet for IEEE13
-        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() * 0.3048
+        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length()# * 0.3048 #in feet for IEEE13
+        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length()# * 0.3048
 
     X = np.reshape(XNR, (2*3*(nnode+nline), 1 ))
+
+    R_matrix = R_matrix/Zbase#/1609.34 #in miles for IEEE 13
+    X_matrix = X_matrix/Zbase#/1609.34 #
 
     #------------ slack bus ------------------
 
@@ -181,9 +183,6 @@ def compute_vecmat(XNR, fn, Vslack):
     b_SB = np.reshape(b_SB, (6, 1))
 
     #--------Residuals for KVL across line (m,n)-----------
-
-    R_matrix = R_matrix/Zbase/1609.34 #in miles for IEEE 13
-    X_matrix = X_matrix/Zbase/1609.34 #
 
     G_KVL = np.array([])
 
