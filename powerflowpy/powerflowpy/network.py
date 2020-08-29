@@ -105,6 +105,7 @@ class Load:
         self.aPQ = None
         self.aI = None
         self.ppu = None
+        self.qpu = None
         self.spu = None
     def __str__(self):
         return self.name

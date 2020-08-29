@@ -61,18 +61,23 @@ def init_from_dss(dss_fp: str) -> None:
 
 
     # make Loads
-    load_names = dss.Loads.AllNames()
+    all_loads_data = dss.utils.loads_to_dataframe().transpose()
+    load_names = all_loads_data.keys()
     for load_name in load_names:
         # TODO: handle multiple loads on a node
+        load_data = all_loads_data[load_name]
         node_name, phase_char, load_idx = load_name.split('_')[1:]
         try:
             node = network.nodes[node_name]
         except KeyError:
-            print("Node assigned to load not defined for this network.")
+            print(f"This load's node has not been defined. Load name: {load_name}, Node name: {node_name}")
         load = Load(load_name + '_' + load_idx)
         load.phases = parse_phases([phase_char])
         node.load = load #assign this load to its node
-    #TODO: get aPQ, aI, ppu, qpu, spu for each load
+        load.ppu = load_data['kW'] / 1000
+        load.qpu = load_data['kvar']  / 1000
+        load.spu = ppu + 1j*qpu
+    #TODO: get aPQ, aI for each load
     #TODO: figure out how to get connection information (wye or delta).
     # Is this info determined by Capacitors?
     # Or can we use Loads.IsDelta?

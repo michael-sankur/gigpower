@@ -25,7 +25,8 @@ class Solution:
             # initialize a zeroed out array for each solution var
             node_dict['V'] = network.Vbase * np.ones(3, dtype='complex')
             node_dict['Inode'] = np.zeros(3, dtype='complex')
-            node_dict['S'] =
+            node_dict['S'] = np.zeros(3, dtype='complex')
+            node_dict['s'] = np.zeros(3, dtype = 'complex')
         for line in network.get_lines():
             line_dict = dict()
             self.solved_lines[line.name] = line_dict
