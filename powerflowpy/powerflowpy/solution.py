@@ -50,7 +50,7 @@ class Solution:
         # child node voltage = parent node voltage - current(child_node, parent)
         new_child_V = parent_V - np.matmul(FZpu, I)
         # zero out voltages for not existent phases at child node
-        child_dict['V'] = mask_phases(new_child_V, child.phases)
+        child_dict['V'] = mask_phases(new_child_V, (3,), child.phases)
         return None
 
     def update_voltage_backward(self, network: Network, child: Node) -> None:
@@ -69,7 +69,7 @@ class Solution:
             if child.phases[phase_idx]: # if this phase is present on child
                 parent_dict['V'][phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
         # zero out voltages for not existent phases at parent node
-        parent_dict['V'] = mask_phases(parent_dict['V'], parent.phases)
+        parent_dict['V'] = mask_phases(parent_dict['V'], (3,), parent.phases)
         return None
 
     def update_current(self, network: Network, line_in: Line) -> None:
@@ -90,7 +90,7 @@ class Solution:
             new_line_I = new_line_I + self.solved_lines[child_segment]['I']
 
         # TODO: confirm that np.divide is the same as matlab right divide './'
-        new_line_I = mask_phases(new_line_I, node_phases)
+        new_line_I = mask_phases(new_line_I, (3,3), node_phases)
         line_dict['I'] = new_line_I
 
     def update_voltage_dependent_load(self, network: Network) -> None:

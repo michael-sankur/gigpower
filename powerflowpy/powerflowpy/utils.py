@@ -73,11 +73,11 @@ def init_from_dss(dss_fp: str) -> None:
         load = Load(load_name + '_' + load_idx)
         load.phases = parse_phases([phase_char])
         node.load = load #assign this load to its node
-        load.ppu = load_data['kW'] / 1000
-        load.qpu = load_data['kvar']  / 1000
+        load.ppu = np.asarray(load_data['kW'] / 1000)
+        load.qpu = np.asarray(load_data['kvar']  / 1000)
         load.spu = load.ppu + 1j*load.qpu
         # pad spu based on phase
-
+        load.spu = pad_phases(load.spu, (3,1), load.phases)
         load.conn =   'delta' if load_data['IsDelta'] else 'wye' #TODO: figure out if delta/wye are mutually exclusive
         #TODO: set load.type
         #TODO: get aPQ, aI for each load
@@ -131,11 +131,10 @@ def get_Z(dss_data: Any, phase_list : Tuple ) -> Iterable:
     RM = np.asarray(dss_data['RMatrix'])
     XM = np.asarray(dss_data['XMatrix'])
     # reshape based on phases
-    phases = int(dss_data['Phases'])
     ZM = RM + 1j*XM
-    ZM = np.reshape(ZM, (ZM.shape[0]//phases, phases))  # reshape
+    ZM = np.reshape(ZM, (ZM.shape[0]//num_phases, num_phases))  # reshape
     # pad the Z matrix
-    return pad_phase(ZM, (3,3), phases)
+    return pad_phases(ZM, (3,3), phase_list)
 
 def pad_phases(matrix:Iterable, shape: tuple, phases: tuple) -> Iterable:
     """
@@ -152,8 +151,8 @@ def pad_phases(matrix:Iterable, shape: tuple, phases: tuple) -> Iterable:
     # make the return matrix matrix
     ret_mat = np.zeros(shape, dtype=complex)
     vals = iter(matrix.flatten())
-    for row_idx in range(3):
-        for col_idx in range(3):
+    for row_idx in range(shape[0]):
+        for col_idx in range(shape[1]):
             if phases[row_idx] and phases[col_idx]:
                 try:
                     ret_mat[row_idx][col_idx] = next(vals)
@@ -161,7 +160,7 @@ def pad_phases(matrix:Iterable, shape: tuple, phases: tuple) -> Iterable:
                     (f"Cannot pad matrix.")
     return ret_mat
 
-def mask_phases(matrix: Iterable, phases: tuple) -> Iterable:
+def mask_phases(matrix: Iterable, shape: tuple, phases: tuple) -> Iterable:
     """
     Zeroes out values in input matrix for phases set to FALSE in the phases tuple.
     Input:
@@ -170,11 +169,13 @@ def mask_phases(matrix: Iterable, phases: tuple) -> Iterable:
     Output:
         input matrix with 0's for all row/column indices corresponding to phases set to FALSE
     """
-    # create a 3x3 phase matrix of 1's and 0's base on phases
-    phase_matrix = np.zeros((3, 3), dtype=complex)
-    for row_idx in range(3):
-        for col_idx in range(3):
-            if phases[row_idx] and phases[col_idx]:
-                phase_matrix[row_idx, col_idx] = 1
+    phase_matrix = np.zeros(shape, dtype=complex)
+    for out_idx in range(shape[0]):
+        if len(shape) == 2:
+            for col_idx in range(shape[1]):
+                if phases[out_idx] and phases[col_idx]:
+                    phase_matrix[out_idx][col_idx] = 1
+        else:
+            phase_matrix[out_idx] = 1
 
-    return np.matmul(matrix, phase_matrix)
+    return np.multiply(matrix, phase_matrix)

@@ -49,6 +49,7 @@ def fbs(dss_fp) -> None:
         solution.iterations += 1
         # set Vtest to the root's voltage
         solution.Vtest = solution.solved_nodes[solution.root.name]['V']
+        solution.diff = max(abs(solution.Vtest - solution.Vref))
 
     return solution
 
