@@ -3,7 +3,6 @@ import opendssdirect as dss
 import sys
 from typing import Iterable, List, Tuple, Any
 from . network import Network, Node, Line, Load, Controller, Capacitor
-import scipy.linalg as spla
 
 def init_from_dss(dss_fp: str) -> None:
     """define a Network attributes from a dss file"""

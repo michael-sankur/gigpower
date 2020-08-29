@@ -6,7 +6,6 @@ from typing import Any, List, Dict, Iterable, Tuple
 import numpy as np
 import opendssdirect as dss
 import sys
-import scipy as sp
 import pandas as pd
 
 #TODO: determine appropriate precision for attributes. Right now everything is either floats or ints.

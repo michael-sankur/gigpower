@@ -6,6 +6,7 @@
 from typing import Iterable, List, Dict
 from . utils import mask_phases
 from . network import *
+import pandas as pd
 
 class Solution:
 
@@ -67,7 +68,7 @@ class Solution:
         # TODO: confirm that np.divide is the same as matlab right divide './'
         new_line_I = mask_phases(new_line_I, downstr_node_phases)
 
-    def update_voltage_dependent_load(network: Network) -> None:
+    def update_voltage_dependent_load(self, network: Network) -> None:
         """
         update s at network loads
         """
@@ -83,11 +84,34 @@ class Solution:
             spu = node.load.spu
             node_dict['s'] = np.multiply(spu, aPQ + np.multiply(aI * abs(V)) ) + np.multiply(aZ (np.linalg.matrix_power(abs(V), 2))) - 1j * cappu + wpu
 
-    def __str__(self):
-        return '\n'.join(
-            [
-                f'itertations to convergence: {self.iterations}',
-                f'tolerance at convergence: {self.tolerance}',
-                f'solution: \n {self.solved_nodes}'
-            ]
-        )
+    def solved_nodes_df(self) -> Iterable:
+        """
+        returns solved nodes as a dataframe indexed by node
+        """
+        return pd.DataFrame.from_dict(self.solved_nodes).transpose()
+
+    def solved_lines_df(self) -> Iterable:
+        """
+        returns solved lines as a dataframe indexed by line
+        """
+        return pd.DataFrame.from_dict(self.solved_lines).transpose()
+
+    def params_df(self) -> Iterable:
+        """
+        returns solution paramaters as a dataframe
+        """
+        index = ['iterations', 'Vtest', 'Vref', 'tolerance', 'diff']
+        data = [self.iterations, self.Vtest, self.Vref, self.tolerance, self.diff]
+        return pd.DataFrame(data, index).transpose()
+
+    def print_solution(self) -> None:
+        """
+        prints solution to stdout
+        """
+        print("Parameters:")
+        print(self.params_df())
+        print("Solved Nodes:")
+        print(self.solved_nodes_df())
+        print("Solved Lines:")
+        print(self.solved_lines_df())
+        print()

@@ -16,7 +16,7 @@ def fbs(dss_fp) -> None:
     #TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
     solution.tolerance = abs( (solution.Vref[1]) * 10**-9) # set tolerance with phase B reference voltage
 
-    converged = max(abs(solution.Vtest - solution.Vref)) >= solution.tol
+    converged = max(abs(solution.Vtest - solution.Vref)) >= solution.tolerance
     while not converged:
         # FORWARD SWEEP: for node in topo_order:
         for node in topo_order:
@@ -44,8 +44,7 @@ def fbs(dss_fp) -> None:
             parent = network.nodes[ node.parent.name ]
             solution.update_voltage(node, parent, 'backwards')
 
-
-    return Solution
+    return solution
 
 def topo_sort(network: Network) -> List:
     """
