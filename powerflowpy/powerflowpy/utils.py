@@ -76,6 +76,8 @@ def init_from_dss(dss_fp: str) -> None:
         load.ppu = load_data['kW'] / 1000
         load.qpu = load_data['kvar']  / 1000
         load.spu = load.ppu + 1j*load.qpu
+        # pad spu based on phase
+
         load.conn =   'delta' if load_data['IsDelta'] else 'wye' #TODO: figure out if delta/wye are mutually exclusive
         #TODO: set load.type
         #TODO: get aPQ, aI for each load
@@ -133,16 +135,31 @@ def get_Z(dss_data: Any, phase_list : Tuple ) -> Iterable:
     ZM = RM + 1j*XM
     ZM = np.reshape(ZM, (ZM.shape[0]//phases, phases))  # reshape
     # pad the Z matrix
-    z_padded = np.zeros((3, 3), dtype=complex)
-    z_vals = iter(ZM.flatten())
+    return pad_phase(ZM, (3,3), phases)
+
+def pad_phases(matrix:Iterable, shape: tuple, phases: tuple) -> Iterable:
+    """
+    Helper method to reshape input matrix and set values set to 0
+    for phases set to FALSE in phases tuple.
+    Input:
+        matrix: an nd array
+        shape: a 2-element tuple indicating the output matrix's shape
+        phases: a tuple of booleans corresponding to phases to set on this matrix (A: T/F, B: T/F, C: T/F)
+    Output:
+        matrix reshaped with original values, and
+        with 0's for all row/column indices corresponding to phases set to FALSE
+    """
+    # make the return matrix matrix
+    ret_mat = np.zeros(shape, dtype=complex)
+    vals = iter(matrix.flatten())
     for row_idx in range(3):
         for col_idx in range(3):
-            if phase_list[row_idx] and phase_list[col_idx]:
+            if phases[row_idx] and phases[col_idx]:
                 try:
-                    z_padded[row_idx][col_idx] = next(z_vals)
+                    ret_mat[row_idx][col_idx] = next(vals)
                 except StopIteration:
-                    (f"There is a mismatch in phases between line {line_name} and the Z matrix")
-    return z_padded
+                    (f"Cannot pad matrix.")
+    return ret_mat
 
 def mask_phases(matrix: Iterable, phases: tuple) -> Iterable:
     """
