@@ -76,8 +76,8 @@ def init_from_dss(dss_fp: str) -> None:
         node.load = load #assign this load to its node
         load.ppu = load_data['kW'] / 1000
         load.qpu = load_data['kvar']  / 1000
-        load.spu = ppu + 1j*qpu
-        load.conn = load_data['IsDelta'] ? 'delta' : 'wye' #TODO: figure out if delta/wye are mutually exclusive
+        load.spu = load.ppu + 1j*load.qpu
+        load.conn =   'delta' if load_data['IsDelta'] else 'wye' #TODO: figure out if delta/wye are mutually exclusive
         #TODO: set load.type
         #TODO: get aPQ, aI for each load
 
@@ -91,7 +91,7 @@ def init_from_dss(dss_fp: str) -> None:
         cap_data = all_cap_data[cap_name]
         cap = Capacitor(cap_name)
         # TODO: figure out if delta/wye are mutually exclusive]
-        cap.conn = cap_data['IsDelta'] ? 'delta': 'wye'
+        cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
         cap.cappu = cap_data['kvar'] * 1000 / self.Sbase
         #TODO: get phases on capacitor
 
@@ -125,6 +125,7 @@ def get_Z(dss_data: Any, phase_list : Tuple ) -> Iterable:
     helper function to get the Z matrix from dss.lines.to_dataframe()
     Returns an ndarray.
     """
+    #TODO: how to make this per unit length
     num_phases = phase_list.count(True)
     RM = np.asarray(dss_data['RMatrix'])
     XM = np.asarray(dss_data['XMatrix'])

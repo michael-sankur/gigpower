@@ -6,7 +6,7 @@ import sys
 from typing import Iterable, List, Dict
 from . utils import init_from_dss, mask_phases
 from . network import *
-from Solution import *
+from . solution import *
 
 def fbs(dss_fp) -> None:
     network = init_from_dss(dss_fp)

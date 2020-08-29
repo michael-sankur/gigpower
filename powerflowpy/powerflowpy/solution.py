@@ -26,7 +26,7 @@ class Solution:
             node_dict['V'] = network.Vbase * np.ones(3, dtype='complex')
             node_dict['Inode'] = np.zeros(3, dtype='complex')
             node_dict['S'] = np.zeros(3, dtype='complex')
-            node_dict['s'] = np.zeros(3, dtype = 'complex')
+            node_dict['s'] = np.zeros(3, dtype = 'complex') # tracks voltage dependent load
         for line in network.get_lines():
             line_dict = dict()
             self.solved_lines[line.name] = line_dict
@@ -45,7 +45,7 @@ class Solution:
         FZpu = network.lines[line_key].FZpu
         I = self.solved_lines[line_key]['I']
         # if forward, subtract Z*I, otherwise add Z*I
-        sign = direction == 'forward' ? - 1: 1
+        sign = -1 if direction == 'forward' else 1
 
         # target node voltage = source node voltage +/- current(target_node, source_node)
         new_target_V = source_V + sign * np.matmul(FZpu, I)
@@ -71,9 +71,17 @@ class Solution:
         """
         update s at network loads
         """
-        #TODO: write this!
         # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
-        pass
+        aPQ = 1.00
+        aI = 0
+        aZ =  0
+        # TODO; get aPQ, aI, aZ from dss file
+        for node_name, node_dict in self.solved_nodes.items():
+            node = network.node[node_name]
+            node_V = node_dict['V']
+            wpu = self.wpu = np.zeroes(3) # TODO: get wpu from dss file
+            spu = node.load.spu
+            node_dict['s'] = np.multiply(spu, aPQ + np.multiply(aI * abs(V)) ) + np.multiply(aZ (np.linalg.matrix_power(abs(V), 2))) - 1j * cappu + wpu
 
     def __str__(self):
         return '\n'.join(
