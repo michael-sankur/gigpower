@@ -69,7 +69,7 @@ class Node:
     def __init__(self, name: str = ''):
         self.name = name
         self.phases = (False, False, False)
-        self.parent = None # only one parent for radial networks
+        self.parent = None # pointer to parent Node. only one parent for radial networks
         self.load = None
         self.controller = None
     def __str__(self):

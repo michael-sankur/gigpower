@@ -10,38 +10,45 @@ from . solution import *
 
 def fbs(dss_fp) -> None:
     network = init_from_dss(dss_fp)
-    topo_order = topo_sort(network)
     solution = Solution(network)
+    topo_order = topo_sort(network)
+    solution.root = network.nodes.get(topo_order[0])  # keep a pointer to the root node
     #TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
     solution.tolerance = abs( (solution.Vref[1]) * 10**-9) # set tolerance with phase B reference voltage
-    converged = max(abs(solution.Vtest - solution.Vref)) >= solution.tolerance
+    converged = max(abs(solution.Vtest - solution.Vref)) <= solution.tolerance
 
     while not converged:
         # FORWARD SWEEP: for node in topo_order:
-        for node in topo_order:
-            children = network.adj[node.name]
-            for child in children:
-                line_out = network.lines[(node, child)]
-                solution.update_voltage(node, child, 'forward')
-        #update voltage dependent load
+        solution.solved_nodes.get(solution.root.name)['V'] = solution.Vref
+        for node_name in topo_order:
+            children = network.adj[node_name]
+            node = network.nodes.get(node_name)
+            for child_name in children:
+                child = network.nodes.get(child_name)
+                line_out = network.lines[(node_name, child_name)]
+                solution.update_voltage_forward(network, node, child)
         solution.update_voltage_dependent_load(network)
+
         #check convergence after each forward sweep
-        converged = max(abs(solution.Vtest - solution.Vref)) >= solution.tol
+        converged = max(abs(solution.Vtest - solution.Vref)) <= solution.tolerance
         if converged:
             break
 
         # BACKWARD SWEEP: for node in reverse topo_order:
-        for node in reversed(topo_order):
-            # get line to parent
-            line_in = network.lines([node.parent.name, node])
-            #update voltage dependent load
+        for node_name in reversed(topo_order):
+            node = network.nodes.get(node_name)
             solution.update_voltage_dependent_load(network)
-            # update segment current
-            solution.update_current(network, line_in)
-            # update voltage at parent
-            # get parent node
-            parent = network.nodes[ node.parent.name ]
-            solution.update_voltage(node, parent, 'backwards')
+            if node.parent and network.adj[node_name]: # if this is a junction node, update voltage at parent
+                solution.update_voltage_backward(network, node)
+            if node.parent: # if this node has a parent (is not the root)
+                # get line from parent
+                line_in = network.lines.get((node.parent.name, node_name))
+                solution.update_voltage_dependent_load(network)
+                solution.update_current(network, line_in)
+
+        solution.iterations += 1
+        # set Vtest to the root's voltage
+        solution.Vtest = solution.solved_nodes[solution.root.name]['V']
 
     return solution
 

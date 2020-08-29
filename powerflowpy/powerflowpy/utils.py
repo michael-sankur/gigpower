@@ -51,7 +51,7 @@ def init_from_dss(dss_fp: str) -> None:
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
         # set rx's parent to tx
-        network.nodes[rx].parent = tx
+        network.nodes.get(rx).parent = network.nodes.get(tx)
 
         #parse line attributes from dss line data
         line.name = line_code
@@ -157,7 +157,7 @@ def mask_phases(matrix: Iterable, phases: tuple) -> Iterable:
     phase_matrix = np.zeros((3, 3), dtype=complex)
     for row_idx in range(3):
         for col_idx in range(3):
-            if phases[row_idx] and phase_list[col_idx]:
-                phase_matrix[row_idx, column_index] = 1
+            if phases[row_idx] and phases[col_idx]:
+                phase_matrix[row_idx, col_idx] = 1
 
     return np.matmul(matrix, phase_matrix)
