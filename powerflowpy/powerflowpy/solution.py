@@ -11,7 +11,7 @@ import pandas as pd
 class Solution:
 
     def __init__(self, network: Network, tol: float = -1, max_iter: int = -1) -> None:
-        self.iterations = -1  # stores number of iterations of FBS until convergence
+        self.iterations = 0  # stores number of iterations of FBS until convergence
         self.Vtest = np.zeros(3, dtype='complex')
         self.Vref = network.Vbase * np.ones(3, dtype='complex')
         self.solved_nodes = dict()
@@ -90,7 +90,7 @@ class Solution:
             new_line_I = new_line_I + self.solved_lines[child_segment]['I']
 
         # TODO: confirm that np.divide is the same as matlab right divide './'
-        new_line_I = mask_phases(new_line_I, (3,3), node_phases)
+        new_line_I = mask_phases(new_line_I, (3,), node_phases)
         line_dict['I'] = new_line_I
 
     def update_voltage_dependent_load(self, network: Network) -> None:
@@ -117,13 +117,13 @@ class Solution:
         """
         returns solved nodes as a dataframe indexed by node
         """
-        return pd.DataFrame.from_dict(self.solved_nodes).transpose()
+        return pd.DataFrame.from_dict(self.solved_nodes, orient = 'index')
 
     def solved_lines_df(self) -> Iterable:
         """
         returns solved lines as a dataframe indexed by line
         """
-        return pd.DataFrame.from_dict(self.solved_lines).transpose()
+        return pd.DataFrame.from_dict(self.solved_lines, orient = 'index')
 
     def params_df(self) -> Iterable:
         """
@@ -140,7 +140,9 @@ class Solution:
         print("Parameters:")
         print(self.params_df())
         print("Solved Nodes:")
-        print(self.solved_nodes_df())
+        for key,d in self.solved_nodes.items():
+            print(f"{key} \t {d['V']}")
         print("Solved Lines:")
         print(self.solved_lines_df())
         print()
+

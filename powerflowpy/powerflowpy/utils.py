@@ -77,7 +77,7 @@ def init_from_dss(dss_fp: str) -> None:
         load.qpu = np.asarray(load_data['kvar']  / 1000)
         load.spu = load.ppu + 1j*load.qpu
         # pad spu based on phase
-        load.spu = pad_phases(load.spu, (3,1), load.phases)
+        load.spu = pad_phases(load.spu, (3,), load.phases)
         load.conn =   'delta' if load_data['IsDelta'] else 'wye' #TODO: figure out if delta/wye are mutually exclusive
         #TODO: set load.type
         #TODO: get aPQ, aI for each load
@@ -151,13 +151,19 @@ def pad_phases(matrix:Iterable, shape: tuple, phases: tuple) -> Iterable:
     # make the return matrix matrix
     ret_mat = np.zeros(shape, dtype=complex)
     vals = iter(matrix.flatten())
-    for row_idx in range(shape[0]):
-        for col_idx in range(shape[1]):
-            if phases[row_idx] and phases[col_idx]:
-                try:
-                    ret_mat[row_idx][col_idx] = next(vals)
-                except StopIteration:
-                    (f"Cannot pad matrix.")
+    for out_idx in range(shape[0]):
+        if len(shape) == 2:
+            for col_idx in range(shape[1]):
+                if phases[out_idx] and phases[col_idx]:
+                    try:
+                        ret_mat[out_idx][col_idx] = next(vals)
+                    except StopIteration:
+                        (f"Cannot pad matrix.")
+        else:
+            try:
+                ret_mat[out_idx] = next(vals)
+            except StopIteration:
+                (f"Cannot pad matrix.")
     return ret_mat
 
 def mask_phases(matrix: Iterable, shape: tuple, phases: tuple) -> Iterable:

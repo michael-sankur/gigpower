@@ -16,13 +16,12 @@ def fbs(dss_fp) -> None:
     #TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
     solution.tolerance = abs( (solution.Vref[1]) * 10**-9) # set tolerance with phase B reference voltage
     converged = max(abs(solution.Vtest - solution.Vref)) <= solution.tolerance
-
     while not converged:
         # FORWARD SWEEP: for node in topo_order:
         solution.solved_nodes.get(solution.root.name)['V'] = solution.Vref
         for node_name in topo_order:
-            children = network.adj[node_name]
             node = network.nodes.get(node_name)
+            children = network.adj[node_name]
             for child_name in children:
                 child = network.nodes.get(child_name)
                 line_out = network.lines[(node_name, child_name)]
@@ -33,7 +32,6 @@ def fbs(dss_fp) -> None:
         converged = max(abs(solution.Vtest - solution.Vref)) <= solution.tolerance
         if converged:
             break
-
         # BACKWARD SWEEP: for node in reverse topo_order:
         for node_name in reversed(topo_order):
             node = network.nodes.get(node_name)
@@ -45,7 +43,6 @@ def fbs(dss_fp) -> None:
                 line_in = network.lines.get((node.parent.name, node_name))
                 solution.update_voltage_dependent_load(network)
                 solution.update_current(network, line_in)
-
         solution.iterations += 1
         # set Vtest to the root's voltage
         solution.Vtest = solution.solved_nodes[solution.root.name]['V']

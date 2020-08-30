@@ -9,7 +9,11 @@ if __name__ == '__main__':
     dss_file = sys.argv[1]
     dss.run_command('Redirect ' + dss_file)
     dss.Solution.SolvePFlow()
-    print(dss.Solution.TotalIterations())
+    # print("Opendss Solution")
+    # print(f"iterations: {dss.Solution.TotalIterations()}")
+    # print(dss.Circuit.AllBusVolts())
+    # print(dss.Circuit.YCurrents())
+
     network = init_from_dss(dss_file)
     solution = fbs(dss_file)
     solution.print_solution()
