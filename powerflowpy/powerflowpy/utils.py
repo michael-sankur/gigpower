@@ -130,8 +130,10 @@ def get_Z(dss_data: Any, phase_list : Tuple ) -> Iterable:
     num_phases = phase_list.count(True)
     RM = np.asarray(dss_data['RMatrix'])
     XM = np.asarray(dss_data['XMatrix'])
-    # reshape based on phases
     ZM = RM + 1j*XM
+    # multiply by length??
+    # ZM = ZM * dss_data['Length']
+    # reshape based on phases
     ZM = np.reshape(ZM, (ZM.shape[0]//num_phases, num_phases))  # reshape
     # pad the Z matrix
     return pad_phases(ZM, (3,3), phase_list)
