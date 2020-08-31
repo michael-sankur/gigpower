@@ -15,6 +15,7 @@ if __name__ == '__main__':
     lines = dss.Circuit.YCurrents()
 
     network = init_from_dss(dss_file)
+    print(network.to_dataframes()['Loads'])
     solution = fbs(dss_file)
     solution.print_solution()
     print()

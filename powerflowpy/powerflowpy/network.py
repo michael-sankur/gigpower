@@ -61,7 +61,8 @@ class Network:
         base_df = pd.DataFrame([self.Vbase, self.Sbase, self.Ibase, self.Zbase, self.num_phases], ['Vbase', 'Sbase', 'Ibase', 'Zbase', 'num_phases']).transpose()
         nodes_df = pd.DataFrame.from_dict( {node.name: node.to_series() for node in self.nodes.values()}).transpose()
         lines_df = pd.DataFrame.from_dict( { str(line.key):line.to_series()  for line in self.lines.values()}).transpose()
-        return({'Base': base_df, 'Nodes': nodes_df, 'Lines': lines_df, 'Adj List': self.adj})
+        loads_df = pd.DataFrame.from_dict( { load.name:load.to_series()  for load in self.loads.values()}).transpose()
+        return({'Base': base_df, 'Nodes': nodes_df, 'Lines': lines_df,'Loads': loads_df, 'Adj List': self.adj})
 
 
 class Node:
@@ -98,6 +99,7 @@ class Line:
 
 
 class Load:
+    series_index = ['name', 'conn', 'phases', 'type', 'aPQ', 'aI', 'ppu', 'qpu', 'spu']
     def __init__(self, name: str = ''):
         self.name = name
         self.conn = None
@@ -110,6 +112,9 @@ class Load:
         self.spu = None
     def __str__(self):
         return self.name
+    def to_series(self):
+        data = [self.name, self.conn, self.phases, self.type, self.aPQ, self.aI, self.ppu, self.qpu, self.spu]
+        return pd.Series(data, self.series_index)
 
 class Controller:
     def __init__(self, name: str = ''):
