@@ -18,7 +18,7 @@ def fbs(dss_fp) -> None:
     converged = max(abs(solution.Vtest - solution.Vref)) <= solution.tolerance
     while not converged:
         # FORWARD SWEEP: for node in topo_order:
-        solution.solved_nodes.get(solution.root.name)['V'] = solution.Vref
+        solution.V[solution.root.name] = solution.Vref
         for node_name in topo_order:
             node = network.nodes.get(node_name)
             children = network.adj[node_name]
@@ -40,12 +40,12 @@ def fbs(dss_fp) -> None:
                 solution.update_voltage_backward(network, node)
             if node.parent: # if this node has a parent (is not the root)
                 # get line from parent
-                line_in = network.lines.get((node.parent.name, node_name))
+                line_in = network.lines.get((node.parent.name, node.name))
                 solution.update_voltage_dependent_load(network)
                 solution.update_current(network, line_in)
         solution.iterations += 1
         # set Vtest to the root's voltage
-        solution.Vtest = solution.solved_nodes[solution.root.name]['V']
+        solution.Vtest = solution.V[solution.root.name]
         solution.diff = max(abs(solution.Vtest - solution.Vref))
 
     return solution

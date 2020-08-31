@@ -21,6 +21,7 @@ class Solution:
         self.Inode = dict() # 3x1 complex pu current phasors delivered to node. Indexed by node name.
         self.I = dict() # 3x1 complex pu current phasors. Indexed by line key.
         self.S = dict() # 3x1 complex pu power phasors delivered to node. Indexed by node name.
+        self.s = dict() # 3x1 stores intermediate values for voltage dependent loads
         self.sV = dict() # 3x1 complex pu power phasors consumed by node. Indexed by node name.
         self.tolerance = -1  # stores the tolerance
         self.diff = -1  # stores the final value of Vtest - Vref at convergence
@@ -33,12 +34,12 @@ class Solution:
             # initialize a zeroed out array for each solution var
             self.Inode[node.name] = np.zeros(3, dtype='complex')
             self.S[node.name] = np.zeros(3, dtype='complex')
-            self.s[node.name] = np.zeros(3, dtype = 'complex') # tracks voltage dependent load
             self.sV[node.name] = np.zeros(3, dtype='complex')
+            self.s[node.name] = np.zeros(3, dtype='complex')
 
         """ Set up currents for all lines """
         for line in network.get_lines():
-            self.I[line.name] = np.zeros(3, dtype='complex')
+            self.I[line.key] = np.zeros(3, dtype='complex')
 
     def update_voltage_forward(self, network: Network, parent: Node, child: Node) -> None:
         """
@@ -54,7 +55,7 @@ class Solution:
         # child node voltage = parent node voltage - current(child_node, parent)
         new_child_V = parent_V - np.matmul(FZpu, I)
         # zero out voltages for not existent phases at child node
-        V[ child.name ] = mask_phases(new_child_V, (3,), child.phases)
+        self.V[ child.name ] = mask_phases(new_child_V, (3,), child.phases)
         return None
 
     def update_voltage_backward(self, network: Network, child: Node) -> None:
@@ -62,18 +63,17 @@ class Solution:
         updates voltage at parent node only for phases existing on child node.
         """
         parent = child.parent
-        parent_dict = self.solved_nodes[parent.name]
-        child_dict = self.solved_nodes[child.name]
-        child_V = child_dict['V']
+        child_V = self.V[child.name]
+        parent_V = self.V[parent.name]
         line_key = (parent.name, child.name)
         FZpu = network.lines[line_key].FZpu
-        I = self.solved_lines[line_key]['I']
+        I = self.I[line_key]
         # update voltages at parent only for phases existing on child
         for phase_idx in range(3):
             if child.phases[phase_idx]: # if this phase is present on child
-                parent_dict['V'][phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
+                parent_V[phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
         # zero out voltages for not existent phases at parent node
-        parent_dict['V'] = mask_phases(parent_dict['V'], (3,), parent.phases)
+        self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases)
         return None
 
     def update_current(self, network: Network, line_in: Line) -> None:
@@ -111,7 +111,7 @@ class Solution:
             wpu = np.zeros(3) # TODO: get wpu from dss file
             cappu = np.zeros(3)  # TODO: get cappu from dss file
             spu = node.load.spu if node.load else np.zeros(3)
-            self.S[node_name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
+            self.S[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
         return None
 
     def V_df(self) -> Iterable:
