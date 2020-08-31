@@ -46,13 +46,10 @@ def test_FZpu(py_network, mat_network):
         py_line_key = f"('{NODE_DICT.get(mat_tx)}', '{NODE_DICT.get(mat_rx)}')"
         mat_FZ = mat_lines.get('FZpu').transpose()[mat_line_idx]
         py_FZ = py_lines.loc[py_line_key].FZpu
-        print("line: ", py_line_key)
-        print(mat_FZ)
-        print(py_FZ)
         err.append(np.abs( (np.subtract(py_FZ, mat_FZ) ) ).max())
         index.append(py_line_key)
-    df = pd.DataFrame(err, index, ['max abs(py_FZ - mat-FZ)'])
-    print(df)
+    df = pd.DataFrame(err, index, ['err'])
+    assert (df.err <= tolerance).all()
 
 
 @pytest.fixture

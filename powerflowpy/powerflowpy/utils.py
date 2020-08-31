@@ -56,7 +56,8 @@ def init_from_dss(dss_fp: str) -> None:
         #parse line attributes from dss line data
         line.name = line_code
         line.length = line_data['Length']
-        line.FZpu = get_Z(line_data, line.phases)
+        line.FZpu = get_Z(line_data, line.phases, 1 / network.Zbase)
+        #TODO: instead of 1/network.Zbase, pass correct FZ multiplier based on units
 
 
     # make Loads
@@ -121,16 +122,16 @@ def get_phase_idx(phase_char: str) -> int:
     else:
         raise ValueError(f'Invalid argument for get_phase_idx {phase_char}')
 
-def get_Z(dss_data: Any, phase_list : Tuple ) -> Iterable:
+def get_Z(dss_data: Any, phase_list : Tuple, fz_mult: float ) -> Iterable:
     """
     helper function to get the Z matrix from dss.lines.to_dataframe()
     Returns an ndarray.
     """
-    #TODO: how to make this per unit length
+    #TODO: how to make this per unit length and scale by units
     num_phases = phase_list.count(True)
     RM = np.asarray(dss_data['RMatrix'])
     XM = np.asarray(dss_data['XMatrix'])
-    ZM = RM + 1j*XM
+    ZM = fz_mult * (RM + 1j*XM)
     # multiply by length??
     # ZM = ZM * dss_data['Length']
     # reshape based on phases
