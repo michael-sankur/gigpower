@@ -60,23 +60,23 @@ New Line.line_A03_A05 Phases=2 Bus1=A03.1.2 Bus2=A05.1.2 LineCode=A03_A05 Length
 New Line.line_A05_A06 Phases=1 Bus1=A05.2 Bus2=A06.2 LineCode=A05_A06 Length=2.00
 
 ! spot loads
-New Load.load_A02_a_01 Bus1=A02.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
-New Load.load_A02_b_01 Bus1=A02.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A02_a_01 Bus1=A02.1 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
+New Load.load_A02_b_01 Bus1=A02.2 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
 New Load.load_A02_c_01 Bus1=A02.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
 
-New Load.load_A03_abc_01 Bus1=A03.1.2.3 Phases=3 Conn=Wye Model=1 kV=4.80 kW=300.0 kVAR=75.0
-!New Load.load_A03_a_01 Bus1=A03.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
-!New Load.load_A03_b_01 Bus1=A03.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
-!New Load.load_A03_c_01 Bus1=A03.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A03_abc_01 Bus1=A03.1.2.3 Phases=3 Conn=Wye kV=4.80 kW=300.0 kVAR=75.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
+New Load.load_A03_a_01 Bus1=A03.1 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
+New Load.load_A03_b_01 Bus1=A03.2 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
+New Load.load_A03_c_01 Bus1=A03.3 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
 
-New Load.load_A04_a_01 Bus1=A04.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
-New Load.load_A04_c_01 Bus1=A04.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A04_a_01 Bus1=A04.1 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
+New Load.load_A04_c_01 Bus1=A04.3 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
 
-New Load.load_A05_ab_01 Bus1=A05.1.2 Phases=2 Conn=Wye Model=1 kV=4.80 kW=200.0 kVAR=50.0
-New Load.load_A05_a_01 Bus1=A05.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=50.0 kVAR=25.0
-!New Load.load_A05_b_01 Bus1=A05.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=50.0 kVAR=25.0
+New Load.load_A05_ab_01 Bus1=A05.1.2 Phases=2 Conn=Wye kV=4.80 kW=200.0 kVAR=50.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
+New Load.load_A05_a_01 Bus1=A05.1 Phases=1 Conn=Wye kV=2.77128 kW=50.0 kVAR=25.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
+New Load.load_A05_b_01 Bus1=A05.2 Phases=1 Conn=Wye kV=2.77128 kW=50.0 kVAR=25.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
 
-New Load.load_A06_b_01 Bus1=A06.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=50.0 kVAR=25.0
+New Load.load_A06_b_01 Bus1=A06.2 Phases=1 Conn=Wye kV=2.77128 kW=50.0 kVAR=25.0 model=8 ZIPV=(0.1, 0.0, 0.9, 0.1, 0.0, 0.9, 0.0)
 
 New Capacitor.cap_A03_abc_01 Bus1=A03.1.2.3 phases=3 kVAR=60 kV=4.8
 New Capacitor.cap_A06_b_01 Bus1=A06.2 phases=1 kVAR=10 kV=2.77128

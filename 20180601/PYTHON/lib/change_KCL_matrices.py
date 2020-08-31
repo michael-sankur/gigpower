@@ -141,9 +141,9 @@ def change_KCL_matrices(fn, H, g, b, t, der, capacitance):
     # ----------Residuals for KCL at a bus (m) ----------
     bp = bus_phases()
 
-    beta_S = 0.9
+    beta_S = 1.0
     beta_I = 0.0
-    beta_Z = 0.1
+    beta_Z = 0.0
 
     if t != -1:
         for ph in range(0,3):

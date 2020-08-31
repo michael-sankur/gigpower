@@ -122,9 +122,9 @@ def compute_KCL_matrices(fn, t, der, capacitance):
     # ----------Residuals for KCL at a bus (m) ----------
     bp = bus_phases()
 
-    beta_S = 0.9
+    beta_S = 1
     beta_I = 0.0
-    beta_Z = 0.1
+    beta_Z = 0.0
 
     H = np.zeros((2*3*(nnode-1), 2 * 3 * (nnode + nline), 2 * 3* (nnode + nline)))
     g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline)))
