@@ -1,0 +1,163 @@
+ieee_37node
+
+~~~~~ Base Values ~~~~~
+
+base Vbase=4.800 unit=kV
+base Sbase=2500.000 unit=kVAr
+
+~~~~~ Nodes ~~~~~
+
+node nodename=SUB phases=a
+node nodename=799 phases=a
+node nodename=701 phases=a
+node nodename=702 phases=a
+node nodename=705 phases=a
+node nodename=712 phases=a
+node nodename=742 phases=a
+node nodename=713 phases=a
+node nodename=704 phases=a
+node nodename=714 phases=a
+node nodename=718 phases=a
+node nodename=720 phases=a
+node nodename=706 phases=a
+node nodename=725 phases=a
+node nodename=707 phases=a
+node nodename=724 phases=a
+node nodename=722 phases=a
+node nodename=703 phases=a
+node nodename=727 phases=a
+node nodename=744 phases=a
+node nodename=728 phases=a
+node nodename=729 phases=a
+node nodename=730 phases=a
+node nodename=709 phases=a
+node nodename=731 phases=a
+node nodename=775 phases=a
+node nodename=708 phases=a
+node nodename=732 phases=a
+node nodename=733 phases=a
+node nodename=734 phases=a
+node nodename=710 phases=a
+node nodename=735 phases=a
+node nodename=736 phases=a
+node nodename=737 phases=a
+node nodename=738 phases=a
+node nodename=711 phases=a
+node nodename=741 phases=a
+node nodename=740 phases=a
+
+~~~~~ Lines ~~~~~
+
+line TXnode=SUB RXnode=799 phases=a config=SUB length=1.00 unit=m
+line TXnode=799 RXnode=701 phases=a config=721 length=1850.00 unit=ft
+line TXnode=701 RXnode=702 phases=a config=722 length=960.00 unit=ft
+line TXnode=702 RXnode=705 phases=a config=724 length=400.00 unit=ft
+line TXnode=705 RXnode=712 phases=a config=724 length=240.00 unit=ft
+line TXnode=705 RXnode=742 phases=a config=724 length=320.00 unit=ft
+line TXnode=702 RXnode=713 phases=a config=723 length=360.00 unit=ft
+line TXnode=713 RXnode=704 phases=a config=723 length=520.00 unit=ft
+line TXnode=704 RXnode=714 phases=a config=724 length=80.00 unit=ft
+line TXnode=714 RXnode=718 phases=a config=724 length=520.00 unit=ft
+line TXnode=704 RXnode=720 phases=a config=723 length=800.00 unit=ft
+line TXnode=720 RXnode=706 phases=a config=723 length=600.00 unit=ft
+line TXnode=706 RXnode=725 phases=a config=724 length=280.00 unit=ft
+line TXnode=720 RXnode=707 phases=a config=724 length=920.00 unit=ft
+line TXnode=707 RXnode=724 phases=a config=724 length=760.00 unit=ft
+line TXnode=707 RXnode=722 phases=a config=724 length=120.00 unit=ft
+line TXnode=702 RXnode=703 phases=a config=722 length=1320.00 unit=ft
+line TXnode=703 RXnode=727 phases=a config=724 length=240.00 unit=ft
+line TXnode=727 RXnode=744 phases=a config=723 length=280.00 unit=ft
+line TXnode=744 RXnode=728 phases=a config=724 length=200.00 unit=ft
+line TXnode=744 RXnode=729 phases=a config=724 length=280.00 unit=ft
+line TXnode=703 RXnode=730 phases=a config=723 length=600.00 unit=ft
+line TXnode=730 RXnode=709 phases=a config=723 length=200.00 unit=ft
+line TXnode=709 RXnode=731 phases=a config=723 length=600.00 unit=ft
+line TXnode=709 RXnode=775 phases=a config=724 length=50.00 unit=ft
+line TXnode=709 RXnode=708 phases=a config=723 length=320.00 unit=ft
+line TXnode=708 RXnode=732 phases=a config=724 length=320.00 unit=ft
+line TXnode=708 RXnode=733 phases=a config=723 length=320.00 unit=ft
+line TXnode=733 RXnode=734 phases=a config=723 length=560.00 unit=ft
+line TXnode=734 RXnode=710 phases=a config=724 length=520.00 unit=ft
+line TXnode=710 RXnode=735 phases=a config=724 length=200.00 unit=ft
+line TXnode=710 RXnode=736 phases=a config=724 length=1280.00 unit=ft
+line TXnode=734 RXnode=737 phases=a config=723 length=640.00 unit=ft
+line TXnode=737 RXnode=738 phases=a config=723 length=400.00 unit=ft
+line TXnode=738 RXnode=711 phases=a config=723 length=400.00 unit=ft
+line TXnode=711 RXnode=741 phases=a config=723 length=400.00 unit=ft
+line TXnode=711 RXnode=740 phases=a config=724 length=200.00 unit=ft
+
+~~~~~ Configuration ~~~~~
+
+config config=SUB unit=ohm/mile raa=1.0000 xaa=0.0000 rab=0.5000 xab=0.0000 rac=0.5000 xac=0.0000 rbb=1.0000 xbb=0.0000 rbc=0.5000 xbc=0.0000 rcc=1.0000 xcc=0.0000
+config config=721 unit=ohm/mile raa=0.2926 xaa=0.1973 rab=0.0673 xab=-0.0368 rac=0.0337 xac=-0.0417 rbb=0.2646 xbb=0.1900 rbc=0.0673 xbc=-0.0368 rcc=0.2926 xcc=0.1973
+config config=722 unit=ohm/mile raa=0.4751 xaa=0.2973 rab=0.1629 xab=-0.0326 rac=0.1234 xac=-0.0607 rbb=0.4488 xbb=0.2678 rbc=0.1629 xbc=-0.0326 rcc=0.4751 xcc=0.2973
+config config=724 unit=ohm/mile raa=2.0952 xaa=0.7758 rab=0.5204 xab=0.2738 rac=0.4926 xac=0.2123 rbb=2.1068 xbb=0.7398 rbc=0.5204 xbc=0.2738 rcc=2.0952 xcc=0.7758
+config config=723 unit=ohm/mile raa=1.2936 xaa=0.6713 rab=0.4871 xab=0.2111 rac=0.4585 xac=0.1521 rbb=1.3022 xbb=0.6326 rbc=0.4871 xbc=0.2111 rcc=1.2936 xcc=0.6713
+
+~~~~~ Loads ~~~~~
+
+load nodename=701 conn=delta phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=140.0000 unit=kW reac=70.0000 unit=kVAr
+#load nodename=701 conn=delta phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=140.0000 unit=kW reac=70.0000 unit=kVAr
+#load nodename=701 conn=delta phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=350.0000 unit=kW reac=175.0000 unit=kVAr
+#load nodename=712 conn=delta phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=85.0000 unit=kW reac=40.0000 unit=kVAr
+load nodename=742 conn=delta phases=a type=cz apq=0.0000 ai=0.0000 az=1.0000 real=8.0000 unit=kW reac=4.0000 unit=kVAr
+#load nodename=742 conn=delta phases=b type=cz apq=0.0000 ai=0.0000 az=1.0000 real=85.0000 unit=kW reac=40.0000 unit=kVAr
+#load nodename=713 conn=delta phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=85.0000 unit=kW reac=40.0000 unit=kVAr
+load nodename=714 conn=delta phases=a type=ci apq=0.0000 ai=1.0000 az=0.0000 real=17.0000 unit=kW reac=8.0000 unit=kVAr
+#load nodename=714 conn=delta phases=b type=ci apq=0.0000 ai=1.0000 az=0.0000 real=21.0000 unit=kW reac=10.0000 unit=kVAr
+load nodename=718 conn=delta phases=a type=cz apq=0.0000 ai=0.0000 az=1.0000 real=85.0000 unit=kW reac=40.0000 unit=kVAr
+#load nodename=720 conn=delta phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=85.0000 unit=kW reac=40.0000 unit=kVAr
+#load nodename=725 conn=delta phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+#load nodename=724 conn=delta phases=b type=cz apq=0.0000 ai=0.0000 az=1.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+#load nodename=722 conn=delta phases=b type=ci apq=0.0000 ai=1.0000 az=0.0000 real=140.0000 unit=kW reac=70.0000 unit=kVAr
+#load nodename=722 conn=delta phases=c type=ci apq=0.0000 ai=1.0000 az=0.0000 real=21.0000 unit=kW reac=10.0000 unit=kVAr
+#load nodename=727 conn=delta phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+load nodename=744 conn=delta phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+load nodename=728 conn=delta phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+#load nodename=728 conn=delta phases=b type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+#load nodename=728 conn=delta phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+load nodename=729 conn=delta phases=a type=ci apq=0.0000 ai=1.0000 az=0.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+#load nodename=730 conn=delta phases=c type=cz apq=0.0000 ai=0.0000 az=1.0000 real=85.0000 unit=kW reac=40.0000 unit=kVAr
+#load nodename=731 conn=delta phases=b type=cz apq=0.0000 ai=0.0000 az=1.0000 real=85.0000 unit=kW reac=40.0000 unit=kVAr
+#load nodename=732 conn=delta phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+load nodename=733 conn=delta phases=a type=ci apq=0.0000 ai=1.0000 az=0.0000 real=85.0000 unit=kW reac=40.0000 unit=kVAr
+#load nodename=734 conn=delta phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+#load nodename=735 conn=delta phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=85.0000 unit=kW reac=40.0000 unit=kVAr
+#load nodename=736 conn=delta phases=b type=cz apq=0.0000 ai=0.0000 az=1.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+load nodename=737 conn=delta phases=a type=ci apq=0.0000 ai=1.0000 az=0.0000 real=140.0000 unit=kW reac=70.0000 unit=kVAr
+load nodename=738 conn=delta phases=a type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=126.0000 unit=kW reac=62.0000 unit=kVAr
+#load nodename=741 conn=delta phases=c type=ci apq=0.0000 ai=1.0000 az=0.0000 real=42.0000 unit=kW reac=21.0000 unit=kVAr
+#load nodename=740 conn=delta phases=c type=cpq apq=1.0000 ai=0.0000 az=0.0000 real=85.0000 unit=kW reac=40.0000 unit=kVAr
+
+~~~~~ Capacitors ~~~~~
+
+
+~~~~~ Controllers ~~~~~
+
+controller nodename=702 conn=wye phases=a mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=702 conn=wye phases=b mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=702 conn=wye phases=c mag=250.0000 unit=kVAr ramprate=10.00
+controller nodename=704 conn=wye phases=a mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=704 conn=wye phases=b mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=704 conn=wye phases=c mag=250.0000 unit=kVAr ramprate=10.00
+controller nodename=725 conn=wye phases=a mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=725 conn=wye phases=b mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=725 conn=wye phases=c mag=250.0000 unit=kVAr ramprate=10.00
+controller nodename=724 conn=wye phases=a mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=724 conn=wye phases=b mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=724 conn=wye phases=c mag=250.0000 unit=kVAr ramprate=10.00
+controller nodename=729 conn=wye phases=a mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=729 conn=wye phases=b mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=729 conn=wye phases=c mag=250.0000 unit=kVAr ramprate=10.00
+controller nodename=732 conn=wye phases=a mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=732 conn=wye phases=b mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=732 conn=wye phases=c mag=250.0000 unit=kVAr ramprate=10.00
+controller nodename=735 conn=wye phases=a mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=735 conn=wye phases=b mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=735 conn=wye phases=c mag=250.0000 unit=kVAr ramprate=10.00
+controller nodename=737 conn=wye phases=a mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=737 conn=wye phases=b mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=737 conn=wye phases=c mag=250.0000 unit=kVAr ramprate=10.00
+controller nodename=711 conn=wye phases=a mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=711 conn=wye phases=b mag=250.0000 unit=kVAr ramprate=10.00
+#controller nodename=711 conn=wye phases=c mag=250.0000 unit=kVAr ramprate=10.00
