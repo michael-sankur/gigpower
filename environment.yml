@@ -28,6 +28,7 @@ dependencies:
   - pytest=6.0.1=py38_0
 #   - python=3.8.5=h26836e1_0
 #   - readline=8.0=h1de35cc_0
+  - scipy=1.5.0
   - setuptools=49.6.0=py38_0
   - six=1.15.0=py_0
 #   - sqlite=3.33.0=hffcf06c_0

@@ -58,10 +58,10 @@ class Network:
         Except for adjacency matrix, which is returned as a list of lists
         """
         # TODO: could define a network object superclass that creates a dataframe from dict
-        params_df = pd.DataFrame([self.Vbase, self.Sbase, self.Ibase, self.Zbase, self.num_phases], ['Vbase', 'Sbase', 'Ibase', 'Zbase', 'num_phases'])
+        base_df = pd.DataFrame([self.Vbase, self.Sbase, self.Ibase, self.Zbase, self.num_phases], ['Vbase', 'Sbase', 'Ibase', 'Zbase', 'num_phases']).transpose()
         nodes_df = pd.DataFrame.from_dict( {node.name: node.to_series() for node in self.nodes.values()}).transpose()
         lines_df = pd.DataFrame.from_dict( { str(line.key):line.to_series()  for line in self.lines.values()}).transpose()
-        return({'Params': params_df, 'Nodes': nodes_df, 'Lines': lines_df, 'Adj List': self.adj})
+        return({'Base': base_df, 'Nodes': nodes_df, 'Lines': lines_df, 'Adj List': self.adj})
 
 
 class Node:
