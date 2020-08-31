@@ -49,6 +49,7 @@ def test_FZpu(py_network, mat_network):
         err.append(np.abs( (np.subtract(py_FZ, mat_FZ) ) ).max())
         index.append(py_line_key)
     df = pd.DataFrame(err, index, ['err'])
+    print(df)
     assert (df.err <= tolerance).all()
 
 
