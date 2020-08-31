@@ -24,8 +24,8 @@ function [FBS] = FBS(feeder,nodes,lines,configs,loads,caps,controllers,subidx,Vr
 
 % Node paramaters
 nnode = nodes.nnode;
-inmat = nodes.inmat;
-outmat = nodes.outmat;
+inmat = nodes.innodes;
+outmat = nodes.outlines;
 
 % Line parameters
 nline = lines.nline;
@@ -65,7 +65,9 @@ end
 
 % Setup voltages and currents
 % V = [Vref Vref zeros(3,nnode-2)];
-V = Vref*ones(1,nnode);
+V = ones(3,nnode);
+for k1 = 1:nnode
+    V(:,k1) =  Vref
 I = zeros(3,nline);
 
 % Initialize iteration

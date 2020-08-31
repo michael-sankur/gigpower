@@ -13,7 +13,9 @@ class Solution:
     def __init__(self, network: Network, tol: float = -1, max_iter: int = -1) -> None:
         self.iterations = 0  # stores number of iterations of FBS until convergence
         self.Vtest = np.zeros(3, dtype='complex')
-        self.Vref = network.Vbase * np.ones(3, dtype='complex')
+        self.Vref = np.array( [1, np.exp(1j*240*np.pi/180), np.exp(1j*120*np.pi/180)], dtype = complex)
+        # hard coded VREF = [1, 1*exp(j*240*pi/180), 1*exp(j*120*pi/180)]
+        #TODO: set reference voltage based on source bus
         self.solved_nodes = dict()
         self.solved_lines = dict()
         self.tolerance = -1  # stores the tolerance
@@ -24,8 +26,9 @@ class Solution:
         for node in network.get_nodes():
             node_dict = dict()
             self.solved_nodes[node.name] = node_dict
+            # set initial voltage at each node to reference voltage
+            node_dict['V'] = self.Vref
             # initialize a zeroed out array for each solution var
-            node_dict['V'] = network.Vbase * np.ones(3, dtype='complex')
             node_dict['Inode'] = np.zeros(3, dtype='complex')
             node_dict['S'] = np.zeros(3, dtype='complex')
             node_dict['s'] = np.zeros(3, dtype = 'complex') # tracks voltage dependent load
