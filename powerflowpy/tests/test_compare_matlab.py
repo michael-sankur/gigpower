@@ -11,8 +11,8 @@ import pytest
 import opendssdirect as dss
 import pandas as pd
 
-tolerance = 10**-2
-dss_file = 'powerflowpy/tests/test_cases_dss/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
+dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
+mat_struct = 'powerflowpy/tests/05n3ph_unbal/05n3ph_unbal.mat'
 # maps matlab node names to python node names
 NODE_DICT = {
     'sub' : 'sourcebus',
@@ -25,6 +25,9 @@ NODE_DICT = {
 }
 
 def test_base(py_network, mat_network):
+    tolerance = 10**-2
+    # tolerance is generous because opendss uses LL base and matlab struct uses LN base
+    # where LN = LL/sqrt(3)
     mat_base = mat_network.get('base')
     py_base = py_network.get('Base')
     base_keys = ['Vbase', 'Ibase', 'Sbase', 'Zbase']
@@ -36,6 +39,7 @@ def test_base(py_network, mat_network):
     assert (base_compare_df.err <= tolerance).all()
 
 def test_FZpu(py_network, mat_network):
+    tolerance = 10**-6
     py_lines = py_network.get('Lines')
     mat_lines = mat_network.get('lines')
     err = []
@@ -60,7 +64,7 @@ def py_network():
 
 @pytest.fixture
 def mat_network():
-    n =  loadmat('powerflowpy/tests/five_node_test.mat').get('network')
+    n =  loadmat(mat_struct).get('network')
     return n
 
 @pytest.fixture
