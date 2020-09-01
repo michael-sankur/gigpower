@@ -13,7 +13,7 @@ import pandas as pd
 import re
 
 dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
-mat_struct = 'powerflowpy/tests/05n3ph_unbal/05n3ph_unbal.mat'
+mat_struct = 'powerflowpy/tests/05n3ph_unbal/05n3ph_unbal_network.mat'
 # nr3 solution is from 20180601/MATLAB/runsim_solve_power_flow_NR.m
 nr3_mat = 'powerflowpy/tests/05n3ph_unbal/NR3-compare_lindist3flow_05node_threephase_unbalanced_oscillation_03-matlab.txt'
 # maps matlab node names to python node names
@@ -121,7 +121,7 @@ def py_network():
 @pytest.fixture
 def mat_network():
     """ Load matlab network struct into a python dictionary """
-    n =  loadmat(mat_struct).get('network')
+    n =  loadmat(mat_struct).get('network1')
     return n
 
 @pytest.fixture
