@@ -85,6 +85,7 @@ class Solution:
         line_I = self.I[line_in.key]
         node_s = self.s[node_name]
         node_V = self.V[node_name]
+        # this line produces a NaN
         new_line_I = np.conj(np.divide(node_s, node_V))
         # sum currents over all node's child segments
         for child_name in network.adj[node_name]:
@@ -118,31 +119,31 @@ class Solution:
         """
         returns self.V as a dataframe indexed by node name
         """
-        return pd.DataFrame.from_dict(self.V, orient = 'index')
+        return pd.DataFrame.from_dict(self.V, orient = 'index', columns=['A', 'B', 'C'])
 
     def I_df(self) -> Iterable:
         """
         returns self.I as a dataframe indexed by line key
         """
-        return pd.DataFrame.from_dict(self.I, orient = 'index')
+        return pd.DataFrame.from_dict(self.I, orient='index', columns=['A', 'B', 'C'])
 
     def Inode_df(self) -> Iterable:
         """
         returns self.Inode as a dataframe indexed by node name
         """
-        return pd.DataFrame.from_dict(self.Inode, orient='index')
+        return pd.DataFrame.from_dict(self.Inode, orient='index', columns=['A', 'B', 'C'])
 
     def S_df(self) -> Iterable:
         """
         returns self.S as a dataframe indexed by node name
         """
-        return pd.DataFrame.from_dict(self.S, orient='index')
+        return pd.DataFrame.from_dict(self.S, orient='index', columns=['A', 'B', 'C'])
 
     def sV_df(self) -> Iterable:
         """
         returns self.sV as a dataframe indexed by node name
         """
-        return pd.DataFrame.from_dict(self.sV, orient='index')
+        return pd.DataFrame.from_dict(self.sV, orient='index', columns=['A', 'B', 'C'])
 
     def params_df(self) -> Iterable:
         """
@@ -156,22 +157,22 @@ class Solution:
         """
         prints solution to stdout
         """
-        print("Parameters:")
+        print("\n Parameters:")
         print(self.params_df())
 
-        print("V solution")
+        print("\n V solution")
         print(self.V_df())
 
-        print("I solution")
+        print("\n I solution")
         print(self.I_df())
 
-        print("Inode solution")
+        print("\n Inode solution")
         print(self.Inode_df())
 
-        print("S solution")
+        print("\n S solution")
         print(self.S_df())
 
-        print("sV solution")
+        print("\n sV solution")
         print(self.sV_df())
         print()
 
