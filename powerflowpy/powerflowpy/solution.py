@@ -97,11 +97,11 @@ class Solution:
         Updates current on a line based on the downstream node. Used during backward sweep.
         """
         node_name = line_in.key[1]
-        node_phases = network.nodes[ node_name ].phases
+        line_phases = network.lines[ line_in.key ].phases
         line_I = self.I[line_in.key]
         node_s = self.s[node_name]
         node_V = self.V[node_name]
-        # this line produces a NaN
+        # np.divide produces a NaN for positions at which node_V is 0 because the phases are not existant on node
         new_line_I = np.conj(np.divide(node_s, node_V))
         # sum currents over all node's child segments
         for child_name in network.adj[node_name]:
@@ -109,7 +109,7 @@ class Solution:
             new_line_I = new_line_I + self.I[child_segment]
 
         # TODO: confirm that np.divide is the same as matlab right divide './'
-        new_line_I = mask_phases(new_line_I, (3,), node_phases)
+        new_line_I = mask_phases(new_line_I, (3,), line_phases)
         self.I[line_in.key] = new_line_I
 
     def update_voltage_dependent_load(self, network: Network) -> None:

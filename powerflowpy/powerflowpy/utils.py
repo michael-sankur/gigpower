@@ -188,5 +188,6 @@ def mask_phases(matrix: Iterable, shape: tuple, phases: tuple) -> Iterable:
         else:
             if phases[out_idx] :
                 phase_matrix[out_idx] = 1
-
-    return np.multiply(matrix, phase_matrix)
+    masked = np.multiply(matrix, phase_matrix)
+    # change all NaN's to 0
+    return np.nan_to_num(masked)
