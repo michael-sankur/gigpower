@@ -13,9 +13,11 @@ if __name__ == '__main__':
     print(f"iterations: {dss.Solution.TotalIterations()}")
     nodes = dss.Circuit.AllBusVolts()
     lines = dss.Circuit.YCurrents()
+    print(nodes)
+    print(lines)
 
     network = init_from_dss(dss_file)
-    print(network.to_dataframes()['Loads'])
     solution = fbs(dss_file)
+    print("\nPython FBS Solution")
     solution.print_solution()
     print()

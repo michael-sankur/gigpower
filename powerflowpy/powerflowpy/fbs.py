@@ -41,8 +41,8 @@ def fbs(dss_fp) -> None:
             Vcurr = np.asarray(solution.V_forward_delta.loc[node.name, 'Vcurr_a' : 'Vcurr_c'])
             solution.V_forward_delta.loc[node.name, 'max_absVdiff'] = max (abs (Vprev - Vcurr))
             solution.V_forward_delta.loc[node.name, 'curr_iter'] = solution.iterations + 1
-        print(f"Running iteration: {solution.iterations + 1}, completed forward sweep.")
-        print(solution.V_forward_delta)
+        # print(f"Running iteration: {solution.iterations + 1}, completed forward sweep.")
+        # print(solution.V_forward_delta)
 
         solution.update_voltage_dependent_load(network)
 
@@ -75,9 +75,9 @@ def fbs(dss_fp) -> None:
                                          'max_absVdiff'] = max(abs(Vprev - Vcurr))
             solution.V_backward_delta.loc[node.name,
                                          'curr_iter'] = solution.iterations + 1
-        print(
-            f"Running iteration: {solution.iterations + 1}, completed backward sweep.")
-        print(solution.V_backward_delta)
+        # print(
+        #     f"Running iteration: {solution.iterations + 1}, completed backward sweep.")
+        # print(solution.V_backward_delta)
 
         solution.iterations += 1
         # set Vtest to the root's voltage
