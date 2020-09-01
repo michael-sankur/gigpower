@@ -54,7 +54,7 @@ class Solution:
 
         # child node voltage = parent node voltage - current(child_node, parent)
         new_child_V = parent_V - np.matmul(FZpu, I)
-        # zero out voltages for not existent phases at child node
+        # zero out voltages for non-existant phases at child node
         self.V[ child.name ] = mask_phases(new_child_V, (3,), child.phases)
         return None
 
@@ -72,7 +72,7 @@ class Solution:
         for phase_idx in range(3):
             if child.phases[phase_idx]: # if this phase is present on child
                 parent_V[phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
-        # zero out voltages for not existent phases at parent node
+        # zero out voltages for non-existant phases at parent node
         self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases)
         return None
 

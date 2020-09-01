@@ -186,6 +186,7 @@ def mask_phases(matrix: Iterable, shape: tuple, phases: tuple) -> Iterable:
                 if phases[out_idx] and phases[col_idx]:
                     phase_matrix[out_idx][col_idx] = 1
         else:
-            phase_matrix[out_idx] = 1
+            if phases[out_idx] :
+                phase_matrix[out_idx] = 1
 
     return np.multiply(matrix, phase_matrix)
