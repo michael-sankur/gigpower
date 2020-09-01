@@ -41,6 +41,22 @@ class Solution:
         for line in network.get_lines():
             self.I[line.key] = np.zeros(3, dtype='complex')
 
+        """ Initialize convergence tracking data frames """
+        # TODO: setup index order based on topo order
+        index = [ n.name for n in network.get_nodes() ]
+        cols = [
+            'curr_iter',
+            'Vprev_a',
+            'Vprev_b',
+            'Vprev_c',
+            'Vcurr_a',
+            'Vcurr_b',
+            'Vcurr_c',
+            'max_absVdiff',
+        ]
+        self.V_forward_delta = pd.DataFrame( [], index, cols)
+        self.V_backward_delta = pd.DataFrame([], index, cols)
+
     def update_voltage_forward(self, network: Network, parent: Node, child: Node) -> None:
         """
         updates voltage at child based on parent according to:
