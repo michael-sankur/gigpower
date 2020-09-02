@@ -54,55 +54,21 @@ def test_dss_sol():
         dss.Solution.ControlMode(-1)
         dss.Solution.MaxControlIterations(1000000)
         dss.Solution.MaxIterations(30000)
-        #Easy process to get all names and count of loads, a trick to avoid
-        #some more lines of code
-        TotalLoads = dss.Loads.Count()
-        AllLoadNames = dss.Loads.AllNames()
+
         print('OpenDSS Model Compliation Done.')
         print('Iterations: ', dss.Solution.Iterations())
         print('Tolerance: ', dss.Solution.Convergence())
-
-        print('')
-
-        # print(dss.Solution.Converged())
-
-        # Print number of buses, and bus names
-        print(len(dss.Circuit.AllBusNames()))
-        print(dss.Circuit.AllBusNames())
-
-        # Print number of loads, and load names
-        print(len(dss.Loads.AllNames()))
-        print(dss.Loads.AllNames())
-
-        print('')
 
         VDSS = np.zeros((3, len(dss.Circuit.AllBusNames())), dtype='complex')
 
         for k1 in range(len(dss.Circuit.AllBusNames())):
             dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k1])
-        #     print(dss.Circuit.AllBusNames()[k1])
-        #     print(dss.Bus.Nodes())
-
-        #     print('puVOTLAGES - LN CARTESIAN')
-        #     print(dss.Bus.PuVoltage())
-
             ph = np.asarray(dss.Bus.Nodes(), dtype='int')-1
-
             Vtemp = np.asarray(dss.Bus.PuVoltage())
             Vtemp = Vtemp[0:5:2] + 1j*Vtemp[1:6:2]
-
-        #     print(np.asarray(dss.Bus.Nodes(),'int'))
-
             VDSS[ph, k1] = Vtemp
-
-        #     VDSS[np.asarray(dss.Bus.Nodes(),'int'),k1] = np.array(dss.Bus.PuVoltage()[0:5:2] + 1j*dss.Bus.PuVoltage()[1:6:2])
-
-
-        #     VDSS[dss.Bus.Nodes()-1,k1] = dss.Bus.PuVoltage()[0:2:5]
-        #     for k2 in range(len(dss.Bus.Nodes())):
-        #         VDSS[int(dss.Bus.Nodes()[k2])-1,k1] = dss.Bus.PuVoltage()[2*k2] + 1j*dss.Bus.PuVoltage()[2*k2+1]
-
-        print('VDSS\n', np.round(VDSS, decimals=6))
+        dssV = pd.DataFrame(VDSS, ['A', 'B', 'C'],dss.Circuit.AllBusNames())
+        print(dssV.transpose())
 
 
         IDSS = np.zeros((3, len(dss.Lines.AllNames())), dtype='complex')
