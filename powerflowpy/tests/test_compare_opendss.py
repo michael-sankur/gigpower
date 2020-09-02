@@ -22,6 +22,7 @@ def test_fbs_sol(dss_sol):
     fbsV, fbsI = fbs_sol.V_df(), fbs_sol.I_df()
     dssV, dssI = dss_sol
     compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
+
     print("\nCOMPARE V")
     compareV = fbsV.sub(dssV)
     compareV.columns = compare_cols
@@ -31,6 +32,14 @@ def test_fbs_sol(dss_sol):
     print(compareV.join(concatV))
 
     print("\nCOMPARE I")
+    compareI = fbsI.sub(dssI)
+    compareI.columns = compare_cols
+    concatI = dssI.join(fbsI, lsuffix='.dss', rsuffix='.fbs')
+    print("Max |diff|:")
+    print(compareI.abs().max())
+    print(compareI.join(concatI))
+
+    print("\nCOMPARE Inode")
     compareI = fbsI.sub(dssI)
     compareI.columns = compare_cols
     concatI = dssI.join(fbsI, lsuffix='.dss', rsuffix='.fbs')

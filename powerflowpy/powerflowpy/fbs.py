@@ -44,7 +44,7 @@ def fbs(dss_fp) -> None:
         # print(f"Running iteration: {solution.iterations + 1}, completed forward sweep.")
         # print(solution.V_forward_delta)
 
-        solution.update_voltage_dependent_load(network)
+        solution.update_voltage_dependent_load()
 
         # store V prior to backward sweep
         for node in network.get_nodes():
@@ -54,13 +54,13 @@ def fbs(dss_fp) -> None:
         # BACKWARD SWEEP: for node in reverse topo_order:
         for node_name in reversed(topo_order):
             node = network.nodes.get(node_name)
-            solution.update_voltage_dependent_load(network)
+            solution.update_voltage_dependent_load()
             if node.parent and network.adj[node_name]: # if this is a junction node, update voltage at parent
                 solution.update_voltage_backward(network, node)
             if node.parent: # if this node has a parent (is not the root)
                 # get line from parent
                 line_in = network.lines.get((node.parent.name, node.name))
-                solution.update_voltage_dependent_load(network)
+                solution.update_voltage_dependent_load()
                 solution.update_current(network, line_in)
 
         # store V after backward sweep, calculate max diff, store iteration number
@@ -87,6 +87,10 @@ def fbs(dss_fp) -> None:
         converged = max(abs(solution.Vtest - solution.Vref)
                         ) <= solution.tolerance
 
+    # final calculations
+    solution.calc_S()
+    solution.calc_sV()
+    solution.calc_Inode()
     return solution
 
 def topo_sort(network: Network) -> List:

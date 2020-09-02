@@ -11,22 +11,30 @@ import pandas as pd
 class Solution:
 
     def __init__(self, network: Network, tol: float = -1, max_iter: int = -1) -> None:
+
+        # PARAMETERS
         self.iterations = 0  # stores number of iterations of FBS until convergence
         self.Vtest = np.zeros(3, dtype='complex')
         self.Vref = np.array( [1, np.exp(1j*240*np.pi/180), np.exp(1j*120*np.pi/180)], dtype = complex)
+        self.tolerance = -1  # stores the tolerance at most recent completed iteration
+        self.diff = -1  # stores the final value of Vtest - Vref at convergence
         # hard coded VREF = [1, 1*exp(j*240*pi/180), 1*exp(j*120*pi/180)]
         #TODO: set reference voltage based on source bus
-        self.V = dict() # 3x1 complex pu voltages phasors. Indexed by node name.
-        self.I = dict() # 3x1 complex pu current phasors. Indexed by node name.
-        self.Inode = dict() # 3x1 complex pu current phasors delivered to node. Indexed by node name.
-        self.I = dict() # 3x1 complex pu current phasors. Indexed by line key.
-        self.S = dict() # 3x1 complex pu power phasors delivered to node. Indexed by node name.
-        self.s = dict() # 3x1 stores intermediate values for voltage dependent loads
-        self.sV = dict() # 3x1 complex pu power phasors consumed by node. Indexed by node name.
-        self.tolerance = -1  # stores the tolerance
-        self.diff = -1  # stores the final value of Vtest - Vref at convergence
+
+        # SOLUTION VARIABLES
+        self.V = dict() # 3x1 complex pu voltages phasors. 3 x num_nodes total datapoints. Indexed by node name.
+        self.I = dict() # 3x1 complex pu current phasors. 3 x num_nodes total datapoints. Indexed by node name.
+        self.Inode = dict() # 3x1 complex pu current phasors delivered to node. 3 x num_nodes total data points. Indexed by node name.
+        self.I = dict() # 3x1 complex pu current phasors. 3 x num_lines total datapoints. Indexed by line key.
+        self.Stx = dict() # line transmitting end power. 3 x num_lines total datapoints. Indexed by line key.
+        self.Srx = dict() # 3x1 line transmitting end power. 3 x num_lines total datapoints. Indexed by line key.
+        self.sV = dict() # Total power at each node. 3 x num_nodes total datapoints. Indexed by line name.
+
+        # HELPER VARIABLES
+        # self.s: intermediate values for voltage dependent loads. 3 x num_nodes total datapoints. Indexed by node name.
+        self.s = dict()
         self.root = None # keeps a pointer to the root node
-        self.network = network
+        self.network = network # keeps a pointer to the network that it is solving
 
         """ Set up voltages and currents for all nodes """
         for node in network.get_nodes():
@@ -114,24 +122,43 @@ class Solution:
         new_line_I = mask_phases(new_line_I, (3,), line_phases)
         self.I[line_in.key] = new_line_I
 
-    def update_voltage_dependent_load(self, network: Network) -> None:
+    def update_voltage_dependent_load(self) -> None:
         """
         update s at network loads
         """
-        #TODO: Recalculate s all at once over a supermatrix?
-
         # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
         aPQ = 1.00
         aI = 0
         aZ =  0
         # TODO; get aPQ, aI, aZ from dss file
-        for node in network.get_nodes():
+        for node in self.network.get_nodes():
             node_V = self.V[node.name]
             wpu = np.zeros(3) # TODO: get wpu from dss file
             cappu = np.zeros(3)  # TODO: get cappu from dss file
             spu = node.load.spu if node.load else np.zeros(3)
             self.s[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
         return None
+
+    def calc_S(self) -> None:
+        """ Calculate Stx and Srx """
+        for line in self.network.lines():
+            tx_name, rx_name = line.key
+            self.Stx [ line.key ] = np.mulitply(self.V[ tx_name ], np.conj(self.I[line.key]))
+            self.Srx [ line.key ] = np.mulitply(self.V[ rx_name ], np.conj(self.I[line.key]))
+
+    def calc_sV(self) -> None:
+        """ Final calculation of voltage dependent complex loads. """
+        # TODO: is self.s redundant? Can we just replace with self.sV?
+        self.update_voltage_dependent_load() # update self.s one last time
+        self.sV = self.s  # set self.sv to self.s
+
+    def calc_Inode(self) -> None:
+        """ Calculate self.Inode (currents consumed at each node) """
+        for node in self.network.get_nodes():
+            node_V = self.V[ node.name ]
+            node_sV = self.sV[ node.name ]
+            node_I = np.conj(np.divide(node_sV,node_v))
+            self.Inode[ node.name ] = mask_phases(node_I, node.phases)
 
     def V_df(self) -> Iterable:
         """
