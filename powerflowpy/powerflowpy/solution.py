@@ -42,7 +42,6 @@ class Solution:
             self.V[node.name] = self.Vref
             # initialize a zeroed out array for each solution var
             self.Inode[node.name] = np.zeros(3, dtype='complex')
-            self.S[node.name] = np.zeros(3, dtype='complex')
             self.sV[node.name] = np.zeros(3, dtype='complex')
             # initialize voltage dependent load
             self.s[node.name] = np.zeros(3, dtype='complex')
@@ -141,10 +140,10 @@ class Solution:
 
     def calc_S(self) -> None:
         """ Calculate Stx and Srx """
-        for line in self.network.lines():
+        for line in self.network.get_lines():
             tx_name, rx_name = line.key
-            self.Stx [ line.key ] = np.mulitply(self.V[ tx_name ], np.conj(self.I[line.key]))
-            self.Srx [ line.key ] = np.mulitply(self.V[ rx_name ], np.conj(self.I[line.key]))
+            self.Stx [ line.key ] = np.multiply(self.V[ tx_name ], np.conj(self.I[line.key]))
+            self.Srx [ line.key ] = np.multiply(self.V[ rx_name ], np.conj(self.I[line.key]))
 
     def calc_sV(self) -> None:
         """ Final calculation of voltage dependent complex loads. """
@@ -157,8 +156,8 @@ class Solution:
         for node in self.network.get_nodes():
             node_V = self.V[ node.name ]
             node_sV = self.sV[ node.name ]
-            node_I = np.conj(np.divide(node_sV,node_v))
-            self.Inode[ node.name ] = mask_phases(node_I, node.phases)
+            node_I = np.conj(np.divide(node_sV,node_V))
+            self.Inode[ node.name ] = mask_phases(node_I, (3,), node.phases)
 
     def V_df(self) -> Iterable:
         """
@@ -182,11 +181,27 @@ class Solution:
         """
         return pd.DataFrame.from_dict(self.Inode, orient='index', columns=['A', 'B', 'C'])
 
-    def S_df(self) -> Iterable:
+    def Stx_df(self) -> Iterable:
         """
-        returns self.S as a dataframe indexed by node name
+        returns self.Stx as a dataframe indexed by line name
         """
-        return pd.DataFrame.from_dict(self.S, orient='index', columns=['A', 'B', 'C'])
+        Stx = pd.DataFrame.from_dict(
+            self.Stx, orient='index', columns=['A', 'B', 'C'])
+        # reindex lines to match opendss file
+        new_index = ([self.network.lines.get(k).name for k in self.I.keys()])
+        Stx.index = new_index
+        return Stx
+
+    def Srx_df(self) -> Iterable:
+        """
+        returns self.Srx as a dataframe indexed by line name
+        """
+        Srx = pd.DataFrame.from_dict(
+            self.Srx, orient='index', columns=['A', 'B', 'C'])
+        # reindex lines to match opendss file
+        new_index = ([self.network.lines.get(k).name for k in self.I.keys()])
+        Srx.index = new_index
+        return Srx
 
     def sV_df(self) -> Iterable:
         """
