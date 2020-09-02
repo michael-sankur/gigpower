@@ -16,14 +16,31 @@ import pytest
 dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
 
 # construct the python FBS solution
-def test_fbs_sol():
-    solution = fbs(dss_file)
-    print("\nPython FBS Solution")
-    solution.print_solution()
-    print()
+def test_fbs_sol(dss_sol):
+    fbs_sol= fbs(dss_file)
+    network = init_from_dss(dss_file)
+    fbsV, fbsI = fbs_sol.V_df(), fbs_sol.I_df()
+    dssV, dssI = dss_sol
+    compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
+    print("\nCOMPARE V")
+    compareV = fbsV.sub(dssV)
+    compareV.columns = compare_cols
+    concatV = dssV.join(fbsV, lsuffix='.dss', rsuffix='.fbs')
+    print("Max |diff|:")
+    print(compareV.abs().max())
+    print(compareV.join(concatV))
+
+    print("\nCOMPARE I")
+    compareI = fbsI.sub(dssI)
+    compareI.columns = compare_cols
+    concatI = dssI.join(fbsI, lsuffix='.dss', rsuffix='.fbs')
+    print("Max |diff|:")
+    print(compareI.abs().max())
+    print(compareI.join(concatI))
 # construct the DSS solution. Copied form '20180601/opendss_nonvec_test_comparison.ipynb'
-# @pytest.fixture
-def test_dss_sol():
+
+@pytest.fixture
+def dss_sol():
     """Run opendss's Solution.Solve on dss_file and save to a dictionary"""
     dss.run_command('Redirect ' + dss_file)
     # Set slack bus (sourcebus) voltage reference in p.u.
@@ -55,38 +72,29 @@ def test_dss_sol():
         dss.Solution.MaxControlIterations(1000000)
         dss.Solution.MaxIterations(30000)
 
-        print('OpenDSS Model Compliation Done.')
-        print('Iterations: ', dss.Solution.Iterations())
-        print('Tolerance: ', dss.Solution.Convergence())
+        print('Opendss Iterations: ', dss.Solution.Iterations())
+        print('Opendss Tolerance: ', dss.Solution.Convergence())
 
-        VDSS = np.zeros((3, len(dss.Circuit.AllBusNames())), dtype='complex')
-
+        VDSS = np.zeros((len(dss.Circuit.AllBusNames()), 3), dtype='complex')
         for k1 in range(len(dss.Circuit.AllBusNames())):
             dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k1])
             ph = np.asarray(dss.Bus.Nodes(), dtype='int')-1
             Vtemp = np.asarray(dss.Bus.PuVoltage())
             Vtemp = Vtemp[0:5:2] + 1j*Vtemp[1:6:2]
-            VDSS[ph, k1] = Vtemp
-        dssV = pd.DataFrame(VDSS, ['A', 'B', 'C'],dss.Circuit.AllBusNames())
-        print(dssV.transpose())
+            VDSS[k1, ph] = Vtemp
+        dssV = pd.DataFrame(VDSS, dss.Circuit.AllBusNames(), ['A', 'B', 'C'])
 
 
-        IDSS = np.zeros((3, len(dss.Lines.AllNames())), dtype='complex')
-
+        IDSS = np.zeros((len(dss.Lines.AllNames()), 3), dtype='complex')
         for k1 in range(len(dss.Lines.AllNames())):
             dss.Lines.Name(dss.Lines.AllNames()[k1])
-        #     print(dss.Lines.AllNames()[k1])
+
             ph = np.asarray(dss.CktElement.BusNames()[0].split('.')[1:], dtype='int')-1
             Imn = np.asarray(dss.CktElement.Currents())/Ibase
-        #     print(Imn)
             Imn = Imn[0:int(len(Imn)/2)]
-        #     print(Imn)
             Imn = Imn[0:5:2] + 1j*Imn[1:6:2]
-        #     print(Imn)
-            IDSS[ph, k1] = Imn
-        #     print('')
-
-        print('IDSS\n', np.round(IDSS, decimals=6))
+            IDSS[k1,ph] = Imn
+        dssI = pd.DataFrame(IDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
 
         STXDSS = np.zeros((3, len(dss.Lines.AllNames())), dtype='complex')
         SRXDSS = np.zeros((3, len(dss.Lines.AllNames())), dtype='complex')
@@ -121,4 +129,4 @@ def test_dss_sol():
         print('|VDSS|\n', np.round(np.abs(VDSS), decimals=6))
         print('<VDSS\n', np.round(180/np.pi*np.angle(VDSS), decimals=6))
         print('D<VDSS\n', 180/np.pi*np.angle(VDSS) - 180/np.pi*np.angle(VDSS[:, [0]]))
-        assert True
+        return dssV, dssI

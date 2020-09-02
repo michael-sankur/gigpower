@@ -26,6 +26,7 @@ class Solution:
         self.tolerance = -1  # stores the tolerance
         self.diff = -1  # stores the final value of Vtest - Vref at convergence
         self.root = None # keeps a pointer to the root node
+        self.network = network
 
         """ Set up voltages and currents for all nodes """
         for node in network.get_nodes():
@@ -139,9 +140,13 @@ class Solution:
 
     def I_df(self) -> Iterable:
         """
-        returns self.I as a dataframe indexed by line key
+        returns self.I as a dataframe indexed by line name
         """
-        return pd.DataFrame.from_dict(self.I, orient='index', columns=['A', 'B', 'C'])
+        Idf = pd.DataFrame.from_dict(self.I, orient='index', columns=['A', 'B', 'C'])
+        # reindex lines to match opendss file
+        new_index = ( [ self.network.lines.get(k).name for k in self.I.keys()] )
+        Idf.index = new_index
+        return Idf
 
     def Inode_df(self) -> Iterable:
         """
