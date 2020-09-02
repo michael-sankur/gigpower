@@ -52,12 +52,12 @@ New linecode.A05_A06 nphases=1 BaseFreq=60
 ! ~ cmatrix = [ 65.0 | 0 0.0 | 0 0 0.0 ]
 
 ! Lines
-New Line.line_sub_A01 Phases=3 Bus1=sourcebus.1.2.3 Bus2=A01.1.2.3 LineCode=sub_A01 Length=1.00
-New Line.line_A01_A02 Phases=3 Bus1=A01.1.2.3 Bus2=A02.1.2.3 LineCode=A01_A02 Length=1.00
-New Line.line_A02_A03 Phases=3 Bus1=A02.1.2.3 Bus2=A03.1.2.3 LineCode=A02_A03 Length=1.00
-New Line.line_A03_A04 Phases=2 Bus1=A03.1.3 Bus2=A04.1.3 LineCode=A03_A04 Length=1.00
-New Line.line_A03_A05 Phases=2 Bus1=A03.1.2 Bus2=A05.1.2 LineCode=A03_A05 Length=1.00
-New Line.line_A05_A06 Phases=1 Bus1=A05.2 Bus2=A06.2 LineCode=A05_A06 Length=1.00
+New Line.line_sub_A01 Phases=3 Bus1=sourcebus.1.2.3 Bus2=A01.1.2.3 LineCode=sub_A01 Length=10.00
+New Line.line_A01_A02 Phases=3 Bus1=A01.1.2.3 Bus2=A02.1.2.3 LineCode=A01_A02 Length=10.00
+New Line.line_A02_A03 Phases=3 Bus1=A02.1.2.3 Bus2=A03.1.2.3 LineCode=A02_A03 Length=10.00
+New Line.line_A03_A04 Phases=2 Bus1=A03.1.3 Bus2=A04.1.3 LineCode=A03_A04 Length=10.00
+New Line.line_A03_A05 Phases=2 Bus1=A03.1.2 Bus2=A05.1.2 LineCode=A03_A05 Length=10.00
+New Line.line_A05_A06 Phases=1 Bus1=A05.2 Bus2=A06.2 LineCode=A05_A06 Length=10.00
 
 ! spot loads
 New Load.load_A02_a_01 Bus1=A02.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
