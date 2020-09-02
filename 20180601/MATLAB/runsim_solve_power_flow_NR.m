@@ -19,13 +19,13 @@ path(path,genpath('/home/michael/Desktop/git/LinDist3Flow/20180601/MATLAB/'));
 % path(path,genpath(genpathstr));
 
 % File path and file name of network configuration file
-fp = '/home/michael/Dropbox/Unbalanced LinDistflow/20180601/NETWORKS/';
-fn = 'ieee_34node.txt';
-fn = '03node_fullphase_radial_example.txt';
-% fn = '03node_fullphase_mesh_example.txt';
+% fp = '/home/michael/Desktop/git/LinDist3Flow/20180601/NETWORKS/';
+fp = '/home/michael/Desktop/';
 
-fp = '/home/michael/Desktop/git/LinDist3Flow/20180601/NETWORKS/';
-% fn = 'ieee_37node.txt';
+
+% fn = 'ieee_34node.txt';
+% fn = '03node_fullphase_radial_example.txt';
+fn = 'compare_lindist3flow_05node_threephase_unbalanced_oscillation_03.txt';
 
 [network1] = network_mapper_function(fp, fn);
 

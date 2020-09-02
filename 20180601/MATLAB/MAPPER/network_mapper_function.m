@@ -71,6 +71,8 @@ for k1 = 1:size(linearray,2)
     end
 end
 
+loadlinearray
+
 %% Base Values
 
 % Base values [V], [VAr], [A], [Ohm]
@@ -515,7 +517,7 @@ for k1 = 1:size(loadlinearray,2)
 
         % Load type - not used
         if strcmp('type',temp2{1})
-            loads.type{kph,knode} = temp2{2};
+%             loads.type{kph,knode} = temp2{2};
         end
 
         % Load constant power coefficient
