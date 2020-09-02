@@ -78,8 +78,8 @@ def init_from_dss(dss_fp: str) -> None:
         load.ppu = np.asarray(load_data['kW'] / 1000)
         load.qpu = np.asarray(load_data['kvar']  / 1000)
         load.spu = load.ppu + 1j*load.qpu
-        # pad spu based on phase
-        load.spu = pad_phases(load.spu, (3,), load.phases)
+        # TODO: Figure out if we need to pad spu based on phase?
+        # load.spu = pad_phases(load.spu, (3,), load.phases)
         load.conn =   'delta' if load_data['IsDelta'] else 'wye' #TODO: figure out if delta/wye are mutually exclusive
         network.loads[load_name] = load
         #TODO: set load.type

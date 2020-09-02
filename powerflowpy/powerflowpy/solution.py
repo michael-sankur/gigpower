@@ -36,6 +36,7 @@ class Solution:
             self.Inode[node.name] = np.zeros(3, dtype='complex')
             self.S[node.name] = np.zeros(3, dtype='complex')
             self.sV[node.name] = np.zeros(3, dtype='complex')
+            # initialize voltage dependent load
             self.s[node.name] = np.zeros(3, dtype='complex')
 
         """ Set up currents for all lines """
@@ -129,7 +130,7 @@ class Solution:
             wpu = np.zeros(3) # TODO: get wpu from dss file
             cappu = np.zeros(3)  # TODO: get cappu from dss file
             spu = node.load.spu if node.load else np.zeros(3)
-            self.S[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
+            self.s[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
         return None
 
     def V_df(self) -> Iterable:
