@@ -14,8 +14,7 @@ import re
 
 dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
 mat_struct = 'powerflowpy/tests/05n3ph_unbal/05n3ph_unbal_network.mat'
-# nr3 solution is from 20180601/MATLAB/runsim_solve_power_flow_NR.m
-nr3_mat = 'powerflowpy/tests/05n3ph_unbal/NR3-compare_lindist3flow_05node_threephase_unbalanced_oscillation_03-matlab.txt'
+
 # maps matlab node names to python node names
 NODE_DICT = {
     'sub' : 'sourcebus',
@@ -60,58 +59,13 @@ def test_FZpu(py_network, mat_network):
     # print(df)
     assert (df.err <= tolerance).all()
 
-# CONFIRM SOLUTION VARS-------------------------------------------------------
-def test_V(nr3sol_mat, fbssol_py):
-    tolerance = 10**-6
-    py_V =fbssol_py.V_df()
-    nr3_V = nr3sol_mat.get('VNR')
-    print("Python FBS.V")
-    print(py_V)
-    print("Matlab NR3.V")
-    print(nr3_V)
-    assert py_V.equals(nr3_V)
+# TODO: CONFIRM SOLUTION VARS-------------------------------------------------------
+
 
 # FIXTURES AND HELPERS-------------------------------------------------------
 @pytest.fixture
 def fbssol_py(py_network):
     return fbs(dss_file)
-
-@pytest.fixture
-def nr3sol_mat(mat_network):
-    """Load nr3 matlab solution from txt file into python data frames """
-    nnode = mat_network[ 'nodes' ].get('nnode')
-    nline = mat_network[ 'lines' ].get('nline')
-    nr3sol = dict()
-
-    # Load VNR in the same node order as the mat network
-    node_names = []
-    phases = ['A', 'B', 'C']
-    for mat_node_idx in range(nnode):
-        node_name = NODE_DICT.get(mat_network[ 'nodes' ].get('nodelist')[ mat_node_idx ])
-        node_names.append(node_name)
-    vnr_vals = np.zeros((nnode,3), dtype='complex')
-    with open(nr3_mat, 'r') as nr3txt:
-        # filter blank lines
-        lines = filter(lambda line: not re.match(r'^\s*$', line), nr3txt.readlines())
-        # strip new lines
-        lines = [ l.strip() for l in lines ]
-        line_iter = iter(lines)
-        line = next(line_iter)
-        if line == 'VNR':
-            a_line = next(line_iter)
-            for i in range(nnode):
-                real, imag = next(line_iter).split(' ')
-                vnr_vals[i][0] = complex( float(real), float(imag) )
-            b_line = next(line_iter)
-            for i in range(nnode):
-                real, imag = next(line_iter).split(' ')
-                vnr_vals[i][1] = complex(float(real), float(imag))
-            c_line = next(line_iter)
-            for i in range(nnode):
-                real, imag = next(line_iter).split(' ')
-                vnr_vals[i][2] = complex(float(real), float(imag))
-    nr3sol['VNR'] = pd.DataFrame(vnr_vals,node_names,phases)
-    return nr3sol
 
 @pytest.fixture
 def py_network():

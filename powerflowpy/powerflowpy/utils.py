@@ -56,7 +56,8 @@ def init_from_dss(dss_fp: str) -> None:
         #parse line attributes from dss line data
         line.name = line_code
         line.length = line_data['Length']
-        line.FZpu = get_Z(line_data, line.phases, 1 / network.Zbase)
+        fz_mult = 1 / network.Zbase * line.length
+        line.FZpu = get_Z(line_data, line.phases, fz_mult)
         #TODO: instead of 1/network.Zbase, pass correct FZ multiplier based on units
 
 
