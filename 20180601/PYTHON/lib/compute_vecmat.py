@@ -156,13 +156,13 @@ def compute_vecmat(XNR, fn, Vslack):
                 r_temp2 = np.hstack((r_temp[:, :], np.zeros((3,1))))
                 R_matrix[k2, :] = r_temp2.flatten()
 
-        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() * 0.3048 #in feet for IEEE13
-        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() * 0.3048
+        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() #* 0.3048 #in feet for IEEE13
+        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() #* 0.3048
 
     X = np.reshape(XNR, (2*3*(nnode+nline), 1 ))
 
-    R_matrix = R_matrix/Zbase/1609.34 #in miles for IEEE 13
-    X_matrix = X_matrix/Zbase/1609.34 #
+    R_matrix = R_matrix/Zbase#/1609.34 #in miles for IEEE 13
+    X_matrix = X_matrix/Zbase#/1609.34 #
 
     #------------ slack bus ------------------
 
