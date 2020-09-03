@@ -31,6 +31,8 @@ def test_fbs_sol(dss_sol):
     compare_dfs(fbsStx, dssStx)
     print("\nCOMPARE Srx")
     compare_dfs(fbsSrx, dssSrx)
+    print("Reprint fbsSrx")
+    print(fbsSrx)
 
 # construct the DSS solution. Copied form '20180601/opendss_nonvec_test_comparison.ipynb'
 

@@ -14,11 +14,11 @@ def fbs(dss_fp) -> None:
     topo_order = topo_sort(network)
     solution.root = network.nodes.get(topo_order[0])  # keep a pointer to the root node
     #TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
-    solution.tolerance = abs( (solution.Vref[1]) * 10**-9) # set tolerance with phase B reference voltage
+    solution.tolerance = abs( (solution.Vref[1]) * 10**-12) # set tolerance with phase B reference voltage
     converged = max(abs(solution.Vtest - solution.Vref)) <= solution.tolerance
     while not converged:
         # set V.root to Vref
-        solution.V[solution.root.name] = solution.Vref
+        solution.V[solution.root.name] = np.copy(solution.Vref)
         # store V prior to forward sweep
         for node in network.get_nodes():
             solution.V_forward_delta.loc[node.name, 'Vprev_a': 'Vprev_c'] = np.copy(

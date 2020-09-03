@@ -13,6 +13,8 @@ def init_from_dss(dss_fp: str) -> None:
     # TODO: make it possible to set the base from a given bus
     dss.Solution.Solve()
     Vbase = dss.Bus.kVBase() * 1000
+    # use LN base
+    Vbase = Vbase / 3**0.5
     Sbase = 1000000.0
     Ibase = Sbase/Vbase
     network.Zbase = Vbase/Ibase
