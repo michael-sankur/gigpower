@@ -39,7 +39,7 @@ class Solution:
         """ Set up voltages and currents for all nodes """
         for node in network.get_nodes():
             # set initial voltage at each node to reference voltage
-            self.V[node.name] = self.Vref
+            self.V[node.name] = np.zeros(3, dtype='complex')
             # initialize a zeroed out array for each solution var
             self.Inode[node.name] = np.zeros(3, dtype='complex')
             self.sV[node.name] = np.zeros(3, dtype='complex')

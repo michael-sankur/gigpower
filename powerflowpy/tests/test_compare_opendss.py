@@ -115,5 +115,4 @@ def dss_sol():
 
         dssStx = pd.DataFrame(STXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
         dssSrx = pd.DataFrame(SRXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
-        print("Check Opendss loads: ")
         return dssV, dssI, dssStx, dssSrx
