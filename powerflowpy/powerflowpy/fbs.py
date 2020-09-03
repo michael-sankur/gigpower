@@ -44,7 +44,7 @@ def fbs(dss_fp) -> None:
         # print(f"Running iteration: {solution.iterations + 1}, completed forward sweep.")
         # print(solution.V_forward_delta)
 
-        solution.update_voltage_dependent_load()
+        solution.update_voltage_dependent_load() # update s
 
         # store V prior to backward sweep
         for node in network.get_nodes():
@@ -56,13 +56,15 @@ def fbs(dss_fp) -> None:
             node = network.nodes.get(node_name)
             if node.parent: # if this is a terminal node or junction node (not the root)
                 line_in = network.lines.get((node.parent.name, node.name))
-                solution.update_voltage_dependent_load() # update s
                 solution.update_current(network, line_in) # update current segment
-                if network.adj[node_name]: # if this is a junction node (not a terminal or root)
-                    solution.update_voltage_backward(network, node) # update voltage at parent
-                    solution.update_voltage_dependent_load()
-                    if node.parent.parent:
-                        solution.update_parent_current(network, line_in) # update parent segment current
+                solution.update_voltage_backward(
+                    network, node)  # update voltage at parent
+                solution.update_voltage_dependent_load()  # update s
+                # if network.adj[node_name]: # if this is a junction node (not a terminal or root)
+                #     # solution.update_voltage_backward(network, node) # update voltage at parent
+                #     solution.update_voltage_dependent_load()
+                #     if node.parent.parent:
+                #         solution.update_parent_current(network, line_in) # update parent segment current
 
         # store V after backward sweep, calculate max diff, store iteration number
         for node in network.get_nodes():
@@ -91,6 +93,7 @@ def fbs(dss_fp) -> None:
     # final calculations
     solution.calc_S()
     solution.calc_sV()
+    # TODO: check that node_sV = node_Srx - sum(all line.Stx for all node.outgoing_lines)
     solution.calc_Inode()
     return solution
 

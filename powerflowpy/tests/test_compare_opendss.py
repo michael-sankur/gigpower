@@ -23,6 +23,7 @@ def test_fbs_sol(dss_sol):
     fbsV, fbsI, fbsStx, fbsSrx = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), fbs_sol.Srx_df()
     dssV, dssI, dssStx, dssSrx = dss_sol
     print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
+    print(f"FBS loads: {network.to_dataframes()['Lines']}")
     print("\nCOMPARE V")
     compare_dfs(fbsV, dssV)
     print("\nCOMPARE I")
@@ -116,4 +117,6 @@ def dss_sol():
 
         dssStx = pd.DataFrame(STXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
         dssSrx = pd.DataFrame(SRXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
+        print("OpenDSS Loads:")
+        print(dss.CktElement.Powers())
         return dssV, dssI, dssStx, dssSrx

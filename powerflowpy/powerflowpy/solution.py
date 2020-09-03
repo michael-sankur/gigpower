@@ -23,12 +23,11 @@ class Solution:
 
         # SOLUTION VARIABLES
         self.V = dict() # 3x1 complex pu voltages phasors. 3 x num_nodes total datapoints. Indexed by node name.
-        self.I = dict() # 3x1 complex pu current phasors. 3 x num_nodes total datapoints. Indexed by node name.
         self.Inode = dict() # 3x1 complex pu current phasors delivered to node. 3 x num_nodes total data points. Indexed by node name.
         self.I = dict() # 3x1 complex pu current phasors. 3 x num_lines total datapoints. Indexed by line key.
         self.Stx = dict() # line transmitting end power. 3 x num_lines total datapoints. Indexed by line key.
         self.Srx = dict() # 3x1 line transmitting end power. 3 x num_lines total datapoints. Indexed by line key.
-        self.sV = dict() # Total power at each node. 3 x num_nodes total datapoints. Indexed by line name.
+        self.sV = dict() # Total power at each node. 3 x num_nodes total datapoints. Indexed by node name.
 
         # HELPER VARIABLES
         # self.s: intermediate values for voltage dependent loads. 3 x num_nodes total datapoints. Indexed by node name.
@@ -81,6 +80,7 @@ class Solution:
         new_child_V = parent_V - np.matmul(FZpu, I)
         # zero out voltages for non-existant phases at child node
         self.V[ child.name ] = mask_phases(new_child_V, (3,), child.phases)
+        #TODO: find out what -0j is. This happens after masking phases on the child.
         return None
 
     def update_voltage_backward(self, network: Network, child: Node) -> None:
@@ -131,7 +131,7 @@ class Solution:
         node_s = self.s[node_name]
         node_V = self.V[node_name]
         # np.divide produces a NaN for positions at which node_V is 0 because the phases are not existant on node
-        new_line_I = np.conj(np.divide(node_s, node_V))
+        new_line_I = np.conj(np.divide(node_s, node_V)) # TODO: consider dividing manually only by phases on the node
         # sum currents over all node's child segments
         for child_name in network.adj[node_name]:
             child_segment = (node_name, child_name)
@@ -146,13 +146,15 @@ class Solution:
         update s at network loads
         """
         # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
-        aPQ = 1.00
+        aPQ = 1.00 # TODO: change all to 3x1s
         aI = 0
         aZ =  0
         # TODO; get aPQ, aI, aZ from dss file
+        # dss.LoadModels - above equal to constant p and q.
+        # We use model 1 and 8
         for node in self.network.get_nodes():
             node_V = self.V[node.name]
-            wpu = np.zeros(3) # TODO: get wpu from dss file
+            wpu = np.zeros(3) # TODO: will be set as argument
             cappu = np.zeros(3)  # TODO: get cappu from dss file
             spu = node.load.spu if node.load else np.zeros(3)
             self.s[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
@@ -167,7 +169,7 @@ class Solution:
 
     def calc_sV(self) -> None:
         """ Final calculation of voltage dependent complex loads. """
-        # TODO: is self.s redundant? Can we just replace with self.sV?
+        # TODO: # handle multiple loads with update_s method. This is redundant (equivalent to update s)
         self.update_voltage_dependent_load() # update self.s one last time
         self.sV = self.s  # set self.sv to self.s
 

@@ -60,8 +60,6 @@ def init_from_dss(dss_fp: str) -> None:
         line.length = line_data['Length']
         fz_mult = 1 / network.Zbase * line.length
         line.FZpu = get_Z(line_data, line.phases, fz_mult)
-        #TODO: instead of 1/network.Zbase, pass correct FZ multiplier based on units
-
 
     # make Loads
     all_loads_data = dss.utils.loads_to_dataframe().transpose()
@@ -80,9 +78,10 @@ def init_from_dss(dss_fp: str) -> None:
         load.ppu = np.asarray(load_data['kW'] / 1000)
         load.qpu = np.asarray(load_data['kvar']  / 1000)
         load.spu = load.ppu + 1j*load.qpu
-        # TODO: Figure out if we need to pad spu based on phase?
+        # TODO: Figure out if we need to pad spu based on phase? YES reshape to 3x1
+        # if 2 phase load - divide by 2, open dss handles differently
         # load.spu = pad_phases(load.spu, (3,), load.phases)
-        load.conn =   'delta' if load_data['IsDelta'] else 'wye' #TODO: figure out if delta/wye are mutually exclusive
+        load.conn =   'delta' if load_data['IsDelta'] else 'wye'
         network.loads[load_name] = load
         #TODO: set load.type
         #TODO: get aPQ, aI for each load
@@ -100,6 +99,7 @@ def init_from_dss(dss_fp: str) -> None:
         cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
         cap.cappu = cap_data['kvar'] * 1000 / self.Sbase
         #TODO: get phases on capacitor
+        #TODO: Save capacitors!
 
     return network
 
