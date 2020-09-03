@@ -14,101 +14,60 @@ def compute_KCL_matrices(fn, t, der, capacitance):
     Ibase = Sbase/Vbase
     Zbase = Vbase/Ibase
 
-    def load_order_f():
-        load_order = {}
-        for n in range(len(dss.Loads.AllNames())):
-            dss.Loads.Name(dss.Loads.AllNames()[n])
-            pattern =  r"(\w+)\."
-            load_bus = re.findall(pattern, dss.CktElement.BusNames()[0])
-            if load_bus[0] not in load_order:
-                load_order[load_bus[0]] = 1
-            elif load_bus[0] in load_order:
-                load_order[load_bus[0]] += 1
-        return load_order
-    load_order_list = load_order_f()
-
+    # 3 x nnode array of loads
     def load_values():
-        load_ph_arr = np.zeros((nnode, max(load_order_list.values()), 3))
         load_kw_arr_ph = np.zeros((3, nnode))
         load_kvar_arr_ph = np.zeros((3, nnode))
         if t == -1:
             var = 1
         else:
             var = (1 + 0.1*np.sin(2*np.pi*0.01*t))
-
         for load in range(len(dss.Loads.AllNames())):
             dss.Loads.Name(dss.Loads.AllNames()[load])
-            pattern =  r"(\w+)\."
-            load_bus = re.findall(pattern, dss.CktElement.BusNames()[0])
-            load_ph_arr_temp = [0, 0, 0]
-            for i in range(1, 4):
-                pattern = r"\.%s" % (str(i))
-                load_ph = re.findall(pattern, dss.CktElement.BusNames()[0])
-                if load_ph:
-                    load_ph_arr_temp[i - 1] = 1
-            for j in range(max(load_order_list.values())):
-                idxbs = dss.Circuit.AllBusNames().index(load_bus[0])
-                if np.all(load_ph_arr[idxbs, j,:] == [0, 0, 0]):
-                    load_ph_arr[idxbs, j, :] = load_ph_arr_temp
-                    for i in range(len(load_ph_arr_temp)):
-                        if load_ph_arr_temp[i] == 1:
-                            load_kw_arr_ph[i,idxbs] += dss.Loads.kW() *1e3*var / Sbase / sum(load_ph_arr_temp)
-                            load_kvar_arr_ph[i,idxbs] += dss.Loads.kvar()*1e3*var / Sbase  / sum(load_ph_arr_temp)
-                    break
+            load_data = dss.CktElement.BusNames()[0].split('.')
+            idxbs = dss.Circuit.AllBusNames().index(load_data[0])
+            for ph in range(1, len(load_data)):
+                load_kw_arr_ph[int(load_data[ph]) - 1, idxbs] += dss.Loads.kW() * 1e3*var / Sbase / (len(load_data) - 1)
+                load_kvar_arr_ph[int(load_data[ph]) - 1, idxbs] += dss.Loads.kvar() * 1e3 *var/ Sbase / (len(load_data) - 1)
         return load_kw_arr_ph, load_kvar_arr_ph
     load_kw_arr_ph, load_kvar_arr_ph = load_values()
 
-    def cap_dict():
-        cap_dict = {}
-        cap_ph_dict = {}
+    # 3 x nnode array of capacitance
+    def cap_arr():
         caparr = np.zeros((3, nnode))
         for n in range(len(dss.Capacitors.AllNames())):
             dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
-            load_phases = [0, 0, 0]
-            for i in range(1, 4): #if the phase is present, what other phases are
-                pattern = r"\.%s" % (str(i))
-                m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
-                if m2:
-                    load_phases[i - 1] = 1
-            cap_ph_dict[dss.CktElement.BusNames()[0]] = load_phases
-            cap_dict[dss.CktElement.BusNames()[0]] = dss.Capacitors.kvar() * 1e3 / Sbase / sum(load_phases)
-        for n in cap_ph_dict.keys():
-            pattern =  r"(\w+)\."
-            cap_bus = re.findall(pattern, n)
-            idxbs = dss.Circuit.AllBusNames().index(cap_bus[0])
-            for ph in range(3):
-                if cap_ph_dict[n][ph] == 1:
-                    caparr[ph, idxbs] += cap_dict[n]
-        return cap_dict, cap_ph_dict,caparr
+            cap_data = dss.CktElement.BusNames()[0].split('.')
 
-    cap_dict_kvar, cap_dict_kv, caparr = cap_dict()
+            idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
+            for ph in range(1, len(cap_data)):
+                caparr[int(cap_data[ph]) - 1, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / (len(cap_data) - 1)
+        return caparr
 
+    caparr = cap_arr()
+
+    # {bus : [1 x 3 phase existence]}
     def bus_phases():
         dictionary = {}
         for k2 in range(len(dss.Circuit.AllNodeNames())):
-            for i in range(1, 4):
-                pattern = r"\.%s" % (str(i))
-                m = re.findall(pattern, dss.Circuit.AllNodeNames()[k2])
-                a, b = dss.Circuit.AllNodeNames()[k2].split('.')
-                if m and a in dictionary:
-                    temp = dictionary[a]
-                    temp[i - 1] = 1
-                    dictionary[a] = temp
-                elif m and a not in dictionary:
-                    dictionary[a] = [0, 0, 0]
-                    temp = dictionary[a]
-                    temp[i - 1] = 1
-                    dictionary[a] = temp
+            a, b = dss.Circuit.AllNodeNames()[k2].split('.')
+            if a in dictionary:
+                temp = dictionary[a]
+                temp[int(b) - 1] = 1
+                dictionary[a] = temp
+            elif a not in dictionary:
+                dictionary[a] = [0, 0, 0]
+                temp = dictionary[a]
+                temp[int(b) - 1] = 1
+                dictionary[a] = temp
         return dictionary
 
-    def get_line_idx(line): #returns the index of a line as stored in dss.Lines.AllNames()
-        k = -1
-        for n in range(len(dss.Lines.AllNames())):
-            if dss.Lines.AllNames()[n] == line:
-                k = n
-        return k
+    #line index
+    def get_line_idx(line):
+        return dss.Lines.AllNames().index(line)
 
-    def linelist(busname): #returns two lists of in and out lines at a bus
+    #in and out line lists
+    def linelist(busname):
         in_lines = np.array([])
         out_lines = np.array([])
         for k in range(len(dss.Lines.AllNames())):
@@ -122,6 +81,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
     # ----------Residuals for KCL at a bus (m) ----------
     bp = bus_phases()
 
+    # Zip Parameters
     beta_S = 1
     beta_I = 0.0
     beta_Z = 0.0
@@ -130,6 +90,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
     g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline)))
     b = np.zeros((2*3*(nnode-1), 1, 1))
 
+    # Quadratic Terms
     for ph in range(0,3):
         if ph == 0: #set nominal voltage based on phase
             A0 = 1
@@ -195,7 +156,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                             H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
                             H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
 
-    #Linear Term
+    #Linear Term & Constant Term
     for ph in range(0,3):
         if ph == 0: #set nominal voltage based on phase
             A0 = 1
@@ -208,26 +169,20 @@ def compute_KCL_matrices(fn, t, der, capacitance):
             B0 = np.sqrt(3)/2
         for k2 in range(1, len(dss.Circuit.AllBusNames())):
             for cplx in range(0,2):
-                #load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx, ph)
+                available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                 idxbs = dss.Circuit.AllBusNames().index(dss.Circuit.AllBusNames()[0])
                 if cplx == 0:
                     load_val = load_kw_arr_ph[ph][idxbs]
                 else:
                     load_val = load_kvar_arr_ph[ph][idxbs]
-                #linear terms
+
+                # linear terms
                 g_temp = np.zeros(2*3*(nnode+nline)) #preallocate g
-                available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                 if available_phases[ph] == 0: #if phase does not exist
                     g_temp[2*(ph)*nnode + 2*k2 + cplx] = 1
-                else:
-                    h = 5
-                    #g_temp[2*ph*nnode+ 2 * k2] = -load_val * beta_I * ((-(A0 * hessian_mag[0][0] + B0 * hessian_mag[0][1])) \
-                                          # +  gradient_mag[0]) #remove for TE
-                    #g_temp[2*ph*nnode+ 2 * k2 + 1] = -load_val * beta_I * ((-(A0 * hessian_mag[0][1] + B0 * hessian_mag[1][1])) \
-                                        #       +  gradient_mag[1]) #remove for TE
                 g[2*(nnode-1)*ph + 2*(k2-1) + cplx, 0,:] = g_temp
 
-                #constant terms
+                # Constant terms
                 b_factor = 0 #DER term
                 if cplx == 0:
                     if der.real != 0:

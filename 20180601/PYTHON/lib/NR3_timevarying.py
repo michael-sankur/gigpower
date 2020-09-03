@@ -1,16 +1,13 @@
 import numpy as np
-#vectorized
 from lib.compute_NR3FT_vectorized import compute_NR3FT_vectorized as ft1
 from lib.compute_NR3JT_vectorized import compute_NR3JT_vectorized as jt1
-from lib.compute_vecmat import compute_vecmat
 from lib.change_KCL_matrices import change_KCL_matrices
 from lib.relevant_openDSS_parameters import relevant_openDSS_parameters
 import opendssdirect as dss
+import time
 import re
-
-def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, der, capacitance, time):
+def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, der, capacitance, time_delta):
     dss.run_command('Redirect ' + fn)
-    #dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
 
@@ -20,24 +17,27 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     if maxiter == None:
         maxiter = 100
 
-    FT1 = 1e99
+    FT = 1e99
     itercount = 0
+    # adjust KCL based on capacitance, DER, and time-varying load
+    t2 = time.time()
+    if der != 0 or capacitance != 0 or time_delta != -1:
+        H, b = change_KCL_matrices(fn, H, g, b, time_delta, der, capacitance)
+    t3 = time.time()
+    # solve power-flow
+    while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
+        print("Iteration number %f" % (itercount))
+        FT = ft1(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode)
+        JT = jt1(XNR, g_SB, G_KVL, H, g, nnode, nline)
 
-    if der != 0 or capacitance != 0 or time != -1:
-        H, g, b = change_KCL_matrices(fn, H, g, b, time, der, capacitance)
-    while np.amax(np.abs(FT1)) >= 1e-9 and itercount < maxiter:
-        print("Iteration number %f" % (itercount))    
-        FT1 = ft1(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode) #vectorized
-        JT1 = jt1(XNR, g_SB, G_KVL, H, g, nnode, nline)
-
-        if JT1.shape[0] >= JT1.shape[1]: #vectorized
-            XNR = XNR - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
-
-        itercount+=1 #diff from the other iter_count, limits # of iterations
-
+        if JT.shape[0] >= JT.shape[1]:
+            XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
+        itercount+=1
+    t4 = time.time()
+    # retrieve relevant parameters for formatting output
     TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = \
-        relevant_openDSS_parameters(fn, time)
-
+        relevant_openDSS_parameters(fn, time_delta)
+    t5 = time.time()
     #remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
     #VNR = XNR(1:2:2*3*nnode-1).' + 1j*XNR(2:2:2*3*nnode).';
     VNR = np.zeros((3,nnode), dtype='complex')
@@ -52,6 +52,7 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     XNR = XNR[2*3*nnode:]
     print('VNR')
     print(VNR)
+
     # INR = XNR(2*3*nnode+1:2:2*3*nnode+2*3*nline-1) + 1j*XNR(2*3*nnode+2:2:2*3*nnode+2*3*nline)
     INR = np.zeros((3,nline), dtype='complex')
     for ph in range(0,3):
@@ -81,14 +82,12 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
                 SRXNR[ph,k1] = 0 + SRXNR[ph,k1].imag
             if np.abs(SRXNR[ph,k1].imag) <= 1e-12:
                 SRXNR[ph,k1] = SRXNR[ph,k1].real + 0
-
     # print('stxnr and srxnr')
     print("STXNR:")
     print(STXNR)
     print("SRXNR:")
     print(SRXNR)
     # print("\n")
-
 
     sNR = np.zeros((3,nnode), dtype='complex')
     iNR = np.zeros((3,nnode), dtype='complex')
@@ -117,4 +116,12 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     print('sNR')
     print(sNR)
 
+
+    t6 = time.time()
+    print("\n")
+    print('change kcl based on time vaying load', t3-t2)
+    print('residual calculations/NR3', t4-t3)
+    print('opendss parameters retrival', t5 - t4)
+    print('filling output',t6 - t5)
+    print("\n\n\n")
     return VNR, INR, STXNR, SRXNR, iNR, sNR, itercount
