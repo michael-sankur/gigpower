@@ -1,0 +1,96 @@
+Clear
+
+! Note that this is a 3-wire delta system. 
+! Node voltages in OpenDSS are normally line-ground and may give strange-looking results
+! Be careful if you put line-neutral connected loads or other devices on this circuit.
+
+New object=circuit.ieee37
+!~ basekv=230 pu=1.00 baseMVA=1 MVAsc3=200000 MVAsc1=210000
+~ basekv=4.80 pu=1.00 baseMVA=1 MVAsc3=200000 MVAsc1=210000
+
+! Substation Transformer
+!New Transformer.SubXF Phases=3 Windings=2 Xhl=8
+!~ wdg=1 bus=sourcebus conn=Wye kv=230 kva=2500 %r=1
+!~ wdg=2 bus=A01 conn=Wye kv=4.8 kva=2500 %r=1
+
+! Load Transformer
+! New Transformer.XFM1 Phases=3 Windings=2 Xhl=1.81
+! ~ wdg=1 bus=709 conn=Delta kv=4.80 kva=500 %r=0.045
+! ~ wdg=2 bus=775 conn=Delta kv=0.48 kva=500 %r=0.045
+
+! import line codes with phase impedance matrices
+! Redirect IEEELineCodes.dss
+
+New linecode.sub_A01 nphases=3 BaseFreq=60
+~ rmatrix = [ 0.015 | 0.005 0.015 | 0.005 0.005 0.015 ]
+~ xmatrix = [ 0.010 | 0.040 0.010 | 0.040 0.040 0.010 ]
+! ~ cmatrix = [ 80.0 | 0 0.0 | 0 0 0.0 ]
+
+New linecode.A01_A02 nphases=3 BaseFreq=60
+~ rmatrix = [ 0.015 | 0.005 0.015 | 0.005 0.005 0.015 ]
+~ xmatrix = [ 0.010 | 0.040 0.010 | 0.040 0.040 0.010 ]
+! ~ cmatrix = [ 80.0 | 0 0.0 | 0 0 0.0 ]
+
+New linecode.A02_A03 nphases=3 BaseFreq=60
+~ rmatrix = [ 0.030 | 0.010 0.030 | 0.010 0.010 0.030 ]
+~ xmatrix = [ 0.020 | 0.080 0.020 | 0.080 0.080 0.020 ]
+! ~ cmatrix = [ 65.0 | 0 0.0 | 0 0 0.0 ]
+
+New linecode.A03_A04 nphases=2 BaseFreq=60
+~ rmatrix = [ 0.030 | 0.010 0.030 ]
+~ xmatrix = [ 0.020 | 0.080 0.020 ]
+! ~ cmatrix = [ 65.0 | 0 0.0 | 0 0 0.0 ]
+
+New linecode.A03_A05 nphases=2 BaseFreq=60
+~ rmatrix = [ 0.030 | 0.010 0.030 ]
+~ xmatrix = [ 0.020 | 0.080 0.020 ]
+! ~ cmatrix = [ 65.0 | 0 0.0 | 0 0 0.0 ]
+
+New linecode.A05_A06 nphases=1 BaseFreq=60
+~ rmatrix = [ 0.030 ]
+~ xmatrix = [ 0.020 ]
+! ~ cmatrix = [ 65.0 | 0 0.0 | 0 0 0.0 ]
+
+! Lines
+New Line.line_sub_A01 Phases=3 Bus1=sourcebus.1.2.3 Bus2=A01.1.2.3 LineCode=sub_A01 Length=2.00
+New Line.line_A01_A02 Phases=3 Bus1=A01.1.2.3 Bus2=A02.1.2.3 LineCode=A01_A02 Length=2.00
+New Line.line_A02_A03 Phases=3 Bus1=A02.1.2.3 Bus2=A03.1.2.3 LineCode=A02_A03 Length=2.00
+New Line.line_A03_A04 Phases=2 Bus1=A03.1.3 Bus2=A04.1.3 LineCode=A03_A04 Length=2.00
+New Line.line_A03_A05 Phases=2 Bus1=A03.1.2 Bus2=A05.1.2 LineCode=A03_A05 Length=2.00
+New Line.line_A05_A06 Phases=1 Bus1=A05.2 Bus2=A06.2 LineCode=A05_A06 Length=2.00
+
+! spot loads
+New Load.load_A02_a_01 Bus1=A02.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A02_b_01 Bus1=A02.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A02_c_01 Bus1=A02.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+
+New Load.load_A03_abc_01 Bus1=A03.1.2.3 Phases=3 Conn=Wye Model=1 kV=4.80 kW=300.0 kVAR=75.0
+!New Load.load_A03_a_01 Bus1=A03.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+!New Load.load_A03_b_01 Bus1=A03.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+!New Load.load_A03_c_01 Bus1=A03.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+
+New Load.load_A04_a_01 Bus1=A04.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A04_c_01 Bus1=A04.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+
+New Load.load_A05_ab_01 Bus1=A05.1.2 Phases=2 Conn=Wye Model=1 kV=4.80 kW=200.0 kVAR=50.0
+New Load.load_A05_a_01 Bus1=A05.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=50.0 kVAR=25.0
+!New Load.load_A05_b_01 Bus1=A05.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=50.0 kVAR=25.0
+
+New Load.load_A06_b_01 Bus1=A06.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=50.0 kVAR=25.0
+
+New Capacitor.cap_A03_abc_01 Bus1=A03.1.2.3 phases=3 kVAR=60 kV=4.8
+New Capacitor.cap_A06_b_01 Bus1=A06.2 phases=1 kVAR=10 kV=2.77128
+
+
+Set VoltageBases = "4.8"
+CalcVoltageBases
+! BusCoords IEEE37_BusXY.csv
+
+! solve mode=direct
+set maxiterations=100
+solve
+
+! show voltages LL Nodes
+! show currents residual=y elements
+! show powers kva elements
+! show taps
