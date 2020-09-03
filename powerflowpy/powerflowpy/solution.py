@@ -101,9 +101,29 @@ class Solution:
         self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases)
         return None
 
+    def update_parent_current(self, network: Network, line_in: Line) -> None:
+        """
+        Updates current at parent segment based on a line_in, according to:
+        [parent_segment]---->parent_node---->[line_in]----->current_node
+        Used during backward sweep
+        """
+        parent_name = line_in.key[0]
+        parent_node = self.network.nodes.get(parent_name)
+        parent_seg_key = (parent_node.parent.name, parent_name)
+        parent_seg_phases = network.lines[parent_seg_key].phases
+        line_in_I = self.I[line_in.key]
+        parent_s = self.s[parent_name]
+        parent_V = self.V[parent_name]
+        # np.divide produces a NaN for positions at which node_V is 0 because the phases are not existant on node
+        new_parent_I = line_in_I + np.conj(np.divide(parent_s, parent_V))
+        new_parent_I = mask_phases(new_parent_I, (3,), parent_seg_phases)
+        self.I[parent_seg_key] = new_parent_I
+
     def update_current(self, network: Network, line_in: Line) -> None:
         """
-        Updates current on a line based on the downstream node. Used during backward sweep.
+        Updates current on a line_in based on the downstream node, according to:
+        upstream_node--->[line_in]---> downstream_node ===> [0 or many lines out] ===> 0 or many child nodes
+        Used during backward sweep.
         """
         node_name = line_in.key[1]
         line_phases = network.lines[ line_in.key ].phases
