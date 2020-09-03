@@ -22,7 +22,7 @@ def test_fbs_sol(dss_sol):
     network = init_from_dss(dss_file)
     fbsV, fbsI, fbsStx, fbsSrx = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), fbs_sol.Srx_df()
     dssV, dssI, dssStx, dssSrx = dss_sol
-    print(f"Python FBS iterations: {fbs_sol.iterations}\t convergence:{fbs_sol.diff}\ttolerance: {fbs_sol.tolerance}")
+    print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
     print("\nCOMPARE V")
     compare_dfs(fbsV, dssV)
     print("\nCOMPARE I")
@@ -78,8 +78,7 @@ def dss_sol():
         dss.Solution.MaxControlIterations(1000000)
         dss.Solution.MaxIterations(30000)
 
-        print('\nOpendss Iterations: ', dss.Solution.Iterations())
-        print('Opendss Tolerance: ', dss.Solution.Convergence())
+        print(f'\nOpendss Iterations: {dss.Solution.Iterations()}\tOpendss Convergence: {dss.Solution.Convergence()}')
 
         VDSS = np.zeros((len(dss.Circuit.AllBusNames()), 3), dtype='complex')
         for k1 in range(len(dss.Circuit.AllBusNames())):
