@@ -91,8 +91,8 @@ def fbs(dss_fp) -> None:
                         ) <= solution.tolerance
 
     # final calculations
-    solution.calc_S()
     solution.calc_sV()
+    solution.calc_S()
     # TODO: check that node_sV = node_Srx - sum(all line.Stx for all node.outgoing_lines)
     solution.calc_Inode()
     return solution
