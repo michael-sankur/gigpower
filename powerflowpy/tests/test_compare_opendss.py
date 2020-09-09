@@ -1,6 +1,10 @@
 # Compare the python FBS solution to the opendss solution.
 # To save output, run from command line:
-# pytest ./powerflowpy/tests/test_compare_opendss.py - s > [OUTPUT TEXT FILE PATH]
+# pytest ./powerflowpy/tests/test_compare_opendss.py -s >[OUTPUT FILE PATH]
+# Ex:
+# pytest ./powerflowpy/tests/test_compare_opendss.py -s > ./powerflowpy/tests/06n3ph_unbal/06n3ph_out.txt
+# pytest ./powerflowpy/tests/test_compare_opendss.py -s > ./powerflowpy/tests/05n3ph_unbal/05n3ph_out.txt
+
 import numpy as np
 import opendssdirect as dss
 from powerflowpy.utils import init_from_dss
@@ -15,7 +19,8 @@ import re
 import sys
 import pytest
 
-dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
+# dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
+dss_file = 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
 
 # construct the python FBS solution
 def test_fbs_sol(dss_sol):
@@ -33,8 +38,6 @@ def test_fbs_sol(dss_sol):
     compare_dfs(fbsStx, dssStx)
     print("\nCOMPARE Srx")
     compare_dfs(fbsSrx, dssSrx)
-    print("Reprint fbsSrx")
-    print(fbsSrx)
 
 # construct the DSS solution. Copied form '20180601/opendss_nonvec_test_comparison.ipynb'
 
@@ -46,7 +49,9 @@ def compare_dfs(fbs_df : pd.DataFrame, dss_df : pd.DataFrame) -> None:
     concat = fbs_df.join(dss_df, lsuffix='.fbs', rsuffix='.dss')
     print("Max |diff|:")
     print(compare.abs().max())
-    print(concat)
+    print(compare)
+    print(fbs_df)
+    print(dss_df)
 
 @pytest.fixture
 def dss_sol():
@@ -118,6 +123,6 @@ def dss_sol():
 
         dssStx = pd.DataFrame(STXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
         dssSrx = pd.DataFrame(SRXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
-        print("OpenDSS Loads:")
+        print("OpenDSS Loads, from dss.CktElement.Powers()):")
         print(dss.CktElement.Powers())
         return dssV, dssI, dssStx, dssSrx

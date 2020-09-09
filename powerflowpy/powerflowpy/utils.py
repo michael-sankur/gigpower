@@ -95,7 +95,7 @@ def init_from_dss(dss_fp: str) -> None:
         cap_data = all_cap_data[cap_name]
         cap = Capacitor(cap_name)
         cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
-        cap.cappu = cap_data['kvar'] * 1000 / self.Sbase
+        cap.cappu = cap_data['kvar'] * 1000 / network.Sbase
         #TODO: get phases on capacitor
         # TODO: add cap to the node's node.caps list
         network.capacitors[ cap_name ] = cap
