@@ -10,7 +10,7 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
 
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
-
+    t0 = time.time()
     XNR = np.zeros((2*3*(nnode + nline),1))
 
     # intialize node voltage portion of XNR
@@ -40,9 +40,17 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1] = I0[ph,k1].real
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1+1] = I0[ph,k1].imag
 
+    t1 = time.time()
     # generate static matrices
     XNR, g_SB, b_SB, G_KVL, b_KVL = compute_vecmat(XNR, fn, Vslack)
     # generate initial KCL matrices (non-static)
+    t2 = time.time()
     H, g, b = compute_KCL_matrices(fn, -1, 0, 0)
-
+    t3 = time.time()
+    print(t3 - t2)
+    print('notsostatic')
+    print(t2-t1)
+    print('static')
+    print(t1-t0)
+    print('xnr')
     return XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b

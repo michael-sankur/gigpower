@@ -121,7 +121,7 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     print("\n")
     print('change kcl based on time vaying load', t3-t2)
     print('residual calculations/NR3', t4-t3)
-    print('opendss parameters retrival', t5 - t4)
-    print('filling output',t6 - t5)
-    print("\n\n\n")
+    # print('opendss parameters retrival', t5 - t4)
+    # print('filling output',t6 - t5)
+    # print("\n\n\n")
     return VNR, INR, STXNR, SRXNR, iNR, sNR, itercount
