@@ -1,0 +1,113 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.7.4, pytest-6.0.1, py-1.9.0, pluggy-0.13.1
+rootdir: /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy
+collected 1 item
+
+powerflowpy/tests/test_compare_opendss.py 
+Opendss Iterations: 11	Opendss Convergence: 1e-12
+OpenDSS Loads:
+[100.48399517618911, 50.24048085785567, -100.00000000000172, -50.000000000002444]
+FBS iterations: 12	 FBS convergence:3.287729130225941e-13	 FBS tolerance: 9.999999999999998e-13
+FBS loads:                                (tx,rx)  ...                                               FZpu
+('sourcebus', 'a01')  (sourcebus, a01)  ...  [[(0.01953125+0.013020833333333336j), (0.00651...
+('a01', 'a02')              (a01, a02)  ...  [[(0.01953125+0.013020833333333336j), (0.00651...
+('a02', 'a03')              (a02, a03)  ...  [[(0.0390625+0.02604166666666667j), (0.0130208...
+('a03', 'a04')              (a03, a04)  ...  [[(0.0390625+0.02604166666666667j), 0j, (0.013...
+('a03', 'a05')              (a03, a05)  ...  [[(0.0390625+0.02604166666666667j), (0.0130208...
+('a05', 'a06')              (a05, a06)  ...  [[0j, 0j, 0j], [0j, (0.0390625+0.0260416666666...
+
+[6 rows x 6 columns]
+
+COMPARE V
+Max |diff|:
+A.(fbs - dss)    0.000071
+B.(fbs - dss)    0.000037
+C.(fbs - dss)    0.000051
+dtype: float64
+                        A.fbs  ...               C.dss
+sourcebus  1.000000+0.000000j  ... -0.499995+0.866026j
+a01        0.993368+0.016721j  ... -0.514413+0.857764j
+a02        0.986735+0.033442j  ... -0.528835+0.849505j
+a03        0.974392+0.058461j  ... -0.550874+0.838135j
+a04        0.980513+0.058900j  ... -0.550306+0.824730j
+a05        0.957050+0.074668j  ...  0.000000+0.000000j
+a06        0.000000+0.000000j  ...  0.000000+0.000000j
+
+[7 rows x 6 columns]
+
+COMPARE I
+Max |diff|:
+A.(fbs - dss)    0.000451
+B.(fbs - dss)    0.000461
+C.(fbs - dss)    0.000378
+dtype: float64
+                           A.fbs  ...               C.dss
+line_sub_a01  0.414908-0.078468j  ... -0.100862+0.292729j
+line_a01_a02  0.414908-0.078468j  ... -0.100777+0.292779j
+line_a02_a03  0.312822-0.056592j  ... -0.069089+0.194789j
+line_a03_a04  0.103147-0.019301j  ... -0.035073+0.097832j
+line_a03_a05  0.105881-0.017861j  ...  0.000000+0.000000j
+line_a05_a06  0.000000+0.000000j  ...  0.000000+0.000000j
+
+[6 rows x 6 columns]
+
+COMPARE Stx
+Max |diff|:
+A.(fbs - dss)    0.000453
+B.(fbs - dss)    0.000463
+C.(fbs - dss)    0.000380
+dtype: float64
+                           A.fbs  ...               C.dss
+line_sub_a01  0.414908+0.078468j  ...  0.303942+0.059014j
+line_a01_a02  0.410844+0.084885j  ...  0.302977+0.064167j
+line_a02_a03  0.306780+0.066302j  ...  0.202011+0.044320j
+line_a03_a04  0.099377+0.024837j  ...  0.101317+0.024497j
+line_a03_a05  0.102126+0.023594j  ...  0.000000+0.000000j
+line_a05_a06  0.000000+0.000000j  ...  0.000000+0.000000j
+
+[6 rows x 6 columns]
+
+COMPARE Srx
+Max |diff|:
+A.(fbs - dss)    0.000358
+B.(fbs - dss)    0.000368
+C.(fbs - dss)    0.000284
+dtype: float64
+                           A.fbs  ...               C.dss
+line_sub_a01  0.410844+0.084885j  ...  0.302977+0.064167j
+line_a01_a02  0.406780+0.091302j  ...  0.302011+0.069320j
+line_a02_a03  0.301503+0.073430j  ...  0.201317+0.049497j
+line_a03_a04  0.100000+0.025000j  ...  0.100000+0.025000j
+line_a03_a05  0.100000+0.025000j  ...  0.000000+0.000000j
+line_a05_a06  0.000000+0.000000j  ...  0.000000+0.000000j
+
+[6 rows x 6 columns]
+Reprint fbsSrx
+                               A                   B                   C
+line_sub_a01  0.410844+0.084885j  0.401473+0.113574j  0.302991+0.064450j
+line_a01_a02  0.406780+0.091302j  0.400629+0.119236j  0.302025+0.069506j
+line_a02_a03  0.301503+0.073430j  0.300198+0.100253j  0.201332+0.049586j
+line_a03_a04  0.100000+0.025000j  0.000000-0.000000j  0.100000+0.025000j
+line_a03_a05  0.100000+0.025000j  0.200484+0.075323j  0.000000+0.000000j
+line_a05_a06  0.000000+0.000000j  0.100000+0.050000j  0.000000+0.000000j
+.
+
+=============================== warnings summary ===============================
+tests/test_compare_opendss.py::test_fbs_sol
+  /Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/site-packages/opendssdirect/utils.py:71: UserWarning: Empty list (opendssdirect.Capacitors)
+    warnings.warn("Empty list ({class_name})".format(class_name=class_name))
+
+tests/test_compare_opendss.py::test_fbs_sol
+  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy/powerflowpy/solution.py:134: RuntimeWarning: divide by zero encountered in true_divide
+    new_line_I = np.conj(np.divide(node_s, node_V)) # TODO: consider dividing manually only by phases on the node
+
+tests/test_compare_opendss.py::test_fbs_sol
+  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy/powerflowpy/utils.py:189: RuntimeWarning: invalid value encountered in multiply
+    masked = np.multiply(matrix, phase_matrix)
+
+tests/test_compare_opendss.py::test_fbs_sol
+  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy/powerflowpy/solution.py:185: RuntimeWarning: divide by zero encountered in true_divide
+    node_I = np.conj(np.divide(node_sV,node_V))
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+======================== 1 passed, 4 warnings in 4.38s =========================

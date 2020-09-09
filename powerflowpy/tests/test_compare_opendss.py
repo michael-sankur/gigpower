@@ -1,4 +1,6 @@
 # Compare the python FBS solution to the opendss solution.
+# To save output, run from command line:
+# pytest ./powerflowpy/tests/test_compare_opendss.py - s > [OUTPUT TEXT FILE PATH]
 import numpy as np
 import opendssdirect as dss
 from powerflowpy.utils import init_from_dss
@@ -45,7 +47,7 @@ def compare_dfs(fbs_df : pd.DataFrame, dss_df : pd.DataFrame) -> None:
     concat = fbs_df.join(dss_df, lsuffix='.fbs', rsuffix='.dss')
     print("Max |diff|:")
     print(compare.abs().max())
-    print(compare.join(concat))
+    print(concat)
 
 @pytest.fixture
 def dss_sol():
