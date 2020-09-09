@@ -72,15 +72,16 @@ def init_from_dss(dss_fp: str) -> None:
         except KeyError:
             print(f"This load's node has not been defined. Load name: {load_name}, Node name: {node_name}")
         load = Load(load_name + '_' + load_idx)
-        load.phases = parse_phases([phase_char])
-        node.loads.append( load ) #assign this load to its node
-        ppu = np.asarray(load_data['kW'] / 1000)
-        qpu = np.asarray(load_data['kvar']  / 1000)
-        load.ppu = pad_phases( ppu, (3,), load.phases)
-        load.qpu = pad_phases( qpu, (3,), load.phases)
+        load.phases = parse_phases(phase_char)
+        load.ppu = load_data['kW'] / 1000
+        load.qpu = load_data['kvar']  / 1000
+        load.aPQ = 1.0
+        load.aI = 0
+        load.aZ = 0
         load.spu = load.ppu + 1j*load.qpu
         load.conn =   'delta' if load_data['IsDelta'] else 'wye'
         network.loads[load_name] = load
+        node.loads.append(load)  # assign this load to its node
         #TODO: set load.type
         #TODO: get aPQ, aI for each load
 

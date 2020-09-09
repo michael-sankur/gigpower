@@ -145,9 +145,10 @@ class Solution:
         update s at network loads
         """
         # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
-        aPQ = np.ones(3)
-        aI = np.zeros(3)
-        aZ = np.zeros(3)
+        aPQ = np.ones(3, dtype = complex)
+        aI = np.zeros(3, dtype=complex)
+        aZ = np.zeros(3, dtype=complex)
+        spu = np.zeros(3, dtype=complex)
         # TODO; get aPQ, aI, aZ from dss file
         # dss.LoadModels - above equal to constant p and q.
         # We use model 1 and 8
@@ -156,7 +157,10 @@ class Solution:
             wpu = np.zeros(3) # TODO: will be set as argument
             cappu = np.zeros(3)  # TODO: get cappu from dss file
             #TODO: handle multiple loads. Does each load have a 3x1 spu?
-            spu = node.loads[0].spu if node.loads else np.zeros(3)
+            #TODO: consider initializing load parameters once and storing on the node, i.e. node.spu (3x1), node.aPQ (3x1), etc.
+            for load in node.loads:
+                load_phase = load.phases.index(True)
+                spu [load_phase] =load.spu
             self.s[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
         return None
 

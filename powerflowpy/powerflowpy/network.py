@@ -108,9 +108,9 @@ class Load:
         self.type = None
         self.aPQ = None
         self.aI = None
-        self.ppu = np.zeros((3, 3), dtype='complex')
-        self.qpu = np.zeros((3, 3), dtype='complex')
-        self.spu = np.zeros((3, 3), dtype='complex')
+        self.ppu = None
+        self.qpu = None
+        self.spu = None
     def __str__(self):
         return self.name
     def to_series(self):
