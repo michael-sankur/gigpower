@@ -155,7 +155,8 @@ class Solution:
             node_V = self.V[node.name]
             wpu = np.zeros(3) # TODO: will be set as argument
             cappu = np.zeros(3)  # TODO: get cappu from dss file
-            spu = node.load.spu if node.load else np.zeros(3)
+            #TODO: handle multiple loads. Does each load have a 3x1 spu?
+            spu = node.loads[0].spu if node.loads else np.zeros(3)
             self.s[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
         return None
 

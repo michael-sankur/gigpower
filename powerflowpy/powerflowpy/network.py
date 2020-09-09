@@ -77,7 +77,7 @@ class Node:
     def __str__(self):
         return f"{self.name}, {self.phases}"
     def to_series(self):
-        data = [self.name, self.phases, self.load, self.controller]
+        data = [self.name, self.phases, self.loads, self.controller]
         return pd.Series(data, self.series_index)
 
 class Line:
