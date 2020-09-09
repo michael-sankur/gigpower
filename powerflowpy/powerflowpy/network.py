@@ -71,8 +71,8 @@ class Node:
         self.name = name
         self.phases = (False, False, False)
         self.parent = None # pointer to parent Node. only one parent for radial networks
-        self.load = None # TODO: turn into a list of LOADS
-        self.cap = None # TODO: assign a capacitor to a node
+        self.loads = [] # list of Nodes
+        self.caps = [] # list of Capacitors
         self.controller = None
     def __str__(self):
         return f"{self.name}, {self.phases}"
@@ -108,9 +108,9 @@ class Load:
         self.type = None
         self.aPQ = None
         self.aI = None
-        self.ppu = None
-        self.qpu = None
-        self.spu = None # TODO: init to 3x1
+        self.ppu = np.zeros((3, 3), dtype='complex')
+        self.qpu = np.zeros((3, 3), dtype='complex')
+        self.spu = np.zeros((3, 3), dtype='complex')
     def __str__(self):
         return self.name
     def to_series(self):

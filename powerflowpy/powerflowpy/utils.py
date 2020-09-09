@@ -13,8 +13,7 @@ def init_from_dss(dss_fp: str) -> None:
     # TODO: make it possible to set the base from a given bus
     dss.Solution.Solve()
     Vbase = dss.Bus.kVBase() * 1000
-    # use LN base
-    # Vbase = Vbase / 3**0.5
+
     Sbase = 1000000.0
     Ibase = Sbase/Vbase
     network.Zbase = Vbase/Ibase
@@ -74,13 +73,12 @@ def init_from_dss(dss_fp: str) -> None:
             print(f"This load's node has not been defined. Load name: {load_name}, Node name: {node_name}")
         load = Load(load_name + '_' + load_idx)
         load.phases = parse_phases([phase_char])
-        node.load = load #assign this load to its node
-        load.ppu = np.asarray(load_data['kW'] / 1000)
-        load.qpu = np.asarray(load_data['kvar']  / 1000)
+        node.loads.append( load ) #assign this load to its node
+        ppu = np.asarray(load_data['kW'] / 1000)
+        qpu = np.asarray(load_data['kvar']  / 1000)
+        load.ppu = pad_phases( ppu, (3,), load.phases)
+        load.qpu = pad_phases( qpu, (3,), load.phases)
         load.spu = load.ppu + 1j*load.qpu
-        # TODO: Figure out if we need to pad spu based on phase? YES reshape to 3x1
-        # if 2 phase load - divide by 2, open dss handles differently
-        # load.spu = pad_phases(load.spu, (3,), load.phases)
         load.conn =   'delta' if load_data['IsDelta'] else 'wye'
         network.loads[load_name] = load
         #TODO: set load.type
@@ -95,11 +93,11 @@ def init_from_dss(dss_fp: str) -> None:
     for cap_name in cap_names:
         cap_data = all_cap_data[cap_name]
         cap = Capacitor(cap_name)
-        # TODO: figure out if delta/wye are mutually exclusive]
         cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
         cap.cappu = cap_data['kvar'] * 1000 / self.Sbase
         #TODO: get phases on capacitor
-        #TODO: Save capacitors!
+        # TODO: add cap to the node's node.caps list
+        network.capacitors[ cap_name ] = cap
 
     return network
 
@@ -131,14 +129,10 @@ def get_Z(dss_data: Any, phase_list : Tuple, fz_mult: float ) -> Iterable:
     helper function to get the Z matrix from dss.lines.to_dataframe()
     Returns an ndarray.
     """
-    #TODO: how to make this per unit length and scale by units
     num_phases = phase_list.count(True)
     RM = np.asarray(dss_data['RMatrix'])
     XM = np.asarray(dss_data['XMatrix'])
     ZM = fz_mult * (RM + 1j*XM)
-    # multiply by length??
-    # ZM = ZM * dss_data['Length']
-    # reshape based on phases
     ZM = np.reshape(ZM, (ZM.shape[0]//num_phases, num_phases))  # reshape
     # pad the Z matrix
     return pad_phases(ZM, (3,3), phase_list)

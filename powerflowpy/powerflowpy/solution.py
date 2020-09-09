@@ -137,7 +137,6 @@ class Solution:
             child_segment = (node_name, child_name)
             new_line_I = new_line_I + self.I[child_segment]
 
-        # TODO: confirm that np.divide is the same as matlab right divide './'
         new_line_I = mask_phases(new_line_I, (3,), line_phases)
         self.I[line_in.key] = new_line_I
 
@@ -146,9 +145,9 @@ class Solution:
         update s at network loads
         """
         # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
-        aPQ = 1.00 # TODO: change all to 3x1s
-        aI = 0
-        aZ =  0
+        aPQ = np.ones(3)
+        aI = np.zeros(3)
+        aZ = np.zeros(3)
         # TODO; get aPQ, aI, aZ from dss file
         # dss.LoadModels - above equal to constant p and q.
         # We use model 1 and 8
