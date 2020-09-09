@@ -50,7 +50,9 @@ def compare_dfs(fbs_df : pd.DataFrame, dss_df : pd.DataFrame) -> None:
     print("Max |diff|:")
     print(compare.abs().max())
     print(compare)
+    print("FBS results")
     print(fbs_df)
+    print("DSS results")
     print(dss_df)
 
 @pytest.fixture
@@ -123,6 +125,6 @@ def dss_sol():
 
         dssStx = pd.DataFrame(STXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
         dssSrx = pd.DataFrame(SRXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
-        print("OpenDSS Loads, from dss.CktElement.Powers()):")
+        print("OpenDSS Loads, from dss.CktElement.Powers():")
         print(dss.CktElement.Powers())
         return dssV, dssI, dssStx, dssSrx
