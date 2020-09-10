@@ -25,7 +25,6 @@ class LinDist3Flow:
         self.all_node_names = dss.Circuit.AllNodeNames()
         self.nn = len(self.all_node_names)
 
-        network = None
         XNR = np.zeros((2*3*(nnode + nline),1))
 
 
@@ -60,7 +59,7 @@ class LinDist3Flow:
         self.max_iter = maxiter
 
         # additional info from openDSS
-        XNR1, g_SB, b_SB, G_KVL, b_KVL, H, g, b = compute_vecmat(XNR, network, dss_path, Vslack)
+        XNR1, g_SB, b_SB, G_KVL, b_KVL, H, g, b = compute_vecmat(XNR, dss_path, Vslack)
         TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = relevant_openDSS_parameters(dss_path)
 
         self.XNR = XNR
