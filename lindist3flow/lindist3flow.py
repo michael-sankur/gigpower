@@ -12,7 +12,6 @@ class LinDist3Flow:
     def __init__(self, dss_path, slacknode, Vslack, V0=None, I0=None, tol=1e-9, maxiter=100):
 
         dss.run_command('Redirect ' + '"' + dss_path + '"')
-        dss.Solution.Solve()
         nline = len(dss.Lines.AllNames())
         nnode = len(dss.Circuit.AllBusNames())
 
@@ -24,6 +23,12 @@ class LinDist3Flow:
 
         self.all_node_names = dss.Circuit.AllNodeNames()
         self.nn = len(self.all_node_names)
+
+        self.Vbase = dss.Bus.kVBase() * 1000
+        self.Sbase = 1000000.0
+
+        self.Ibase = self.Sbase/self.Vbase
+        self.Zbase = self.Vbase/self.Ibase
 
         XNR = np.zeros((2*3*(nnode + nline),1))
 
@@ -59,7 +64,8 @@ class LinDist3Flow:
         self.max_iter = maxiter
 
         # additional info from openDSS
-        XNR1, g_SB, b_SB, G_KVL, b_KVL, H, g, b = compute_vecmat(XNR, dss_path, Vslack)
+        self.bus_load, self.bus_load_divide = self._init_load_values()  #bus_name, phase, kwkvar
+        XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b = compute_vecmat(XNR, dss_path, Vslack, self.bus_load)
         TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = relevant_openDSS_parameters(dss_path)
 
         self.XNR = XNR
@@ -74,7 +80,7 @@ class LinDist3Flow:
         self.TXnum = TXnum # constant
         self.RXnum = RXnum # constant
         self.PH = PH # constant
-        self.spu = spu # constant
+        self.spu = self.bus_load[:, :, 0] + 1j * self.bus_load[:, :, 1] # constant
         self.APQ = APQ # constant
         self.AZ = AZ # constant
         self.AI = AI # constant
@@ -83,8 +89,6 @@ class LinDist3Flow:
         self.vvcpu = vvcpu # constant
 
         self._is_init = True
-
-        self.bus_load = np.zeros((self.nnode, 3, 2))  #bus_name, phase, kwkvar
 
         # in_lines, out_lines
         self.in_lines = []
@@ -102,44 +106,20 @@ class LinDist3Flow:
             self._is_init = False
         else:
             self.H, self.g, self.b = self._calculate_Hgb()
-
+            self.spu = self.bus_load[:, :, 0] + 1j * self.bus_load[:, :, 1] # constant
         # TODO: update XNR, H, g, b after solve()
         iter_count = 0 #count # of iterations
-        XNR_deep_vec = np.zeros((self.max_iter+1, 2*3*(self.nnode+self.nline), 1))
-        FT_deep_vec = np.zeros((self.max_iter+1,2*3*(self.nnode+self.nline), 1))
-        JT_deep_vec = np.zeros((self.max_iter+1,2*3*(self.nnode+self.nline), 2*3*(self.nnode+self.nline)))
-        FTSUBV_vec = np.zeros((self.max_iter+1,6, 1))
-        FTKVL_vec = np.zeros((self.max_iter+1,36, 1))
-        FTKCL_vec = np.zeros((self.max_iter+1,36, 1))
-        JSUBV_vec = np.zeros((self.max_iter+1,6, 78))
-        JKVL_vec = np.zeros((self.max_iter+1,36, 78))
-        JKCL_vec = np.zeros((self.max_iter+1,36, 78))
 
-        XNR_deep_vec[iter_count, :, 0] = self.XNR[:, 0]
         FT1 = 1e99
         while np.amax(np.abs(FT1)) >= 1e-9 and iter_count < self.max_iter:
             FT1 = ft1(self.XNR, self.g_SB, self.b_SB, self.G_KVL, self.b_KVL, self.H, self.g, self.b, self.nnode) #vectorized
-            FT_deep_vec[iter_count,:, :] = FT1
-            FTSUBV_vec[iter_count, :, 0] = np.reshape(FT1[0:6], (6))
-            FTKVL_vec[iter_count,:, 0] = np.reshape(FT1[6:42], (36))
-            FTKCL_vec[iter_count, :, 0] = np.reshape(FT1[42:], (36))
-
             JT1 = jt1(self.XNR, self.g_SB, self.G_KVL, self.H, self.g, self.nnode, self.nline)
-            JT_deep_vec[iter_count,:, :] = JT1
-            JSUBV_vec[iter_count,:, :] = np.reshape(JT1[0:6], (6, 78))
-            JKVL_vec[iter_count,:, :] = np.reshape(JT1[6:42], (36, 78))
-            JKCL_vec[iter_count,:, :] = np.reshape(JT1[42:], (36, 78))
-
-            iter_count += 1 #count up at this point (indexing should match)
-
             # if JT.shape[0] >= JT.shape[1]: #non-vectorized
             #     XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
             if JT1.shape[0] >= JT1.shape[1]: #vectorized
                 self.XNR = self.XNR - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
 
-            #dump xnr into the mega-XNR matrix
-            XNR_deep_vec[iter_count, :, 0] = self.XNR[:, 0]
-
+            iter_count += 1 #count up at this point (indexing should match)
         ###############################################################################
         VNR = np.zeros((3,self.nnode), dtype='complex')
         for ph in range(0,3):
@@ -186,7 +166,6 @@ class LinDist3Flow:
                     sNR[ph,k1] = 0 + sNR[ph,k1].imag
                 if np.abs(sNR[ph,k1].imag) <= 1e-12:
                     sNR[ph,k1] = sNR[ph,k1].real + 0
-        sNR[self.PH == 0] = 0
         # Total node current
 
         iNR[self.PH != 0] = np.conj(sNR[self.PH != 0]/VNR[self.PH != 0]) #also needs to be updated...
@@ -197,27 +176,26 @@ class LinDist3Flow:
                     iNR[ph,k1] = 0 + iNR[ph,k1].imag
                 if np.abs(iNR[ph,k1].imag) <= 1e-12:
                     iNR[ph,k1] = iNR[ph,k1].real + 0
-        iNR[self.PH == 0] = 0
 
         #reset bus_load, ready for the next timestep
-        self.bus_load = np.zeros((self.nnode, 3, 2))  #bus_name, phase, kwkvar
+        self.bus_load = np.zeros((3, self.nnode, 2))  #bus_name, phase, kwkvar
         # VNR, INR, iNR, sNR, STXNR, SRXNR
 
     def set_bus_kw(self, bus, kw, ph):
         bus_idx = self.all_bus_names.index(bus)
-        self.bus_load[bus_idx, ph, 0] = kw
+        self.bus_load[ph, bus_idx, 0] = kw/self.bus_load_divide[ph, bus_idx, 0]
 
     def set_bus_kvar(self, bus, kvar, ph):
         bus_idx = self.all_bus_names.index(bus)
-        self.bus_load[bus_idx, ph, 1] = kvar
+        self.bus_load[ph, bus_idx, 1] = kvar/self.bus_load_divide[ph, bus_idx, 1]
 
     def _calculate_Hgb(self):
-        beta_S = 0.9
-        beta_I = 0
-        beta_Z = 0.1
-        H = np.zeros((2*3*(self.nnode-1), 2 * 3 * (self.nnode + self.nline), 2 * 3* (self.nnode + self.nline)))
-        g = np.zeros((2*3*(self.nnode-1), 1, 2*3*(self.nnode+self.nline)))
-        b = np.zeros((2*3*(self.nnode-1), 1, 1))
+        beta_S = 1.0
+        beta_I = 0.0
+        beta_Z = 0.0
+        H = self.H
+        g = self.g
+        b = self.b
 
         for ph in range(0,3):
             if ph == 0: #set nominal voltage based on phase
@@ -230,59 +208,20 @@ class LinDist3Flow:
                 A0 = -1/2
                 B0 = np.sqrt(3)/2
             for k2 in range(1, self.nnode): #skip slack bus
-                in_lines = self.in_lines[k2-1]
-                out_lines = self.out_lines[k2-1]
-
                 for cplx in range(0,2):
-                    load_val = self.bus_load[k2, ph, cplx]
+                    idxbs = self.all_bus_names.index(self.all_bus_names[k2])
+                    load_val = self.bus_load[ph, idxbs, cplx]
                     gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
                     hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
                                         [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
 
                     available_phases = self.bus_phases[self.all_bus_names[k2]] #phase array at specific bus
                     if available_phases[ph] == 1:                 #quadratic terms
-                        H[2*ph*(self.nnode-1) + (k2-1)*2 + cplx][2*(self.nnode)*ph + 2*k2][2*(self.nnode)*ph + 2*k2] = -load_val * (beta_Z) #+ (0.5 * beta_I* hessian_mag[0][0])) # TE replace right side of equality with -load_val * beta_Z #a**2
-                        H[2*ph*(self.nnode-1) + (k2-1)*2 + cplx][2*(self.nnode)*ph + 2*k2 + 1][2*(self.nnode)*ph + 2*k2 + 1] = -load_val * (beta_Z)# + (0.5 * beta_I * hessian_mag[1][1])) # TE -load_val * beta_Z #b**2
+                        H[2*ph*(self.nnode-1) + (k2-1)*2 + cplx][2*(self.nnode)*ph + 2*k2][2*(self.nnode)*ph + 2*k2] = -load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) # TE replace assignment w/ -load_val * beta_Z; #a**2
+                        H[2*ph*(self.nnode-1) + (k2-1)*2 + cplx][2*(self.nnode)*ph + 2*k2 + 1][2*(self.nnode)*ph + 2*k2 + 1] = -load_val * (beta_Z  + (0.5 * beta_I * hessian_mag[1][1])) # TE replace assignment w/ -load_val * beta_Z; #b**2
+
                         #H[2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1][2*ph*(nnode-1) + (k2-1)*2] = -load_val * beta_I * hessian_mag[0][1] #cross quad. terms in taylor exp,TE  remove
                         #H[2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2][2*ph*(nnode-1) + (k2-1)*2] =  -load_val * beta_I * hessian_mag[0][1] #TE remove
-
-                    for i in range(len(in_lines)): #fill in H for the inlines
-                        line_idx = self.all_line_names.index(in_lines[i])
-                        if available_phases[ph] == 1:
-                            if cplx == 0: #real residual
-                                #A_m and C_lm
-                                H[2*ph*(self.nnode-1) + (k2-1)*2 + cplx][2*(self.nnode)*ph + 2*k2][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx] = 1/2
-                                H[2*ph*(self.nnode-1) + (k2-1)*2 + cplx][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx][2*(self.nnode)*ph + 2*k2] = 1/2
-                                #B_m and D_lm
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*(self.nnode)*ph + 2*k2 + 1][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx + 1] = 1/2
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx + 1][2*(self.nnode)*ph + 2*k2 + 1] = 1/2
-                            if cplx == 1: #complex residual
-                                #A_m, D_lm
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*(self.nnode)*ph + 2*k2][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx + 1] = -1/2
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx + 1][2*(self.nnode)*ph + 2*k2] = -1/2
-                                #B_m and C_lm
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*(self.nnode)*ph + 2*k2 + 1][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx] = 1/2
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx][2*(self.nnode)*ph + 2*k2 + 1] = 1/2
-
-                    for j in range(len(out_lines)): #fill in H for the outlines
-                        line_idx = self.all_line_names.index(out_lines[j])
-
-                        if available_phases[ph] == 1:
-                            if cplx == 0:
-                                #A_m and C_mn
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*(self.nnode)*ph + 2*k2][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx] = -1/2
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx][2*(self.nnode)*ph + 2*k2] = -1/2
-                                #B_m and D_mn
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*(self.nnode)*ph + 2*k2 + 1][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx + 1] = -1/2
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx + 1][2*(self.nnode)*ph + 2*k2 + 1] = -1/2
-                            if cplx == 1:
-                                #A_m and D_mn
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*(self.nnode)*ph + 2*k2][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx + 1]= 1/2
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+ cplx][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx + 1][2*(self.nnode)*ph + 2*k2] = 1/2
-                                #C_m and B_mn
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+cplx][2*(self.nnode)*ph + 2*k2 + 1][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx] = -1/2
-                                H[2*ph*(self.nnode-1) + (k2-1)*2+cplx][2*3*(self.nnode) + 2*ph*self.nline + 2*line_idx][2*(self.nnode)*ph + 2*k2 + 1] = -1/2
-
         #Linear Term
         for ph in range(0,3):
             if ph == 0: #set nominal voltage based on phase
@@ -294,11 +233,12 @@ class LinDist3Flow:
             elif ph == 2:
                 A0 = -1/2
                 B0 = np.sqrt(3)/2
-            for k2 in range(1, len(dss.Circuit.AllBusNames())):
+            for k2 in range(1, self.nnode):
                 for cplx in range(0,2):
-                    load_val = self.bus_load[k2, ph, cplx]
+                    idxbs = self.all_bus_names.index(self.all_bus_names[k2])
+                    load_val = self.bus_load[ph, idxbs, cplx]
                     #linear terms
-                    g_temp = np.zeros(len(self.XNR)) #preallocate g
+                    g_temp = np.zeros(2*3*(self.nnode+self.nline)) #preallocate g
                     available_phases = self.bus_phases[self.all_bus_names[k2]] #phase array at specific bus
 
                     if available_phases[ph] == 0: #if phase does not exist
@@ -365,3 +305,43 @@ class LinDist3Flow:
             elif busname in dss.Lines.Bus2():
                 in_lines = np.append(in_lines, self.all_line_names[k])
         return in_lines, out_lines
+
+
+    def _init_load_order_f(self):
+        load_order = {}
+        for n in range(len(dss.Loads.AllNames())):
+            dss.Loads.Name(dss.Loads.AllNames()[n])
+            pattern =  r"(\w+)\."
+            load_bus = re.findall(pattern, dss.CktElement.BusNames()[0])
+            if load_bus[0] not in load_order:
+                load_order[load_bus[0]] = 1
+            elif load_bus[0] in load_order:
+                load_order[load_bus[0]] += 1
+        return load_order
+
+
+    def _init_load_values(self):
+        load_order_list = self._init_load_order_f()
+        bus_load = np.zeros((3, self.nnode, 2))
+        bus_load_divide = np.zeros((3, self.nnode, 2))
+
+        for load in range(len(dss.Loads.AllNames())):
+            dss.Loads.Name(dss.Loads.AllNames()[load])
+            pattern =  r"(\w+)\."
+            load_bus = re.findall(pattern, dss.CktElement.BusNames()[0])
+            load_ph_arr_temp = [0, 0, 0]
+            for i in range(1, 4):
+                pattern = r"\.%s" % (str(i))
+                load_ph = re.findall(pattern, dss.CktElement.BusNames()[0])
+                if load_ph:
+                    load_ph_arr_temp[i - 1] = 1
+            for j in range(max(load_order_list.values())):
+                idxbs = dss.Circuit.AllBusNames().index(load_bus[0])
+                for i in range(len(load_ph_arr_temp)):
+                    if load_ph_arr_temp[i] == 1:
+                        bus_load[i, idxbs, 0] += dss.Loads.kW() *1e3*1 / self.Sbase / sum(load_ph_arr_temp)
+                        bus_load[i, idxbs, 1] += dss.Loads.kvar()*1e3*1 / self.Sbase  / sum(load_ph_arr_temp)
+                        bus_load_divide[i, idxbs, 0] = 1e3 / self.Sbase / sum(load_ph_arr_temp)
+                        bus_load_divide[i, idxbs, 1] = 1e3 / self.Sbase  / sum(load_ph_arr_temp)
+                break
+        return bus_load, bus_load_divide

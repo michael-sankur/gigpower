@@ -2,7 +2,7 @@ import numpy as np
 import opendssdirect as dss
 import re
 import sys
-def compute_vecmat(XNR, fn, Vslack):
+def compute_vecmat(XNR, fn, Vslack, bus_load):
 
     np.set_printoptions(threshold=sys.maxsize)
     # Michael Sankur - msankur@lbl.gov
@@ -58,6 +58,8 @@ def compute_vecmat(XNR, fn, Vslack):
     # cwd = os.getcwd()
     # print(cwd)
 
+    #################################################################################################################
+    #################################################################################################################
     def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
     #1 if phase exists, 0 o.w.
     #list goes [a, b, c]
@@ -328,10 +330,14 @@ def compute_vecmat(XNR, fn, Vslack):
             dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k2]) #set the bus
             in_lines, out_lines = linelist(dss.Circuit.AllBusNames()[k2]) #get in/out lines of bus
             for cplx in range(0,2):
-                load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx, ph)
-                gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
-                hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
-                                    [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
+                idxbs = dss.Circuit.AllBusNames().index(dss.Circuit.AllBusNames()[0])
+                if cplx == 0:
+                    load_val = bus_load[ph, idxbs, 0]
+                else:
+                    load_val = bus_load[ph, idxbs, 1]
+                #gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
+                #hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
+                #                    [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
 
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                 if available_phases[ph] == 1:                 #quadratic terms
@@ -390,7 +396,11 @@ def compute_vecmat(XNR, fn, Vslack):
             B0 = np.sqrt(3)/2
         for k2 in range(1, len(dss.Circuit.AllBusNames())):
             for cplx in range(0,2):
-                load_val = d_factor(dss.Circuit.AllBusNames()[k2], cplx, ph)
+                idxbs = dss.Circuit.AllBusNames().index(dss.Circuit.AllBusNames()[0])
+                if cplx == 0:
+                    load_val = bus_load[ph, idxbs, 0]
+                else:
+                    load_val = bus_load[ph, idxbs, 1]
                 #linear terms
                 g_temp = np.zeros(len(X)) #preallocate g
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
@@ -411,7 +421,6 @@ def compute_vecmat(XNR, fn, Vslack):
                 if cplx == 0:
                     b_factor = 0 #DER term
                 elif cplx == 1:
-                    b_factor = (dss.Capacitors.kvar()*1000/Sbase) #DER term
                     b_factor = 0
                 else:
                     b_factor = 0

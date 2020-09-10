@@ -4,10 +4,20 @@ import numpy as np
 def relevant_openDSS_parameters(fn):
 
     dss.run_command('Redirect ' + fn)
-    dss.Solution.Solve()
+    #dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
+
+    dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
+
+    #BASE values
+    Vbase = dss.Bus.kVBase() * 1000
+    Sbase = 1000000.0
+    Ibase = Sbase/Vbase
+    Zbase = Vbase/Ibase
+
     nodelist = [None]*nnode
+    #NODE indexing
 
     TXnum = np.zeros((nline), dtype='int') #int value, do as dict
     RXnum = np.zeros((nline), dtype='int') #int value
@@ -66,27 +76,36 @@ def relevant_openDSS_parameters(fn):
     aZ = np.zeros((3,nnode))
 
 
-    for k in range(len(dss.Loads.AllNames())):
-        dss.Loads.Name(dss.Loads.AllNames()[k])
-        no_pattern = r"_([\w]+?)_"
-        knode = re.findall(no_pattern, dss.Loads.Name())
-        knode = nodelist.index(knode[0])
-        ph_pattern = r"_([\w]?)_"
-        kph = re.findall(ph_pattern, dss.Loads.Name())
+    def get_bus_idx(bus):
+        k = -1
+        for n in range(len(dss.Circuit.AllBusNames())): #iterates over all the buses to see which index corresponds to bus
+            if dss.Circuit.AllBusNames()[n] in bus:
+                k = n
+        return k
 
-        if kph[0] == 'a':
-            kph = 0
-        elif kph[0] == 'b':
-            kph = 1
-        elif kph[0] == 'c':
-            kph = 2
+    for kph in range(0, 3):
+        for k in range(len(dss.Circuit.AllBusNames())):
+            for n in range(len(dss.Loads.AllNames())): #go through the loads
+                dss.Loads.Name(dss.Loads.AllNames()[n]) #set the load
+                if dss.Circuit.AllBusNames()[k] in dss.CktElement.BusNames()[0]: #check is the busname in the busname of the load
+                    pattern =  r"\.%s" % (str(kph + 1)) #if it is, is the phase present?
+                    m = re.findall(pattern, dss.CktElement.BusNames()[0])
+                    if m:
+                        load_phases = [0, 0, 0]
+                        for i in range(1, 4): #if the phase is present, what other phases are
+                            pattern = r"\.%s" % (str(i))
+                            m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
+                            if m2:
+                                load_phases[i - 1] = 1
+                        knode = get_bus_idx(dss.Circuit.AllBusNames()[k])
+                        if sum(load_phases) == 1:
+                            aPQ[kph, knode] = 1 #temporary
+                            aZ[kph,knode] = 0
+                        else:
+                            aPQ[kph, knode] = 1 #temporary
+                            aZ[kph,knode] = 0
 
-        aPQ[kph, knode] = 0.9 #temporary
-        #aI[kph,knode] = .5
-        aZ[kph, knode] = 0.1
-        ppu[kph,knode] = dss.Loads.kW() / 1000
-        qpu[kph,knode] = dss.Loads.kvar() / 1000
-    spu = ppu + 1j*qpu
+    spu = (ppu + 1j * qpu)
 
     #cappu, wpu, vvcpu
     cappu = np.zeros((3,nnode))
