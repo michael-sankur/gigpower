@@ -19,8 +19,8 @@ import re
 import sys
 import pytest
 
-# dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
-dss_file = 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
+dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
+# dss_file = 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
 
 # construct the python FBS solution
 def test_fbs_sol(dss_sol):
