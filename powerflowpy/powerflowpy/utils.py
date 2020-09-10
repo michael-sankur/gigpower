@@ -64,26 +64,36 @@ def init_from_dss(dss_fp: str) -> None:
     all_loads_data = dss.utils.loads_to_dataframe().transpose()
     load_names = all_loads_data.keys()
     for load_name in load_names:
-        # TODO: handle multiple loads on a node
         load_data = all_loads_data[load_name]
-        node_name, phase_char, load_idx = load_name.split('_')[1:]
+        node_name, phase_chars, load_idx = load_name.split('_')[1:]
         try:
             node = network.nodes[node_name]
         except KeyError:
             print(f"This load's node has not been defined. Load name: {load_name}, Node name: {node_name}")
-        load = Load(load_name + '_' + load_idx)
-        load.phases = parse_phases(phase_char)
-        load.ppu = load_data['kW'] / 1000
-        load.qpu = load_data['kvar']  / 1000
-        load.aPQ = 1.0
-        load.aI = 0
-        load.aZ = 0
+        load = Load(load_name)
+        load.phases = parse_phases(list(phase_chars))
+        # divide ppu and qpu by number of phases
+        ppu = load_data['kW'] / 1000/ load.phases.count(True)
+        qpu = load_data['kvar'] / 1000 / load.phases.count(True)
+        # set aPQ, aI, aZ
+        # TODO: get aPQ, aI for each load
+        load.aPQ = np.ones(3)
+        load.aI = np.zeros(3)
+        load.aZ = np.zeros(3)
+        # set load's ppu, qpu, and spu as a 3x1 based on load's phases
+        load.ppu = np.asarray( [ppu if phase else 0 for phase in load.phases])
+        load.qpu = np.asarray( [qpu if phase else 0 for phase in load.phases])
         load.spu = load.ppu + 1j*load.qpu
         load.conn =   'delta' if load_data['IsDelta'] else 'wye'
+        # add a pointer to this load to the network
         network.loads[load_name] = load
-        node.loads.append(load)  # assign this load to its node
+        node.loads.append(load)  # add this load to its node's load list
         #TODO: set load.type
-        #TODO: get aPQ, aI for each load
+    # sum all loads on each node and store on each node, to avoid re-calculating during
+    # fbs.update-voltage-dependent-load()
+    for node in network.nodes.values():
+        for load in node.loads:
+            node.sum_spu = np.add(node.sum_spu, load.spu)
 
     # make Controllers
     # TODO: implement this. No idea how opendssdirect maps this info. Which class is it even?
@@ -93,13 +103,24 @@ def init_from_dss(dss_fp: str) -> None:
     cap_names = all_cap_data.keys()
     for cap_name in cap_names:
         cap_data = all_cap_data[cap_name]
+        node_name, phase_chars, cap_idx = cap_name.split('_')[1:]
+        try:
+            node = network.nodes[node_name]
+        except KeyError:
+            print(
+                f"This cap's node has not been defined. Cap name: {cap_name}, Node name: {node_name}")
         cap = Capacitor(cap_name)
+        cap.phases = parse_phases(list(phase_chars))
         cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
-        cap.cappu = cap_data['kvar'] * 1000 / network.Sbase
-        #TODO: get phases on capacitor
-        # TODO: add cap to the node's node.caps list
-        network.capacitors[ cap_name ] = cap
-
+        cappu = cap_data['kvar'] * 1000 / network.Sbase / len(cap.phases) # TODO: confirm that cappu is divided by num phases
+        cap.cappu = np.asarray([cappu if phase else 0 for phase in cap.phases])
+        network.capacitors[ cap_name ] = cap # add a pointer to this cap to the network
+        node.capacitors.append(cap) # add capacitor to it's node's cap list
+    # sum all cappu on each node and store on each node, to avoid re-calculating during
+    # fbs.update-voltage-dependent-load()
+    for node in network.nodes.values():
+        for cap in node.capacitors:
+            node.sum_cappu = np.add(node.sum_cappu, cap.cappu)
     return network
 
 

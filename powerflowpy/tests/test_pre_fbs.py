@@ -7,6 +7,7 @@ import opendssdirect as dss
 import numpy as np
 
 dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
+# dss_file = 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
 
 @pytest.fixture
 def get_network():

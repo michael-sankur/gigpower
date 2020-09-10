@@ -72,7 +72,9 @@ class Node:
         self.phases = (False, False, False)
         self.parent = None # pointer to parent Node. only one parent for radial networks
         self.loads = [] # list of Nodes
-        self.caps = [] # list of Capacitors
+        self.capacitors = [] # list of Capacitors
+        self.sum_spu = np.zeros(3) # 3x1 complex array that holds the sum of all load.spu on this node
+        self.sum_cappu = np.zeros(3) # 3x1 array that holds the sum of all capacitor.cappu on this node
         self.controller = None
     def __str__(self):
         return f"{self.name}, {self.phases}"
