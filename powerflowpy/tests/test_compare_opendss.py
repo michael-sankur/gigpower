@@ -25,19 +25,25 @@ dss_file = 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
 # construct the python FBS solution
 def test_fbs_sol(dss_sol):
     #TODO: Figure out how to get Inode (iNR) and sV (sNR) at each node from dss and perform a compare
+    tolerance = .01
     fbs_sol= fbs(dss_file)
     network = init_from_dss(dss_file)
     fbsV, fbsI, fbsStx, fbsSrx = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), fbs_sol.Srx_df()
     dssV, dssI, dssStx, dssSrx = dss_sol
     print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
     print("\nCOMPARE V")
-    compare_dfs(fbsV, dssV)
+    V_maxDiff = compare_dfs(fbsV, dssV)
     print("\nCOMPARE I")
-    compare_dfs(fbsI, dssI)
+    I_maxDiff = compare_dfs(fbsI, dssI)
     print("\nCOMPARE Stx")
-    compare_dfs(fbsStx, dssStx)
+    Stx_maxDiff = compare_dfs(fbsStx, dssStx)
     print("\nCOMPARE Srx")
-    compare_dfs(fbsSrx, dssSrx)
+    Srx_maxDiff = compare_dfs(fbsSrx, dssSrx)
+
+    assert (V_maxDiff <= tolerance).all()
+    assert (I_maxDiff <= tolerance).all()
+    assert (Stx_maxDiff <= tolerance).all()
+    assert (Srx_maxDiff <= tolerance).all()
 
 # construct the DSS solution. Copied form '20180601/opendss_nonvec_test_comparison.ipynb'
 
@@ -54,6 +60,7 @@ def compare_dfs(fbs_df : pd.DataFrame, dss_df : pd.DataFrame) -> None:
     print(fbs_df)
     print("DSS results")
     print(dss_df)
+    return compare.abs().max()
 
 @pytest.fixture
 def dss_sol():
