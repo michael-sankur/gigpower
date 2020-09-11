@@ -4,54 +4,33 @@
 # Compare running time of opendss' powerflow solver to powerflowpy/fbs
 
 import sys
+import click
+from pathlib import Path
 import powerflowpy
 from powerflowpy.fbs import *
+from powerflowpy.utils import init_from_dss
+from powerflowpy.dss_solve import solve_with_dss
 import opendssdirect as dss
 import time
 import functools
 import numpy as np
+import csv
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
+
 
 def solver_timer(solver_func):
     """Decorator that returns the elapsed time when running solver_func n times"""
     @functools.wraps(solver_func)
-    def wrapper(file, n):
-        t1= time.perf_counter()
+    def wrapper(network, n):
+        t1 = time.perf_counter()
+        x = None
         for i in range(n):
-            solver_func(file, n) # run once
-        t2= time.perf_counter()
+            x = solver_func(network, n)  # run once
+        t2 = time.perf_counter()
         return t2 - t1
     return wrapper
 
-def solve_with_dss(dss_file):
-    dss.run_command('Redirect ' + dss_file)
-    # Set slack bus (sourcebus) voltage reference in p.u.
-    SlackBusVoltage = 1.000
-    dss.Vsources.PU(SlackBusVoltage)
-    dss.Solution.Convergence(0.000000000001)
-
-    Vbase = dss.Bus.kVBase() * 1000
-    Sbase = 1000000.0
-    Ibase = Sbase/Vbase
-    Zbase = Vbase/Ibase
-
-    # Solve power flow with OpenDSS file
-    dss.Solution.Solve()
-    if not dss.Solution.Converged:
-        print('Initial Solution Not Converged. Check Model for Convergence')
-    else:
-        #Doing this solve command is required for GridPV, that is why the monitors
-        #go under a reset process
-        dss.Monitors.ResetAll()
-        #set solution Params
-        #setSolutionParams(dss,'daily',1,1,'off',1000000,30000)
-        dss.Solution.Mode(1)
-        dss.Solution.Number(1)
-        dss.Solution.StepSize(1)
-        dss.Solution.ControlMode(-1)
-        dss.Solution.MaxControlIterations(1000000)
-        dss.Solution.MaxIterations(30000)
 
 @solver_timer
 def time_dss(dss_file, n):
@@ -60,36 +39,57 @@ def time_dss(dss_file, n):
 
 
 @solver_timer
-def time_fbs(dss_file, n):
+def time_fbs(network, n):
     """ wrap powerflowpy.fbs in a timer"""
-    fbs(dss_file)
+    fbs(network, False)
+# set up command line arguments to this script
+@click.command( help='Compare running times between opendss and fbs. Please provide a full or relative path to a dss file.')
+@click.argument('dss_file')
+@click.option('--output', metavar='PATH', help='write output files to this directory')
+@click.option('--trials', default = '20', help = 'Specify max number of trials to run. Default is 20.')
 
-if __name__ == '__main__':
+def main(dss_file: str, trials: int, output: str) -> None:
     """
     Compare opendss's solver with fbs and plot the results.
     Code based on Bernard Knasmueller's accurate-time-measurements-python at this github link: https://gitlab.com/bernhard.knasmueller/accurate-time-measurements-python/-/blob/master/main.py
     We use a straight-line fitting technique to eliminate systemic measurement errors
     The approach is described in this article: https://knasmueller.net/measure-code-execution-time-accurately-in-python
     And this paper: https://uwaterloo.ca/embedded-software-group/sites/ca.embedded-software-group/files/uploads/files/ieee-esl-precise-measurements.pdf
-    """
-    num_trials = 20
-    dss_file = sys.argv[1]
 
+    Sample command with default number of trials, and an output directory specified
+    $ python3 powerflowpy/main.py 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss' --output ./powerflowpy/timing_results
+    """
+    num_trials = int(trials)
+    # create a network objet for fbs to read
+    network = init_from_dss(dss_file)
     # initialize duration arrays, to avoid time lost to dynamic array resizing
     dss_durations = [-1] * num_trials
     fbs_durations = [-1] * num_trials
 
-    for n in range(0,num_trials): #solve powerflow n...num_trials times with opendss
-        dss_durations[n] = time_dss( dss_file, n)
-
     for n in range(0, num_trials):  # solve powerflow n...num_trials times with fbs
-        fbs_durations[n] = time_fbs(dss_file, n)
+        fbs_durations[n] = time_fbs(network, n+1)
+    for n in range(0,num_trials): #solve powerflow n...num_trials times with opendss
+        dss_durations[n] = time_dss( dss_file, n+1)
 
     # change s to ms
     dss_durations = np.array([ 1000*s for s in dss_durations ])
     fbs_durations = np.array([ 1000*s for s in fbs_durations ])
     # initialize array for x axis, x = num trials
     x = np.array([i for i in range(1, num_trials + 1)])
+
+    # if output is specified, write csv file
+    if output:
+        parent = Path(output)
+        parent.mkdir(exist_ok = True)
+        with parent.joinpath('fbs_v_dss.csv').open('w') as out:
+            writer = csv.writer(out)
+            writer.writerow(['n', 'fbs', 'dss'])  # write header row
+            for row in zip( x, fbs_durations, dss_durations): # write timing data
+                writer.writerow(row)
+    # otherwise, write to stdout
+    else:
+        click.echo("n, fbs, dss")
+        click.echo(zip(x, fbs_durations, dss_durations))
 
     #fit data to a line
     dss_m, dss_b = np.polyfit(x, dss_durations, 1)
@@ -107,11 +107,16 @@ if __name__ == '__main__':
     ax.plot(x, fbs_f(x), color = 'blue')
     ax.legend()
     ax.grid(True)
-    plt.savefig('dss_fbs_compare.png')
+    if output:
+        parent = Path(output)
+        parent.mkdir(exist_ok=True)
+        plt.savefig(parent.joinpath('dss_fbs_compare.png'))
     plt.show()
+    print(f'FBS m: {fbs_m}ms')
+    print(f'dss m: {dss_m}ms')
 
-
-
+if __name__ == '__main__':
+    main()
 
 
 

@@ -8,13 +8,14 @@ from . utils import init_from_dss, mask_phases
 from . network import *
 from . solution import *
 
-def fbs(dss_fp) -> None:
-    network = init_from_dss(dss_fp)
+def fbs(network, dss_fp = True) -> None:
+    if dss_fp:
+        network = init_from_dss(network)
     solution = Solution(network)
     topo_order = topo_sort(network)
     solution.root = network.nodes.get(topo_order[0])  # keep a pointer to the root node
     #TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
-    solution.tolerance = abs( (solution.Vref[1]) * 10**-12) # set tolerance with phase B reference voltage
+    solution.tolerance = abs( (solution.Vref[1]) * 10**-9) # set tolerance with phase B reference voltage
     converged = max(abs(solution.Vtest - solution.Vref)) <= solution.tolerance
     while not converged:
         # set V.root to Vref
@@ -46,10 +47,10 @@ def fbs(dss_fp) -> None:
         for node in network.get_nodes():
             solution.update_voltage_dependent_load(node) # update s at all nodes
 
-        # store V prior to backward sweep
-        for node in network.get_nodes():
-            solution.V_backward_delta.loc[node.name, 'Vprev_a': 'Vprev_c'] = np.copy(
-                solution.V[node.name])
+        # # store V prior to backward sweep
+        # for node in network.get_nodes():
+        #     solution.V_backward_delta.loc[node.name, 'Vprev_a': 'Vprev_c'] = np.copy(
+        #         solution.V[node.name])
 
         # BACKWARD SWEEP: for node in reverse topo_order:
         for node_name in reversed(topo_order):
@@ -66,17 +67,17 @@ def fbs(dss_fp) -> None:
 
 
         # store V after backward sweep, calculate max diff, store iteration number
-        for node in network.get_nodes():
-            solution.V_backward_delta.loc[node.name, 'Vcurr_a': 'Vcurr_c'] = np.copy(
-                solution.V[node.name])
-            Vprev = np.asarray(solution.V_backward_delta.loc[node.name,
-                                                 'Vprev_a' : 'Vprev_c'])
-            Vcurr = np.asarray(solution.V_backward_delta.loc[node.name,
-                                                 'Vcurr_a' : 'Vcurr_c'])
-            solution.V_backward_delta.loc[node.name,
-                                         'max_absVdiff'] = max(abs(Vprev - Vcurr))
-            solution.V_backward_delta.loc[node.name,
-                                         'curr_iter'] = solution.iterations + 1
+        # for node in network.get_nodes():
+        #     solution.V_backward_delta.loc[node.name, 'Vcurr_a': 'Vcurr_c'] = np.copy(
+        #         solution.V[node.name])
+        #     Vprev = np.asarray(solution.V_backward_delta.loc[node.name,
+        #                                          'Vprev_a' : 'Vprev_c'])
+        #     Vcurr = np.asarray(solution.V_backward_delta.loc[node.name,
+        #                                          'Vcurr_a' : 'Vcurr_c'])
+        #     solution.V_backward_delta.loc[node.name,
+        #                                  'max_absVdiff'] = max(abs(Vprev - Vcurr))
+        #     solution.V_backward_delta.loc[node.name,
+        #                                  'curr_iter'] = solution.iterations + 1
         # print(
         #     f"Running iteration: {solution.iterations + 1}, completed backward sweep.")
         # print(solution.V_backward_delta)
