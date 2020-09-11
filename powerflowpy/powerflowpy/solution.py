@@ -140,9 +140,10 @@ class Solution:
         new_line_I = mask_phases(new_line_I, (3,), line_phases)
         self.I[line_in.key] = new_line_I
 
-    def update_voltage_dependent_load(self) -> None:
+    def update_voltage_dependent_load(self, node: Node) -> None:
         """
-        update s at network loads
+        updates voltage_dependent_load (Solution.s[node]) at the input node.
+        Used during backward sweep.
         """
         # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
         aPQ = np.ones(3)
@@ -150,12 +151,12 @@ class Solution:
         aZ = np.zeros(3)
         # TODO; get aPQ, aI, aZ from dss file
         # dss.LoadModels - above equal to constant p and q. We use model 1 and 8
-        for node in self.network.get_nodes():
-            node_V = self.V[node.name]
-            wpu = np.zeros(3) # TODO: will be set as argument
-            cappu = node.sum_cappu
-            spu = node.sum_spu
-            self.s[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
+
+        node_V = self.V[node.name]
+        wpu = np.zeros(3) # TODO: will be set as argument
+        cappu = node.sum_cappu
+        spu = node.sum_spu
+        self.s[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
         return None
 
     def calc_S(self) -> None:
@@ -168,7 +169,8 @@ class Solution:
     def calc_sV(self) -> None:
         """ Final calculation of voltage dependent complex loads. """
         # TODO: # handle multiple loads with update_s method. This is redundant (equivalent to update s)
-        self.update_voltage_dependent_load() # update self.s one last time
+        for node in self.network.get_nodes():
+            self.update_voltage_dependent_load(node) # update self.s one last time
         self.sV = self.s  # set self.sv to self.s
 
     def calc_Inode(self) -> None:

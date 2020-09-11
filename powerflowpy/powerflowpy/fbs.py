@@ -43,8 +43,8 @@ def fbs(dss_fp) -> None:
             solution.V_forward_delta.loc[node.name, 'curr_iter'] = solution.iterations + 1
         # print(f"Running iteration: {solution.iterations + 1}, completed forward sweep.")
         # print(solution.V_forward_delta)
-
-        solution.update_voltage_dependent_load() # update s
+        for node in network.get_nodes():
+            solution.update_voltage_dependent_load(node) # update s at all nodes
 
         # store V prior to backward sweep
         for node in network.get_nodes():
@@ -55,16 +55,15 @@ def fbs(dss_fp) -> None:
         for node_name in reversed(topo_order):
             node = network.nodes.get(node_name)
             if node.parent: # if this is a terminal node or junction node (not the root)
+                solution.update_voltage_dependent_load(
+                    node)  # update s at this node
+                solution.update_voltage_dependent_load(
+                    node.parent)  # update s at node's parent
                 line_in = network.lines.get((node.parent.name, node.name))
                 solution.update_current(network, line_in) # update current segment
                 solution.update_voltage_backward(
                     network, node)  # update voltage at parent
-                solution.update_voltage_dependent_load()  # update s
-                # if network.adj[node_name]: # if this is a junction node (not a terminal or root)
-                #     # solution.update_voltage_backward(network, node) # update voltage at parent
-                #     solution.update_voltage_dependent_load()
-                #     if node.parent.parent:
-                #         solution.update_parent_current(network, line_in) # update parent segment current
+
 
         # store V after backward sweep, calculate max diff, store iteration number
         for node in network.get_nodes():
