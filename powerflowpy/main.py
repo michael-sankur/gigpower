@@ -57,7 +57,7 @@ def main(dss_file: str, trials: int, output: str) -> None:
     And this paper: https://uwaterloo.ca/embedded-software-group/sites/ca.embedded-software-group/files/uploads/files/ieee-esl-precise-measurements.pdf
 
     Sample command with default number of trials, and an output directory specified
-    $ python3 powerflowpy/main.py 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss' --output ./powerflowpy/timing_results
+    $ python3 powerflowpy/main.py 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss' --output ./powerflowpy/tests/06n3ph_rad_unbal
     """
     num_trials = int(trials)
     # create a network objet for fbs to read
@@ -102,9 +102,12 @@ def main(dss_file: str, trials: int, output: str) -> None:
     ax.set_xlabel("number of times solved")
     ax.set_ylabel("execution time(ms)")
     ax.plot(x, dss_durations, 'go', label = 'opendss')
-    ax.plot(x, dss_f(x), color = 'green')
+    ax.plot(x, dss_f(x), color='green',
+            label=f"dss time/trial ~= {dss_m :.2f}ms")
     ax.plot(x, fbs_durations, 'bo', label = 'fbs')
-    ax.plot(x, fbs_f(x), color = 'blue')
+    ax.plot(x, fbs_f(x), color='blue', label=f'fbs time/trial ~={fbs_m: .2f}ms')
+
+    plt.xticks(np.arange(1, num_trials + 1)) # set x ticks to whole numbers
     ax.legend()
     ax.grid(True)
     if output:
