@@ -83,6 +83,7 @@ def main(dss_file: str, trials: int, output: str) -> None:
         parent.mkdir(exist_ok = True)
         with parent.joinpath('fbs_v_dss.csv').open('w') as out:
             writer = csv.writer(out)
+            writer.writerow([f'Input file: {dss_file}'])  # write path to input file
             writer.writerow(['n', 'fbs', 'dss'])  # write header row
             for row in zip( x, fbs_durations, dss_durations): # write timing data
                 writer.writerow(row)
@@ -99,6 +100,7 @@ def main(dss_file: str, trials: int, output: str) -> None:
 
     # plot dss vs fbs
     fig, ax = plt.subplots()
+    plt.title(f'{dss_file}')
     ax.set_xlabel("number of times solved")
     ax.set_ylabel("execution time(ms)")
     ax.plot(x, dss_durations, 'go', label = 'opendss')
