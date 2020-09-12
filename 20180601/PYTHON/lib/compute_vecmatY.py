@@ -146,13 +146,15 @@ def compute_vecmat(fn, Vslack):
                 hbmat2 = np.hstack((hbmat[:, :], np.zeros((3,1))))
                 Hb_matrix[k2, :] = hbmat2.flatten()
 
-        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() * 0.3048 #in feet for IEEE13
-        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() * 0.3048
+        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length()# * 0.3048 #in feet for IEEE13
+        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length()# * 0.3048
+        Hb_matrix[k2, :] = Hb_matrix[k2, :] * dss.Lines.Length()
+        G_matrix[k2, :] = G_matrix[k2, :] * dss.Lines.Length()
 
-    R_matrix = R_matrix/Zbase/1609.34 #in miles for IEEE 13
-    X_matrix = X_matrix/Zbase/1609.34 #
-    Hb_matrix = Hb_matrix/Zbase/1609.34
-    G_matrix = G_matrix/Zbase/1609.34
+    R_matrix = R_matrix/Zbase#/1609.34 #in miles for IEEE 13
+    X_matrix = X_matrix/Zbase#/1609.34 #
+    Hb_matrix = Hb_matrix/Zbase#/1609.34
+    G_matrix = G_matrix/Zbase#/1609.34
 
     #------------ slack bus ------------------
 
@@ -190,19 +192,20 @@ def compute_vecmat(fn, Vslack):
             #real part of KVL residual
 
             if bus1_phases[ph] == 1: #check the negatives
-                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
-                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n #check the phase stuff bc there's a loop
-                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3] * G_matrix[line][ph*3] - X_matrix[line][ph*3] * Hb_matrix[line][ph*3])* bus1_phases[0] -  #C_mn  for A_m terms, phase a
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] += 1 #A_m
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] += -1 #A_n #check the phase stuff bc there's a loop
+
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3] * G_matrix[line][ph*3] - X_matrix[line][ph*3] * Hb_matrix[line][ph*3])* bus1_phases[0]   #C_mn  for A_m terms, phase a
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] += -(R_matrix[line][ph*3] * -G_matrix[line][ph*3] - X_matrix[line][ph*3] * -Hb_matrix[line][ph*3]) *bus1_phases[0] #C_mn for A_n terms, phase a
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx) + 1] += -(R_matrix[line][ph*3] * -Hb_matrix[line][ph*3] - X_matrix[line][ph*3] * G_matrix[line][ph*3]) *bus1_phases[0] #C_mn for B_m, phase a
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx) + 1] += -(R_matrix[line][ph*3] * Hb_matrix[line][ph*3] - X_matrix[line][ph*3] * -G_matrix[line][ph*3]) *bus1_phases[0]  #C_mn for B_n, phase a
 
-                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3 + 1] * G_matrix[line][ph*3 + 1] - X_matrix[line][ph*3 + 1] * Hb_matrix[line][ph*3 + 1])* bus1_phases[1] -  #C_mn  for A_m terms, phase b
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3 + 1] * G_matrix[line][ph*3 + 1] - X_matrix[line][ph*3 + 1] * Hb_matrix[line][ph*3 + 1])* bus1_phases[1]   #C_mn  for A_m terms, phase b
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] += -(R_matrix[line][ph*3 + 1] * -G_matrix[line][ph*3 + 1] - X_matrix[line][ph*3 + 1] * -Hb_matrix[line][ph*3 + 1]) *bus1_phases[1] #C_mn for A_n terms, phase b
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx) + 1] += -(R_matrix[line][ph*3 + 1] * -Hb_matrix[line][ph*3 + 1] - X_matrix[line][ph*3 + 1] * G_matrix[line][ph*3 + 1]) *bus1_phases[1] #C_mn for B_m, phase b
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx) + 1] += -(R_matrix[line][ph*3 + 1] * Hb_matrix[line][ph*3 + 1] - X_matrix[line][ph*3 + 1] * -G_matrix[line][ph*3 + 1]) *bus1_phases[1]  #C_mn for B_n, phase b
 
-                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3 + 2] * G_matrix[line][ph*3 + 2] - X_matrix[line][ph*3 + 2] * Hb_matrix[line][ph*3 + 2])* bus1_phases[2] -  #C_mn  for A_m terms, phase c
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3 + 2] * G_matrix[line][ph*3 + 2] - X_matrix[line][ph*3 + 2] * Hb_matrix[line][ph*3 + 2])* bus1_phases[2]   #C_mn  for A_m terms, phase c
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] += -(R_matrix[line][ph*3 + 2] * -G_matrix[line][ph*3 + 2] - X_matrix[line][ph*3 + 2] * -Hb_matrix[line][ph*3 + 2]) *bus1_phases[2] #C_mn for A_n terms, phase c
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx) + 1] += -(R_matrix[line][ph*3 + 2] * -Hb_matrix[line][ph*3 + 2] - X_matrix[line][ph*3 + 2] * G_matrix[line][ph*3 + 2]) *bus1_phases[2] #C_mn for B_m, phase c
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx) + 1] += -(R_matrix[line][ph*3 + 2] * Hb_matrix[line][ph*3 + 2] - X_matrix[line][ph*3 + 2] * -G_matrix[line][ph*3 + 2]) *bus1_phases[2]  #C_mn for B_n, phase c
@@ -210,29 +213,38 @@ def compute_vecmat(fn, Vslack):
 #------------------ #Imaginary Residual
 
 
-                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx) + 1] = 1 #B_m
-                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx) + 1] = -1 #B_n
-                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3] * Hb_matrix[line][ph*3] + X_matrix[line][ph*3] * G_matrix[line][ph*3])* bus1_phases[0] -  #C_mn  for A_m terms, phase a
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx) + 1] += 1 #B_m
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx) + 1] += -1 #B_n
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3] * Hb_matrix[line][ph*3] + X_matrix[line][ph*3] * G_matrix[line][ph*3])* bus1_phases[0]   #C_mn  for A_m terms, phase a
                 G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx)] += -(R_matrix[line][ph*3] * -Hb_matrix[line][ph*3] + X_matrix[line][ph*3] * -G_matrix[line][ph*3]) *bus1_phases[0] #C_mn for A_n terms, phase a
-                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx) + 1] += -(R_matrix[line][ph*3] * G_matrix[line][ph*3] + X_matrix[line][ph*3] * Hb_matrix[line][ph*3]) *bus1_phases[0] #C_mn for B_m, phase a
-                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx) + 1] += -(R_matrix[line][ph*3] * -G_matrix[line][ph*3] + X_matrix[line][ph*3] * -Hb_matrix[line][ph*3]) *bus1_phases[0]  #C_mn for B_n, phase a
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx) + 1] += -(R_matrix[line][ph*3] * G_matrix[line][ph*3] + X_matrix[line][ph*3] * -Hb_matrix[line][ph*3]) *bus1_phases[0] #C_mn for B_m, phase a
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx) + 1] += -(R_matrix[line][ph*3] * -G_matrix[line][ph*3] + X_matrix[line][ph*3] * Hb_matrix[line][ph*3]) *bus1_phases[0]  #C_mn for B_n, phase a
 
-                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3 + 1] * Hb_matrix[line][ph*3 + 1] + X_matrix[line][ph*3 + 1] * G_matrix[line][ph*3 + 1])* bus1_phases[1] -  #C_mn  for A_m terms, phase b
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3 + 1] * Hb_matrix[line][ph*3 + 1] + X_matrix[line][ph*3 + 1] * G_matrix[line][ph*3 + 1])* bus1_phases[1]   #C_mn  for A_m terms, phase b
                 G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx)] += -(R_matrix[line][ph*3 + 1] * -Hb_matrix[line][ph*3 + 1] + X_matrix[line][ph*3 + 1] * -G_matrix[line][ph*3 + 1]) *bus1_phases[1] #C_mn for A_n terms, phase b
-                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx) + 1] += -(R_matrix[line][ph*3 + 1] * -G_matrix[line][ph*3 + 1] + X_matrix[line][ph*3 + 1] * Hb_matrix[line][ph*3 + 1]) *bus1_phases[1] #C_mn for B_m, phase b
-                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx) + 1] += -(R_matrix[line][ph*3 + 1] * -G_matrix[line][ph*3 + 1] + X_matrix[line][ph*3 + 1] * -Hb_matrix[line][ph*3 + 1]) *bus1_phases[1]  #C_mn for B_n, phase b
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx) + 1] += -(R_matrix[line][ph*3 + 1] * G_matrix[line][ph*3 + 1] + X_matrix[line][ph*3 + 1] * -Hb_matrix[line][ph*3 + 1]) *bus1_phases[1] #C_mn for B_m, phase b
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx) + 1] += -(R_matrix[line][ph*3 + 1] * -G_matrix[line][ph*3 + 1] + X_matrix[line][ph*3 + 1] * Hb_matrix[line][ph*3 + 1]) *bus1_phases[1]  #C_mn for B_n, phase b
 
-                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3 + 2] * Hb_matrix[line][ph*3 + 2] + X_matrix[line][ph*3 + 2] * G_matrix[line][ph*3 + 2])* bus1_phases[2] -  #C_mn  for A_m terms, phase c
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx)] += -(R_matrix[line][ph*3 + 2] * Hb_matrix[line][ph*3 + 2] + X_matrix[line][ph*3 + 2] * G_matrix[line][ph*3 + 2])* bus1_phases[2]  #C_mn  for A_m terms, phase c
                 G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx)] += -(R_matrix[line][ph*3 + 2] * -Hb_matrix[line][ph*3 + 2] + X_matrix[line][ph*3 + 2] * -G_matrix[line][ph*3 + 2]) *bus1_phases[2] #C_mn for A_n terms, phase c
-                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx) + 1] += -(R_matrix[line][ph*3 + 2] * -G_matrix[line][ph*3 + 2] + X_matrix[line][ph*3 + 2] * Hb_matrix[line][ph*3 + 2]) *bus1_phases[2] #C_mn for B_m, phase c
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx) + 1] += -(R_matrix[line][ph*3 + 2] * G_matrix[line][ph*3 + 2] + X_matrix[line][ph*3 + 2] * -Hb_matrix[line][ph*3 + 2]) *bus1_phases[2] #C_mn for B_m, phase c
                 G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx) + 1] += -(R_matrix[line][ph*3 + 2] * -G_matrix[line][ph*3 + 2] + X_matrix[line][ph*3 + 2] * Hb_matrix[line][ph*3 + 2]) *bus1_phases[2]  #C_mn for B_n, phase c
 
 
-            else: #need to figure this out
-                G_KVL[2*ph*nline + 2*line][2*(nnode)*3 + 2*ph*nline + 2*line] = 1 #C_mn
-                G_KVL[2*ph*nline + 2*line+1][2*(nnode)*3 + 2*ph*nline + 2*line+1] = 1 #D_mn
+            else:
+                #real
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] = 0 #A_m
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] = 0  #A_n
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx) + 1] = 0 #B_l
+                G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx) + 1] = 0 #B_,
+                #imaginary
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx) + 1] = 0 #B_l
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx) + 1] = 0  #B_m
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus1_idx)] = 0 #A_l
+                G_KVL[2*ph*nline + 2*line + 1][2*(nnode)*ph + 2*(bus2_idx)] = 0 #A_m
+
 
 
     b_kvl = np.zeros((2*3*nline, 1))
 
-    return g_SB, b_SB, G_KVL, b_kvl
+    return g_SB, b_SB, G_KVL, b_kvl, R_matrix, X_matrix, G_matrix, Hb_matrix

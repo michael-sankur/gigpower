@@ -2,7 +2,7 @@ import numpy as np
 import opendssdirect as dss
 import re
 import sys
-def compute_KCL_matrices(fn, t, der, capacitance):
+def compute_KCL_matrices(fn, t, der, capacitance,  R_matrix, X_matrix, G_matrix, Hb_matrix):
 
     dss.run_command('Redirect ' + fn)
     nline = len(dss.Lines.AllNames())
@@ -128,8 +128,6 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                     bus1_idx = dss.Circuit.AllBusNames().index(re.findall(pattern, bus1)[0]) #get the buses of the line
 
                     if available_phases[ph] == 1:
-
-
                         if cplx == 0: #real residual
                             #A_m and A_m
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] += -G_matrix[line_idx][ph*3] * available_phases[0]/2
@@ -156,7 +154,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2] += -Hb_matrix[line_idx][ph*3] * available_phases[0]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3] * available_phases[0]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2] += -Hb_matrix[line_idx][ph*3 + 1] * available_phases[1]/2
-                            H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3 + 1] * available_phases[1]]/2
+                            H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3 + 1] * available_phases[1]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2] += -Hb_matrix[line_idx][ph*3 + 2] * available_phases[2]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3 + 2] * available_phases[2]/2
                             #B_m and B_m
@@ -247,6 +245,38 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3 + 1] * available_phases[1]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2 + 1] += -Hb_matrix[line_idx][ph*3 + 2] * available_phases[2]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3 + 2] * available_phases[2]/2
+                    else:
+                        #B_l and B_m
+
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*bus1_idx + 1] = 0
+                        #_A_l and B_m
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx][2*(nnode)*ph + 2*k2 + 1] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*bus1_idx] = 0
+                        #B_m and B_m
+                        H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = 0
+                        #A_m and B_m
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1]  = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] = 0
+
+
+                        #B_l and A_m
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2]  = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx + 1] = 0
+                        #A_m and A_m
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = 0
+                        #B_m and A_m
+                        H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1] = 0
+                        #A_l and A_m
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx][2*(nnode)*ph + 2*k2] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx] = 0
+
+
+
+
 
 
                 for j in range(len(out_lines)): #fill in H for the outlines
@@ -283,7 +313,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2] += -Hb_matrix[line_idx][ph*3] * available_phases[0]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3] * available_phases[0]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2] += -Hb_matrix[line_idx][ph*3 + 1] * available_phases[1]/2
-                            H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3 + 1] * available_phases[1]]/2
+                            H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3 + 1] * available_phases[1]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2] += -Hb_matrix[line_idx][ph*3 + 2] * available_phases[2]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3 + 2] * available_phases[2]/2
                             #B_m and B_m
@@ -374,6 +404,35 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3 + 1] * available_phases[1]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2 + 1] += -Hb_matrix[line_idx][ph*3 + 2] * available_phases[2]/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*bus1_idx + 1] += -Hb_matrix[line_idx][ph*3 + 2] * available_phases[2]/2
+                    else:
+                        #B_l and B_m
+
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*bus1_idx + 1] = 0
+                        #_A_l and B_m
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx][2*(nnode)*ph + 2*k2 + 1] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*bus1_idx] = 0
+                        #B_m and B_m
+                        H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = 0
+                        #A_m and B_m
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1]  = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] = 0
+
+
+                        #B_l and A_m
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx + 1][2*(nnode)*ph + 2*k2]  = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx + 1] = 0
+                        #A_m and A_m
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = 0
+                        #B_m and A_m
+                        H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1] = 0
+                        #A_l and A_m
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*bus1_idx][2*(nnode)*ph + 2*k2] = 0
+                        H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*bus1_idx] = 0
+                        
 
     #Linear Term & Constant Term
     for ph in range(0,3):
