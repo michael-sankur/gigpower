@@ -68,8 +68,8 @@ def relevant_openDSS_parameters(fn, t):
                 load_phases[ph - 1] = 1
                 aPQ[ph, knode] = 1
                 aZ[ph, knode] = 0
-                ppu[ph, knode] = dss.Loads.kW()* 1e3 * var / Sbase
-                qpu[ph, knode] = dss.Loads.kvar() * 1e3 * var / Sbase
+                ppu[ph, knode] += dss.Loads.kW()* 1e3 * var / Sbase #check these lines later
+                qpu[ph, knode] += dss.Loads.kvar() * 1e3 * var / Sbase
         if sum(load_phases) > 1: #if it is a multiphase load
             for ph in range(0,3):
                 ppu[ph, knode]/= sum(load_phases)
@@ -83,7 +83,7 @@ def relevant_openDSS_parameters(fn, t):
         for n in range(len(dss.Capacitors.AllNames())):
             dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
             cap_data = dss.CktElement.BusNames()[0].split('.')
-            
+
             idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
             for ph in range(1, len(cap_data)):
                 cappu[int(cap_data[ph]) - 1, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / (len(cap_data) - 1)
