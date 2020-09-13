@@ -5,7 +5,7 @@ from lib.relevant_openDSS_parameters import relevant_openDSS_parameters
 import opendssdirect as dss
 import time
 import re
-def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, der, capacitance, time_delta):
+def NR3_timevarying(fn, XNR, g_SB, b_SB, H, g, b, tol, maxiter, der, capacitance, time_delta):
     dss.run_command('Redirect ' + fn)
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
@@ -21,13 +21,13 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     # solve power-flow
     while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
         print("Iteration number %f" % (itercount))
-        FT = ft1(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode)
-        JT = jt1(XNR, g_SB, G_KVL, H, g, nnode, nline)
+        FT = ft1(XNR, g_SB, b_SB, H, g, b, nnode)
+        JT = jt1(XNR, g_SB, H, g, nnode, nline)
 
         if JT.shape[0] >= JT.shape[1]:
             XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
         itercount+=1
-    # # retrieve relevant parameters for formatting output
+    # retrieve relevant parameters for formatting output
     TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(fn, time_delta)
 
@@ -46,4 +46,5 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     print('VNR')
     print(VNR)
 
+    return VNR
     return VNR

@@ -34,24 +34,25 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
             XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
         itercount+=1
     #t4 = time.time()
-    # retrieve relevant parameters for formatting output
-    # TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = \
-    #     relevant_openDSS_parameters(fn, time_delta)
-    # t5 = time.time()
-    # #remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
-    # #VNR = XNR(1:2:2*3*nnode-1).' + 1j*XNR(2:2:2*3*nnode).';
-    # VNR = np.zeros((3,nnode), dtype='complex')
-    # for ph in range(0,3):
-    #     for k1 in range(0,nnode):
-    #         VNR[ph,k1] = XNR[2*ph*nnode + 2*k1] + 1j*XNR[2*ph*nnode + 2*k1+1]
-    #         if np.abs(VNR[ph,k1].real) <= 1e-12:
-    #             VNR[ph,k1] = 0 + VNR[ph,k1].imag
-    #         if np.abs(VNR[ph,k1].imag) <= 1e-12:
-    #             VNR[ph,k1] = VNR[ph,k1].real + 0
-    # VNR[PH == 0] = 0
-    # XNR = XNR[2*3*nnode:]
-    # print('VNR')
-    # print(VNR)
+    #retrieve relevant parameters for formatting output
+    TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = \
+        relevant_openDSS_parameters(fn, time_delta)
+    t5 = time.time()
+    #remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
+    #VNR = XNR(1:2:2*3*nnode-1).' + 1j*XNR(2:2:2*3*nnode).';
+    VNR = np.zeros((3,nnode), dtype='complex')
+    for ph in range(0,3):
+        for k1 in range(0,nnode):
+            VNR[ph,k1] = XNR[2*ph*nnode + 2*k1] + 1j*XNR[2*ph*nnode + 2*k1+1]
+            if np.abs(VNR[ph,k1].real) <= 1e-12:
+                VNR[ph,k1] = 0 + VNR[ph,k1].imag
+            if np.abs(VNR[ph,k1].imag) <= 1e-12:
+                VNR[ph,k1] = VNR[ph,k1].real + 0
+    VNR[PH == 0] = 0
+    XNR = XNR[2*3*nnode:]
+    print('VNR')
+    print(VNR)
+    return VNR
     #
     # # INR = XNR(2*3*nnode+1:2:2*3*nnode+2*3*nline-1) + 1j*XNR(2*3*nnode+2:2:2*3*nnode+2*3*nline)
     # INR = np.zeros((3,nline), dtype='complex')
