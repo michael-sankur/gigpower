@@ -42,8 +42,9 @@ class Solution:
             # initialize a zeroed out array for each solution var
             self.Inode[node.name] = np.zeros(3, dtype='complex')
             self.sV[node.name] = np.zeros(3, dtype='complex')
-            # initialize voltage dependent load
-            self.s[node.name] = np.zeros(3, dtype='complex')
+            # initialize voltage dependent loads - CONSTANT LOADS
+            self.s[node.name] = np.ones(3)
+
 
         """ Set up currents for all lines """
         for line in network.get_lines():
