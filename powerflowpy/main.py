@@ -26,27 +26,27 @@ def solver_timer(solver_func):
         t1 = time.perf_counter()
         x = None
         for i in range(n):
-            x = solver_func(network, n)  # run once
+            x = solver_func(network, i)  # run once
         t2 = time.perf_counter()
         return t2 - t1
     return wrapper
 
 
 @solver_timer
-def time_dss(dss_file, n):
+def time_dss(dss_file, i):
     """wrap dss solver in a timer"""
     solve_with_dss(dss_file)
 
 
 @solver_timer
-def time_fbs(network, n):
+def time_fbs(network, i):
     """ wrap powerflowpy.fbs in a timer"""
     fbs(network, False)
 # set up command line arguments to this script
 @click.command( help='Compare running times between opendss and fbs. Please provide a full or relative path to a dss file.')
 @click.argument('dss_file')
 @click.option('--output', metavar='PATH', help='write output files to this directory')
-@click.option('--trials', default = '20', help = 'Specify max number of trials to run. Default is 20.')
+@click.option('--trials', default = '5', help = 'Specify max number of trials to run. Default is 20.')
 
 def main(dss_file: str, trials: int, output: str) -> None:
     """
@@ -60,17 +60,18 @@ def main(dss_file: str, trials: int, output: str) -> None:
     $ python3 powerflowpy/main.py 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss' --output ./powerflowpy/tests/06n3ph_rad_unbal
     """
     num_trials = int(trials)
-    # create a network objet for fbs to read
-    network = init_from_dss(dss_file)
+
     # initialize duration arrays, to avoid time lost to dynamic array resizing
     dss_durations = [-1] * num_trials
     fbs_durations = [-1] * num_trials
 
-    for n in range(0, num_trials):  # solve powerflow n...num_trials times with fbs
-        fbs_durations[n] = time_fbs(network, n+1)
     for n in range(0,num_trials): #solve powerflow n...num_trials times with opendss
         dss_durations[n] = time_dss( dss_file, n+1)
 
+    # create a network objet for fbs to read
+    network = init_from_dss(dss_file)
+    for n in range(0, num_trials):  # solve powerflow n...num_trials times with fbs
+        fbs_durations[n] = time_fbs(network, n+1)
     # change s to ms
     dss_durations = np.array([ 1000*s for s in dss_durations ])
     fbs_durations = np.array([ 1000*s for s in fbs_durations ])

@@ -27,22 +27,20 @@ def solve_with_dss(dss_file):
     originalSteps = dss.Solution.Number()
     dss.Solution.Number(1)
     # save original loads
-    orig_loads_data = dss.utils.loads_to_dataframe().transpose()
+    orig_loads_data = dss.utils.loads_to_dataframe()
+    orig_loads_data = orig_loads_data.transpose()
     print("Original Loads: ")
     print(orig_loads_data)
 
 
     for stepNumber in range(originalSteps): # simulate timesteps
-        # print this iteration's loads
-        print(f"--step {stepNumber}")
-        print(f"dss.CktElement.Powers: {dss.CktElement.Powers()}")
 
         # set loads
         for load_name in dss.Loads.AllNames():
             load_data = orig_loads_data[load_name]
-            dss.Loads.Name = load_name
-            dss.Loads.kW =load_data['kW']
-            dss.Loads.kvar = load_data['kvar']
+            dss.Loads.Name(load_name)
+            dss.Loads.kW( load_data['kW'] )
+            dss.Loads.kvar( load_data['kvar'] )
 
         #run solve for this timestep
         dss.Solution.SolveSnap()
