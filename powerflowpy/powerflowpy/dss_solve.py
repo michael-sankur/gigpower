@@ -29,9 +29,9 @@ def solve_with_dss(dss_file):
     # save original loads
     orig_loads_data = dss.utils.loads_to_dataframe()
     orig_loads_data = orig_loads_data.transpose()
-    print("Original Loads: ")
-    print(orig_loads_data)
-
+    # print original loads
+    print("OpenDSS Loads after solving, from dss.CktElement.Powers():")
+    print(dss.CktElement.Powers())
 
     for stepNumber in range(originalSteps): # simulate timesteps
 
@@ -99,6 +99,6 @@ def solve_with_dss(dss_file):
 
         dssStx = pd.DataFrame(STXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
         dssSrx = pd.DataFrame(SRXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
-        print("OpenDSS Loads, from dss.CktElement.Powers():")
+        print("OpenDSS Loads after solving, from dss.CktElement.Powers():")
         print(dss.CktElement.Powers())
         return dssV, dssI, dssStx, dssSrx

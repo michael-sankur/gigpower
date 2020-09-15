@@ -46,7 +46,7 @@ def time_fbs(network, i):
 @click.command( help='Compare running times between opendss and fbs. Please provide a full or relative path to a dss file.')
 @click.argument('dss_file')
 @click.option('--output', metavar='PATH', help='write output files to this directory')
-@click.option('--trials', default = '5', help = 'Specify max number of trials to run. Default is 20.')
+@click.option('--trials', default = '5', help = 'Specify max number of trials to run. Default is 5.')
 
 def main(dss_file: str, trials: int, output: str) -> None:
     """
