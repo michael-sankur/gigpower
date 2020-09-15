@@ -20,20 +20,22 @@ import re
 import sys
 import pytest
 
-dss_files = ['powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss', 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss', 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
+#dss_files = ['powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss', 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss', 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
+dss_files = ['powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
 
 def test_all():
     tolerance = .01
-    for f in dss_files:
-        print(f'\n\nTesting File: {f}')
-        compare_fbs_sol(f, tolerance)
+    for file in dss_files:
+        print(f'\n\nTesting File: {file}')
+        compare_fbs_sol(file, tolerance)
 
 # construct the python FBS solution
 def compare_fbs_sol(dss_file, tolerance):
     #TODO: Figure out how to get Inode (iNR) and sV (sNR) at each node from dss and perform a compare
-    dss_sol = get_dss_sol(dss_file)
-    fbs_sol= fbs(dss_file)
     network = init_from_dss(dss_file)
+    fbs_sol = fbs(network, False)
+    dss_sol = solve_with_dss(dss_file)
+
     fbsV, fbsI, fbsStx, fbsSrx = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), fbs_sol.Srx_df()
     dssV, dssI, dssStx, dssSrx = dss_sol
     print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
@@ -67,7 +69,3 @@ def compare_dfs(fbs_df : pd.DataFrame, dss_df : pd.DataFrame) -> None:
     print("DSS results")
     print(dss_df)
     return compare.abs().max()
-
-def get_dss_sol(dss_file):
-    """Run opendss's Solution.Solve on dss_file and save to a dictionary"""
-    return solve_with_dss(dss_file)
