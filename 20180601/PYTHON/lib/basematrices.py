@@ -27,13 +27,9 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
                 XNR[2*ph*nnode + 2*k1] = V0[ph,k1].real
                 XNR[2*ph*nnode + 2*k1+1] = V0[ph,k1].imag
 
-    # |V|_{A02} = 1.05 * |V|_{A01}
-    # for ph in range(0,3):
-    #     XNR[2*ph*nnode + 2*] = XNR[2*ph*nnode + 2]
-
     # intialize line current portion of XNR
     if I0 == None or len(I0) == 0:
-        for k1 in range(0,nnode):
+        for k1 in range(0,nline):
             XNR[(2*3*nnode):] = 0.0*np.ones((6*nline,1))
 
     # If initial I is given
@@ -44,7 +40,7 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1+1] = I0[ph,k1].imag
 
     # generate static matrices
-    XNR, g_SB, b_SB, G_KVL, b_KVL, H_reg = compute_vecmat(XNR, fn, Vslack)
+    XNR, g_SB, b_SB, G_KVL, b_KVL, H_reg, G_reg = compute_vecmat(XNR, fn, Vslack)
     # generate non-static matrices
     H, g, b = compute_KCL_matrices(fn, -1, 0, 0)
-    return XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg
+    return XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg
