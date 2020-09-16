@@ -72,8 +72,7 @@ def compute_vecmat(fn, Vslack):
         YP = np.reshape(YP,(int(YP.shape[0]**(1/2)),int(YP.shape[0]**(1/2))))
         YP11 = YP[0:int(YP.shape[0]/2),0:int(YP.shape[0]/2)].flatten()
         G = YP11.real
-        Hb = YP11.imag #do i need to do any unit conversions
-
+        Hb = YP11.imag
 
         line_phases = identify_line_phases(dss.Lines.AllNames()[k2])
         if len(xmat) == 9:
@@ -111,7 +110,6 @@ def compute_vecmat(fn, Vslack):
                 gmat = np.vstack([np.zeros((1,2)),G[:,:]])
                 gmat2 = np.hstack((np.zeros((3,1)), gmat[:, :]))
                 G_matrix[k2, :] = gmat2.flatten()
-
                 hbmat = np.vstack([np.zeros((1,2)),Hb[:,:]])
                 hbmat2 = np.hstack((np.zeros((3,1)), hbmat[:, :]))
                 Hb_matrix[k2, :] = hbmat2.flatten()
@@ -147,9 +145,9 @@ def compute_vecmat(fn, Vslack):
                 Hb_matrix[k2, :] = hbmat2.flatten()
 
         X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length()# * 0.3048 #in feet for IEEE13
-        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length()# * 0.3048
-        Hb_matrix[k2, :] = Hb_matrix[k2, :] * dss.Lines.Length()
-        G_matrix[k2, :] = G_matrix[k2, :] * dss.Lines.Length()
+        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() #* 0.3048
+        Hb_matrix[k2, :] = Hb_matrix[k2, :] * dss.Lines.Length() #* 0.3048
+        G_matrix[k2, :] = G_matrix[k2, :] * dss.Lines.Length() #* 0.3048
 
     R_matrix = R_matrix/Zbase#/1609.34 #in miles for IEEE 13
     X_matrix = X_matrix/Zbase#/1609.34 #

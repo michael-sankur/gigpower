@@ -29,6 +29,6 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
     # generate static matrices
     g_SB, b_SB, R_matrix, X_matrix, G_matrix, Hb_matrix = compute_vecmat(fn, Vslack)
     # generate non-static matrices
-    H, g, b = compute_KCL_matrices(fn, -1, 0, 0, R_matrix, X_matrix, G_matrix, Hb_matrix)
+    H, g, b = compute_KCL_matrices(fn, 0, 0, 0, R_matrix, X_matrix, G_matrix, Hb_matrix)
 
     return XNR, g_SB, b_SB, H, g, b

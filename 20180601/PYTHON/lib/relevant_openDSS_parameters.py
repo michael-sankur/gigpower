@@ -68,8 +68,8 @@ def relevant_openDSS_parameters(fn, t):
                 load_phases[ph - 1] = 1
                 aPQ[ph, knode] = 1
                 aZ[ph, knode] = 0
-                ppu[ph, knode] += dss.Loads.kW()* 1e3 * var / Sbase #check these lines later
-                qpu[ph, knode] += dss.Loads.kvar() * 1e3 * var / Sbase
+                ppu[ph, knode] = dss.Loads.kW()* 1e3 * var / Sbase #check these lines later
+                qpu[ph, knode] = dss.Loads.kvar() * 1e3 * var / Sbase
         if sum(load_phases) > 1: #if it is a multiphase load
             for ph in range(0,3):
                 ppu[ph, knode]/= sum(load_phases)
