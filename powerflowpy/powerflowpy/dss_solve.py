@@ -30,7 +30,7 @@ def solve_with_dss(dss_file):
     orig_loads_data = dss.utils.loads_to_dataframe()
     orig_loads_data = orig_loads_data.transpose()
     # print original loads
-    print("OpenDSS Loads after solving, from dss.CktElement.Powers():")
+    print("OpenDSS Loads before solving, from dss.CktElement.Powers():")
     print(dss.CktElement.Powers())
 
     for stepNumber in range(originalSteps): # simulate timesteps
