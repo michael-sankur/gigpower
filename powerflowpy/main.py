@@ -9,7 +9,8 @@ from pathlib import Path
 import powerflowpy
 from powerflowpy.fbs import *
 from powerflowpy.utils import init_from_dss
-from powerflowpy.dss_solve import solve_with_dss
+from powerflowpy.dss_solve import solve_with_dss_constant_loads as solve_with_dss
+# from powerflowpy.dss_solve import solve_with_dss
 import opendssdirect as dss
 import time
 import functools
