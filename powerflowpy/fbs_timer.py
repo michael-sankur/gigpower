@@ -1,4 +1,4 @@
-from powerflowpy.fbs import *
+from powerflowpy.fbs_detailed_timing import *
 import numpy as np
 
 dss_file = 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss'

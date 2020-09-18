@@ -1,4 +1,4 @@
-from powerflowpy.dss_solve import *
+from powerflowpy.dss_solve_detailed_timing import *
 import numpy as np
 import csv
 
