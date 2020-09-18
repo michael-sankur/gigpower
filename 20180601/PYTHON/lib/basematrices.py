@@ -16,7 +16,6 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
     if V0 == None or len(V0) == 0:
         for ph in range(0,3):
             for k1 in range(0,nnode):
-
                 XNR[2*ph*nnode + 2*k1] = Vslack[ph].real
                 XNR[2*ph*nnode + 2*k1+1] = Vslack[ph].imag
 

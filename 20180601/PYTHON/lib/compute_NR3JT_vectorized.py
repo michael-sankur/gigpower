@@ -2,15 +2,8 @@ import numpy as np
 def compute_NR3JT_vectorized(X, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg):
     JSUBV = g_SB
     JKVL = G_KVL
-    # JKVL = np.zeros((2*3*nline, 2*3*(nnode+nline)))
-    # for i in range(2*3*nline):
-    #     r = (2 *  X.T @ H_reg[i, :, :]) \
-    #     + G_KVL[i, :]
-    #     JKVL[i,:] = r
 
     JKCL = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline)))
-     #np.zeros((2*3*(nnode-1),2*3*(nnode + nline)))
-
     for i in range(2*3*(nnode-1)):
         r = (2 * (X.T @ H[i, :, :])) \
         + (g[i, 0, :])
@@ -18,7 +11,7 @@ def compute_NR3JT_vectorized(X, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg):
 
     JVR = np.zeros((6, 2*3*(nnode+nline)))
     for i in range(6):
-        r = (2* (X.T @ H_reg[i, :, :])) 
+        r = (2* (X.T @ H_reg[i, :, :]))
         JVR[i, :] = r
 
     JVR2 = G_reg

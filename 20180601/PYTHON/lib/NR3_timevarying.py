@@ -20,10 +20,10 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     FT = 1e99
     itercount = 0
     # adjust KCL based on capacitance, DER, and time-varying load
-    #t2 = time.time()
+
     if der != 0 or capacitance != 0 or time_delta != -1:
         H, b = change_KCL_matrices(fn, H, g, b, time_delta, der, capacitance)
-    #t3 = time.time()
+
     # solve power-flow
     while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
         print("Iteration number %f" % (itercount))
@@ -33,11 +33,11 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
         if JT.shape[0] >= JT.shape[1]:
             XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
         itercount+=1
-    #t4 = time.time()
+
     #retrieve relevant parameters for formatting output
     TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(fn, time_delta)
-    t5 = time.time()
+
     #remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
     #VNR = XNR(1:2:2*3*nnode-1).' + 1j*XNR(2:2:2*3*nnode).';
     VNR = np.zeros((3,nnode), dtype='complex')
@@ -116,13 +116,4 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     print('sNR')
     print(sNR)
 
-
-    t6 = time.time()
-    # print("\n")
-    # print('change kcl based on time vaying load', t3-t2)
-    # print('residual calculations/NR3', t4-t3)
-    # print('opendss parameters retrival', t5 - t4)
-    # print('filling output',t6 - t5)
-    # print("\n\n\n")
     return VNR, INR, STXNR, SRXNR, iNR, sNR, itercount
-    return

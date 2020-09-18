@@ -146,22 +146,7 @@ def compute_vecmat(XNR, fn, Vslack):
                 b1, b2 = dss.CktElement.BusNames() #the buses on a line should have the same phase
                 bus1_phases = identify_bus_phases(b1) #identifies which phase is associated with the bus (which is the same as the line)
 
-                #real part of KVL residual
-                #assigning the re voltage coefficients
-
                 if bus1_phases[ph] == 1:
-                    # if line == 1: #voltage-regulator at line_a01_a02
-                    #     G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] = 0 #A_m (KVL term), a01 (bus)
-                    #     G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] = 0 #A_n, a02
-                    #     G_KVL[2*ph*nline + 2*line+1][2*(nnode)*ph + 2*(bus1_idx) + 1] = 0 #B_m, a01
-                    #     G_KVL[2*ph*nline + 2*line+1][2*(nnode)*ph + 2*(bus2_idx) + 1] = 0 #B_n, a02
-                    #
-                    #     H_reg[2*ph*nline + 2*line][2*ph*nnode + 2*bus1_idx][2*ph*nnode + 2*bus1_idx] = -1.05**2# A for A01
-                    #     H_reg[2*ph*nline + 2*line + 1][2*ph*nnode + 2*bus1_idx + 1][2*ph*nnode + 2*bus1_idx + 1] = -1.05**2 # B for A01
-                    #     H_reg[2*ph*nline + 2*line][2*ph*nnode + 2*bus2_idx][2*ph*nnode + 2*bus2_idx] = 1 # A for A02
-                    #     H_reg[2*ph*nline + 2*line + 1][2*ph*nnode + 2*bus2_idx + 1][2*ph*nnode + 2*bus2_idx + 1] = 1  # B for A02
-                    #
-                    # else:
                     G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
                     G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n
                     G_KVL[2*ph*nline + 2*line+1][2*(nnode)*ph + 2*(bus1_idx) + 1] =1 #B_m
@@ -174,14 +159,12 @@ def compute_vecmat(XNR, fn, Vslack):
                     G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 4*nline + 2*line] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
                     G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 4*nline + 2*line + 1] = X_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
 
-
                     G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 2*line] = -X_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
                     G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 2*line + 1] = -R_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
                     G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 2*nline + 2*line] = -X_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
                     G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 2*nline + 2*line + 1] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
                     G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 4*nline + 2*line] = -X_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
                     G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 4*nline + 2*line + 1] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
-                    #same as above for imaginary part of KVL residual
                 else:
                     G_KVL[2*ph*nline + 2*line][2*(nnode)*3 + 2*ph*nline + 2*line] = 1 #C_mn
                     G_KVL[2*ph*nline + 2*line+1][2*(nnode)*3 + 2*ph*nline + 2*line+1] = 1 #D_mn
@@ -204,10 +187,10 @@ def compute_vecmat(XNR, fn, Vslack):
     bus2_idx = dss.Circuit.AllBusNames().index(re.findall(pattern, bus_out)[0])
 
     for ph in range(0,3):
-        G_reg[ph*2][2*nnode*ph + 2*3*line_in_idx] = -1.05 #A_in
-        G_reg[ph*2][2*nnode*ph + 2*3*line_out_idx] = 1 #A_out
-        G_reg[ph*2 + 1][2*nnode*ph + 2*3*line_in_idx + 1] = -1.05 #B_in
-        G_reg[ph*2 + 1][2*nnode*ph + 2*3*line_out_idx + 1] = 1 #B_out
+        G_reg[ph*2][2*nnode*ph + 2*bus1_idx] = -1.05 #A_in
+        G_reg[ph*2][2*nnode*ph + 2*bus2_idx] = 1 #A_out
+        G_reg[ph*2 + 1][2*nnode*ph + 2*bus1_idx + 1] = -1.05 #B_in
+        G_reg[ph*2 + 1][2*nnode*ph + 2*bus2_idx + 1] = 1 #B_out
 
     #conservation of power: V_bus1 (I_bus1,out)* -  V_bus2 (I_bus2,in)* = 0
     # A_1 * C_out + B_1 * D_out  - (A_2 * C_in + B_2 * D_in)
