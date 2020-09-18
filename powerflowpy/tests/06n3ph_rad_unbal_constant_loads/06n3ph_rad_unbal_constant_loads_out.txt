@@ -1,5 +1,5 @@
 ============================= test session starts ==============================
-platform darwin -- Python 3.8.5, pytest-6.0.1, py-1.9.0, pluggy-0.13.1
+platform darwin -- Python 3.7.4, pytest-6.0.1, py-1.9.0, pluggy-0.13.1
 rootdir: /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy
 collected 1 item
 
@@ -12,7 +12,7 @@ OpenDSS Loads after solving, from dss.CktElement.Powers():
 Opendss Iterations: 2	Opendss Convergence: 1e-12
 OpenDSS Loads after solving, from dss.CktElement.Powers():
 [50.021008902813136, 14.878382876656207, -49.99999999997782, -14.880791431880832]
-FBS iterations: 6	 FBS convergence:2.7876882116420945e-11	 FBS tolerance: 1e-09
+FBS iterations: 6	 FBS convergence:2.78768834885036e-11	 FBS tolerance: 1e-09
 
 COMPARE V
 Max |diff|:
@@ -287,4 +287,4 @@ tests/test_compare_opendss.py::test_all
     node_I = np.conj(np.divide(node_sV,node_V))
 
 -- Docs: https://docs.pytest.org/en/stable/warnings.html
-======================== 1 passed, 4 warnings in 1.06s =========================
+======================== 1 passed, 4 warnings in 6.86s =========================
