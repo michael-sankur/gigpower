@@ -187,9 +187,15 @@ def compute_vecmat(XNR, fn, Vslack):
     bus2_idx = dss.Circuit.AllBusNames().index(re.findall(pattern, bus_out)[0])
 
     for ph in range(0,3):
-        G_reg[ph*2][2*nnode*ph + 2*bus1_idx] = -1.05 #A_in
+        if ph == 0:
+            gamma = -.95
+        if ph == 1:
+            gamma = -1
+        if ph == 2:
+            gamma = -1.10
+        G_reg[ph*2][2*nnode*ph + 2*bus1_idx] = gamma #A_in
         G_reg[ph*2][2*nnode*ph + 2*bus2_idx] = 1 #A_out
-        G_reg[ph*2 + 1][2*nnode*ph + 2*bus1_idx + 1] = -1.05 #B_in
+        G_reg[ph*2 + 1][2*nnode*ph + 2*bus1_idx + 1] = gamma  #B_in
         G_reg[ph*2 + 1][2*nnode*ph + 2*bus2_idx + 1] = 1 #B_out
 
     #conservation of power: V_bus1 (I_bus1,out)* -  V_bus2 (I_bus2,in)* = 0
