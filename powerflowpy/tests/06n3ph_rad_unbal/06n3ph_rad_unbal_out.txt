@@ -4,10 +4,15 @@ rootdir: /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy
 collected 1 item
 
 powerflowpy/tests/test_compare_opendss.py 
-Opendss Iterations: 7	Opendss Convergence: 1e-12
-OpenDSS Loads, from dss.CktElement.Powers():
-[50.05165164364492, 14.721408302812728, -49.99999999997433, -14.728655167593352]
-FBS iterations: 9	 FBS convergence:1.6884448770579196e-13	 FBS tolerance: 9.999999999999998e-13
+
+Testing File: powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss
+OpenDSS Loads before solving, from dss.CktElement.Powers():
+[49.999463880451074, 24.99983366814471, 0.0, 0.0]
+
+Opendss Iterations: 2	Opendss Convergence: 1e-12
+OpenDSS Loads after solving, from dss.CktElement.Powers():
+[50.05165164366915, 14.721408302828596, -49.999999999996284, -14.728655167610428]
+FBS iterations: 7	 FBS convergence:1.2107197065235484e-10	 FBS tolerance: 1e-09
 
 COMPARE V
 Max |diff|:
@@ -25,7 +30,7 @@ a05        0.000604+0.000810j  0.000508+0.000046j -0.000000+0.000000j
 a06        0.000000+0.000000j  0.000668+0.000060j -0.000000+0.000000j
 FBS results
                             A                   B                   C
-sourcebus  1.000000+0.000000j -0.500000-0.866025j -0.500000+0.866025j
+sourcebus  1.000000-0.000000j -0.500000-0.866025j -0.500000+0.866025j
 a01        0.998626+0.002759j -0.498256-0.868238j -0.502898+0.863349j
 a02        0.995191+0.009657j -0.493898-0.873770j -0.510143+0.856658j
 a03        0.988672+0.019218j -0.489028-0.883026j -0.521172+0.845743j
@@ -109,11 +114,11 @@ B.(fbs - dss)    0.007364
 C.(fbs - dss)    0.000227
 dtype: float64
                            A.(fbs - dss)  ...               C.(fbs - dss)
-line_sub_a01 -1.279135e-04-5.375332e-04j  ... -6.472204e-05-5.543927e-07j
+line_sub_a01 -1.279135e-04-5.375332e-04j  ... -6.472204e-05-5.543930e-07j
 line_a01_a02 -8.573214e-05-5.053516e-04j  ... -3.295798e-05-1.040141e-04j
-line_a02_a03 -2.022761e-05-4.264452e-04j  ...  7.420490e-06-2.264730e-04j
-line_a03_a04  1.802725e-14+4.343748e-15j  ... -5.082046e-14-6.626644e-15j
-line_a03_a05  3.674838e-14+1.314920e-14j  ...  0.000000e+00+0.000000e+00j
+line_a02_a03 -2.022762e-05-4.264452e-04j  ...  7.420490e-06-2.264730e-04j
+line_a03_a04 -1.956768e-15+2.851885e-15j  ...  1.623701e-15-4.007211e-15j
+line_a03_a05  1.415534e-15+2.331468e-15j  ...  0.000000e+00+0.000000e+00j
 line_a05_a06  0.000000e+00+0.000000e+00j  ...  0.000000e+00+0.000000e+00j
 
 [6 rows x 3 columns]
@@ -136,13 +141,13 @@ line_a05_a06  0.000000+0.000000j  0.050000+0.014729j  0.000000+0.000000j
 .
 
 =============================== warnings summary ===============================
-tests/test_compare_opendss.py::test_fbs_sol
+tests/test_compare_opendss.py::test_all
   /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy/powerflowpy/solution.py:134: RuntimeWarning: invalid value encountered in true_divide
     new_line_I = np.conj(np.divide(node_s, node_V)) # TODO: consider dividing manually only by phases on the node
 
-tests/test_compare_opendss.py::test_fbs_sol
-  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy/powerflowpy/solution.py:179: RuntimeWarning: invalid value encountered in true_divide
+tests/test_compare_opendss.py::test_all
+  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy/powerflowpy/solution.py:181: RuntimeWarning: invalid value encountered in true_divide
     node_I = np.conj(np.divide(node_sV,node_V))
 
 -- Docs: https://docs.pytest.org/en/stable/warnings.html
-======================== 1 passed, 2 warnings in 1.30s =========================
+======================== 1 passed, 2 warnings in 0.62s =========================
