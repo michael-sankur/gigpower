@@ -169,7 +169,7 @@ def network_mapper_function(fn, t):
         lines.RXnode[line] = re.findall(pattern, bus2)[0]
         lines.TXnum[line] = busIdx[lines.TXnode[line]]
         lines.RXnum[line] = busIdx[lines.RXnode[line]]
-        lines.length[line] = dss.Lines.Length() * 0.3048
+        lines.length[line] = dss.Lines.Length() #* 0.3048
         lines.config[line] = dss.Lines.LineCode()
 
     line_phase_dict = {}
@@ -319,7 +319,7 @@ def network_mapper_function(fn, t):
         tempFZpupl = rtemp + 1j*xtemp
 
         # 3x3 impedance per unit length matrix for current line config [pu/m]
-        configs.FZpupl[:,3*k1:3*(k1+1)] = tempFZpupl/Zbase/1609.34
+        configs.FZpupl[:,3*k1:3*(k1+1)] = tempFZpupl/Zbase#/1609.34
     configs.conflist = lines.config
 
     if printflag == 1:
