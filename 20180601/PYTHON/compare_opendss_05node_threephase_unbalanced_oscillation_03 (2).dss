@@ -1,5 +1,4 @@
 Clear
-new circuit.mycktname
 
 ! Note that this is a 3-wire delta system. 
 ! Node voltages in OpenDSS are normally line-ground and may give strange-looking results
@@ -53,7 +52,7 @@ New linecode.A05_A06 nphases=1 BaseFreq=60
 ! ~ cmatrix = [ 65.0 | 0 0.0 | 0 0 0.0 ]
 
 ! Lines
-New Line.line_sub_A01 Phases=3 Bus1=sourcebus.1.2.3 Bus2=A01.1.2.3 LineCode=sub_A01 Length=1.00 
+New Line.line_sub_A01 Phases=3 Bus1=sourcebus.1.2.3 Bus2=A01.1.2.3 LineCode=sub_A01 Length=1.00
 New Line.line_A01_A02 Phases=3 Bus1=A01.1.2.3 Bus2=A02.1.2.3 LineCode=A01_A02 Length=1.00
 New Line.line_A02_A03 Phases=3 Bus1=A02.1.2.3 Bus2=A03.1.2.3 LineCode=A02_A03 Length=1.00
 New Line.line_A03_A04 Phases=2 Bus1=A03.1.3 Bus2=A04.1.3 LineCode=A03_A04 Length=1.00
@@ -61,25 +60,25 @@ New Line.line_A03_A05 Phases=2 Bus1=A03.1.2 Bus2=A05.1.2 LineCode=A03_A05 Length
 New Line.line_A05_A06 Phases=1 Bus1=A05.2 Bus2=A06.2 LineCode=A05_A06 Length=1.00
 
 ! spot loads
-New Load.load_A02_a_01 Bus1=A02.1 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0  
-New Load.load_A02_b_01 Bus1=A02.2 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0  
-New Load.load_A02_c_01 Bus1=A02.3 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0  
-! New Load.SA02b Bus1=A02.2 Phases=1 Conn=Wye kV=2.77128 kW=140.0 kVAR=70.0  
-! New Load.SA02c Bus1=A02.3 Phases=1 Conn=Wye kV=2.77128 kW=140.0 kVAR=70.0  
+New Load.load_A02_a_01 Bus1=A02.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A02_b_01 Bus1=A02.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A02_c_01 Bus1=A02.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+! New Load.SA02b Bus1=A02.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=140.0 kVAR=70.0
+! New Load.SA02c Bus1=A02.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=140.0 kVAR=70.0
 
-New Load.load_A03_a_01 Bus1=A03.1 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0  
-New Load.load_A03_b_01 Bus1=A03.2 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0  
-New Load.load_A03_c_01 Bus1=A03.3 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0  
+New Load.load_A03_a_01 Bus1=A03.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A03_b_01 Bus1=A03.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A03_c_01 Bus1=A03.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
 ! New Load.SA03b Bus1=A03.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=300.0 kVAR=100.0
 ! New Load.SA03c Bus1=A03.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=300.0 kVAR=100.0
 
-New Load.load_A04_a_01 Bus1=A04.1 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0 
-New Load.load_A04_c_01 Bus1=A04.3 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0  
+New Load.load_A04_a_01 Bus1=A04.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A04_c_01 Bus1=A04.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
 ! New Load.SA04b Bus1=A04.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=300.0 kVAR=100.0
 ! New Load.SA04c Bus1=A04.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=300.0 kVAR=100.0
 
-New Load.load_A05_a_01 Bus1=A05.1 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0  
-New Load.load_A05_b_01 Bus1=A05.2 Phases=1 Conn=Wye kV=2.77128 kW=100.0 kVAR=25.0  
+New Load.load_A05_a_01 Bus1=A05.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
+New Load.load_A05_b_01 Bus1=A05.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=100.0 kVAR=25.0
 ! New Load.SA05b Bus1=A05.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=300.0 kVAR=100.0
 ! New Load.SA05c Bus1=A05.3 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=300.0 kVAR=100.0
 

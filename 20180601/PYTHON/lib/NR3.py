@@ -150,14 +150,8 @@ def NR3_function(network,slacknode,Vslack,V0,I0,tol=1e-9,maxiter=100):
 
         if JT.shape[0] >= JT.shape[1]:
             #XNR = XNR - inv(JT.'*JT)*JT.'*FT;
-            print('egienvalues')
-            print(np.max(np.abs(np.linalg.eigvals(JT))))
-            print(np.min(np.abs(np.linalg.eigvals(JT))))
-            print(np.max(np.abs(np.linalg.eigvals(JT.T@JT))))#use this compute max min
-            print(np.min(np.abs(np.linalg.eigvals(JT.T@JT))))
 
-            #XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
-            XNR = XNR - np.linalg.inv(JT)@FT#@JT.T@FT
+            XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
 
         #print(itercount)
         itercount+=1
