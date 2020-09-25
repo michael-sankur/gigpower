@@ -63,7 +63,6 @@ class LinDist3Flow:
                     XNR[(2*3*nnode) + 2*ph*nline + 2*k1] = I0[ph,k1].real
                     XNR[(2*3*nnode) + 2*ph*nline + 2*k1+1] = I0[ph,k1].imag
 
-        # getting additional info from openDSS
         self.max_iter = maxiter
 
         # additional info from openDSS
@@ -91,8 +90,6 @@ class LinDist3Flow:
         self.wpu = wpu # constant
         self.vvcpu = vvcpu # constant
 
-        self._is_init = True
-
         # in_lines, out_lines
         self.in_lines = []
         self.out_lines = []
@@ -105,11 +102,8 @@ class LinDist3Flow:
 
     def solve(self):
 
-        if self._is_init:
-            self._is_init = False
-        else:
-            self.H, self.g, self.b = self._calculate_Hgb()
-            self.spu = self.bus_load[:, :, 0] + 1j * self.bus_load[:, :, 1] # constant
+        self.H, self.g, self.b = self._calculate_Hgb()
+        self.spu = self.bus_load[:, :, 0] + 1j * self.bus_load[:, :, 1] # constant
         # TODO: update XNR, H, g, b after solve()
         iter_count = 0 #count # of iterations
 
@@ -196,7 +190,7 @@ class LinDist3Flow:
     def set_load_kw(self, load, kw):
         load_idx = self.all_load_names.index(load)
         # TODO: refactor this
-        bus = load[:3]
+        bus = load.split('_')[1]
         bus_idx = self.all_bus_names.index(bus)
         load_ph = self.load_ph_arr[load_idx]
         for i, ph in enumerate(load_ph):
@@ -206,7 +200,7 @@ class LinDist3Flow:
     def set_load_kvar(self, load, kvar):
         load_idx = self.all_load_names.index(load)
         # TODO: refactor this
-        bus = load[:3]
+        bus = load.split('_')[1]
         bus_idx = self.all_bus_names.index(bus)
         load_ph = self.load_ph_arr[load_idx]
         for i, ph in enumerate(load_ph):
@@ -349,8 +343,9 @@ class LinDist3Flow:
         bus_load = np.zeros((3, self.nnode, 2))
         load_ph_arr = np.zeros((self.nload, 3))
 
+        load_ph_arr_origin = np.zeros((self.nnode, max(load_order_list.values()), 3))
         bus_load_divide = np.zeros((3, self.nnode, 2))
-        
+
         for load in range(self.nload):
             dss.Loads.Name(self.all_load_names[load])
             pattern =  r"(\w+)\."
@@ -364,11 +359,13 @@ class LinDist3Flow:
                     load_ph_arr[load, i - 1] = 1
             for j in range(max(load_order_list.values())):
                 idxbs = dss.Circuit.AllBusNames().index(load_bus[0])
-                for i in range(len(load_ph_arr_temp)):
-                    if load_ph_arr_temp[i] == 1:
-                        bus_load[i, idxbs, 0] += dss.Loads.kW() *1e3*1 / self.Sbase / sum(load_ph_arr_temp)
-                        bus_load[i, idxbs, 1] += dss.Loads.kvar()*1e3*1 / self.Sbase  / sum(load_ph_arr_temp)
-                        bus_load_divide[i, idxbs, 0] = 1e3 / self.Sbase / sum(load_ph_arr_temp)
-                        bus_load_divide[i, idxbs, 1] = 1e3 / self.Sbase  / sum(load_ph_arr_temp)
-                break
+                if np.all(load_ph_arr_origin[idxbs, j,:] == [0, 0, 0]):
+                    load_ph_arr_origin[idxbs, j, :] = load_ph_arr_temp
+                    for i in range(len(load_ph_arr_temp)):
+                        if load_ph_arr_temp[i] == 1:
+                            bus_load[i, idxbs, 0] += dss.Loads.kW() *1e3*1 / self.Sbase / sum(load_ph_arr_temp)
+                            bus_load[i, idxbs, 1] += dss.Loads.kvar()*1e3*1 / self.Sbase  / sum(load_ph_arr_temp)
+                            bus_load_divide[i, idxbs, 0] = 1e3 / self.Sbase / sum(load_ph_arr_temp)
+                            bus_load_divide[i, idxbs, 1] = 1e3 / self.Sbase  / sum(load_ph_arr_temp)
+                    break
         return bus_load, bus_load_divide, load_ph_arr

@@ -46,7 +46,6 @@ def compute_vecmat(XNR, fn, Vslack, bus_load):
     # X = [V^a V^b V^c I^a I^b I^c]
 
     dss.run_command('Redirect ' + fn)
-    dss.Solution.Solve()
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
     Vbase = dss.Bus.kVBase() * 1000
@@ -83,10 +82,9 @@ def compute_vecmat(XNR, fn, Vslack, bus_load):
         return dictionary
 
     def get_bus_idx(bus):
-        k = -1
-        for n in range(len(dss.Circuit.AllBusNames())): #iterates over all the buses to see which index corresponds to bus
-            if dss.Circuit.AllBusNames()[n] in bus:
-                k = n
+        pattern =  r"(\w+)\."
+        bus_ph_free = re.findall(pattern, bus)
+        k =  dss.Circuit.AllBusNames().index(bus_ph_free[0])
         return k
 
     def identify_bus_phases(bus): #figures out which phases correspond to the bus
@@ -147,45 +145,19 @@ def compute_vecmat(XNR, fn, Vslack, bus_load):
                 k[i - 1] = 1
         return k
 
-    # Residuals for slack node voltage
-    A_m = np.array([])
-    B_m = np.array([])
-
-    C_mn = np.array([])
-    D_mn = np.array([])
-
     R_matrix = np.zeros((nline,9))
     X_matrix = np.zeros((nline,9))
 
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
-    kV_base = dss.Bus.kVBase() * 1000
-
     bus_phase_dict = bus_phases()
-
-    for k1 in range(len(dss.Circuit.AllBusNames())):
-        dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k1])
-        phases = bus_phase_dict[dss.Circuit.AllBusNames()[k1]]
-        volts = dss.Bus.PuVoltage() #get bus1's puVoltage
-        a_temp = np.zeros(3)
-        b_temp = np.zeros(3)
-
-        count = 0
-        for i in range(0, 3):
-            if phases[i] == 1: #need to properly assign voltages based on what phases exist
-                a_temp[i] = volts[count]
-                b_temp[i] = volts[count+1]
-                count = count + 2
-
-        A_m = np.append(A_m, a_temp) #split into re/im parts
-        B_m = np.append(B_m, b_temp)
 
     for k2 in range(len(dss.Lines.AllNames())):
         dss.Lines.Name(dss.Lines.AllNames()[k2]) #set the line
-
         linecode = dss.Lines.LineCode() #get the linecode
         dss.LineCodes.Name(linecode) #set the linecode
         xmat = dss.LineCodes.Xmatrix() #get the xmat
         rmat = dss.LineCodes.Rmatrix() #get the rmat
+
         line_phases = identify_line_phases(dss.Lines.AllNames()[k2])
         if len(xmat) == 9:
             for i in range(len(xmat)):
@@ -223,11 +195,12 @@ def compute_vecmat(XNR, fn, Vslack, bus_load):
                 r_temp2 = np.hstack((r_temp[:, :], np.zeros((3,1))))
                 R_matrix[k2, :] = r_temp2.flatten()
 
-        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() * 0.3048 #in feet for IEEE13
-        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() * 0.3048
+        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() #in feet for IEEE13
+        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length()
 
     X = np.reshape(XNR, (2*3*(nnode+nline), 1))
-
+    R_matrix = R_matrix/Zbase
+    X_matrix = X_matrix/Zbase
     #------------ slack bus ------------------
 
 
@@ -248,9 +221,6 @@ def compute_vecmat(XNR, fn, Vslack, bus_load):
 
     #--------------------------------------------------
     # Residuals for KVL across line (m,n)
-
-    R_matrix = R_matrix/Zbase/1609.34
-    X_matrix = X_matrix/Zbase/1609.34
 
     G_KVL = np.array([])
 
@@ -311,7 +281,7 @@ def compute_vecmat(XNR, fn, Vslack, bus_load):
     beta_S = 1
     beta_I = 0.0
     beta_Z = 0.0
-    bp =  bus_phases()
+    bp = bus_phases()
     H = np.zeros((2*3*(nnode-1), 2 * 3 * (nnode + nline), 2 * 3* (nnode + nline)))
     g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline)))
     b = np.zeros((2*3*(nnode-1), 1, 1))
@@ -402,7 +372,7 @@ def compute_vecmat(XNR, fn, Vslack, bus_load):
                 else:
                     load_val = bus_load[ph, idxbs, 1]
                 #linear terms
-                g_temp = np.zeros(len(X)) #preallocate g
+                g_temp = np.zeros(2*3*(nnode+nline)) #preallocate g
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
 
                 if available_phases[ph] == 0: #if phase does not exist
