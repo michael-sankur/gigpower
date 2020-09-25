@@ -34,13 +34,13 @@ sNR01 = np.zeros((len(times), 3, nnode), dtype = "complex")
 
 LinDist3Flow = LinDist3Flow(dss_path, slackidx, Vslack)
 start_time = time.time()
-for i in range(len(times)):
+for i in range(len(times)-1):
 
     VNR, INR, iNR, sNR, STXNR, SRXNR = LinDist3Flow.solve()
     # Time-varying load
     for k,v in enumerate(all_load_names):
-        LinDist3Flow.set_load_kw(v, kW_list[k]* (1 + 0.1*np.sin(2*np.pi*0.01*times[i])))
-        LinDist3Flow.set_load_kvar(v, kvar_list[k] * (1 + 0.1*np.sin(2*np.pi*0.01*times[i])))
+        LinDist3Flow.set_load_kw(v, kW_list[k]* (1 + 0.1*np.sin(2*np.pi*0.01*times[i+1])))
+        LinDist3Flow.set_load_kvar(v, kvar_list[k] * (1 + 0.1*np.sin(2*np.pi*0.01*times[i+1])))
     #VNR01[i, :, :] = np.reshape(VNR, (3, nnode))
     #INR01[i, :, :] = np.reshape(INR, (3, nline))
     #STXNR01[i, :, :] = np.reshape(STXNR, (3, nline))
