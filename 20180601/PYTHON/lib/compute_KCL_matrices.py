@@ -124,12 +124,24 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                     line_idx = get_line_idx(in_lines[i])
                     if available_phases[ph] == 1:
                         if cplx == 0: #real residual
-                            # if k2 == 2: #bus 2 has two inlines, VR
-                            #     line_idx = 1 #so whichever one u got, set it to the inline at idx 1
-                            if k2 == 1: #transformer
-                                line_idx = 0
-                            elif k2 == 7:
-                                line_idx = 7
+                            # if k2 == 2: #VR
+                            #     line_idx = 1 
+                            # if k2 == 1: #transformer if src/A01 exists or 6/7 DNE
+                            #     line_idx = 0
+                            # elif k2 == 7: #transformer if 6/7 and src/A01 exists
+                            #     line_idx = 7 
+                            # if k2 == 7: #transformer where src/A01 DNE
+                            #    line_idx = 6
+                            # if k2 == 1: #transformer if src/A01 exists or 6/7 DNE
+                            #      line_idx = 0
+
+
+                            if k2 == 2: 
+                                line_idx = 1
+                            # elif k2 == 2:
+                            #     line_idx = 2
+                            # elif k2 == 8:
+                            #     line_idx = 9
                             #A_m and C_lm
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
                             H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = 1/2
@@ -137,12 +149,20 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                             H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = 1/2
                             H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 1/2
                         if cplx == 1: #imaginary residual
-                            if k2 == 1:
-                                line_idx = 0
-                            elif k2 == 7:
-                                line_idx = 7
-                            # elif k2 == 2: #bus 2 has two inlines
+                            # if k2 == 1:
+                            #     line_idx = 0
+                            # elif k2 == 7: #transformer if 6/7 and src/A01 exists
+                            #     line_idx = 7
+                            # if k2 == 7:
+                            #     line_idx = 6
+                            # if k2 == 2: #VR bus 2 has two inlines
                             #     line_idx = 1 #so whichever one u got, set it to inline at idx 1
+                            if k2 == 2: 
+                                line_idx = 1
+                            # elif k2 == 2:
+                            #     line_idx = 2
+                            # elif k2 == 8:
+                            #     line_idx = 9
                             # #A_m, D_lm
                             H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = -1/2
                             H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = -1/2
@@ -154,12 +174,20 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                     line_idx = get_line_idx(out_lines[j])
                     if available_phases[ph] == 1:
                         if cplx == 0: #real residual
-                            # if k2 == 1: #bus 1 has two outlines, voltage regulator
+                            # if k2 == 1: #VR, bus 1 has two outlines
                             #     line_idx = 2 #so whichever outline u're @ set it to the outline which is at idx 2, same for below.
-                            if k2 == 0: #transformer
-                                line_idx = 1
-                            elif k2 == 6:
-                                line_idx = 8
+                            # if k2 == 0: #transformer if src/A01 exists or 6/7 DNE
+                            #     line_idx = 1
+                            # elif k2 == 3: #transformer, if src/a01 and 6/7 exists
+                            #   line_idx = 8
+                            # if k2 == 3: #transformer if src/A01 DNE
+                            #     line_idx = 7
+                            if k2 == 1:
+                                line_idx = 2
+                            # elif k2 == 1:
+                            #     line_idx =3
+                            # elif k2 == 4:
+                            #     line_idx = 10
                             #A_m and C_mn
                             H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
                             H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = -1/2
@@ -169,17 +197,25 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                         if cplx == 1: #imaginary residual
                             # if k2 == 1: #voltage regulator
                             #     line_idx = 2
-                            if k2 == 0: #transformer
-                                line_idx = 1
-                            elif k2 == 6:
-                                line_idx = 8
+                            # if k2 == 0: #transformer
+                            #     line_idx = 1
+                            # elif k2 == 3: #transformer, if src/a01 and 6/7 exists
+                            #     line_idx = 8
+                            # if k2 == 3:
+                            #     line_idx = 7
+                            if k2 == 1:
+                                line_idx = 2
+                            # elif k2 == 1:
+                            #     line_idx =3
+                            # elif k2 == 4:
+                            #     line_idx = 10
                             #A_m and D_mn
                             H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1]= 1/2
                             H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = 1/2
                             #C_m and B_mn
                             H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
                             H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
-
+                      
     #Linear Term & Constant Term
     for ph in range(0,3):
         if ph == 0: #set nominal voltage based on phase
@@ -222,7 +258,6 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                         b_factor = caparr[ph][k2]
                 else:
                     b_factor = 0
-
 
                 if available_phases[ph] == 0: #if phase does not exist at bus, set b = 0
                     b_temp = 0

@@ -29,7 +29,7 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
         print("Iteration number %f" % (itercount))
         FT = ft1(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg)
         JT = jt1(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg)
-
+    
         if JT.shape[0] >= JT.shape[1]:
             XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
         itercount+=1
