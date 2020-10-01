@@ -1,16 +1,13 @@
-# Compare the python FBS solution to the opendss solution.
-# To save output, run from command line:
-# pytest ./powerflowpy/tests/test_compare_opendss.py -s >[OUTPUT FILE PATH]
-# Ex:
-# pytest ./powerflowpy/tests/test_compare_opendss.py -s > ./powerflowpy/tests/06n3ph_unbal/06n3ph_out.txt
-# pytest ./powerflowpy/tests/test_compare_opendss.py -s > ./powerflowpy/tests/05n3ph_unbal/05n3ph_out.txt
+# Elaine Laguerta (github: @elaguerta)
+# LBNL GIG
+# File created: September 2020
+# Compare solutions from opendss and powerflowpy.fbs
 
 import numpy as np
 import opendssdirect as dss
 from powerflowpy.utils import init_from_dss
-from powerflowpy.fbs import *
-from powerflowpy.dss_solve import solve_with_dss
-import opendssdirect as dss
+from powerflowpy.fbs import fbs, get_solution as get_fbs_solution
+from powerflowpy.dss_solve import solve_with_dss, get_solution as get_dss_solution
 
 from math import tan, acos
 import copy
@@ -24,6 +21,14 @@ import pytest
 dss_files = ['powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
 
 def test_all():
+    """
+    Compare the python FBS solution to the opendss solution.
+    To save output, run from command line:
+    pytest ./powerflowpy/tests/test_compare_opendss.py -s >[OUTPUT FILE PATH]
+    Examples:
+    $ pytest ./powerflowpy/tests/test_compare_opendss.py -s > ./powerflowpy/tests/06n3ph_unbal/06n3ph_out.txt
+    $ pytest ./powerflowpy/tests/test_compare_opendss.py -s > ./powerflowpy/tests/05n3ph_unbal/05n3ph_out.txt
+    """
     tolerance = .01
     for file in dss_files:
         print(f'\n\nTesting File: {file}')
@@ -32,9 +37,13 @@ def test_all():
 # construct the python FBS solution
 def compare_fbs_sol(dss_file, tolerance):
     #TODO: Figure out how to get Inode (iNR) and sV (sNR) at each node from dss and perform a compare
+    # solve with fbs
     network = init_from_dss(dss_file)
-    fbs_sol = fbs(network, False)
-    dss_sol = solve_with_dss(dss_file)
+    fbs_sol = get_fbs_solution( fbs(network) )
+
+    # solve with dss
+    solve_with_dss(dss_file)
+    dss_sol = get_dss_solution()
 
     fbsV, fbsI, fbsStx, fbsSrx = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), fbs_sol.Srx_df()
     dssV, dssI, dssStx, dssSrx = dss_sol

@@ -66,6 +66,7 @@ def get_solution(solution: Solution) -> Solution:
     solution.calc_S()
     # TODO: check that node_sV = node_Srx - sum(all line.Stx for all node.outgoing_lines)
     solution.calc_Inode()
+    return solution
 
 def topo_sort(network: Network) -> List:
     """
@@ -86,16 +87,16 @@ def topo_sort(network: Network) -> List:
     #TODO: also return a list of connected commponents, in case we need to know
     #about isolated nodes or the network is a forest of trees
     for node_name,status in nodes.items():
-        if status is 'new':
+        if status ==  'new':
             clock = topo_sort_dfs(node_name, nodes, network.adj, clock, topo_order)
     return topo_order
 
 def topo_sort_dfs(start_node:str, node_status: Dict[str,str], adj_matrix: Iterable, clock: int, topo_order: List) -> int:
-    node_status[start_node] = 'active'
+    node_status[start_node] == 'active'
     for child in adj_matrix[start_node]:
-        if node_status[child] is 'new':
+        if node_status[child] == 'new':
             clock = topo_sort_dfs(child, node_status, adj_matrix, clock, topo_order)
-        elif node_status[child] is 'active':
+        elif node_status[child] == 'active':
             raise ValueError('Network contains a cycle.')
     node_status[start_node] = 'finished'
     topo_order[clock-1] = start_node
