@@ -21,8 +21,9 @@ def solve_with_dss(dss_file):
     Zbase = Vbase/Ibase
 
 
-    # Solve power flow with OpenDSS file, and updating loads at each timestep.
+    # Solve power flow with OpenDSS file, and updating loads before solving once
     # Code based on https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/Examples/Python/Python-to-OpenDSS%20Control%20Interface.pdf
+
     originalSteps = dss.Solution.Number()
     dss.Solution.Mode(1)
     dss.Solution.Number(1)
@@ -36,7 +37,7 @@ def solve_with_dss(dss_file):
     orig_loads_data = orig_loads_data.transpose()
 
     # this would run for a default value of originalSteps = 100
-    # Do we solve 100 times?
+    # TODO: confirm with Shammya that this is correct, specifically that we do one timestep and call Solution.SolveSnap()
     for stepNumber in range(1): # simulate timesteps
 
         # set loads
@@ -102,80 +103,3 @@ def solve_with_dss(dss_file):
         # print(dss.CktElement.Powers())
         # return dssV, dssI, dssStx, dssSrx
         # return VDSS
-
-# Consider deleting below: It should be the same as solve_with_dss now
-# def solve_with_dss_constant_loads(dss_file):
-#     dss.run_command('Redirect ' + dss_file)
-
-#     # Set slack bus (sourcebus) voltage reference in p.u.
-#     SlackBusVoltage = 1.000
-#     dss.Vsources.PU(SlackBusVoltage)
-#     dss.Solution.Convergence(0.000000000001)
-
-#     Vbase = dss.Bus.kVBase() * 1000
-#     Sbase = 1000000.0
-#     Ibase = Sbase/Vbase
-#     Zbase = Vbase/Ibase
-
-#     # Solve power flow with OpenDSS file
-#     dss.Solution.Solve()
-#     if not dss.Solution.Converged:
-#         print('Initial Solution Not Converged. Check Model for Convergence')
-#     else:
-#         #Doing this solve command is required for GridPV, that is why the monitors
-#         #go under a reset process
-#         dss.Monitors.ResetAll()
-#         #set solution Params
-#         #setSolutionParams(dss,'daily',1,1,'off',1000000,30000)
-#         dss.Solution.Mode(1)
-#         dss.Solution.Number(1)
-#         dss.Solution.StepSize(1)
-#         dss.Solution.ControlMode(-1)
-#         dss.Solution.MaxControlIterations(1000000)
-#         dss.Solution.MaxIterations(30000)
-#         dss.Solution.Cleanup()
-
-#         print(
-#             f'\nOpendss Iterations: {dss.Solution.Iterations()}\tOpendss Convergence: {dss.Solution.Convergence()}')
-
-#         VDSS = np.zeros((len(dss.Circuit.AllBusNames()), 3), dtype='complex')
-#         for k1 in range(len(dss.Circuit.AllBusNames())):
-#             dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k1])
-#             ph = np.asarray(dss.Bus.Nodes(), dtype='int')-1
-#             Vtemp = np.asarray(dss.Bus.PuVoltage())
-#             Vtemp = Vtemp[0:5:2] + 1j*Vtemp[1:6:2]
-#             VDSS[k1, ph] = Vtemp
-#         dssV = pd.DataFrame(VDSS, dss.Circuit.AllBusNames(), ['A', 'B', 'C'])
-
-#         IDSS = np.zeros((len(dss.Lines.AllNames()), 3), dtype='complex')
-#         for k1 in range(len(dss.Lines.AllNames())):
-#             dss.Lines.Name(dss.Lines.AllNames()[k1])
-
-#             ph = np.asarray(dss.CktElement.BusNames()[
-#                             0].split('.')[1:], dtype='int')-1
-#             Imn = np.asarray(dss.CktElement.Currents())/Ibase
-#             Imn = Imn[0:int(len(Imn)/2)]
-#             Imn = Imn[0:5:2] + 1j*Imn[1:6:2]
-#             IDSS[k1, ph] = Imn
-#         dssI = pd.DataFrame(IDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
-
-#         STXDSS = np.zeros((len(dss.Lines.AllNames()), 3), dtype='complex')
-#         SRXDSS = np.zeros((len(dss.Lines.AllNames()), 3), dtype='complex')
-
-#         for k1 in range(len(dss.Lines.AllNames())):
-#             dss.Lines.Name(dss.Lines.AllNames()[k1])
-#             ph = np.asarray(dss.CktElement.BusNames()[
-#                             0].split('.')[1:], dtype='int')-1
-#             Sk = np.asarray(dss.CktElement.Powers())/(Sbase/1000)
-#             STXtemp = Sk[0:int(len(Sk)/2)]
-#             SRXtemp = Sk[int(len(Sk)/2):]
-#             STXtemp = STXtemp[0:5:2] + 1j*STXtemp[1:6:2]
-#             SRXtemp = -(SRXtemp[0:5:2] + 1j*SRXtemp[1:6:2])
-#             STXDSS[k1, ph] = STXtemp
-#             SRXDSS[k1, ph] = SRXtemp
-
-#         dssStx = pd.DataFrame(STXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
-#         dssSrx = pd.DataFrame(SRXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
-#         print("OpenDSS Loads after solving, from dss.CktElement.Powers():")
-#         print(dss.CktElement.Powers())
-#         return dssV, dssI, dssStx, dssSrx
