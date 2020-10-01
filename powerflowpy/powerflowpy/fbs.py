@@ -8,9 +8,11 @@ from . utils import init_from_dss, mask_phases
 from . network import *
 from . solution import *
 
-def fbs(network, dss_fp = True) -> None:
-    if dss_fp:
-        network = init_from_dss(network)
+def fbs(network: Network) -> Solution:
+    """
+    Input: a Network object, the result of running utils.init_from_dss() on a dss file
+    Output: A Solution object, with V and I calculated. Note that you will need to run get_solution() to obtain sV, S, and Inode.
+    """
     solution = Solution(network)
     topo_order = topo_sort(network)
     solution.root = network.nodes.get(topo_order[0])  # keep a pointer to the root node
@@ -53,13 +55,17 @@ def fbs(network, dss_fp = True) -> None:
         #check convergence
         converged = max(abs(solution.Vtest - solution.Vref)
                         ) <= solution.tolerance
-
-    # # final calculations
-    # solution.calc_sV()
-    # solution.calc_S()
-    # # TODO: check that node_sV = node_Srx - sum(all line.Stx for all node.outgoing_lines)
-    # solution.calc_Inode()
     return solution
+
+def get_solution(solution: Solution) -> Solution:
+    """
+    Input: a Solution object, after running fbs to solve powerflow for the network.
+    Output: Modifies the Solution object to calculate sV, S, and Inode. Returns the Solution object.
+    """
+    solution.calc_sV()
+    solution.calc_S()
+    # TODO: check that node_sV = node_Srx - sum(all line.Stx for all node.outgoing_lines)
+    solution.calc_Inode()
 
 def topo_sort(network: Network) -> List:
     """
