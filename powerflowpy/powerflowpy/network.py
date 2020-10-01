@@ -113,6 +113,19 @@ class Load:
         self.ppu = None
         self.qpu = None
         self.spu = None
+        self.kW = None
+        self.kVar = None
+
+    def set_kVar(self, kVar):
+    """ reset kVar and recalculate all load parameters based on new kVar """
+        #TODO: write this!
+        pass
+
+    def set_kW(self, kW)
+    """ reset kVar and recalculate all load parameters based on new kVar """
+        #TODO: write this!
+        pass
+
     def __str__(self):
         return self.name
     def to_series(self):
