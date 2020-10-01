@@ -41,7 +41,7 @@ def time_dss(dss_file, i):
 @solver_timer
 def time_fbs(network, i):
     """ wrap powerflowpy.fbs in a timer"""
-    fbs(network, False)
+    fbs(network)
 # set up command line arguments to this script
 @click.command( help='Compare running times between opendss and fbs. Please provide a full or relative path to a dss file.')
 @click.argument('dss_file')

@@ -117,17 +117,18 @@ class Load:
         self.kVar = None
 
     def set_kVar(self, kVar):
-    """ reset kVar and recalculate all load parameters based on new kVar """
+        """ reset kVar and recalculate all load parameters based on new kVar """
         #TODO: write this!
         pass
 
-    def set_kW(self, kW)
-    """ reset kVar and recalculate all load parameters based on new kVar """
+    def set_kW(self, kW):
+        """ reset kVar and recalculate all load parameters based on new kVar """
         #TODO: write this!
         pass
 
     def __str__(self):
         return self.name
+
     def to_series(self):
         data = [self.name, self.conn, self.phases, self.type, self.aPQ, self.aI, self.ppu, self.qpu, self.spu]
         return pd.Series(data, self.series_index)
