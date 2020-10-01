@@ -35,9 +35,13 @@ class Network:
         """return a list of network Node objects"""
         return self.nodes.values()
 
-    def get_lines(self) -> List[Any] :
+    def get_lines(self) -> List[Any]:
         """return a list of network Line objects"""
         return self.lines.values()
+
+    def get_loads(self) -> List[Any] :
+        """return a list of network Load objects"""
+        return self.loads.values()
 
     def __str__(self) -> str:
         """return something informative"""
@@ -113,21 +117,52 @@ class Load:
         self.ppu = None
         self.qpu = None
         self.spu = None
-        self.kW = None
-        self.kVar = None
-
-    def set_kVar(self, kVar):
-        """ reset kVar and recalculate all load parameters based on new kVar """
-        #TODO: write this!
-        pass
-
-    def set_kW(self, kW):
-        """ reset kVar and recalculate all load parameters based on new kVar """
-        #TODO: write this!
-        pass
+        self.kw = None
+        self.kvar = None
+        self.node = None
 
     def __str__(self):
         return self.name
+
+    def set_kvar(self, kvar: float) -> None:
+        """
+        Reset a load's kvar and recalculate all load parameters based on new kvar.
+        Note that this also updates the load's node's sum_spu
+        """
+        old_spu = self.spu
+        self.kvar = kvar
+
+        #divide by number of phases
+        self.qpu = self.kvar / 1000 / self.phases.count(True)
+
+        # set to 3x1 based on phases
+        self.qpu = np.asarray([qpu if phase else 0 for phase in load.phases])
+        self.spu = self.ppu + 1j*self.qpu
+
+        # Update the sum_spu of the node that this load belongs to
+        # Subtracting the old value from the sum, then add the current value
+        self.node.sum_spu = np.subtract(node.sum_spu, old_spu)
+        self.node.sum_spu = np.add(node.sum_spu, self.spu)
+
+    def set_kW(self, kW):
+        """
+        Reset a load's kW and recalculate all load parameters based on new kvar.
+        Note that this also updates the load's node's sum_spu
+        """
+        old_spu = self.spu
+        self.kW = kW
+
+        # divide by number of phases
+        ppu = self.kW / 1000 / load.phases.count(True)
+
+        # set to 3x1 based on phases
+        self.ppu = np.asarray([ppu if phase else 0 for phase in load.phases])
+        self.spu = load.ppu + 1j*load.qpu
+
+        # Update the sum_spu of the node that this load belongs to
+        # Subtracting the old value from the sum, then add the current value
+        self.node.sum_spu = np.subtract(node.sum_spu, old_spu)
+        self.node.sum_spu = np.add(node.sum_spu, self.spu)
 
     def to_series(self):
         data = [self.name, self.conn, self.phases, self.type, self.aPQ, self.aI, self.ppu, self.qpu, self.spu]

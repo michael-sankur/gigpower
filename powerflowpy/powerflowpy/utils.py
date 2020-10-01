@@ -72,9 +72,15 @@ def init_from_dss(dss_fp: str) -> None:
             print(f"This load's node has not been defined. Load name: {load_name}, Node name: {node_name}")
         load = Load(load_name)
         load.phases = parse_phases(list(phase_chars))
+
+        # save kw and kvar
+        load.kW = load_data['kW']
+        load.kvar = load_data['kvar']
+
         # divide ppu and qpu by number of phases
-        ppu = load_data['kW'] / 1000/ load.phases.count(True)
-        qpu = load_data['kvar'] / 1000 / load.phases.count(True)
+        ppu = load.kW / 1000/ load.phases.count(True)
+        qpu = load.kvar / 1000 / load.phases.count(True)
+
         # set aPQ, aI, aZ
         # TODO: get aPQ, aI for each load
         load.aPQ = np.ones(3)
@@ -87,6 +93,7 @@ def init_from_dss(dss_fp: str) -> None:
         load.conn =   'delta' if load_data['IsDelta'] else 'wye'
         # add a pointer to this load to the network
         network.loads[load_name] = load
+        load.node = node # assign the node to the load
         node.loads.append(load)  # add this load to its node's load list
         #TODO: set load.type
     # sum all loads on each node and store on each node, to avoid re-calculating during
