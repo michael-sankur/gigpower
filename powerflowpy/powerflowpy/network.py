@@ -14,24 +14,20 @@ import pandas as pd
 # See: https://stackoverflow.com/questions/6663272/double-precision-floating-values-in-python
 
 class Network:
-    def __init__(self, dss_fp: str = '', num_phases:int = 3) -> None:
+    def __init__(self, num_phases:int = 3) -> None:
         """
         Initialize a Network instance.
-        Optional dss_file is the full path to a dss file.
         """
-        if dss_fp:
-            return init_from_dss(dss_fp)
-        else:
-            self.nodes : Dict[str,Node] = dict()
-            self.lines: Dict[ Tuple(str,str) ] = dict()
-            self.loads: Dict[str, Load] = dict()
-            self.capacitors: Dict[str, Capacitor] = dict()
-            self.adj: Dict[str, List] = dict()
-            self.Vbase = 0
-            self.Sbase = 0
-            self.Ibase = 0
-            self.Zbase = 0
-            self.num_phases = num_phases
+        self.nodes : Dict[str,Node] = dict()
+        self.lines: Dict[ Tuple(str,str) ] = dict()
+        self.loads: Dict[str, Load] = dict()
+        self.capacitors: Dict[str, Capacitor] = dict()
+        self.adj: Dict[str, List] = dict()
+        self.Vbase = 0
+        self.Sbase = 0
+        self.Ibase = 0
+        self.Zbase = 0
+        self.num_phases = num_phases
 
 
     def get_nodes(self) -> ValuesView[Any] :
