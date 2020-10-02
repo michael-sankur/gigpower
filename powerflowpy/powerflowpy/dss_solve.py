@@ -6,23 +6,23 @@
 import opendssdirect as dss
 import numpy as np
 import pandas as pd
+from typing import Tuple
 
-def solve_with_dss(dss_file : str) -> None:
+
+def solve_with_dss(dss_file: str) -> Tuple[pd.DataFrame]:
+    """
+    Set up dss object, call solve, and return the solution.
+    """
+    setup(dss_file)
+    solve()
+    return get_solution()
+
+def setup(dss_file: str) -> None:
     """
     Initialize the network with a dss file, with one call to 'Redirect'.
     Set loads on the network.
-    Call SolveSnap() to solve powerflow for one timestep.
     """
     dss.run_command('Redirect ' + dss_file)
-
-    # Set slack bus (sourcebus) voltage reference in p.u.
-    SlackBusVoltage = 1.000
-    dss.Vsources.PU(SlackBusVoltage)
-    dss.Solution.Convergence(0.000000000001)
-
-    # Solve power flow with OpenDSS file, and updating loads before solving once
-    # Code based on https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/Examples/Python/Python-to-OpenDSS%20Control%20Interface.pdf
-
     originalSteps = dss.Solution.Number()
     dss.Solution.Mode(1)
     dss.Solution.Number(1)
@@ -31,6 +31,14 @@ def solve_with_dss(dss_file : str) -> None:
     dss.Solution.MaxControlIterations(1000000)
     dss.Solution.MaxIterations(30000)
 
+def solve() -> None:
+    """
+    Call SolveSnap() to solve powerflow for one timestep.
+    Save the loads before solving.
+    """
+
+    # Solve power flow with OpenDSS file, and updating loads before solving once
+    # Code based on https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/Examples/Python/Python-to-OpenDSS%20Control%20Interface.pdf
     # save original loads
     orig_loads_data = dss.utils.loads_to_dataframe()
     orig_loads_data = orig_loads_data.transpose()

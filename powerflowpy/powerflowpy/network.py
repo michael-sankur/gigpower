@@ -3,7 +3,6 @@
 # File created: 20 August 2020
 # Object model for networks
 from typing import Any, List, Dict, Iterable, Tuple, ValuesView
-from . utils import init_from_dss
 import numpy as np
 import opendssdirect as dss
 import sys
