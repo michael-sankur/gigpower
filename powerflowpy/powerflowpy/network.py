@@ -2,7 +2,8 @@
 # LBNL GIG
 # File created: 20 August 2020
 # Object model for networks
-from typing import Any, List, Dict, Iterable, Tuple
+from typing import Any, List, Dict, Iterable, Tuple, ValuesView
+from . utils import init_from_dss
 import numpy as np
 import opendssdirect as dss
 import sys
@@ -13,39 +14,41 @@ import pandas as pd
 # See: https://stackoverflow.com/questions/6663272/double-precision-floating-values-in-python
 
 class Network:
-    def __init__(self, dss_fp: str = '', num_phases = 3):
+    def __init__(self, dss_fp: str = '', num_phases:int = 3) -> None:
         """
         Initialize a Network instance.
         Optional dss_file is the full path to a dss file.
         """
-        self.nodes = dict()
-        self.lines = dict()
-        self.loads = dict()
-        self.capacitors = dict()
-        self.adj = dict()
-        self.Vbase = None
-        self.Sbase = None
-        self.Ibase = None
-        self.Zbase = None
-        self.num_phases = num_phases
         if dss_fp:
-            init_from_dss(self, dss_fp)
+            return init_from_dss(dss_fp)
+        else:
+            self.nodes : Dict[str,Node] = dict()
+            self.lines: Dict[ Tuple(str,str) ] = dict()
+            self.loads: Dict[str, Load] = dict()
+            self.capacitors: Dict[str, Capacitor] = dict()
+            self.adj: Dict[str, List] = dict()
+            self.Vbase = 0
+            self.Sbase = 0
+            self.Ibase = 0
+            self.Zbase = 0
+            self.num_phases = num_phases
 
-    def get_nodes(self) -> List[Any] :
-        """return a list of network Node objects"""
+
+    def get_nodes(self) -> ValuesView[Any] :
+        """return a List-like iterable view of network Node objects"""
         return self.nodes.values()
 
-    def get_lines(self) -> List[Any]:
-        """return a list of network Line objects"""
+    def get_lines(self) -> ValuesView[Any]:
+        """return a List-like view of network Line objects"""
         return self.lines.values()
 
-    def get_loads(self) -> List[Any] :
-        """return a list of network Load objects"""
+    def get_loads(self) -> ValuesView[Any] :
+        """return a List-like view network Load objects"""
         return self.loads.values()
 
     def __str__(self) -> str:
         """return something informative"""
-        df_dict = self.to_data_frames()
+        df_dict = self.to_dataframes()
         return_str = ''
         for k,v in df_dict.items():
             if k == 'Adj List':
@@ -71,18 +74,20 @@ class Network:
 
 class Node:
     series_index = ['name', 'phases', 'load', 'controller']
-    def __init__(self, name: str = ''):
+    def __init__(self, name: str = '') -> None:
         self.name = name
-        self.phases = (False, False, False)
+        self.phases = [False, False, False]
         self.parent = None # pointer to parent Node. only one parent for radial networks
-        self.loads = [] # list of Nodes
-        self.capacitors = [] # list of Capacitors
+        self.loads : List[Node] = []
+        self.capacitors : List[Capacitor] = []
         self.sum_spu = np.zeros(3) # 3x1 complex array that holds the sum of all load.spu on this node
         self.sum_cappu = np.zeros(3) # 3x1 array that holds the sum of all capacitor.cappu on this node
         self.controller = None
-    def __str__(self):
+
+    def __str__(self) -> str:
         return f"{self.name}, {self.phases}"
-    def to_series(self):
+
+    def to_series(self) -> pd.Series:
         data = [self.name, self.phases, self.loads, self.controller]
         return pd.Series(data, self.series_index)
 
@@ -90,16 +95,18 @@ class Line:
     series_index = ['(tx,rx)', 'name', 'phases', 'config', 'length', 'FZpu']
     # TODO: might be helpful to include a list of pointers to all Lines in the class, and do the same for Node, etc.
     # see: http://effbot.org/pyfaq/how-do-i-get-a-list-of-all-instances-of-a-given-class.htm
-    def __init__(self, key: Tuple[str] = None, name: str = ''):
+    def __init__(self, key: Tuple[str,str] = None, name: str = '') -> None:
         self.key = key # tuple of (txnode_name, rxnode_name)
         self.name = name # string, the name DSS uses to refer to this line
-        self.phases = (False, False, False)
+        self.phases = [False, False, False]
         self.config = None
         self.length = None
         self.FZpu = np.zeros((3,3), dtype = 'complex')
-    def __str__(self):
+
+    def __str__(self) -> str:
         return str(self.key)
-    def to_series(self):
+
+    def to_series(self) -> pd.Series:
         data = [self.key, self.name, self.phases, self.config, self.length, self.FZpu]
         return pd.Series(data, self.series_index)
 
@@ -107,21 +114,21 @@ class Line:
 
 class Load:
     series_index = ['name', 'conn', 'phases', 'type', 'aPQ', 'aI', 'ppu', 'qpu', 'spu']
-    def __init__(self, name: str = ''):
+    def __init__(self, name: str = '') -> None:
         self.name = name
         self.conn = None
         self.phases = (False, False, False)
         self.type = None
         self.aPQ = None
         self.aI = None
-        self.ppu = None
-        self.qpu = None
-        self.spu = None
-        self.kw = None
-        self.kvar = None
-        self.node = None
+        self.ppu = 0
+        self.qpu = 0
+        self.spu = 0
+        self.kw = 0
+        self.kvar = 0
+        self.node : Union[ Node, Any ]= None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     def set_kvar(self, kvar: float) -> None:
@@ -136,15 +143,15 @@ class Load:
         self.qpu = self.kvar / 1000 / self.phases.count(True)
 
         # set to 3x1 based on phases
-        self.qpu = np.asarray([qpu if phase else 0 for phase in load.phases])
+        self.qpu = np.asarray([self.qpu if phase else 0 for phase in self.phases])
         self.spu = self.ppu + 1j*self.qpu
 
         # Update the sum_spu of the node that this load belongs to
         # Subtracting the old value from the sum, then add the current value
-        self.node.sum_spu = np.subtract(node.sum_spu, old_spu)
-        self.node.sum_spu = np.add(node.sum_spu, self.spu)
+        self.node.sum_spu = np.subtract(self.node.sum_spu, old_spu)
+        self.node.sum_spu = np.add(self.node.sum_spu, self.spu)
 
-    def set_kW(self, kW):
+    def set_kW(self, kW: float) -> None:
         """
         Reset a load's kW and recalculate all load parameters based on new kvar.
         Note that this also updates the load's node's sum_spu
@@ -153,25 +160,25 @@ class Load:
         self.kW = kW
 
         # divide by number of phases
-        ppu = self.kW / 1000 / load.phases.count(True)
+        ppu = self.kW / 1000 / self.phases.count(True)
 
         # set to 3x1 based on phases
-        self.ppu = np.asarray([ppu if phase else 0 for phase in load.phases])
-        self.spu = load.ppu + 1j*load.qpu
+        self.ppu = np.asarray([ppu if phase else 0 for phase in self.phases])
+        self.spu = self.ppu + 1j*self.qpu
 
         # Update the sum_spu of the node that this load belongs to
         # Subtracting the old value from the sum, then add the current value
-        self.node.sum_spu = np.subtract(node.sum_spu, old_spu)
-        self.node.sum_spu = np.add(node.sum_spu, self.spu)
+        self.node.sum_spu = np.subtract(self.node.sum_spu, old_spu)
+        self.node.sum_spu = np.add(self.node.sum_spu, self.spu)
 
-    def to_series(self):
+    def to_series(self) -> pd.Series:
         data = [self.name, self.conn, self.phases, self.type, self.aPQ, self.aI, self.ppu, self.qpu, self.spu]
         return pd.Series(data, self.series_index)
 
 class Controller:
-    def __init__(self, name: str = ''):
+    def __init__(self, name: str = '') -> None:
         self.node = None
-        self.name = None
+        self.name = name
         self.phases = (False, False, False)
         self.wpu = np.zeroes(3)
         self.wmaxpu = np.zeroes(3)
@@ -179,16 +186,18 @@ class Controller:
         self.hpfes = np.zeroes(3)
         self.lpfes = np.zeroes(3)
         self.kintes = np.zeroes(3)
-    def __str__(self):
+
+
+    def __str__(self) -> str:
         return self.name
 
 class Capacitor:
-    def __init__(self, name: str = ''):
+    def __init__(self, name: str = '') -> None:
         self.name = name
         self.phases = (False, False, False)
         self.conn = None
         self.cappu = np.zeros((3, 3), dtype='float')
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 

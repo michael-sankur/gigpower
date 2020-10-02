@@ -131,7 +131,7 @@ def init_from_dss(dss_fp: str) -> None:
     return network
 
 
-def parse_phases(phase_char_lst):
+def parse_phases(phase_char_lst) -> List:
     """
     helper function to return a list of phase characters into a boolean triple
     ex: ['1', '3'] -> (True, False True)

@@ -7,7 +7,7 @@ import opendssdirect as dss
 import numpy as np
 import pandas as pd
 
-def solve_with_dss(dss_file):
+def solve_with_dss(dss_file : str) -> None:
     """
     Initialize the network with a dss file, with one call to 'Redirect'.
     Set loads on the network.
@@ -57,7 +57,7 @@ def solve_with_dss(dss_file):
             #go under a reset process
             dss.Monitors.ResetAll()
 
-def get_solution():
+def get_solution() -> Tuple[pd.DataFrame]:
     """
     Input: A dss object with a solved network.
     Output: Network solution paramters V, I, Stx, Srx in pandas DataFrames.
@@ -109,4 +109,3 @@ def get_solution():
     print("OpenDSS Loads after solving, from dss.CktElement.Powers():")
     print(dss.CktElement.Powers())
     return dssV, dssI, dssStx, dssSrx
-    return VDSS
