@@ -9,14 +9,27 @@ New object=circuit.ieee37
 !~ basekv=4.80 pu=1.00 baseMVA=1 MVAsc3=200000 MVAsc1=210000
 
 ! Substation Transformer
-!New Transformer.SubXF Phases=3 Windings=2 Xhl=8
-!~ wdg=1 bus=sourcebus conn=Wye kv=115 kva=2500 %r=1
-!~ wdg=2 bus=A01 conn=Wye kv=4.8 kva=2500 %r=1
+New Transformer.SubXF Phases=3 Windings=2 Xhl=8
+~ wdg=1 bus=sourcebus conn=Wye kv=115 kva=2500 %r=1
+~ wdg=2 bus=A01 conn=Wye kv=4.8 kva=2500 %r=1
 
 ! Load Transformer
-!New Transformer.XFM1 Phases=3 Windings=2 Xhl=1.81
-!~ wdg=1 bus=A03 conn=Wye kv=4.80 kva=500 %r=0.045
-!~ wdg=2 bus=A07 conn=Wye kv=0.48 kva=500 %r=0.045
+New Transformer.XFM1 Phases=3 Windings=2 Xhl=1.81
+~ wdg=1 bus=A03 conn=Wye kv=4.80 kva=500 %r=0.045
+~ wdg=2 bus=A07 conn=Wye kv=0.48 kva=500 %r=0.045
+
+New Transformer.Reg1 phases=1 bank=reg1 XHL=0.01 kVAs=[10000 10000]
+~ Buses=[A01.1 A02.1] kVs=[2.77128  2.77128] %LoadLoss=0.01
+new regcontrol.Reg1  transformer=Reg1 winding=2  vreg=138  band=2  ptratio=20 ctprim=700 !  R=3   X=9
+
+New Transformer.Reg2 phases=1 bank=reg1 XHL=0.01 kVAs=[10000 10000]
+~ Buses=[A01.2 A02.2] kVs=[2.77128  2.77128] %LoadLoss=0.01
+new regcontrol.Reg2  transformer=Reg2 winding=2  vreg=138  band=2  ptratio=20 ctprim=700 !  R=3   X=9 
+
+New Transformer.Reg3 phases=1 bank=reg1 XHL=0.01 kVAs=[10000 10000]
+~ Buses=[A01.3 A02.3] kVs=[2.77128  2.77128] %LoadLoss=0.01
+new regcontrol.Reg3  transformer=Reg3 winding=2  vreg=138  band=2  ptratio=20 ctprim=700 !  R=3   X=9 
+
 
 
 ! import line codes with phase impedance matrices

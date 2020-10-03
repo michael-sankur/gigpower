@@ -8,7 +8,7 @@ import time
 import re
 def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, der, capacitance, time_delta, H_reg, G_reg):
     dss.run_command('Redirect ' + fn)
-    nline = len(dss.Lines.AllNames())
+    nline = len(dss.Lines.AllNames()) + 2
     nnode = len(dss.Circuit.AllBusNames())
 
     if tol == None:
@@ -21,8 +21,9 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     itercount = 0
     # adjust KCL based on capacitance, DER, and time-varying load
 
-    if der != 0 or capacitance != 0 or time_delta != -1:
-        H, b = change_KCL_matrices(fn, H, g, b, time_delta, der, capacitance)
+    # if der != 0 or capacitance != 0 or time_delta != -1:
+    #     print('WRONGLY CHANGES KCL MATRICES')
+    #     H, b = change_KCL_matrices(fn, H, g, b, time_delta, der, capacitance)
 
     # solve power-flow
     while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:

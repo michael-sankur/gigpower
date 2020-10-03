@@ -8,7 +8,7 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
 
     dss.run_command('Redirect ' + fn)
 
-    nline = len(dss.Lines.AllNames())
+    nline = len(dss.Lines.AllNames()) + 2
     nnode = len(dss.Circuit.AllBusNames())
     XNR = np.zeros((2*3*(nnode + nline),1))
 
