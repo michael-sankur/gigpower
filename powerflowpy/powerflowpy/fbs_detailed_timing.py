@@ -5,8 +5,8 @@
 import time
 from typing import List, Dict
 from . utils import init_from_dss
-from . network import *
-from . solution import *
+from . network import Network
+from . solution import Solution
 import numpy as np # type: ignore
 
 def fbs(dss_file: str) -> List[float]:

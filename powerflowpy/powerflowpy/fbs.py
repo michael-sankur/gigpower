@@ -3,8 +3,9 @@
 # File created: 20 August 2020
 # Implement FBS to solve Power Flow for a radial distribution network.
 from typing import List, Dict
-from . network import *
-from . solution import *
+from . network import Network
+from . solution import Solution
+import numpy as np
 
 def fbs(network: Network) -> Solution:
     """

@@ -5,7 +5,7 @@
 
 from typing import Iterable, Dict, Tuple
 from . utils import mask_phases
-from . network import *
+from . network import Network, Node, Line
 import pandas as pd # type: ignore
 import numpy as np # type: ignore
 
@@ -75,7 +75,6 @@ class Solution:
         """
         line_key = (parent.name, child.name)
         parent_V = self.V[parent.name]
-        child_V = self.V[child.name]
         FZpu = network.lines[line_key].FZpu
         I = self.I[line_key]
 
