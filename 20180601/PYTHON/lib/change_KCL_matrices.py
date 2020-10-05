@@ -59,7 +59,7 @@ def change_KCL_matrices(fn, H, g, b, t, der, capacitance):
         return load_order
     load_order_list = load_order_f()
 
-    def load_values():
+    def load_values():     
         load_ph_arr = np.zeros((nnode, max(load_order_list.values()), 3))
         load_kw_arr_ph = np.zeros((3, nnode))
         load_kvar_arr_ph = np.zeros((3, nnode))
@@ -90,52 +90,33 @@ def change_KCL_matrices(fn, H, g, b, t, der, capacitance):
     load_kw_arr_ph, load_kvar_arr_ph = load_values()
 
 
-    def cap_dict():
-        cap_dict = {}
-        cap_ph_dict = {}
+    def cap_arr():
         caparr = np.zeros((3, nnode))
         for n in range(len(dss.Capacitors.AllNames())):
             dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
-            pattern =  r"(\w+)\."
-            load_phases = [0, 0, 0]
-            for i in range(1, 4): #if the phase is present, what other phases are
-                pattern = r"\.%s" % (str(i))
-                m2 = re.findall(pattern, dss.CktElement.BusNames()[0])
-                if m2:
-                    load_phases[i - 1] = 1
-            cap_ph_dict[dss.CktElement.BusNames()[0]] = load_phases
-            cap_dict[dss.CktElement.BusNames()[0]] = dss.Capacitors.kvar() / Sbase * 1e3 / sum(load_phases)
-        for n in cap_ph_dict.keys():
-            pattern =  r"(\w+)\."
-            cap_bus = re.findall(pattern, n)
-            idxbs = dss.Circuit.AllBusNames().index(cap_bus[0])
-            for ph in range(3):
-                if cap_ph_dict[n][ph] == 1:
-                    caparr[ph, idxbs] += cap_dict[n]
+            cap_data = dss.CktElement.BusNames()[0].split('.')
 
-        return cap_dict, cap_ph_dict, caparr
+            idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
+            for ph in range(1, len(cap_data)):
+                caparr[int(cap_data[ph]) - 1, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / (len(cap_data) - 1)
+        return caparr
 
-    cd, cpd, caparr = cap_dict()
+    caparr = cap_arr()
 
-    def bus_phases(): #goes through all the buses and saves their phases to a list stored in a dictionary
-    #1 if phase exists, 0 o.w.
-    #list goes [a, b, c]
-    #key is the bus name (without the phase part)
+    # {bus : [1 x 3 phase existence]}
+    def bus_phases():
         dictionary = {}
         for k2 in range(len(dss.Circuit.AllNodeNames())):
-            for i in range(1, 4):
-                pattern = r"\.%s" % (str(i))
-                m = re.findall(pattern, dss.Circuit.AllNodeNames()[k2])
-                a, b = dss.Circuit.AllNodeNames()[k2].split('.')
-                if m and a in dictionary:
-                    temp = dictionary[a]
-                    temp[i - 1] = 1
-                    dictionary[a] = temp
-                elif m and a not in dictionary:
-                    dictionary[a] = [0, 0, 0]
-                    temp = dictionary[a]
-                    temp[i - 1] = 1
-                    dictionary[a] = temp
+            a, b = dss.Circuit.AllNodeNames()[k2].split('.')
+            if a in dictionary:
+                temp = dictionary[a]
+                temp[int(b) - 1] = 1
+                dictionary[a] = temp
+            elif a not in dictionary:
+                dictionary[a] = [0, 0, 0]
+                temp = dictionary[a]
+                temp[int(b) - 1] = 1
+                dictionary[a] = temp
         return dictionary
 
     # ----------Residuals for KCL at a bus (m) ----------
