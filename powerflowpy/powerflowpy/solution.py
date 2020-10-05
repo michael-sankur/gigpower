@@ -3,10 +3,11 @@
 # File created: 28 August 2020
 # Implement FBS to solve Power Flow for a radial distribution network.
 
-from typing import Iterable, List, Dict, Tuple
+from typing import Iterable, Dict, Tuple
 from . utils import mask_phases
 from . network import *
 import pandas as pd # type: ignore
+import numpy as np # type: ignore
 
 class Solution:
 
@@ -129,7 +130,6 @@ class Solution:
         """
         node_name = line_in.key[1] # type: ignore
         line_phases = network.lines[ line_in.key ].phases #type: ignore
-        line_I = self.I[line_in.key]
         node_s = self.s[node_name]
         node_V = self.V[node_name]
         # np.divide produces a NaN for positions at which node_V is 0 because the phases are not existant on node

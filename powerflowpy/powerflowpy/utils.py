@@ -1,8 +1,7 @@
 import numpy as np # type: ignore
 import opendssdirect as dss # type: ignore
-import sys
-from typing import Iterable, List, Tuple, Any
-from . network import Network, Node, Line, Load, Controller, Capacitor
+from typing import Iterable, List, Any
+from . network import Network, Node, Line, Load, Capacitor
 
 def init_from_dss(dss_fp: str) -> Network:
     """define a Network attributes from a dss file"""
@@ -188,12 +187,12 @@ def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> Iterable
                     try:
                         ret_mat[out_idx][col_idx] = next(vals)
                     except StopIteration:
-                        (f"Cannot pad matrix.")
+                        ("Cannot pad matrix.")
         else:
             try:
                 ret_mat[out_idx] = next(vals)
             except StopIteration:
-                (f"Cannot pad matrix.")
+                ("Cannot pad matrix.")
     return ret_mat
 
 def mask_phases(matrix: Iterable, shape: tuple, phases: List[bool]) -> Iterable:

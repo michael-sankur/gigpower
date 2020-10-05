@@ -3,18 +3,11 @@
 # File created: September 2020
 # Compare solutions from opendss and powerflowpy.fbs
 
-import numpy as np
-import opendssdirect as dss
 from powerflowpy.utils import init_from_dss
 from powerflowpy.fbs import fbs, get_solution as get_fbs_solution
 from powerflowpy.dss_solve import solve_with_dss, get_solution as get_dss_solution
 
-from math import tan, acos
-import copy
 import pandas as pd
-import time
-import re
-import sys
 import pytest
 
 # dss_files = ['powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss', 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss', 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
@@ -69,7 +62,6 @@ def compare_dfs(fbs_df : pd.DataFrame, dss_df : pd.DataFrame) -> None:
     compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
     compare = fbs_df.sub(dss_df)
     compare.columns = compare_cols
-    concat = fbs_df.join(dss_df, lsuffix='.fbs', rsuffix='.dss')
     print("Max |diff|:")
     print(compare.abs().max())
     print(compare)

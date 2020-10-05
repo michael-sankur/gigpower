@@ -3,23 +3,18 @@
 # File created: 10 September 2020
 # Compare running time of opendss' powerflow solver to powerflowpy/fbs
 
-import sys
 import click
 from pathlib import Path
-import powerflowpy
-from powerflowpy.fbs import *
+from powerflowpy.fbs import fbs
 from powerflowpy.utils import init_from_dss
 from powerflowpy.dss_solve import solve_with_dss
-from powerflowpy.solution import Solution
 from powerflowpy.network import Network
-import pandas as pd # type: ignore
-import opendssdirect as dss # type: ignore
 import time
 import functools
 import numpy as np # type: ignore
 import csv
 import matplotlib.pyplot as plt # type: ignore
-from typing import Any, Tuple
+from typing import Any
 plt.style.use('seaborn-whitegrid')
 
 
@@ -28,13 +23,11 @@ def solver_timer(solver_func : Any) -> Any:
     @functools.wraps(solver_func)
     def wrapper(network : Network, n : int) -> Any:
         t1 = time.perf_counter()
-        x = None
         for i in range(n):
-            x = solver_func(network, i)  # run once
+            solver_func(network, i)  # run once
         t2 = time.perf_counter()
         return t2 - t1
     return wrapper
-
 
 @solver_timer
 def time_dss(dss_file: str, i: int) -> None:

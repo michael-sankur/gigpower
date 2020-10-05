@@ -2,10 +2,8 @@
 # LBNL GIG
 # File created: 20 August 2020
 # Object model for networks
-from typing import Any, List, Dict, Iterable, Tuple, ValuesView, Union
+from typing import Any, List, Dict, Tuple, ValuesView, Union
 import numpy as np # type: ignore
-import opendssdirect as dss # type: ignore
-import sys
 import pandas as pd # type: ignore
 
 #TODO: determine appropriate precision for attributes. Right now everything is either floats or ints.

@@ -1,4 +1,4 @@
-from powerflowpy.fbs_detailed_timing import *
+from powerflowpy.fbs_detailed_timing import fbs
 import numpy as np # type: ignore
 import csv
 

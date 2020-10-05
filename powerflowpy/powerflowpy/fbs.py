@@ -2,9 +2,7 @@
 # LBNL GIG
 # File created: 20 August 2020
 # Implement FBS to solve Power Flow for a radial distribution network.
-import sys
-from typing import Iterable, List, Dict
-from . utils import init_from_dss, mask_phases
+from typing import List, Dict
 from . network import *
 from . solution import *
 
@@ -30,7 +28,6 @@ def fbs(network: Network) -> Solution:
             children = network.adj[node_name]
             for child_name in children:
                 child = network.nodes.get(child_name)
-                line_out = network.lines[(node_name, child_name)]
                 solution.update_voltage_forward(network, node, child) #type: ignore
 
         # update s at all nodes

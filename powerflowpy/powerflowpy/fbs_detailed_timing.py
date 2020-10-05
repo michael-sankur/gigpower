@@ -2,13 +2,12 @@
 # LBNL GIG
 # File created: 20 August 2020
 # Implement FBS to solve Power Flow for a radial distribution network.
-import sys
 import time
-import csv
-from typing import Iterable, List, Dict
-from . utils import init_from_dss, mask_phases
+from typing import List, Dict
+from . utils import init_from_dss
 from . network import *
 from . solution import *
+import numpy as np # type: ignore
 
 def fbs(dss_file: str) -> List[float]:
 
@@ -50,7 +49,6 @@ def fbs(dss_file: str) -> List[float]:
             children = network.adj[node_name]
             for child_name in children:
                 child = network.nodes.get(child_name)
-                line_out = network.lines[(node_name, child_name)]
                 solution.update_voltage_forward(network, node, child) # type: ignore
         t8 = time.perf_counter()
         fwd_sweep_total += (t8-t7) * 1000
@@ -121,16 +119,16 @@ def topo_sort(network: Network) -> List:
 
     # top level call to _topo_sort_dfs for each node
     for node_name,status in nodes.items():
-        if status is 'new':
+        if status == 'new':
             clock = topo_sort_dfs(node_name, nodes, network.adj, clock, topo_order)
     return topo_order
 
 def topo_sort_dfs(start_node:str, node_status: Dict[str,str], adj_matrix: Dict[str, List[str]], clock: int, topo_order: List) -> int:
     node_status[start_node] = 'active'
     for child in adj_matrix[start_node]:
-        if node_status[child] is 'new':
+        if node_status[child] == 'new':
             clock = topo_sort_dfs(child, node_status, adj_matrix, clock, topo_order)
-        elif node_status[child] is 'active':
+        elif node_status[child] == 'active':
             raise ValueError('Network contains a cycle.')
     node_status[start_node] = 'finished'
     topo_order[clock-1] = start_node

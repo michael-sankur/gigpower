@@ -23,7 +23,7 @@ def setup(dss_file: str) -> None:
     Set loads on the network.
     """
     dss.run_command('Redirect ' + dss_file)
-    originalSteps = dss.Solution.Number()
+    # originalSteps = dss.Solution.Number() # used to save original steps
     dss.Solution.Mode(1)
     dss.Solution.Number(1)
     dss.Solution.StepSize(1)
@@ -75,7 +75,6 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
     Vbase = dss.Bus.kVBase() * 1000
     Sbase = 1000000.0
     Ibase = Sbase/Vbase
-    Zbase = Vbase/Ibase
 
     VDSS = np.zeros((len(dss.Circuit.AllBusNames()), 3), dtype='complex')
     for k1 in range(len(dss.Circuit.AllBusNames())):
