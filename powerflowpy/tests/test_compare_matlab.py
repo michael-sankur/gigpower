@@ -10,21 +10,23 @@ import opendssdirect as dss
 import numpy as np
 import pandas as pd
 
-dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
+parent_path = 'powerflowpy/tests/05n3ph_unbal/'
+dss_file = parent_path + 'compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
 mat_struct = 'powerflowpy/tests/05n3ph_unbal/05n3ph_unbal_network.mat'
 
 # maps matlab node names to python node names
 NODE_DICT = {
-    'sub' : 'sourcebus',
-    'A01' : 'a01',
-    'A02' : 'a02',
-    'A03' : 'a03',
-    'A04' : 'a04',
-    'A05' : 'a05',
-    'A06' : 'a06',
+    'sub': 'sourcebus',
+    'A01': 'a01',
+    'A02': 'a02',
+    'A03': 'a03',
+    'A04': 'a04',
+    'A05': 'a05',
+    'A06': 'a06',
 }
-
 # CONFIRM NETWORK MAPPING-------------------------------------------------------
+
+
 def test_base(py_network, mat_network):
     tolerance = 10**-2
     # tolerance is generous because opendss uses LL base and matlab struct uses LN base
@@ -33,11 +35,12 @@ def test_base(py_network, mat_network):
     py_base = py_network.get('Base')
     base_keys = ['Vbase', 'Ibase', 'Sbase', 'Zbase']
     base_cols = ['python', 'matlab', 'err']
-    data = [ np.array([py_base[k], mat_base[k], abs(mat_base[k] - py_base[k])], dtype = 'float') for k in base_keys]
+    data = [np.array([py_base[k], mat_base[k], abs(mat_base[k]-py_base[k])], dtype='float') for k in base_keys]
     base_compare_df = pd.DataFrame(data, base_keys, base_cols)
     # print(base_compare_df)
     # TODO: Vbase is off by .0013. Figure out why!
     assert (base_compare_df.err <= tolerance).all()
+
 
 def test_FZpu(py_network, mat_network):
     tolerance = 10**-6
@@ -51,7 +54,7 @@ def test_FZpu(py_network, mat_network):
         py_line_key = f"('{NODE_DICT.get(mat_tx)}', '{NODE_DICT.get(mat_rx)}')"
         mat_FZ = mat_lines.get('FZpu').transpose()[mat_line_idx]
         py_FZ = py_lines.loc[py_line_key].FZpu
-        err.append(np.abs( (np.subtract(py_FZ, mat_FZ) ) ).max())
+        err.append(np.abs((np.subtract(py_FZ, mat_FZ))).max())
         index.append(py_line_key)
     df = pd.DataFrame(err, index, ['err'])
     # print(df)
@@ -65,22 +68,26 @@ def test_FZpu(py_network, mat_network):
 def fbssol_py(py_network):
     return fbs(dss_file)
 
+
 @pytest.fixture
 def py_network():
     """setup test network from dss_file"""
     return init_from_dss(dss_file).to_dataframes()
 
+
 @pytest.fixture
 def mat_network():
     """ Load matlab network struct into a python dictionary """
-    n =  loadmat(mat_struct).get('network1')
+    n = loadmat(mat_struct).get('network1')
     return n
+
 
 @pytest.fixture
 def get_dss_instance():
     """set-up dss instance for dss_file"""
     dss.run_command('Redirect ' + dss_file)
     return None
+
 
 def loadmat(filename):
     '''

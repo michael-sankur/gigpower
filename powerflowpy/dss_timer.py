@@ -1,5 +1,5 @@
 from powerflowpy.dss_solve import setup, solve
-import numpy as np # type: ignore
+import numpy as np  # type: ignore
 import csv
 import time
 
@@ -15,7 +15,7 @@ if __name__ == '__main__':
         writer.writerow(['num_trials', 'setup_time', 'solve_time', 'total_time'])
 
         for i in range(TRIALS):
-            result = np.zeros(4) # initialize result row for this trial set
+            result = np.zeros(4)  # initialize result row for this trial set
             for j in range(i+1):
 
                 t1 = time.perf_counter()
@@ -27,8 +27,5 @@ if __name__ == '__main__':
 
                 trial_result = [(t2-t1) * 1000, (t3 - t2) * 1000, (t3 - t1) * 1000]
                 # add this trial to the result array
-                result = result + np.asarray([1] + trial_result) # type: ignore
+                result = result + np.asarray([1] + trial_result)  # type: ignore
             writer.writerow(result)
-
-
-
