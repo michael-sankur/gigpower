@@ -3,10 +3,10 @@
 # File created: 28 August 2020
 # Implement FBS to solve Power Flow for a radial distribution network.
 
-from typing import Iterable, List, Dict
+from typing import Iterable, List, Dict, Tuple
 from . utils import mask_phases
 from . network import *
-import pandas as pd
+import pandas as pd # type: ignore
 
 class Solution:
 
@@ -25,9 +25,11 @@ class Solution:
         self.V = dict() # 3x1 complex pu voltages phasors. 3 x num_nodes total datapoints. Indexed by node name.
         self.Inode = dict() # 3x1 complex pu current phasors delivered to node. 3 x num_nodes total data points. Indexed by node name.
         self.I = dict() # 3x1 complex pu current phasors. 3 x num_lines total datapoints. Indexed by line key.
-        self.Stx = dict() # line transmitting end power. 3 x num_lines total datapoints. Indexed by line key.
-        self.Srx = dict() # 3x1 line transmitting end power. 3 x num_lines total datapoints. Indexed by line key.
-        self.sV = dict() # Total power at each node. 3 x num_nodes total datapoints. Indexed by node name.
+        self.Stx : Dict[ Tuple[str,str], Iterable] = dict() # line transmitting end power. 3 x num_lines total datapoints. Indexed by line key.
+        # 3x1 line transmitting end power. 3 x num_lines total datapoints. Indexed by line key.
+        self.Srx : Dict[Tuple[str, str], Iterable] = dict()
+        # Total power at each node. 3 x num_nodes total datapoints. Indexed by node name.
+        self.sV: Dict[str, Iterable] = dict()
 
         # HELPER VARIABLES
         # self.s: intermediate values for voltage dependent loads. 3 x num_nodes total datapoints. Indexed by node name.
@@ -89,8 +91,8 @@ class Solution:
         """
         parent = child.parent
         child_V = self.V[child.name]
-        parent_V = self.V[parent.name]
-        line_key = (parent.name, child.name)
+        parent_V = self.V[parent.name] # type: ignore
+        line_key = (parent.name, child.name) # type: ignore
         FZpu = network.lines[line_key].FZpu
         I = self.I[line_key]
         # update voltages at parent only for phases existing on child
@@ -98,7 +100,7 @@ class Solution:
             if child.phases[phase_idx]: # if this phase is present on child
                 parent_V[phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
         # zero out voltages for non-existant phases at parent node
-        self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases)
+        self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases) # type: ignore
         return None
 
     def update_parent_current(self, network: Network, line_in: Line) -> None:
@@ -107,9 +109,9 @@ class Solution:
         [parent_segment]---->parent_node---->[line_in]----->current_node
         Used during backward sweep
         """
-        parent_name = line_in.key[0]
+        parent_name = line_in.key[0] # type: ignore
         parent_node = self.network.nodes.get(parent_name)
-        parent_seg_key = (parent_node.parent.name, parent_name)
+        parent_seg_key = (parent_node.parent.name, parent_name) # type: ignore
         parent_seg_phases = network.lines[parent_seg_key].phases
         line_in_I = self.I[line_in.key]
         parent_s = self.s[parent_name]
@@ -125,8 +127,8 @@ class Solution:
         upstream_node--->[line_in]---> downstream_node ===> [0 or many lines out] ===> 0 or many child nodes
         Used during backward sweep.
         """
-        node_name = line_in.key[1]
-        line_phases = network.lines[ line_in.key ].phases
+        node_name = line_in.key[1] # type: ignore
+        line_phases = network.lines[ line_in.key ].phases #type: ignore
         line_I = self.I[line_in.key]
         node_s = self.s[node_name]
         node_V = self.V[node_name]
@@ -193,7 +195,7 @@ class Solution:
         """
         Idf = pd.DataFrame.from_dict(self.I, orient='index', columns=['A', 'B', 'C'])
         # reindex lines to match opendss file
-        new_index = ( [ self.network.lines.get(k).name for k in self.I.keys()] )
+        new_index = ( [ self.network.lines.get(k).name for k in self.I.keys()] ) # type: ignore
         Idf.index = new_index
         return Idf
 
@@ -210,7 +212,7 @@ class Solution:
         Stx = pd.DataFrame.from_dict(
             self.Stx, orient='index', columns=['A', 'B', 'C'])
         # reindex lines to match opendss file
-        new_index = ([self.network.lines.get(k).name for k in self.I.keys()])
+        new_index = ([self.network.lines.get(k).name for k in self.I.keys()]) # type: ignore
         Stx.index = new_index
         return Stx
 
@@ -221,7 +223,7 @@ class Solution:
         Srx = pd.DataFrame.from_dict(
             self.Srx, orient='index', columns=['A', 'B', 'C'])
         # reindex lines to match opendss file
-        new_index = ([self.network.lines.get(k).name for k in self.I.keys()])
+        new_index = ([self.network.lines.get(k).name for k in self.I.keys()]) # type: ignore
         Srx.index = new_index
         return Srx
 
@@ -255,8 +257,11 @@ class Solution:
         print("\n Inode solution")
         print(self.Inode_df())
 
-        print("\n S solution")
-        print(self.S_df())
+        print("\n Stx solution")
+        print(self.Stx_df())
+
+        print("\n Srx solution")
+        print(self.Srx_df())
 
         print("\n sV solution")
         print(self.sV_df())

@@ -3,13 +3,13 @@
 # File created: 10 September 2020
 # run opendss' solver on a dss file. Copied form '20180601/opendss_nonvec_test_comparison.ipynb'
 
-import opendssdirect as dss
-import numpy as np
-import pandas as pd
+import opendssdirect as dss # type: ignore
+import numpy as np # type: ignore
+import pandas as pd # type: ignore
 from typing import Tuple
 
 
-def solve_with_dss(dss_file: str) -> Tuple[pd.DataFrame]:
+def solve_with_dss(dss_file: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Set up dss object, call solve, and return the solution.
     """
@@ -65,7 +65,7 @@ def solve() -> None:
             #go under a reset process
             dss.Monitors.ResetAll()
 
-def get_solution() -> Tuple[pd.DataFrame]:
+def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Input: A dss object with a solved network.
     Output: Network solution paramters V, I, Stx, Srx in pandas DataFrames.

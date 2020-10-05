@@ -2,11 +2,11 @@
 # LBNL GIG
 # File created: 20 August 2020
 # Object model for networks
-from typing import Any, List, Dict, Iterable, Tuple, ValuesView
-import numpy as np
-import opendssdirect as dss
+from typing import Any, List, Dict, Iterable, Tuple, ValuesView, Union
+import numpy as np # type: ignore
+import opendssdirect as dss # type: ignore
 import sys
-import pandas as pd
+import pandas as pd # type: ignore
 
 #TODO: determine appropriate precision for attributes. Right now everything is either floats or ints.
 # Decimal has alterable precision (defaults to 28 places), and numpy.float128 can have 64-bit precision
@@ -18,14 +18,14 @@ class Network:
         Initialize a Network instance.
         """
         self.nodes : Dict[str,Node] = dict()
-        self.lines: Dict[ Tuple(str,str) ] = dict()
+        self.lines: Dict[ Tuple[str,str], Line ] = dict()
         self.loads: Dict[str, Load] = dict()
         self.capacitors: Dict[str, Capacitor] = dict()
         self.adj: Dict[str, List] = dict()
-        self.Vbase = 0
-        self.Sbase = 0
-        self.Ibase = 0
-        self.Zbase = 0
+        self.Vbase = 0.0
+        self.Sbase = 0.0
+        self.Ibase = 0.0
+        self.Zbase = 0.0
         self.num_phases = num_phases
 
 
@@ -72,8 +72,8 @@ class Node:
     def __init__(self, name: str = '') -> None:
         self.name = name
         self.phases = [False, False, False]
-        self.parent = None # pointer to parent Node. only one parent for radial networks
-        self.loads : List[Node] = []
+        self.parent : Union[None, Node]= None # pointer to parent Node. only one parent for radial networks
+        self.loads : List[Load] = []
         self.capacitors : List[Capacitor] = []
         self.sum_spu = np.zeros(3) # 3x1 complex array that holds the sum of all load.spu on this node
         self.sum_cappu = np.zeros(3) # 3x1 array that holds the sum of all capacitor.cappu on this node
@@ -95,7 +95,7 @@ class Line:
         self.name = name # string, the name DSS uses to refer to this line
         self.phases = [False, False, False]
         self.config = None
-        self.length = None
+        self.length = 0.0
         self.FZpu = np.zeros((3,3), dtype = 'complex')
 
     def __str__(self) -> str:
@@ -111,16 +111,17 @@ class Load:
     series_index = ['name', 'conn', 'phases', 'type', 'aPQ', 'aI', 'ppu', 'qpu', 'spu']
     def __init__(self, name: str = '') -> None:
         self.name = name
-        self.conn = None
+        self.conn = ''
         self.phases = (False, False, False)
         self.type = None
         self.aPQ = None
         self.aI = None
-        self.ppu = 0
-        self.qpu = 0
-        self.spu = 0
-        self.kw = 0
-        self.kvar = 0
+        self.aZ = None
+        self.ppu = 0.0 + 0j
+        self.qpu = 0.0
+        self.spu = 0.0 + 0j
+        self.kw = 0.0
+        self.kvar = 0.0
         self.node : Union[ Node, Any ]= None
 
     def __str__(self) -> str:
@@ -174,7 +175,7 @@ class Controller:
     def __init__(self, name: str = '') -> None:
         self.node = None
         self.name = name
-        self.phases = (False, False, False)
+        self.phases = [False, False, False]
         self.wpu = np.zeroes(3)
         self.wmaxpu = np.zeroes(3)
         self.fes = np.zeroes(3)
@@ -189,8 +190,8 @@ class Controller:
 class Capacitor:
     def __init__(self, name: str = '') -> None:
         self.name = name
-        self.phases = (False, False, False)
-        self.conn = None
+        self.phases = [False, False, False]
+        self.conn = ''
         self.cappu = np.zeros((3, 3), dtype='float')
     def __str__(self) -> str:
         return self.name

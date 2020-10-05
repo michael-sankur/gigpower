@@ -10,19 +10,23 @@ import powerflowpy
 from powerflowpy.fbs import *
 from powerflowpy.utils import init_from_dss
 from powerflowpy.dss_solve import solve_with_dss
-import opendssdirect as dss
+from powerflowpy.solution import Solution
+from powerflowpy.network import Network
+import pandas as pd # type: ignore
+import opendssdirect as dss # type: ignore
 import time
 import functools
-import numpy as np
+import numpy as np # type: ignore
 import csv
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt # type: ignore
+from typing import Any, Tuple
 plt.style.use('seaborn-whitegrid')
 
 
-def solver_timer(solver_func):
+def solver_timer(solver_func : Any) -> Any:
     """Decorator that returns the elapsed time when running solver_func n times"""
     @functools.wraps(solver_func)
-    def wrapper(network, n):
+    def wrapper(network : Network, n : int) -> Any:
         t1 = time.perf_counter()
         x = None
         for i in range(n):
@@ -33,15 +37,18 @@ def solver_timer(solver_func):
 
 
 @solver_timer
-def time_dss(dss_file, i):
+def time_dss(dss_file: str, i: int) -> None:
     """wrap dss solver in a timer"""
     solve_with_dss(dss_file)
+    return None
 
 
 @solver_timer
-def time_fbs(network, i):
+def time_fbs(network: Network, i: int) -> None :
     """ wrap powerflowpy.fbs in a timer"""
     fbs(network)
+    return None
+
 # set up command line arguments to this script
 @click.command( help='Compare running times between opendss and fbs. Please provide a full or relative path to a dss file.')
 @click.argument('dss_file')
@@ -105,10 +112,10 @@ def main(dss_file: str, trials: int, output: str) -> None:
     ax.set_xlabel("number of times solved")
     ax.set_ylabel("execution time(ms)")
     ax.plot(x, dss_durations, 'go', label = 'opendss')
-    ax.plot(x, dss_f(x), color='green',
+    ax.plot(x, dss_f(x), color='green', # type: ignore
             label=f"dss time/trial ~= {dss_m :.2f}ms")
     ax.plot(x, fbs_durations, 'bo', label = 'fbs')
-    ax.plot(x, fbs_f(x), color='blue', label=f'fbs time/trial ~={fbs_m: .2f}ms')
+    ax.plot(x, fbs_f(x), color='blue', label=f'fbs time/trial ~={fbs_m: .2f}ms') # type: ignore
 
     plt.xticks(np.arange(1, num_trials + 1)) # set x ticks to whole numbers
     ax.legend()

@@ -1,10 +1,10 @@
-import numpy as np
-import opendssdirect as dss
+import numpy as np # type: ignore
+import opendssdirect as dss # type: ignore
 import sys
 from typing import Iterable, List, Tuple, Any
 from . network import Network, Node, Line, Load, Controller, Capacitor
 
-def init_from_dss(dss_fp: str) -> None:
+def init_from_dss(dss_fp: str) -> Network:
     """define a Network attributes from a dss file"""
     dss.run_command('Redirect ' + dss_fp)
     network = Network()
@@ -33,7 +33,7 @@ def init_from_dss(dss_fp: str) -> None:
         network.adj[name] = []
     # iterate through nodes to parse phase lists
     for node in network.get_nodes():
-        node.phases = parse_phases(node.phases)
+        node.phases = parse_phases(node.phases) #type: ignore
 
     #make Lines
     all_lines_data = dss.utils.lines_to_dataframe().transpose() # get dss line data indexed by line_code
@@ -52,7 +52,7 @@ def init_from_dss(dss_fp: str) -> None:
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
         # set rx's parent to tx
-        network.nodes.get(rx).parent = network.nodes.get(tx)
+        network.nodes.get(rx).parent = network.nodes.get(tx) #type: ignore
 
         #parse line attributes from dss line data
         line.name = line_code
@@ -71,7 +71,7 @@ def init_from_dss(dss_fp: str) -> None:
         except KeyError:
             print(f"This load's node has not been defined. Load name: {load_name}, Node name: {node_name}")
         load = Load(load_name)
-        load.phases = parse_phases(list(phase_chars))
+        load.phases = parse_phases(list(phase_chars)) #type: ignore
 
         # save kw and kvar
         load.kW = load_data['kW']
@@ -131,7 +131,7 @@ def init_from_dss(dss_fp: str) -> None:
     return network
 
 
-def parse_phases(phase_char_lst) -> List:
+def parse_phases(phase_char_lst : List[str]) -> List:
     """
     helper function to return a list of phase characters into a boolean triple
     ex: ['1', '3'] -> (True, False True)
@@ -140,7 +140,7 @@ def parse_phases(phase_char_lst) -> List:
     phase_list = [False, False, False]
     for p in phase_char_lst:
         phase_list[get_phase_idx(p)] = True
-    return tuple(phase_list)
+    return phase_list
 
 def get_phase_idx(phase_char: str) -> int:
     """
@@ -153,7 +153,7 @@ def get_phase_idx(phase_char: str) -> int:
     else:
         raise ValueError(f'Invalid argument for get_phase_idx {phase_char}')
 
-def get_Z(dss_data: Any, phase_list : Tuple, fz_mult: float ) -> Iterable:
+def get_Z(dss_data: Any, phase_list : List[bool], fz_mult: float ) -> Iterable:
     """
     helper function to get the Z matrix from dss.lines.to_dataframe()
     Returns an ndarray.
@@ -166,7 +166,7 @@ def get_Z(dss_data: Any, phase_list : Tuple, fz_mult: float ) -> Iterable:
     # pad the Z matrix
     return pad_phases(ZM, (3,3), phase_list)
 
-def pad_phases(matrix:Iterable, shape: tuple, phases: tuple) -> Iterable:
+def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> Iterable:
     """
     Helper method to reshape input matrix and set values set to 0
     for phases set to FALSE in phases tuple.
@@ -196,7 +196,7 @@ def pad_phases(matrix:Iterable, shape: tuple, phases: tuple) -> Iterable:
                 (f"Cannot pad matrix.")
     return ret_mat
 
-def mask_phases(matrix: Iterable, shape: tuple, phases: tuple) -> Iterable:
+def mask_phases(matrix: Iterable, shape: tuple, phases: List[bool]) -> Iterable:
     """
     Zeroes out values in input matrix for phases set to FALSE in the phases tuple.
     Input:

@@ -1,5 +1,6 @@
 from powerflowpy.fbs_detailed_timing import *
-import numpy as np
+import numpy as np # type: ignore
+import csv
 
 dss_file = 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss'
 out_csv = './powerflowpy/tests/timings/fbs_detailed_timing.csv'
