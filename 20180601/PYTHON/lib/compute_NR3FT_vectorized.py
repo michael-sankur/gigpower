@@ -18,6 +18,6 @@ def compute_NR3FT_vectorized(X, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline,
 
     FTVR2 = G_reg @ X
 
-    FT = np.r_[FTSUBV, FTKVL, FTKCL]#, FTVR, FTVR2]
+    FT = np.r_[FTSUBV, FTKVL, FTKCL, FTVR, FTVR2]
 
     return FT

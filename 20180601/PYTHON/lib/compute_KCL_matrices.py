@@ -5,14 +5,16 @@ import sys
 def compute_KCL_matrices(fn, t, der, capacitance):
 
     dss.run_command('Redirect ' + fn)
+
+    # Allocate transformer lines
     tf_no = len(dss.Transformers.AllNames()) - len(dss.RegControls.AllNames()) #number of transformers
     vr_no = len(dss.RegControls.AllNames()) #number of voltage regulators
-
     tf_bus = np.zeros((2, tf_no), dtype = int) #tf has in and out bus
     vr_bus = np.zeros((3, vr_no), dtype = int) #vr has in and out bus and phase
     tf_count = 0
     vr_count = 0
     whichone = -1
+
     for tf in range(len(dss.Transformers.AllNames())):
         dss.Transformers.Name(dss.Transformers.AllNames()[tf])
         for i in range(2):
@@ -114,7 +116,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
     beta_I = 0.0
     beta_Z = 0.0
 
-    H = np.zeros((2*3*(nnode-1), 2 * 3 * (nnode + nline), 2 * 3* (nnode + nline)))
+    H = np.zeros((2*3*(nnode-1), 2*3*(nnode + nline), 2*3*(nnode + nline)))
     g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline)))
     b = np.zeros((2*3*(nnode-1), 1, 1))
 
@@ -185,7 +187,8 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                             H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
 
     # Transformer KCL
-    for ph in range(0,3):       
+    for ph in range(0,3):  
+        print('transformer KCL')     
         if ph == 0: #set nominal voltage based on phase
             A0 = 1
             B0 = 0
@@ -236,6 +239,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
 
     #Voltage Regulator KCL    
     if vr_no > 0:
+        print('voltage regulator KCL')
         for ph in range(0,3):
             for cplx in range(2):
                 if ph == 0: #set nominal voltage based on phase

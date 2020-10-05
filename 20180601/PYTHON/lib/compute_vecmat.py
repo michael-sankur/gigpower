@@ -82,7 +82,6 @@ def compute_vecmat(XNR, fn, Vslack):
         dss.Circuit.SetActiveBus(start_bus)
 
         Vbase = dss.Bus.kVBase() * 1000
-        print(Vbase)
      
         Ibase = Sbase/Vbase
         Zbase = Vbase/Ibase
@@ -185,8 +184,9 @@ def compute_vecmat(XNR, fn, Vslack):
                 G_KVL[2*ph*nline + 2*line+1][2*(nnode)*3 + 2*ph*nline + 2*line+1] = 1 #D_mn
 
     # KVL for transformer
-    for ph in range(0, 3):
-        for tfbs in range(len(tf_bus[0])):
+    for tfbs in range(len(tf_bus[0])):
+        for ph in range(0, 3):    
+            print('transformer kvl: ')
             line = len(dss.Lines.AllNames()) + tfbs
             G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*int(tf_bus[0, tfbs])] = 1 #A_m
             G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*int(tf_bus[1, tfbs])] = -1 #A_n
@@ -203,9 +203,10 @@ def compute_vecmat(XNR, fn, Vslack):
     #  voltage ratio: V_bus2 - gamma V_bus1 = 0
     line_in_idx = range(len(dss.Lines.AllNames()) + tf_no, nline, 2)
     line_out_idx = range(len(dss.Lines.AllNames()) + tf_no + 1, nline, 2)
-    gain =  -1 * np.ones((1, vr_no)) #list of gains
+    gain =  -1.05 * np.ones((1, vr_no)) #list of gains
 
     for m in range(len(vr_bus[0])):
+        print('voltage regulator - ratio, conservation of power')
         bus1_idx = vr_bus[0, m]
         bus2_idx = vr_bus[1, m]
             

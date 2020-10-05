@@ -16,7 +16,7 @@ def compute_NR3JT_vectorized(X, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg):
 
     JVR2 = G_reg
 
-    JT = np.r_[JSUBV, JKVL, JKCL]#, JVR, JVR2]
+    JT = np.r_[JSUBV, JKVL, JKCL, JVR, JVR2]
 
     #print(JT)
 
