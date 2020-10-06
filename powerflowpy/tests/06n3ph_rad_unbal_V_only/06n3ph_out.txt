@@ -1,0 +1,54 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.8.5, pytest-6.0.1, py-1.9.0, pluggy-0.13.1
+rootdir: /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy
+collected 1 item
+
+powerflowpy/tests/test_compare_opendss.py 
+
+Testing File: powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss
+F
+
+=================================== FAILURES ===================================
+___________________________________ test_all ___________________________________
+
+    def test_all():
+        """
+        Compare the python FBS solution to the opendss solution.
+        To save output, run from command line:
+        pytest ./powerflowpy/tests/test_compare_opendss.py -s >[OUTPUT FILE PATH]
+        Examples:
+        $ pytest ./powerflowpy/tests/test_compare_opendss.py -s > ./powerflowpy/tests/06n3ph_unbal/06n3ph_out.txt
+        $ pytest ./powerflowpy/tests/test_compare_opendss.py -s > ./powerflowpy/tests/05n3ph_unbal/05n3ph_out.txt
+        """
+        tolerance = .01
+        for file in dss_files:
+            print(f'\n\nTesting File: {file}')
+>           compare_fbs_sol(file, tolerance)
+
+powerflowpy/tests/test_compare_opendss.py:36: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+dss_file = 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss'
+tolerance = 0.01
+
+    def compare_fbs_sol(dss_file, tolerance):
+        #TODO: Figure out how to get Inode (iNR) and sV (sNR) at each node from dss and perform a compare
+        network = init_from_dss(dss_file)
+        fbs_sol = get_fbs_solution( fbs(network) )
+>       dss_sol = get_dss_solution( solve_with_dss(dss_file) )
+E       TypeError: get_solution() takes 0 positional arguments but 1 was given
+
+powerflowpy/tests/test_compare_opendss.py:43: TypeError
+=============================== warnings summary ===============================
+tests/test_compare_opendss.py::test_all
+  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy/powerflowpy/solution.py:134: RuntimeWarning: invalid value encountered in true_divide
+    new_line_I = np.conj(np.divide(node_s, node_V)) # TODO: consider dividing manually only by phases on the node
+
+tests/test_compare_opendss.py::test_all
+  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy/powerflowpy/solution.py:181: RuntimeWarning: invalid value encountered in true_divide
+    node_I = np.conj(np.divide(node_sV,node_V))
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+=========================== short test summary info ============================
+FAILED powerflowpy/tests/test_compare_opendss.py::test_all - TypeError: get_s...
+======================== 1 failed, 2 warnings in 0.79s =========================

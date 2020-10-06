@@ -1,16 +1,22 @@
-import numpy as np
-import opendssdirect as dss
-import sys
-from typing import Iterable, List
-from . network import Network, Node, Line, Load, Controller, Capacitor
+import numpy as np # type: ignore
+import opendssdirect as dss # type: ignore
+from typing import Iterable, List, Any
+from . network import Network, Node, Line, Load, Capacitor
 
-def init_from_dss(dss_fp: str) -> None:
+def init_from_dss(dss_fp: str) -> Network:
     """define a Network attributes from a dss file"""
     dss.run_command('Redirect ' + dss_fp)
-    # set base values
-    #TODO: figure out how to get Vbase, units and Sbase, units from opendss
-
     network = Network()
+
+    # set base values
+    # TODO: make it possible to set the base from a given bus
+    dss.Solution.Solve()
+    Vbase = dss.Bus.kVBase() * 1000
+
+    Sbase = 1000000.0
+    Ibase = Sbase/Vbase
+    network.Zbase = Vbase/Ibase
+    network.Vbase, network.Sbase, network.Ibase = Vbase, Sbase, Ibase
 
     # make Nodes
     for node_name in dss.Circuit.AllNodeNames():
@@ -18,63 +24,195 @@ def init_from_dss(dss_fp: str) -> None:
         # get the node corresponding to this name, or make a new one
         if name not in network.nodes.keys():
             network.nodes[name] = Node(name)
+            network.nodes[name].phases = [] # replace default tuple with empty list so we can mutate it
         node = network.nodes[name]
-        phase_idx = int(phase) - 1 # shift to 0-indexing
-        node.phases[phase_idx] = 1 # add this phase to the node
-        # initalize this node's adjacency list to the empty list
-        # note: this means that every node has an entry. Nodes with no children will hav an empty list.
+        # store phases as characters in phase list for now
+        node.phases.append(phase)
+        # Add node to adjacency lisst. note: this means that every node has an entry. Nodes with no children will have an empty list.
         network.adj[name] = []
-    
-    #make Lines
-    line_codes = dss.LineCodes.AllNames()
-    lengths = [i() for i in dss.utils.Iterator(dss.Lines, 'Length')]
-    line_zip = zip(line_codes, lengths)
-    
-    for line_code,length in line_zip:
-        tx, rx = line_code.split('_')
-        tx = 'sourcebus' if tx == 'sub' else tx # TODO: figure out: is 'sub' the same as 'sourcebus?'
-        if (tx, rx) not in network.lines.keys():
-            network.lines[(tx,rx)] = Line((tx,rx))
-        line = network.lines[(tx,rx)]
-        line.length = length
+    # iterate through nodes to parse phase lists
+    for node in network.get_nodes():
+        node.phases = parse_phases(node.phases) #type: ignore
 
+    #make Lines
+    all_lines_data = dss.utils.lines_to_dataframe().transpose() # get dss line data indexed by line_code
+    line_codes = all_lines_data.keys()
+
+    for line_code in line_codes:
+        line_data = all_lines_data[line_code]
+        tx, *tx_phases = line_data['Bus1'].split('.')
+        rx, *rx_phases = line_data['Bus2'].split('.')
+        if tx_phases != rx_phases:
+            raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
+        line = Line((tx, rx), line_code) # initialize line
+        for phase in tx_phases: # set phases according to tx
+            line.phases = parse_phases(tx_phases)
+        network.lines[(tx,rx)] = line # add line to network.line
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
+        # set rx's parent to tx
+        network.nodes.get(rx).parent = network.nodes.get(tx) #type: ignore
 
-    # TODO: figure out how to get 3x3 impedance per unit matrix. 
-    # probably something using dss.Lines, 'XMatrix' and 'RMatrix'
-    # TODO: handle unit conversions
+        #parse line attributes from dss line data
+        line.name = line_code
+        line.length = line_data['Length']
+        fz_mult = 1 / network.Zbase * line.length
+        line.FZpu = get_Z(line_data, line.phases, fz_mult)
 
     # make Loads
-    load_names = dss.Loads.AllNames()
+    all_loads_data = dss.utils.loads_to_dataframe().transpose()
+    load_names = all_loads_data.keys()
     for load_name in load_names:
-        # TODO: handle multiple loads on a node 
-        node_name, phase_char, load_idx = load_name.split('_')[1:]
+        load_data = all_loads_data[load_name]
+        node_name, phase_chars, load_idx = load_name.split('_')[1:]
         try:
             node = network.nodes[node_name]
         except KeyError:
-            print("Node assigned to load not defined for this network.")
-        load = Load(load_name + '_' + load_idx)
-        load.phases[get_phase_idx(phase_char)] = 1 # indicate this load's phase
-        node.load = load #assign this load to its node
-    #TODO: get aPQ, aI, ppu, qpu, spu for each load
-    #TODO: figure out how to get connection information (wye or delta). 
-    # Is this info determined by Capacitors?
-    # Or can we use Loads.IsDelta?
+            print(f"This load's node has not been defined. Load name: {load_name}, Node name: {node_name}")
+        load = Load(load_name)
+        load.phases = parse_phases(list(phase_chars)) #type: ignore
+
+        # save kw and kvar
+        load.kW = load_data['kW']
+        load.kvar = load_data['kvar']
+
+        # divide ppu and qpu by number of phases
+        ppu = load.kW / 1000/ load.phases.count(True)
+        qpu = load.kvar / 1000 / load.phases.count(True)
+
+        # set aPQ, aI, aZ
+        # TODO: get aPQ, aI for each load
+        load.aPQ = np.ones(3)
+        load.aI = np.zeros(3)
+        load.aZ = np.zeros(3)
+        # set load's ppu, qpu, and spu as a 3x1 based on load's phases
+        load.ppu = np.asarray( [ppu if phase else 0 for phase in load.phases])
+        load.qpu = np.asarray( [qpu if phase else 0 for phase in load.phases])
+        load.spu = load.ppu + 1j*load.qpu
+        load.conn =   'delta' if load_data['IsDelta'] else 'wye'
+        # add a pointer to this load to the network
+        network.loads[load_name] = load
+        load.node = node # assign the node to the load
+        node.loads.append(load)  # add this load to its node's load list
+        #TODO: set load.type
+    # sum all loads on each node and store on each node, to avoid re-calculating during
+    # fbs.update-voltage-dependent-load()
+    for node in network.nodes.values():
+        for load in node.loads:
+            node.sum_spu = np.add(node.sum_spu, load.spu)
 
     # make Controllers
     # TODO: implement this. No idea how opendssdirect maps this info. Which class is it even?
 
     # make Capacitors
-    cap_names = dss.Capacitors.AllNames()
+    all_cap_data = dss.utils.capacitors_to_dataframe().transpose()
+    cap_names = all_cap_data.keys()
     for cap_name in cap_names:
+        cap_data = all_cap_data[cap_name]
+        node_name, phase_chars, cap_idx = cap_name.split('_')[1:]
+        try:
+            node = network.nodes[node_name]
+        except KeyError:
+            print(
+                f"This cap's node has not been defined. Cap name: {cap_name}, Node name: {node_name}")
         cap = Capacitor(cap_name)
-        #TODO: figure out how to parse these names from an example
-    
+        cap.phases = parse_phases(list(phase_chars))
+        cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
+        cappu = cap_data['kvar'] * 1000 / network.Sbase / len(cap.phases) # TODO: confirm that cappu is divided by num phases
+        cap.cappu = np.asarray([cappu if phase else 0 for phase in cap.phases])
+        network.capacitors[ cap_name ] = cap # add a pointer to this cap to the network
+        node.capacitors.append(cap) # add capacitor to it's node's cap list
+    # sum all cappu on each node and store on each node, to avoid re-calculating during
+    # fbs.update-voltage-dependent-load()
+    for node in network.nodes.values():
+        for cap in node.capacitors:
+            node.sum_cappu = np.add(node.sum_cappu, cap.cappu)
     return network
+
+
+def parse_phases(phase_char_lst : List[str]) -> List:
+    """
+    helper function to return a list of phase characters into a boolean triple
+    ex: ['1', '3'] -> (True, False True)
+    ex: ['a','b'] -> (True, True, False)
+    """
+    phase_list = [False, False, False]
+    for p in phase_char_lst:
+        phase_list[get_phase_idx(p)] = True
+    return phase_list
 
 def get_phase_idx(phase_char: str) -> int:
     """
     helper function to turn a phase letter into an index, where 'a' = 0
     """
-    return ord(phase_char.lower()) - ord('a') 
+    if phase_char in ['a', 'b', 'c']:
+        return ord(phase_char.lower()) - ord('a')
+    elif phase_char in ['1', '2', '3']:
+        return int(phase_char) - 1
+    else:
+        raise ValueError(f'Invalid argument for get_phase_idx {phase_char}')
+
+def get_Z(dss_data: Any, phase_list : List[bool], fz_mult: float ) -> Iterable:
+    """
+    helper function to get the Z matrix from dss.lines.to_dataframe()
+    Returns an ndarray.
+    """
+    num_phases = phase_list.count(True)
+    RM = np.asarray(dss_data['RMatrix'])
+    XM = np.asarray(dss_data['XMatrix'])
+    ZM = fz_mult * (RM + 1j*XM)
+    ZM = np.reshape(ZM, (ZM.shape[0]//num_phases, num_phases))  # reshape
+    # pad the Z matrix
+    return pad_phases(ZM, (3,3), phase_list)
+
+def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> Iterable:
+    """
+    Helper method to reshape input matrix and set values set to 0
+    for phases set to FALSE in phases tuple.
+    Input:
+        matrix: an nd array
+        shape: a 2-element tuple indicating the output matrix's shape
+        phases: a tuple of booleans corresponding to phases to set on this matrix (A: T/F, B: T/F, C: T/F)
+    Output:
+        matrix reshaped with original values, and
+        with 0's for all row/column indices corresponding to phases set to FALSE
+    """
+    # make the return matrix matrix
+    ret_mat = np.zeros(shape, dtype=complex)
+    vals = iter(matrix.flatten())
+    for out_idx in range(shape[0]):
+        if len(shape) == 2:
+            for col_idx in range(shape[1]):
+                if phases[out_idx] and phases[col_idx]:
+                    try:
+                        ret_mat[out_idx][col_idx] = next(vals)
+                    except StopIteration:
+                        ("Cannot pad matrix.")
+        else:
+            try:
+                ret_mat[out_idx] = next(vals)
+            except StopIteration:
+                ("Cannot pad matrix.")
+    return ret_mat
+
+def mask_phases(matrix: Iterable, shape: tuple, phases: List[bool]) -> Iterable:
+    """
+    Zeroes out values in input matrix for phases set to FALSE in the phases tuple.
+    Input:
+        matrix: a 3x3 ndarray
+        phases: a tuple of booleans corresponding to phases to set on this matrix (A: T/F, B: T/F, C: T/F)
+    Output:
+        input matrix with 0's for all row/column indices corresponding to phases set to FALSE
+    """
+    phase_matrix = np.zeros(shape, dtype=complex)
+    for out_idx in range(shape[0]):
+        if len(shape) == 2:
+            for col_idx in range(shape[1]):
+                if phases[out_idx] and phases[col_idx]:
+                    phase_matrix[out_idx][col_idx] = 1
+        else:
+            if phases[out_idx] :
+                phase_matrix[out_idx] = 1
+    masked = np.multiply(matrix, phase_matrix)
+    # change all NaN's to 0
+    return np.nan_to_num(masked)
