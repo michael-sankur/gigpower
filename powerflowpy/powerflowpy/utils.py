@@ -40,6 +40,7 @@ def init_from_dss(dss_fp: str) -> Network:
 
     for line_code in line_codes:
         line_data = all_lines_data[line_code]
+        print(line_data)
         tx, *tx_phases = line_data['Bus1'].split('.')
         rx, *rx_phases = line_data['Bus2'].split('.')
         if tx_phases != rx_phases:
@@ -57,6 +58,7 @@ def init_from_dss(dss_fp: str) -> Network:
         line.name = line_code
         line.length = line_data['Length']
         fz_mult = 1 / network.Zbase * line.length
+
         line.FZpu = get_Z(line_data, line.phases, fz_mult)
 
     # make Loads
@@ -127,6 +129,12 @@ def init_from_dss(dss_fp: str) -> Network:
     for node in network.nodes.values():
         for cap in node.capacitors:
             node.sum_cappu = np.add(node.sum_cappu, cap.cappu)
+
+    # make Transformers
+    all_transformer_data = dss.utils.transformers_to_dataframe().transpose()
+    transformer_names = all_transformer_data.keys()
+    print(all_transformer_data)
+
     return network
 
 
@@ -158,6 +166,8 @@ def get_Z(dss_data: Any, phase_list : List[bool], fz_mult: float ) -> Iterable:
     Returns an ndarray.
     """
     num_phases = phase_list.count(True)
+    if num_phases == 0:
+        print(dss_data)
     RM = np.asarray(dss_data['RMatrix'])
     XM = np.asarray(dss_data['XMatrix'])
     ZM = fz_mult * (RM + 1j*XM)

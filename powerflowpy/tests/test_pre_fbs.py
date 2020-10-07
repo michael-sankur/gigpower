@@ -5,7 +5,7 @@ from powerflowpy.fbs import topo_sort
 import pytest
 import opendssdirect as dss
 
-dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
+dss_file = 'powerflowpy/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss'
 # dss_file = 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
 
 @pytest.fixture
