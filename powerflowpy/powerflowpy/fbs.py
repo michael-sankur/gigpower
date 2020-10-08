@@ -5,7 +5,7 @@
 from typing import List, Dict
 from . network import Network
 from . solution import Solution
-import numpy as np
+import numpy as np  # type: ignore
 
 
 def fbs(network: Network) -> Solution:

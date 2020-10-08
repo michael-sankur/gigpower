@@ -52,8 +52,8 @@ def init_from_dss(dss_fp: str) -> Network:
         network.adj[tx].append(rx)
         tx_node, rx_node = network.nodes.get(tx), network.nodes.get(rx)
         # Make sure that rx does not yet have a parent assigned. If so, set rx's parent to tx
-        if rx_node.parent: # type: ignore
-            raise ValueError(f"Not a radial network. Node {rx_node.name} has more than one parent.")
+        if rx_node.parent:  # type: ignore
+            raise ValueError(f"Not a radial network. Node {rx_node.name} has more than one parent.")  # type: ignore
         else:
             rx_node.parent = tx_node  #type: ignore
 
