@@ -35,7 +35,6 @@ def test_init_from_dss(get_network) -> None:
 
 def test_topo_sort() -> None:
     network = init_from_dss(dss_file)
-    # TODO: make sure that topo_sort fails on a network with a cycle
     # if any node is preceded by one of its children assert False
     sort = topo_sort(network)
     for idx,node in enumerate(sort):
