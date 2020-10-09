@@ -19,7 +19,7 @@ Conduct a timing experiment on opendss vs. FBS | `main.py`
 
 ## Testing Suite
 Tests were written using `pytest`. These tests live in `fbs/tests` and can be run manually by invoking `pytest` on the powerflowpy directory:  
-`$ pytest ./powerflowpy`
+`$ pytest ./fbs`
 
 Below is a brief description of the test files and their coverage:
 <hr>
