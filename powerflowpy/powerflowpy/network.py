@@ -39,6 +39,12 @@ class Network:
         """return a List-like view network Load objects"""
         return self.loads.values()
 
+    def set_load_kw(self, load, kw) -> None:
+        self.loads[load].set_kW(kw)
+
+    def set_load_kvar(self, load, kvar) -> None:
+        self.loads[load].set_kVar(kvar)
+
     def __str__(self) -> str:
         """return something informative"""
         df_dict = self.to_dataframes()

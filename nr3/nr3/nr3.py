@@ -110,13 +110,18 @@ class NR3:
         iter_count = 0 #count # of iterations
 
         FT1 = 1e99
+        self.converged = True
         while np.amax(np.abs(FT1)) >= 1e-9 and iter_count < self.max_iter:
             FT1 = ft1(self.XNR, self.g_SB, self.b_SB, self.G_KVL, self.b_KVL, self.H, self.g, self.b, self.nnode) #vectorized
             JT1 = jt1(self.XNR, self.g_SB, self.G_KVL, self.H, self.g, self.nnode, self.nline)
             # if JT.shape[0] >= JT.shape[1]: #non-vectorized
             #     XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
-            if JT1.shape[0] > JT1.shape[1]: #vectorized
-                self.XNR = self.XNR - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
+            if JT1.shape[0] >= JT1.shape[1]: #vectorized
+                try:
+                    self.XNR = self.XNR - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
+                except:
+                    self.converged = False
+                    break
 
             iter_count += 1 #count up at this point (indexing should match)
         ###############################################################################
@@ -179,7 +184,12 @@ class NR3:
         #reset bus_load, ready for the next timestep
         self.bus_load = np.zeros((3, self.nnode, 2))  #bus_name, phase, kwkvar
 
-        return VNR, INR, iNR, sNR, STXNR, SRXNR
+        #return VNR, INR, iNR, sNR, STXNR, SRXNR
+        self.VNR = VNR
+
+    def get_all_bus_voltages(self):
+        all_voltages = np.absolute(self.VNR).T.flatten()
+        return all_voltages[all_voltages != 0]
 
     def set_bus_kw(self, bus, kw, ph):
         bus_idx = self.all_bus_names.index(bus)
