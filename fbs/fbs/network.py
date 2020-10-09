@@ -39,11 +39,11 @@ class Network:
         """return a List-like view network Load objects"""
         return self.loads.values()
 
-    def set_load_kw(self, load, kw) -> None:
-        self.loads[load].set_kW(kw)
+    def set_load_kw(self, load:str, kw:float) -> None:
+        self.loads[load].set_kw(kw)
 
-    def set_load_kvar(self, load, kvar) -> None:
-        self.loads[load].set_kVar(kvar)
+    def set_load_kvar(self, load:str, kvar:float) -> None:
+        self.loads[load].set_kvar(kvar)
 
     def __str__(self) -> str:
         """return something informative"""
@@ -151,7 +151,7 @@ class Load:
         self.node.sum_spu = np.subtract(self.node.sum_spu, old_spu)
         self.node.sum_spu = np.add(self.node.sum_spu, self.spu)
 
-    def set_kW(self, kW: float) -> None:
+    def set_kw(self, kW: float) -> None:
         """
         Reset a load's kW and recalculate all load parameters based on new kvar.
         Note that this also updates the load's node's sum_spu

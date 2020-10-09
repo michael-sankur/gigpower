@@ -96,7 +96,7 @@ def init_from_dss(dss_fp: str) -> Network:
         except KeyError:
             print(f"This load's node has not been defined. Load name: {load_name}, Node name: {node_name}")
         load = Load(load_name)
-        load.phases = parse_phases(list(phase_chars))  # type: ignore
+        load.phases = parse_phases(list(phase_chars))
         # save kw and kvar
         load.kW = load_data['kW']
         load.kvar = load_data['kvar']
