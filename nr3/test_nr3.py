@@ -49,4 +49,5 @@ for i in range(len(times)-1):
     #iNR01[i, :, :] = np.reshape(iNR, (3, nnode))
     #sNR01[i, :, :] = np.reshape(sNR, (3, nnode))
     print(np.absolute(VNR))
+    #print(VNR)
 print(time.time() - start_time)
