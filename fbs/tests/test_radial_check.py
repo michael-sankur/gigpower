@@ -3,8 +3,8 @@
 # File created: October 2020
 # Make sure that fbs module fails on a network that is not radial.
 
-from powerflowpy.utils import init_from_dss
-from powerflowpy.fbs import fbs
+from fbs.utils import init_from_dss
+from fbs.fbs import fbs
 import pytest
 
 dss_file_cycle = 'fbs/tests/non_radial_networks/06node_contains_cycle.dss'

@@ -3,9 +3,9 @@
 # File created: September 2020
 # Compare solutions from opendss and powerflowpy.fbs
 
-from powerflowpy.utils import init_from_dss
-from powerflowpy.fbs import fbs, get_solution as get_fbs_solution
-from powerflowpy.dss_solve import solve_with_dss, get_solution as get_dss_solution
+from fbs.utils import init_from_dss
+from fbs.fbs import fbs, get_solution as get_fbs_solution
+from fbs.dss_solve import solve_with_dss, get_solution as get_dss_solution
 
 import pandas as pd
 import pytest

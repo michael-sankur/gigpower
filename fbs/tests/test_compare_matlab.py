@@ -3,8 +3,8 @@
 
 import scipy
 import scipy.io as spio
-from powerflowpy.utils import init_from_dss
-from powerflowpy.fbs import fbs
+from fbs.utils import init_from_dss
+from fbs.fbs import fbs
 import pytest
 import opendssdirect as dss
 import numpy as np

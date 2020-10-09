@@ -1,7 +1,7 @@
 # Smoke tests for pre-requisites to running fbs.
 
-from powerflowpy.utils import init_from_dss
-from powerflowpy.fbs import topo_sort
+from fbs.utils import init_from_dss
+from fbs.fbs import topo_sort
 import pytest
 import opendssdirect as dss
 

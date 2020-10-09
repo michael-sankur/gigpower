@@ -5,10 +5,10 @@
 
 import click
 from pathlib import Path
-from powerflowpy.fbs import fbs
-from powerflowpy.utils import init_from_dss
-from powerflowpy.dss_solve import solve_with_dss
-from powerflowpy.network import Network
+from fbs.fbs import fbs
+from fbs.utils import init_from_dss
+from fbs.dss_solve import solve_with_dss
+from fbs.network import Network
 import time
 import functools
 import numpy as np # type: ignore
