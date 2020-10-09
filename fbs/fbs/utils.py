@@ -166,11 +166,11 @@ def init_from_dss(dss_fp: str) -> Network:
     return network
 
 
-def parse_phases(phase_char_lst : List[str]) -> List:
+def parse_phases(phase_char_lst : List[str]) -> List[bool, bool, bool]:
     """
     helper function to return a list of phase characters into a boolean triple
-    ex: ['1', '3'] -> (True, False True)
-    ex: ['a','b'] -> (True, True, False)
+    ex: ['1', '3'] -> [True, False True]
+    ex: ['a','b'] -> [True, True, False]
     """
     phase_list = [False, False, False]
     for p in phase_char_lst:

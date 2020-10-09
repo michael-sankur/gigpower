@@ -110,7 +110,7 @@ class Load:
     def __init__(self, name: str = '') -> None:
         self.name = name
         self.conn = ''
-        self.phases = (False, False, False)
+        self.phases = [False, False, False]
         self.type = None
         self.aPQ = None
         self.aI = None

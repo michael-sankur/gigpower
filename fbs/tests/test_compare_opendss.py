@@ -11,8 +11,8 @@ import pandas as pd
 import pytest
 
 # dss_files = ['fbs/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss', 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss', 'fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
-# dss_files = ['fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
-dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss']
+dss_files = ['fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
+# dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss']
 
 def test_all():
     """
