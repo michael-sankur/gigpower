@@ -77,7 +77,20 @@ def init_from_dss(dss_fp: str) -> Network:
     load_names = all_loads_data.keys()
     for load_name in load_names:
         load_data = all_loads_data[load_name]
-        node_name, phase_chars, load_idx = load_name.split('_')[1:]
+        #node_name, phase_chars, load_idx = load_name.split('_')[1:]
+        dss.Loads.Name(load_name)
+        bus_phase = dss.CktElement.BusNames()[0].split('.')
+        if len(bus_phase) == 1:
+            bus_phase.extend(['1', '2', '3'])
+        phase_chars = ''
+        for i in range(dss.CktElement.NumPhases()):
+            if bus_phase[i+1] == '1':
+                phase_chars += 'a'
+            if bus_phase[i+1] == '2':
+                phase_chars += 'b'
+            if bus_phase[i+1] == '3':
+                phase_chars += 'c'
+        node_name = bus_phase[0]
         try:
             node = network.nodes[node_name]
         except KeyError:
@@ -120,20 +133,21 @@ def init_from_dss(dss_fp: str) -> Network:
     all_cap_data = dss.utils.capacitors_to_dataframe().transpose()
     cap_names = all_cap_data.keys()
     for cap_name in cap_names:
-        cap_data = all_cap_data[cap_name]
-        node_name, phase_chars, cap_idx = cap_name.split('_')[1:]
-        try:
-            node = network.nodes[node_name]
-        except KeyError:
-            print(
-                f"This cap's node has not been defined. Cap name: {cap_name}, Node name: {node_name}")
-        cap = Capacitor(cap_name)
-        cap.phases = parse_phases(list(phase_chars))
-        cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
-        cappu = cap_data['kvar'] * 1000 / network.Sbase / len(cap.phases) # TODO: confirm that cappu is divided by num phases
-        cap.cappu = np.asarray([cappu if phase else 0 for phase in cap.phases])
-        network.capacitors[ cap_name ] = cap # add a pointer to this cap to the network
-        node.capacitors.append(cap) # add capacitor to it's node's cap list
+        if cap_name != '':
+            cap_data = all_cap_data[cap_name]
+            node_name, phase_chars, cap_idx = cap_name.split('_')[1:]
+            try:
+                node = network.nodes[node_name]
+            except KeyError:
+                print(
+                    f"This cap's node has not been defined. Cap name: {cap_name}, Node name: {node_name}")
+            cap = Capacitor(cap_name)
+            cap.phases = parse_phases(list(phase_chars))
+            cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
+            cappu = cap_data['kvar'] * 1000 / network.Sbase / len(cap.phases) # TODO: confirm that cappu is divided by num phases
+            cap.cappu = np.asarray([cappu if phase else 0 for phase in cap.phases])
+            network.capacitors[ cap_name ] = cap # add a pointer to this cap to the network
+            node.capacitors.append(cap) # add capacitor to it's node's cap list
     # sum all cappu on each node and store on each node, to avoid re-calculating during
     # fbs.update-voltage-dependent-load()
     for node in network.nodes.values():
