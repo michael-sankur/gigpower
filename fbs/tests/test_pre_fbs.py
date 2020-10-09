@@ -5,8 +5,8 @@ from fbs.fbs import topo_sort
 import pytest
 import opendssdirect as dss
 
-# dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss'
-dss_file = 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
+dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss'
+# dss_file = 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
 
 @pytest.fixture
 def get_network():
