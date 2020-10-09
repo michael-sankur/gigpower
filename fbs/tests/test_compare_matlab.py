@@ -10,9 +10,9 @@ import opendssdirect as dss
 import numpy as np
 import pandas as pd
 
-parent_path = 'powerflowpy/tests/05n3ph_unbal/'
+parent_path = 'fbs/tests/05n3ph_unbal/'
 dss_file = parent_path + 'compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
-mat_struct = 'powerflowpy/tests/05n3ph_unbal/05n3ph_unbal_network.mat'
+mat_struct = 'fbs/tests/05n3ph_unbal/05n3ph_unbal_network.mat'
 
 # maps matlab node names to python node names
 NODE_DICT = {

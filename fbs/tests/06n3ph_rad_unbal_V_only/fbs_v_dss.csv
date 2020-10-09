@@ -1,4 +1,4 @@
-Input file: powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss
+Input file: fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss
 n,fbs,dss
 1,19.098978999999794,6.815347000000083
 2,30.627999000000017,11.84653899999999

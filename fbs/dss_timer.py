@@ -3,8 +3,8 @@ import numpy as np  # type: ignore
 import csv
 import time
 
-dss_file = 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss'
-out_csv = './powerflowpy/tests/timings/dss_detailed_timing.csv'
+dss_file = 'fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss'
+out_csv = './fbs/tests/timings/dss_detailed_timing.csv'
 TRIALS = 20
 if __name__ == '__main__':
     with open(out_csv, 'w') as out:

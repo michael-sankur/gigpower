@@ -7,8 +7,8 @@ from powerflowpy.utils import init_from_dss
 from powerflowpy.fbs import fbs
 import pytest
 
-dss_file_cycle = 'powerflowpy/tests/non_radial_networks/06node_contains_cycle.dss'
-dss_file_multiple_parents = 'powerflowpy/tests/non_radial_networks/06node_multiple_parents.dss'
+dss_file_cycle = 'fbs/tests/non_radial_networks/06node_contains_cycle.dss'
+dss_file_multiple_parents = 'fbs/tests/non_radial_networks/06node_multiple_parents.dss'
 
 
 @pytest.fixture

@@ -1,5 +1,5 @@
 """
-please don't delete me! this makes sure that './powerflowpy/ is in
+please don't delete me! this makes sure that './fbs/ is in
 python's search path when running pytest.
 Please see these for more info:
 https://code-examples.net/en/q/9c7602
