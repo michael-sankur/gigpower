@@ -40,11 +40,17 @@ def init_from_dss(dss_fp: str) -> Network:
 
     for line_code in line_codes:
         line_data = all_lines_data[line_code]
-        print(line_data)
-        tx, *tx_phases = line_data['Bus1'].split('.')
-        rx, *rx_phases = line_data['Bus2'].split('.')
-        if tx_phases != rx_phases:
-            raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
+
+        # Handle the typical case where bus names tell you the phases, e.g. 'Bus1.1.2.'
+        if "." in line_data['Bus1']:
+            tx, *tx_phases = line_data['Bus1'].split('.')
+            rx, *rx_phases = line_data['Bus2'].split('.')
+            if tx_phases != rx_phases:
+                raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
+        else:  # Otherwise, if all 3 phases are present, define the line for all 3 phases.
+            tx, rx = line_data['Bus1'], line_data['Bus2']
+            tx_phases = ['1', '2', '3']
+
         line = Line((tx, rx), line_code)  # initialize line
         for phase in tx_phases:  # set phases according to tx
             line.phases = parse_phases(tx_phases)
@@ -67,17 +73,35 @@ def init_from_dss(dss_fp: str) -> Network:
 
     # make Loads
     all_loads_data = dss.utils.loads_to_dataframe().transpose()
+
     load_names = all_loads_data.keys()
     for load_name in load_names:
         load_data = all_loads_data[load_name]
-        node_name, phase_chars, load_idx = load_name.split('_')[1:]
-        try:
-            node = network.nodes[node_name]
-        except KeyError:
-            print(f"This load's node has not been defined. Load name: {load_name}, Node name: {node_name}")
-        load = Load(load_name)
-        load.phases = parse_phases(list(phase_chars)) #type: ignore
-
+        load = Load(load_name)  # define this Load
+        # handle the case where the load name contains an is of the form
+        # 'BUS_1_2_LOADIDX'
+        if '_' in load_name:
+            node_name, phase_chars, load_idx = load_name.split('_')[1:]
+            load.phases = parse_phases(list(phase_chars))
+        else:  # handle the case where a load name is of the form 'BUS[abc]'
+            phase_chars_on_load = []
+            for phase_char in 'abc':
+                if phase_char in load_name:
+                    parse_load_name = load_name.split(phase_char)
+                    node_name = parse_load_name[0]
+                    # grab the node that this load is defined on,
+                    # and throw an error if the node does not exist
+                    try:
+                        node = network.nodes[node_name]
+                    except KeyError:
+                        print(f"Error for Load: {load_name}: Node: {node_name} not defined")
+                    if len(parse_load_name) == 2:
+                        phase_chars_on_load.append(phase_char)
+            if phase_chars_on_load:
+                load.phases = parse_phases(list(phase_chars_on_load))
+            # if no phase letters included, assume it is on all phases of its bus
+            else:
+                load.phases = node.phases
         # save kw and kvar
         load.kW = load_data['kW']
         load.kvar = load_data['kvar']
