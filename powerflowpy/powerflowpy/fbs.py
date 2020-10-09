@@ -5,7 +5,7 @@
 from typing import List, Dict
 from . network import Network
 from . solution import Solution
-import numpy as np
+import numpy as np  # type: ignore
 
 
 def fbs(network: Network) -> Solution:
@@ -102,12 +102,12 @@ def topo_sort(network: Network) -> List:
 
 
 def topo_sort_dfs(start_node: str, node_status: Dict[str, str], adj_matrix: Dict[str, List[str]], clock: int, topo_order: List) -> int:
-    node_status[start_node] == 'active'
+    node_status[start_node] = 'active'
     for child in adj_matrix[start_node]:
         if node_status[child] == 'new':
             clock = topo_sort_dfs(child, node_status, adj_matrix, clock, topo_order)
         elif node_status[child] == 'active':
-            raise ValueError('Network contains a cycle.')
+            raise ValueError('Not a radial network. Network contains a cycle.')
     node_status[start_node] = 'finished'
     topo_order[clock-1] = start_node
     return clock - 1

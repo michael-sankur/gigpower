@@ -45,14 +45,18 @@ def init_from_dss(dss_fp: str) -> Network:
         rx, *rx_phases = line_data['Bus2'].split('.')
         if tx_phases != rx_phases:
             raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
-        line = Line((tx, rx), line_code) # initialize line
-        for phase in tx_phases: # set phases according to tx
+        line = Line((tx, rx), line_code)  # initialize line
+        for phase in tx_phases:  # set phases according to tx
             line.phases = parse_phases(tx_phases)
-        network.lines[(tx,rx)] = line # add line to network.line
+        network.lines[(tx, rx)] = line  # add line to network.line
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
-        # set rx's parent to tx
-        network.nodes.get(rx).parent = network.nodes.get(tx) #type: ignore
+        tx_node, rx_node = network.nodes.get(tx), network.nodes.get(rx)
+        # Make sure that rx does not yet have a parent assigned. If so, set rx's parent to tx
+        if rx_node.parent:  # type: ignore
+            raise ValueError(f"Not a radial network. Node {rx_node.name} has more than one parent.")  # type: ignore
+        else:
+            rx_node.parent = tx_node  #type: ignore
 
         #parse line attributes from dss line data
         line.name = line_code
