@@ -1,15 +1,17 @@
 import numpy as np
 import opendssdirect as dss
-from lib.compute_NR3FT_vectorized import compute_NR3FT_vectorized as ft1
-from lib.compute_NR3JT_vectorized import compute_NR3JT_vectorized as jt1
-from lib.compute_vecmat import compute_vecmat
-from lib.relevant_openDSS_parameters import relevant_openDSS_parameters
+from nr3.lib.compute_NR3FT_vectorized import compute_NR3FT_vectorized as ft1
+from nr3.lib.compute_NR3JT_vectorized import compute_NR3JT_vectorized as jt1
+from nr3.lib.compute_vecmat import compute_vecmat
+from nr3.lib.relevant_openDSS_parameters import relevant_openDSS_parameters
 import re
 
 #a31faff
+SLACKIDX = 0
+VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
 
-class LinDist3Flow:
-    def __init__(self, dss_path, slacknode, Vslack, V0=None, I0=None, tol=1e-9, maxiter=100):
+class NR3:
+    def __init__(self, dss_path, slacknode=SLACKIDX, Vslack=VSLACK, V0=None, I0=None, tol=1e-9, maxiter=100):
 
         dss.run_command('Redirect ' + '"' + dss_path + '"')
         nline = len(dss.Lines.AllNames())
@@ -113,7 +115,7 @@ class LinDist3Flow:
             JT1 = jt1(self.XNR, self.g_SB, self.G_KVL, self.H, self.g, self.nnode, self.nline)
             # if JT.shape[0] >= JT.shape[1]: #non-vectorized
             #     XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
-            if JT1.shape[0] >= JT1.shape[1]: #vectorized
+            if JT1.shape[0] > JT1.shape[1]: #vectorized
                 self.XNR = self.XNR - np.linalg.inv(JT1.T@JT1)@JT1.T@FT1
 
             iter_count += 1 #count up at this point (indexing should match)
@@ -190,7 +192,10 @@ class LinDist3Flow:
     def set_load_kw(self, load, kw):
         load_idx = self.all_load_names.index(load)
         # TODO: refactor this
-        bus = load.split('_')[1]
+        try:
+            bus = load.split('_')[1]
+        except:
+            bus = re.findall("\d+", load)[0]
         bus_idx = self.all_bus_names.index(bus)
         load_ph = self.load_ph_arr[load_idx]
         for i, ph in enumerate(load_ph):
@@ -200,7 +205,10 @@ class LinDist3Flow:
     def set_load_kvar(self, load, kvar):
         load_idx = self.all_load_names.index(load)
         # TODO: refactor this
-        bus = load.split('_')[1]
+        try:
+            bus = load.split('_')[1]
+        except:
+            bus = re.findall("\d+", load)[0]
         bus_idx = self.all_bus_names.index(bus)
         load_ph = self.load_ph_arr[load_idx]
         for i, ph in enumerate(load_ph):
