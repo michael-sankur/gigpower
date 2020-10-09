@@ -43,7 +43,7 @@ class Network:
         self.loads[load].set_kW(kw)
 
     def set_load_kvar(self, load, kvar) -> None:
-        self.loads[load].set_kVar(kvar)
+        self.loads[load].set_kvar(kvar)
 
     def __str__(self) -> str:
         """return something informative"""

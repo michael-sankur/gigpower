@@ -18,4 +18,5 @@ class FBS:
         self.network.set_load_kvar(load, kvar)
 
     def get_all_bus_voltages(self):
-        self.solution.calc_sV()
+        all_voltages = np.absolute(np.array(list(self.solution.V.values())).flatten())
+        return all_voltages[all_voltages != 0]
