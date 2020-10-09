@@ -70,7 +70,7 @@ class Node:
     def __init__(self, name: str = '') -> None:
         self.name = name
         self.phases = [False, False, False]
-        self.parent : Union[None, Node]= None # pointer to parent Node. only one parent for radial networks
+        self.parent = None # pointer to parent Node. only one parent for radial networks
         self.loads : List[Load] = []
         self.capacitors : List[Capacitor] = []
         self.sum_spu = np.zeros(3) # 3x1 complex array that holds the sum of all load.spu on this node
