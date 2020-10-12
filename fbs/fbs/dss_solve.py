@@ -94,6 +94,10 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
         Imn = np.asarray(dss.CktElement.Currents())/Ibase
         Imn = Imn[0:int(len(Imn)/2)]
         Imn = Imn[0:5:2] + 1j*Imn[1:6:2]
+        Imn.shape
+        temp = IDSS[k1,ph]
+        if temp.shape == 0:
+            pass
         IDSS[k1,ph] = Imn
     dssI = pd.DataFrame(IDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
 
