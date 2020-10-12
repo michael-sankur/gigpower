@@ -1,12 +1,12 @@
 # Smoke tests for pre-requisites to running fbs.
 
-from powerflowpy.utils import init_from_dss
-from powerflowpy.fbs import topo_sort
+from fbs.utils import init_from_dss
+from fbs.fbs import topo_sort
 import pytest
 import opendssdirect as dss
 
-dss_file = 'powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
-# dss_file = 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
+dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss'
+# dss_file = 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
 
 @pytest.fixture
 def get_network():
@@ -35,7 +35,6 @@ def test_init_from_dss(get_network) -> None:
 
 def test_topo_sort() -> None:
     network = init_from_dss(dss_file)
-    # TODO: make sure that topo_sort fails on a network with a cycle
     # if any node is preceded by one of its children assert False
     sort = topo_sort(network)
     for idx,node in enumerate(sort):

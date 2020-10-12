@@ -18,8 +18,8 @@ Compare opendss' solution to the FBS solution | `tests/test_compare_matlab.py`
 Conduct a timing experiment on opendss vs. FBS | `main.py`
 
 ## Testing Suite
-Tests were written using `pytest`. These tests live in `powerflowpy/tests` and can be run manually by invoking `pytest` on the powerflowpy directory:  
-`$ pytest ./powerflowpy`
+Tests were written using `pytest`. These tests live in `fbs/tests` and can be run manually by invoking `pytest` on the powerflowpy directory:  
+`$ pytest ./fbs`
 
 Below is a brief description of the test files and their coverage:
 <hr>
@@ -30,14 +30,14 @@ Previous work on an fbs solver was written in MATLAB. The MATLAB solver relies o
 The analogous network mapper for `powerflowpy` is defined in `powerflowpy.utils.init_from_dss`, which maps a `.dss` file representing the network to a Python Network object. The `Network` class definition is in `powerflowpy.network`.
 
     
-This test compares the results of the MATLAB mapper to the powerflowpy's network mapper on a 5 node test case. You can find this test case in `powerflowpy/tests/05n3ph_unbal`. The test was constructed by the following process: 
+This test compares the results of the MATLAB mapper to the powerflowpy's network mapper on a 5 node test case. You can find this test case in `fbs/tests/05n3ph_unbal`. The test was constructed by the following process: 
 
 1. Run `network_mapper.m` on the txt file representation of the network.
     - See `compare_lindist3flow_05node_threephase_unbalanced_oscillation_03.txt` 
 2. Save the resulting MATLAB structs as .mat files.
-    - See all the `*.mat` files in `powerflowpy/tests/05n3ph_unbal`
+    - See all the `*.mat` files in `fbs/tests/05n3ph_unbal`
 3. Run `utils.init_from_dss()` on the corresponding .dss file of the network. 
-     - See powerflowpy/tests/05n3ph_unbal/`compare_opendss_05node_threephase_unbalanced_oscillation_03.dss`
+     - See fbs/tests/05n3ph_unbal/`compare_opendss_05node_threephase_unbalanced_oscillation_03.dss`
 4. Compare the MATLAB structs with the resulting Network object obtained in 3.
 
 <hr>

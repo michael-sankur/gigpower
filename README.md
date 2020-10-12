@@ -1,7 +1,7 @@
 # LinDist3Flow
 
 ## Getting started with the powerflow python package
-The python package that will house all the stable python module for power flow work is currently in `./powerflowpy`.
+The python package that will house all the stable python module for power flow work is currently in `./fbs`.
 (`powerflowpy` is a working title, and the module is under active development)
 We are using [conda](https://docs.conda.io/projects/conda/en/latest/index.html) to manage packages and environments.  
 If you would like to run or alter any code in `powerflowpy` here is how to get set up: 

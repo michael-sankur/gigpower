@@ -1,14 +1,14 @@
 # # Elaine Laguerta (github: @elaguerta)
 # LBNL GIG
 # File created: 10 September 2020
-# Compare running time of opendss' powerflow solver to powerflowpy/fbs
+# Compare running time of opendss' powerflow solver to fbs/fbs
 
 import click
 from pathlib import Path
-from powerflowpy.fbs import fbs
-from powerflowpy.utils import init_from_dss
-from powerflowpy.dss_solve import solve_with_dss
-from powerflowpy.network import Network
+from fbs.fbs import fbs
+from fbs.utils import init_from_dss
+from fbs.dss_solve import solve_with_dss
+from fbs.network import Network
 import time
 import functools
 import numpy as np # type: ignore
@@ -57,7 +57,7 @@ def main(dss_file: str, trials: int, output: str) -> None:
     And this paper: https://uwaterloo.ca/embedded-software-group/sites/ca.embedded-software-group/files/uploads/files/ieee-esl-precise-measurements.pdf
 
     Sample command with default number of trials, and an output directory specified
-    $ python3 powerflowpy/main.py 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss' --output ./powerflowpy/tests/06n3ph_rad_unbal
+    $ python3 fbs/main.py 'fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss' --output ./fbs/tests/06n3ph_rad_unbal
     """
     num_trials = int(trials)
 

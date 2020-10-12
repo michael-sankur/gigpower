@@ -3,7 +3,7 @@ platform darwin -- Python 3.7.4, pytest-6.0.1, py-1.9.0, pluggy-0.13.1
 rootdir: /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy
 collected 1 item
 
-powerflowpy/tests/test_compare_opendss.py 
+fbs/tests/test_compare_opendss.py 
 Opendss Iterations: 6	Opendss Convergence: 1e-12
 OpenDSS Loads, from dss.CktElement.Powers():
 [50.02100890281331, 14.878382876656211, -49.999999999968, -14.880791431863193]
@@ -137,11 +137,11 @@ line_a05_a06  0.000000+0.000000j  0.050000+0.014881j  0.000000+0.000000j
 
 =============================== warnings summary ===============================
 tests/test_compare_opendss.py::test_fbs_sol
-  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy/powerflowpy/solution.py:134: RuntimeWarning: invalid value encountered in true_divide
+  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/fbs/fbs/solution.py:134: RuntimeWarning: invalid value encountered in true_divide
     new_line_I = np.conj(np.divide(node_s, node_V)) # TODO: consider dividing manually only by phases on the node
 
 tests/test_compare_opendss.py::test_fbs_sol
-  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/powerflowpy/powerflowpy/solution.py:179: RuntimeWarning: invalid value encountered in true_divide
+  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/fbs/fbs/solution.py:179: RuntimeWarning: invalid value encountered in true_divide
     node_I = np.conj(np.divide(node_sV,node_V))
 
 -- Docs: https://docs.pytest.org/en/stable/warnings.html

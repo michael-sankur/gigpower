@@ -40,23 +40,36 @@ def init_from_dss(dss_fp: str) -> Network:
 
     for line_code in line_codes:
         line_data = all_lines_data[line_code]
-        tx, *tx_phases = line_data['Bus1'].split('.')
-        rx, *rx_phases = line_data['Bus2'].split('.')
-        if tx_phases != rx_phases:
-            raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
-        line = Line((tx, rx), line_code) # initialize line
-        for phase in tx_phases: # set phases according to tx
-            line.phases = parse_phases(tx_phases)
-        network.lines[(tx,rx)] = line # add line to network.line
+
+        # Handle the typical case where bus names tell you the phases, e.g. 'Bus1.1.2.'
+        if "." in line_data['Bus1']:
+            tx, *tx_phases = line_data['Bus1'].split('.')
+            rx, *rx_phases = line_data['Bus2'].split('.')          
+            if tx_phases != rx_phases:
+                raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
+            
+        else:  # Otherwise, if all 3 phases are present, define the line for all 3 phases.
+            tx, rx = line_data['Bus1'], line_data['Bus2']
+            tx_phases = ['1', '2', '3']
+
+        line = Line((tx, rx), line_code)  # initialize line
+        # set phases according to tx
+        line.phases = parse_phases(tx_phases)
+        network.lines[(tx, rx)] = line  # add line to network.line
         # add directed line to adjacency list, adj[tx] += rx
         network.adj[tx].append(rx)
-        # set rx's parent to tx
-        network.nodes.get(rx).parent = network.nodes.get(tx) #type: ignore
+        tx_node, rx_node = network.nodes.get(tx), network.nodes.get(rx)
+        # Make sure that rx does not yet have a parent assigned. If so, set rx's parent to tx
+        if rx_node.parent:  # type: ignore
+            raise ValueError(f"Not a radial network. Node {rx_node.name} has more than one parent.")  # type: ignore
+        else:
+            rx_node.parent = tx_node  # type: ignore
 
-        #parse line attributes from dss line data
+        # parse line attributes from dss line data
         line.name = line_code
         line.length = line_data['Length']
         fz_mult = 1 / network.Zbase * line.length
+
         line.FZpu = get_Z(line_data, line.phases, fz_mult)
 
     # make Loads
@@ -83,8 +96,7 @@ def init_from_dss(dss_fp: str) -> Network:
         except KeyError:
             print(f"This load's node has not been defined. Load name: {load_name}, Node name: {node_name}")
         load = Load(load_name)
-        load.phases = parse_phases(list(phase_chars)) #type: ignore
-
+        load.phases = parse_phases(list(phase_chars))
         # save kw and kvar
         load.kW = load_data['kW']
         load.kvar = load_data['kvar']
@@ -141,14 +153,20 @@ def init_from_dss(dss_fp: str) -> Network:
     for node in network.nodes.values():
         for cap in node.capacitors:
             node.sum_cappu = np.add(node.sum_cappu, cap.cappu)
+
+    # # make Transformers
+    # all_transformer_data = dss.utils.transformers_to_dataframe().transpose()
+    # transformer_names = all_transformer_data.keys()
+    # print(all_transformer_data)
+
     return network
 
 
-def parse_phases(phase_char_lst : List[str]) -> List:
+def parse_phases(phase_char_lst : List[str]) -> List[bool]:
     """
     helper function to return a list of phase characters into a boolean triple
-    ex: ['1', '3'] -> (True, False True)
-    ex: ['a','b'] -> (True, True, False)
+    ex: ['1', '3'] -> [True, False True]
+    ex: ['a','b'] -> [True, True, False]
     """
     phase_list = [False, False, False]
     for p in phase_char_lst:
@@ -172,6 +190,8 @@ def get_Z(dss_data: Any, phase_list : List[bool], fz_mult: float ) -> Iterable:
     Returns an ndarray.
     """
     num_phases = phase_list.count(True)
+    if num_phases == 0:
+        print(dss_data)
     RM = np.asarray(dss_data['RMatrix'])
     XM = np.asarray(dss_data['XMatrix'])
     ZM = fz_mult * (RM + 1j*XM)

@@ -3,24 +3,24 @@
 # File created: September 2020
 # Compare solutions from opendss and powerflowpy.fbs
 
-from powerflowpy.utils import init_from_dss
-from powerflowpy.fbs import fbs, get_solution as get_fbs_solution
-from powerflowpy.dss_solve import solve_with_dss, get_solution as get_dss_solution
+from fbs.utils import init_from_dss
+from fbs.fbs import fbs, get_solution as get_fbs_solution
+from fbs.dss_solve import solve_with_dss, get_solution as get_dss_solution
 
 import pandas as pd
 import pytest
 
-# dss_files = ['powerflowpy/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss', 'powerflowpy/tests/06n3ph_unbal/06node_threephase_unbalanced.dss', 'powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
-dss_files = ['powerflowpy/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
+# dss_files = ['fbs/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss', 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss', 'fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
+dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss']
 
 def test_all():
     """
     Compare the python FBS solution to the opendss solution.
     To save output, run from command line:
-    pytest ./powerflowpy/tests/test_compare_opendss.py -s >[OUTPUT FILE PATH]
+    pytest ./fbs/tests/test_compare_opendss.py -s >[OUTPUT FILE PATH]
     Examples:
-    $ pytest ./powerflowpy/tests/test_compare_opendss.py -s > ./powerflowpy/tests/06n3ph_unbal/06n3ph_out.txt
-    $ pytest ./powerflowpy/tests/test_compare_opendss.py -s > ./powerflowpy/tests/05n3ph_unbal/05n3ph_out.txt
+    $ pytest ./fbs/tests/test_compare_opendss.py -s > ./fbs/tests/06n3ph_unbal/06n3ph_out.txt
+    $ pytest ./fbs/tests/test_compare_opendss.py -s > ./fbs/tests/05n3ph_unbal/05n3ph_out.txt
     """
     tolerance = .01
     for file in dss_files:

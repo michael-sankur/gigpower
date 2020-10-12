@@ -1,6 +1,6 @@
-from powerflowpy.utils import init_from_dss
-from powerflowpy.fbs import fbs, get_solution as get_fbs_solution
-from powerflowpy.dss_solve import solve_with_dss, get_solution as get_dss_solution
+from fbs.utils import init_from_dss
+from fbs.fbs import fbs, get_solution as get_fbs_solution
+from fbs.dss_solve import solve_with_dss, get_solution as get_dss_solution
 
 # Initialize the Network object from a dss file
 # Loads will be initialized based on the dss file

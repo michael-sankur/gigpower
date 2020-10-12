@@ -39,10 +39,10 @@ class Network:
         """return a List-like view network Load objects"""
         return self.loads.values()
 
-    def set_load_kw(self, load, kw) -> None:
-        self.loads[load].set_kW(kw)
+    def set_load_kw(self, load:str, kw:float) -> None:
+        self.loads[load].set_kw(kw)
 
-    def set_load_kvar(self, load, kvar) -> None:
+    def set_load_kvar(self, load:str, kvar:float) -> None:
         self.loads[load].set_kvar(kvar)
 
     def __str__(self) -> str:
@@ -76,7 +76,7 @@ class Node:
     def __init__(self, name: str = '') -> None:
         self.name = name
         self.phases = [False, False, False]
-        self.parent : Union[None, Node]= None # pointer to parent Node. only one parent for radial networks
+        self.parent = None # pointer to parent Node. only one parent for radial networks
         self.loads : List[Load] = []
         self.capacitors : List[Capacitor] = []
         self.sum_spu = np.zeros(3) # 3x1 complex array that holds the sum of all load.spu on this node
@@ -116,7 +116,7 @@ class Load:
     def __init__(self, name: str = '') -> None:
         self.name = name
         self.conn = ''
-        self.phases = (False, False, False)
+        self.phases = [False, False, False]
         self.type = None
         self.aPQ = None
         self.aI = None
@@ -151,7 +151,7 @@ class Load:
         self.node.sum_spu = np.subtract(self.node.sum_spu, old_spu)
         self.node.sum_spu = np.add(self.node.sum_spu, self.spu)
 
-    def set_kW(self, kW: float) -> None:
+    def set_kw(self, kW: float) -> None:
         """
         Reset a load's kW and recalculate all load parameters based on new kvar.
         Note that this also updates the load's node's sum_spu

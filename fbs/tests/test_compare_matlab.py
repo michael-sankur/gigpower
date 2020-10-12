@@ -3,16 +3,16 @@
 
 import scipy
 import scipy.io as spio
-from powerflowpy.utils import init_from_dss
-from powerflowpy.fbs import fbs
+from fbs.utils import init_from_dss
+from fbs.fbs import fbs
 import pytest
 import opendssdirect as dss
 import numpy as np
 import pandas as pd
 
-parent_path = 'powerflowpy/tests/05n3ph_unbal/'
+parent_path = 'fbs/tests/05n3ph_unbal/'
 dss_file = parent_path + 'compare_opendss_05node_threephase_unbalanced_oscillation_03.dss'
-mat_struct = 'powerflowpy/tests/05n3ph_unbal/05n3ph_unbal_network.mat'
+mat_struct = 'fbs/tests/05n3ph_unbal/05n3ph_unbal_network.mat'
 
 # maps matlab node names to python node names
 NODE_DICT = {
