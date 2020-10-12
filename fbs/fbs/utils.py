@@ -185,12 +185,12 @@ def get_transformers_from_dss(network: Network, dss: Any) -> None:
             transformer_data = all_transformer_data[transformer_name]
             # TODO: Right now the key representing bus1, bus2 is hard-coded.
             # Change this to query opendss for bus1 and bus2
-            transformer = Transformer(('633', '634'), transformer_name, transformer_data['NumWindings'])
+            bus1, bus2 = '633', '634'
+            transformer = Transformer((bus1, bus2), transformer_name, transformer_data['NumWindings'])
             transformer.conn = 'delta' if transformer_data['IsDelta'] else 'wye'
             transformer.Vbase = transformer_data['WdgVoltages']
             transformer.kV = transformer_data['kV']
             transformer.kVA = transformer_data['kVA']
-            network.transformers[transformer_name] = transformer
 
 
 def parse_phases(phase_char_lst : List[str]) -> List[bool]:

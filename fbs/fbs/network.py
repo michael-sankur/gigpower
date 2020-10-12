@@ -101,13 +101,17 @@ class Line:
     series_index = ['(tx,rx)', 'name', 'phases', 'config', 'length', 'FZpu']
     # TODO: might be helpful to include a list of pointers to all Lines in the class, and do the same for Node, etc.
     # see: http://effbot.org/pyfaq/how-do-i-get-a-list-of-all-instances-of-a-given-class.htm
-    def __init__(self, key: Tuple[str,str] = None, name: str = '') -> None:
+    def __init__(self, network: Network, key: Tuple[str,str] = None, name: str = '') -> None:
         self.key = key # tuple of (txnode_name, rxnode_name)
         self.name = name # string, the name DSS uses to refer to this line
         self.phases = [False, False, False]
         self.config = None
         self.length = 0.0
         self.FZpu = np.zeros((3,3), dtype = 'complex')
+
+        # add this Line to the network
+        network.Lines[line_name] = self
+        network.adj[key[0]].append(key[1])  # add this as a Line in the adjacency list
 
     def __str__(self) -> str:
         return str(self.key)
@@ -210,10 +214,14 @@ class Capacitor:
 
 
 class Transformer (Line):
-    def __init__(self, key: Tuple[str, str], name: str, num_windings: int) -> None:
+    def __init__(self, , network: Network, key: Tuple[str, str], name: str, num_windings: int) -> None:
         super().__init__(key, name) # initialize this as a Line with 0 length
         self.num_windings = num_windings
         self.Vbase = np.zeros((3,) dtype='complex')  # 3x1, initialize to nominal voltage
         self.kV = 0.0
         self.kVA = 0
         self.conn = ''  # 'wye' or 'delta
+
+        # add this Transformer to the network
+        network.transformers[name] = self
+
