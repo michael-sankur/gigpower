@@ -7,7 +7,21 @@ def init_from_dss(dss_fp: str) -> Network:
     """define a Network attributes from a dss file"""
     dss.run_command('Redirect ' + dss_fp)
     network = Network()
+    get_base_values_from_dss(network, dss)
+    get_nodes_from_dss(network, dss)
+    get_lines_from_dss(network, dss)
+    get_loads_from_dss(network, dss)
+    get_caps_from_dss(network, dss)
 
+    # # make Transformers
+    # all_transformer_data = dss.utils.transformers_to_dataframe().transpose()
+    # transformer_names = all_transformer_data.keys()
+    # print(all_transformer_data)
+
+    return network
+
+
+def get_base_values_from_dss(network: Network, dss: Any)-> None:
     # set base values
     # TODO: make it possible to set the base from a given bus
     dss.Solution.Solve()
@@ -18,13 +32,15 @@ def init_from_dss(dss_fp: str) -> Network:
     network.Zbase = Vbase/Ibase
     network.Vbase, network.Sbase, network.Ibase = Vbase, Sbase, Ibase
 
+
+def get_nodes_from_dss(network: Network, dss: Any) -> None:
     # make Nodes
     for node_name in dss.Circuit.AllNodeNames():
-        name, phase  = node_name.split('.')
+        name, phase = node_name.split('.')
         # get the node corresponding to this name, or make a new one
         if name not in network.nodes.keys():
             network.nodes[name] = Node(name)
-            network.nodes[name].phases = [] # replace default tuple with empty list so we can mutate it
+            network.nodes[name].phases = []  # replace default tuple with empty list so we can mutate it
         node = network.nodes[name]
         # store phases as characters in phase list for now
         node.phases.append(phase)
@@ -32,10 +48,12 @@ def init_from_dss(dss_fp: str) -> Network:
         network.adj[name] = []
     # iterate through nodes to parse phase lists
     for node in network.get_nodes():
-        node.phases = parse_phases(node.phases) #type: ignore
+        node.phases = parse_phases(node.phases)  # type: ignore
 
+
+def get_lines_from_dss(network: Network, dss:Any) -> None:
     #make Lines
-    all_lines_data = dss.utils.lines_to_dataframe().transpose() # get dss line data indexed by line_code
+    all_lines_data = dss.utils.lines_to_dataframe().transpose()  # get dss line data indexed by line_code
     line_codes = all_lines_data.keys()
 
     for line_code in line_codes:
@@ -44,10 +62,10 @@ def init_from_dss(dss_fp: str) -> Network:
         # Handle the typical case where bus names tell you the phases, e.g. 'Bus1.1.2.'
         if "." in line_data['Bus1']:
             tx, *tx_phases = line_data['Bus1'].split('.')
-            rx, *rx_phases = line_data['Bus2'].split('.')          
+            rx, *rx_phases = line_data['Bus2'].split('.')
             if tx_phases != rx_phases:
                 raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
-            
+
         else:  # Otherwise, if all 3 phases are present, define the line for all 3 phases.
             tx, rx = line_data['Bus1'], line_data['Bus2']
             tx_phases = ['1', '2', '3']
@@ -61,7 +79,8 @@ def init_from_dss(dss_fp: str) -> Network:
         tx_node, rx_node = network.nodes.get(tx), network.nodes.get(rx)
         # Make sure that rx does not yet have a parent assigned. If so, set rx's parent to tx
         if rx_node.parent:  # type: ignore
-            raise ValueError(f"Not a radial network. Node {rx_node.name} has more than one parent.")  # type: ignore
+            # type: ignore
+            raise ValueError(f"Not a radial network. Node {rx_node.name} has more than one parent.")
         else:
             rx_node.parent = tx_node  # type: ignore
 
@@ -72,6 +91,8 @@ def init_from_dss(dss_fp: str) -> Network:
 
         line.FZpu = get_Z(line_data, line.phases, fz_mult)
 
+
+def get_loads_from_dss(network: Network, dss: Any) -> None:
     # make Loads
     all_loads_data = dss.utils.loads_to_dataframe().transpose()
     load_names = all_loads_data.keys()
@@ -102,7 +123,7 @@ def init_from_dss(dss_fp: str) -> Network:
         load.kvar = load_data['kvar']
 
         # divide ppu and qpu by number of phases
-        ppu = load.kW / 1000/ load.phases.count(True)
+        ppu = load.kW / 1000 / load.phases.count(True)
         qpu = load.kvar / 1000 / load.phases.count(True)
 
         # set aPQ, aI, aZ
@@ -111,13 +132,13 @@ def init_from_dss(dss_fp: str) -> Network:
         load.aI = np.zeros(3)
         load.aZ = np.zeros(3)
         # set load's ppu, qpu, and spu as a 3x1 based on load's phases
-        load.ppu = np.asarray( [ppu if phase else 0 for phase in load.phases])
-        load.qpu = np.asarray( [qpu if phase else 0 for phase in load.phases])
+        load.ppu = np.asarray([ppu if phase else 0 for phase in load.phases])
+        load.qpu = np.asarray([qpu if phase else 0 for phase in load.phases])
         load.spu = load.ppu + 1j*load.qpu
-        load.conn =   'delta' if load_data['IsDelta'] else 'wye'
+        load.conn = 'delta' if load_data['IsDelta'] else 'wye'
         # add a pointer to this load to the network
         network.loads[load_name] = load
-        load.node = node # assign the node to the load
+        load.node = node  # assign the node to the load
         node.loads.append(load)  # add this load to its node's load list
         #TODO: set load.type
     # sum all loads on each node and store on each node, to avoid re-calculating during
@@ -126,9 +147,8 @@ def init_from_dss(dss_fp: str) -> Network:
         for load in node.loads:
             node.sum_spu = np.add(node.sum_spu, load.spu)
 
-    # make Controllers
-    # TODO: implement this. No idea how opendssdirect maps this info. Which class is it even?
 
+def get_caps_from_dss(network: Network, dss: Any) -> None:
     # make Capacitors
     all_cap_data = dss.utils.capacitors_to_dataframe().transpose()
     cap_names = all_cap_data.keys()
@@ -144,22 +164,16 @@ def init_from_dss(dss_fp: str) -> Network:
             cap = Capacitor(cap_name)
             cap.phases = parse_phases(list(phase_chars))
             cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
-            cappu = cap_data['kvar'] * 1000 / network.Sbase / len(cap.phases) # TODO: confirm that cappu is divided by num phases
+            # TODO: confirm that cappu is divided by num phases
+            cappu = cap_data['kvar'] * 1000 / network.Sbase / len(cap.phases)
             cap.cappu = np.asarray([cappu if phase else 0 for phase in cap.phases])
-            network.capacitors[ cap_name ] = cap # add a pointer to this cap to the network
-            node.capacitors.append(cap) # add capacitor to it's node's cap list
+            network.capacitors[cap_name] = cap  # add a pointer to this cap to the network
+            node.capacitors.append(cap)  # add capacitor to it's node's cap list
     # sum all cappu on each node and store on each node, to avoid re-calculating during
     # fbs.update-voltage-dependent-load()
     for node in network.nodes.values():
         for cap in node.capacitors:
             node.sum_cappu = np.add(node.sum_cappu, cap.cappu)
-
-    # # make Transformers
-    # all_transformer_data = dss.utils.transformers_to_dataframe().transpose()
-    # transformer_names = all_transformer_data.keys()
-    # print(all_transformer_data)
-
-    return network
 
 
 def parse_phases(phase_char_lst : List[str]) -> List[bool]:
@@ -199,6 +213,7 @@ def get_Z(dss_data: Any, phase_list : List[bool], fz_mult: float ) -> Iterable:
     # pad the Z matrix
     return pad_phases(ZM, (3,3), phase_list)
 
+
 def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> Iterable:
     """
     Helper method to reshape input matrix and set values set to 0
@@ -228,6 +243,7 @@ def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> Iterable
             except StopIteration:
                 ("Cannot pad matrix.")
     return ret_mat
+
 
 def mask_phases(matrix: Iterable, shape: tuple, phases: List[bool]) -> Iterable:
     """
