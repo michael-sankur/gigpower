@@ -123,8 +123,8 @@ New Load.670b Bus1=670.2 Phases=1 Conn=Wye Model=1 kV=2.4 kW=66 kvar=38
 New Load.670c Bus1=670.3 Phases=1 Conn=Wye Model=1 kV=2.4 kW=117 kvar=68 
 
 !CAPACITOR DEFINITIONS
-New Capacitor.Cap1 Bus1=675 phases=3 kVAR=600 kV=4.16 
-New Capacitor.Cap2 Bus1=611.3 phases=1 kVAR=100 kV=2.4 
+New Capacitor.cap_675_abc_0 Bus1=675 phases=3 kVAR=600 kV=4.16 
+New Capacitor.cap_611_c_1 Bus1=611.3 phases=1 kVAR=100 kV=2.4 
 
 !Bus 670 is the concentrated point load of the distributed load on line 632 to 671 located at 1/3 the distance from node 632
 

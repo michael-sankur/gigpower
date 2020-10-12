@@ -1,7 +1,9 @@
 import numpy as np # type: ignore
 import opendssdirect as dss # type: ignore
 from typing import Iterable, List, Any
-from . network import Network, Node, Line, Load, Capacitor
+from . network import Network, Node, Line, Load, Capacitor, Transformer
+import re
+
 
 def init_from_dss(dss_fp: str) -> Network:
     """define a Network attributes from a dss file"""
@@ -12,16 +14,12 @@ def init_from_dss(dss_fp: str) -> Network:
     get_lines_from_dss(network, dss)
     get_loads_from_dss(network, dss)
     get_caps_from_dss(network, dss)
-
-    # # make Transformers
-    # all_transformer_data = dss.utils.transformers_to_dataframe().transpose()
-    # transformer_names = all_transformer_data.keys()
-    # print(all_transformer_data)
+    get_transformers_from_dss(network, dss)
 
     return network
 
 
-def get_base_values_from_dss(network: Network, dss: Any)-> None:
+def get_base_values_from_dss(network: Network, dss: Any) -> None:
     # set base values
     # TODO: make it possible to set the base from a given bus
     dss.Solution.Solve()
@@ -51,8 +49,8 @@ def get_nodes_from_dss(network: Network, dss: Any) -> None:
         node.phases = parse_phases(node.phases)  # type: ignore
 
 
-def get_lines_from_dss(network: Network, dss:Any) -> None:
-    #make Lines
+def get_lines_from_dss(network: Network, dss: Any) -> None:
+    # make Lines
     all_lines_data = dss.utils.lines_to_dataframe().transpose()  # get dss line data indexed by line_code
     line_codes = all_lines_data.keys()
 
@@ -140,7 +138,7 @@ def get_loads_from_dss(network: Network, dss: Any) -> None:
         network.loads[load_name] = load
         load.node = node  # assign the node to the load
         node.loads.append(load)  # add this load to its node's load list
-        #TODO: set load.type
+        # TODO: set load.type
     # sum all loads on each node and store on each node, to avoid re-calculating during
     # fbs.update-voltage-dependent-load()
     for node in network.nodes.values():
@@ -176,6 +174,25 @@ def get_caps_from_dss(network: Network, dss: Any) -> None:
             node.sum_cappu = np.add(node.sum_cappu, cap.cappu)
 
 
+def get_transformers_from_dss(network: Network, dss: Any) -> None:
+    # make Transformers
+    all_transformer_data = dss.utils.transformers_to_dataframe().transpose()
+    transformer_names = all_transformer_data.keys()
+    transformer_flag = re.compile('xfm', re.IGNORECASE)
+
+    for transformer_name in transformer_names:
+        if transformer_flag.match(transformer_name):  # only get dss Transformer objects with 'xfm' in the name
+            transformer_data = all_transformer_data[transformer_name]
+            # TODO: Right now the key representing bus1, bus2 is hard-coded.
+            # Change this to query opendss for bus1 and bus2
+            transformer = Transformer(('633', '634'), transformer_name, transformer_data['NumWindings'])
+            transformer.conn = 'delta' if transformer_data['IsDelta'] else 'wye'
+            transformer.Vbase = transformer_data['WdgVoltages']
+            transformer.kV = transformer_data['kV']
+            transformer.kVA = transformer_data['kVA']
+            network.transformers[transformer_name] = transformer
+
+
 def parse_phases(phase_char_lst : List[str]) -> List[bool]:
     """
     helper function to return a list of phase characters into a boolean triple
@@ -187,6 +204,7 @@ def parse_phases(phase_char_lst : List[str]) -> List[bool]:
         phase_list[get_phase_idx(p)] = True
     return phase_list
 
+
 def get_phase_idx(phase_char: str) -> int:
     """
     helper function to turn a phase letter into an index, where 'a' = 0
@@ -197,6 +215,7 @@ def get_phase_idx(phase_char: str) -> int:
         return int(phase_char) - 1
     else:
         raise ValueError(f'Invalid argument for get_phase_idx {phase_char}')
+
 
 def get_Z(dss_data: Any, phase_list : List[bool], fz_mult: float ) -> Iterable:
     """

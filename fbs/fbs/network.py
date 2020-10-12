@@ -10,15 +10,17 @@ import pandas as pd # type: ignore
 # Decimal has alterable precision (defaults to 28 places), and numpy.float128 can have 64-bit precision
 # See: https://stackoverflow.com/questions/6663272/double-precision-floating-values-in-python
 
+
 class Network:
     def __init__(self, num_phases:int = 3) -> None:
         """
         Initialize a Network instance.
         """
-        self.nodes : Dict[str,Node] = dict()
-        self.lines: Dict[ Tuple[str,str], Line ] = dict()
+        self.nodes: Dict[str,Node] = dict()
+        self.lines: Dict[Tuple [str,str], Line] = dict()
         self.loads: Dict[str, Load] = dict()
         self.capacitors: Dict[str, Capacitor] = dict()
+        self.transformers: Dict[str, Transformer] = dict()
         self.adj: Dict[str, List] = dict()
         self.Vbase = 0.0
         self.Sbase = 0.0
@@ -27,7 +29,7 @@ class Network:
         self.num_phases = num_phases
 
 
-    def get_nodes(self) -> ValuesView[Any] :
+    def get_nodes(self) -> ValuesView[Any]:
         """return a List-like iterable view of network Node objects"""
         return self.nodes.values()
 
@@ -35,9 +37,13 @@ class Network:
         """return a List-like view of network Line objects"""
         return self.lines.values()
 
-    def get_loads(self) -> ValuesView[Any] :
+    def get_loads(self) -> ValuesView[Any]:
         """return a List-like view network Load objects"""
         return self.loads.values()
+
+    def get_transformers(self) -> ValuesView[Any]:
+        """return a List-like view of network Transformer objects"""
+        return self.transformers.values()
 
     def set_load_kw(self, load:str, kw:float) -> None:
         self.loads[load].set_kw(kw)
@@ -90,6 +96,7 @@ class Node:
         data = [self.name, self.phases, self.loads, self.controller]
         return pd.Series(data, self.series_index)
 
+
 class Line:
     series_index = ['(tx,rx)', 'name', 'phases', 'config', 'length', 'FZpu']
     # TODO: might be helpful to include a list of pointers to all Lines in the class, and do the same for Node, etc.
@@ -108,7 +115,6 @@ class Line:
     def to_series(self) -> pd.Series:
         data = [self.key, self.name, self.phases, self.config, self.length, self.FZpu]
         return pd.Series(data, self.series_index)
-
 
 
 class Load:
@@ -175,6 +181,7 @@ class Load:
         data = [self.name, self.conn, self.phases, self.type, self.aPQ, self.aI, self.ppu, self.qpu, self.spu]
         return pd.Series(data, self.series_index)
 
+
 class Controller:
     def __init__(self, name: str = '') -> None:
         self.node = None
@@ -191,6 +198,7 @@ class Controller:
     def __str__(self) -> str:
         return self.name
 
+
 class Capacitor:
     def __init__(self, name: str = '') -> None:
         self.name = name
@@ -201,3 +209,11 @@ class Capacitor:
         return self.name
 
 
+class Transformer (Line):
+    def __init__(self, key: Tuple[str, str], name: str, num_windings: int) -> None:
+        super().__init__(key, name) # initialize this as a Line with 0 length
+        self.num_windings = num_windings
+        self.Vbase = np.zeros((3,) dtype='complex')  # 3x1, initialize to nominal voltage
+        self.kV = 0.0
+        self.kVA = 0
+        self.conn = ''  # 'wye' or 'delta
