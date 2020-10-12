@@ -24,12 +24,12 @@ def test_init_from_dss(get_network) -> None:
     # check that number of dss nodes equals our network's node x phases
     network = get_network
     dss_nodes = len(dss.Circuit.AllNodeNames())
-    network_nodes = sum([ node.phases.count(True) for node in network.get_nodes() ])
+    network_nodes = sum([node.phases.count(True) for node in network.get_nodes()])
     node_check = dss_nodes == network_nodes
     # check that number of lines match
-    dss_lines = len(dss.Lines.AllNames())
+    dss_lines = len(dss.Lines.AllNames()) + len(network.transformers)
     network_lines = len(network.lines)
-    network_edges = sum([ len(node_list) for node_list in network.adj.values() ])
+    network_edges = sum([len(node_list) for node_list in network.adj.values()])
     line_check = (dss_lines == network_lines) and (dss_lines == network_edges)
     assert node_check and line_check
 

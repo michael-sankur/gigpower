@@ -110,7 +110,7 @@ class Line:
         self.FZpu = np.zeros((3,3), dtype = 'complex')
 
         # add this Line to the network
-        network.Lines[line_name] = self
+        network.lines[name] = self
         network.adj[key[0]].append(key[1])  # add this as a Line in the adjacency list
 
     def __str__(self) -> str:
@@ -214,10 +214,10 @@ class Capacitor:
 
 
 class Transformer (Line):
-    def __init__(self, , network: Network, key: Tuple[str, str], name: str, num_windings: int) -> None:
-        super().__init__(key, name) # initialize this as a Line with 0 length
+    def __init__(self, network: Network, key: Tuple[str, str], name: str, num_windings: int) -> None:
+        super().__init__(network, key, name) # initialize this as a Line with 0 length
         self.num_windings = num_windings
-        self.Vbase = np.zeros((3,) dtype='complex')  # 3x1, initialize to nominal voltage
+        self.Vbase = np.zeros((3,), dtype='complex')  # 3x1, initialize to nominal voltage
         self.kV = 0.0
         self.kVA = 0
         self.conn = ''  # 'wye' or 'delta

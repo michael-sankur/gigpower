@@ -68,7 +68,7 @@ def get_lines_from_dss(network: Network, dss: Any) -> None:
             tx, rx = line_data['Bus1'], line_data['Bus2']
             tx_phases = ['1', '2', '3']
 
-        line = Line((tx, rx), line_code)  # initialize line
+        line = Line(network, (tx, rx), line_code)  # initialize line
         # set phases according to tx
         line.phases = parse_phases(tx_phases)
         network.lines[(tx, rx)] = line  # add line to network.line
@@ -186,7 +186,7 @@ def get_transformers_from_dss(network: Network, dss: Any) -> None:
             # TODO: Right now the key representing bus1, bus2 is hard-coded.
             # Change this to query opendss for bus1 and bus2
             bus1, bus2 = '633', '634'
-            transformer = Transformer((bus1, bus2), transformer_name, transformer_data['NumWindings'])
+            transformer = Transformer(network, (bus1, bus2), transformer_name, transformer_data['NumWindings'])
             transformer.conn = 'delta' if transformer_data['IsDelta'] else 'wye'
             transformer.Vbase = transformer_data['WdgVoltages']
             transformer.kV = transformer_data['kV']
