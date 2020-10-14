@@ -88,6 +88,10 @@ class Node:
         self.sum_spu = np.zeros(3) # 3x1 complex array that holds the sum of all load.spu on this node
         self.sum_cappu = np.zeros(3) # 3x1 array that holds the sum of all capacitor.cappu on this node
         self.controller = None
+        self.Sbase = 1000000.0
+        self.Vbase = 0.0
+        self.Ibase = 0.0
+        self.Zbase = 0.0
 
     def __str__(self) -> str:
         return f"{self.name}, {self.phases}"
@@ -108,10 +112,15 @@ class Line:
         self.config = None
         self.length = 0.0
         self.FZpu = np.zeros((3,3), dtype = 'complex')
-
+        self.Sbase = 1000000.0
+        self.Vbase = 0.0
+        self.Ibase = 0.0
+        self.Zbase = 0.0
         # add this Line to the network
-        network.lines[name] = self
-        network.adj[key[0]].append(key[1])  # add this as a Line in the adjacency list
+        network.lines[key] = self
+        tx, rx = key
+        if rx not in network.adj[tx]:
+            network.adj[tx].append(rx)  # add this as a Line in the adjacency list
 
     def __str__(self) -> str:
         return str(self.key)
@@ -215,7 +224,7 @@ class Capacitor:
 
 class Transformer (Line):
     def __init__(self, network: Network, key: Tuple[str, str], name: str, num_windings: int) -> None:
-        super().__init__(network, key, name) # initialize this as a Line with 0 length
+        super().__init__(network, key, name)  # initialize this as a Line with 0 length
         self.num_windings = num_windings
         self.Vbase = np.zeros((3,), dtype='complex')  # 3x1, initialize to nominal voltage
         self.kV = 0.0

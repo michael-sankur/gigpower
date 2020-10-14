@@ -10,9 +10,9 @@ from fbs.dss_solve import solve_with_dss, get_solution as get_dss_solution
 import pandas as pd
 import pytest
 
-# dss_files = ['fbs/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss', 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss', 'fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
+dss_files = ['fbs/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss', 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss', 'fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss']
-dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss']
+# dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss']
 
 def test_all():
     """
@@ -33,7 +33,7 @@ def compare_fbs_sol(dss_file, tolerance):
     #TODO: Figure out how to get Inode (iNR) and sV (sNR) at each node from dss and perform a compare
     # solve with fbs
     network = init_from_dss(dss_file)
-    fbs_sol = get_fbs_solution( fbs(network) )
+    fbs_sol = get_fbs_solution(fbs(network))
 
     # solve with dss
     solve_with_dss(dss_file)

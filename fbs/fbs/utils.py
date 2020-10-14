@@ -24,7 +24,7 @@ def get_base_values_from_dss(network: Network, dss: Any) -> None:
     # TODO: make it possible to set the base from a given bus
     dss.Solution.Solve()
     Vbase = dss.Bus.kVBase() * 1000
-
+    # TODO: get Sbase from opendss
     Sbase = 1000000.0
     Ibase = Sbase/Vbase
     network.Zbase = Vbase/Ibase
@@ -39,7 +39,11 @@ def get_nodes_from_dss(network: Network, dss: Any) -> None:
         if name not in network.nodes.keys():
             network.nodes[name] = Node(name)
             network.nodes[name].phases = []  # replace default tuple with empty list so we can mutate it
+        dss.Circuit.SetActiveBus(name)
         node = network.nodes[name]
+        node.Vbase = dss.Bus.kVBase()
+        node.Ibase = node.Sbase/node.Vbase
+        node.Zbase = node.Vbase/node.Ibase
         # store phases as characters in phase list for now
         node.phases.append(phase)
         # Add node to adjacency lisst. note: this means that every node has an entry. Nodes with no children will have an empty list.
@@ -53,7 +57,7 @@ def get_lines_from_dss(network: Network, dss: Any) -> None:
     # make Lines
     all_lines_data = dss.utils.lines_to_dataframe().transpose()  # get dss line data indexed by line_code
     line_codes = all_lines_data.keys()
-
+    # TODO: set line base values based on node Vbase
     for line_code in line_codes:
         line_data = all_lines_data[line_code]
 
@@ -68,12 +72,10 @@ def get_lines_from_dss(network: Network, dss: Any) -> None:
             tx, rx = line_data['Bus1'], line_data['Bus2']
             tx_phases = ['1', '2', '3']
 
-        line = Line(network, (tx, rx), line_code)  # initialize line
+        line = Line(network, (tx, rx), line_code)  # initialize line. Line constructor will add the line to the adjacency list
         # set phases according to tx
         line.phases = parse_phases(tx_phases)
-        network.lines[(tx, rx)] = line  # add line to network.line
-        # add directed line to adjacency list, adj[tx] += rx
-        network.adj[tx].append(rx)
+        network.lines[(tx, rx)] = line  # add line to network.line.
         tx_node, rx_node = network.nodes.get(tx), network.nodes.get(rx)
         # Make sure that rx does not yet have a parent assigned. If so, set rx's parent to tx
         if rx_node.parent:  # type: ignore
@@ -178,19 +180,22 @@ def get_transformers_from_dss(network: Network, dss: Any) -> None:
     # make Transformers
     all_transformer_data = dss.utils.transformers_to_dataframe().transpose()
     transformer_names = all_transformer_data.keys()
-    transformer_flag = re.compile('xfm', re.IGNORECASE)
-
+    # loop through transformers
+    # loop through reg control obejcts
+    # find regcontrols associated with transformers
+    # is this a voltage regulator or transformer?
     for transformer_name in transformer_names:
-        if transformer_flag.match(transformer_name):  # only get dss Transformer objects with 'xfm' in the name
-            transformer_data = all_transformer_data[transformer_name]
-            # TODO: Right now the key representing bus1, bus2 is hard-coded.
-            # Change this to query opendss for bus1 and bus2
-            bus1, bus2 = '633', '634'
-            transformer = Transformer(network, (bus1, bus2), transformer_name, transformer_data['NumWindings'])
-            transformer.conn = 'delta' if transformer_data['IsDelta'] else 'wye'
-            transformer.Vbase = transformer_data['WdgVoltages']
-            transformer.kV = transformer_data['kV']
-            transformer.kVA = transformer_data['kVA']
+        transformer_data = all_transformer_data[transformer_name]
+        # TODO: Right now the key representing bus1, bus2 is hard-coded.
+        # Change this to query opendss for bus1 and bus2
+        dss.Transformers.Name(transformer_name)
+        bus1, bus2 = (b.split('.')[0] for b in dss.CktElement.BusNames())
+        transformer = Transformer(network, (bus1, bus2), transformer_name, transformer_data['NumWindings'])
+        transformer.phases = network.nodes[bus1].phases
+        transformer.conn = 'delta' if transformer_data['IsDelta'] else 'wye'
+        transformer.Vbase = transformer_data['WdgVoltages']
+        transformer.kV = transformer_data['kV']
+        transformer.kVA = transformer_data['kVA']
 
 
 def parse_phases(phase_char_lst : List[str]) -> List[bool]:
