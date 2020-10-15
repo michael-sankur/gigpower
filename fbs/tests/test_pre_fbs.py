@@ -40,6 +40,13 @@ def test_init_from_dss(get_network) -> None:
     network_loads = len(network.loads)
     load_check = dss_loads == network_loads
 
+    # check that list of loads on each node matches opendss
+    load_list_check = True
+    for node in network.get_nodes():
+        dss.Circuit.SetActiveBus(node.name)
+        if len(dss.Bus.LoadList()) != len(node.loads):
+            load_list_check = False
+
     # check that the number of capacitors match
     dss_capacitors = len(dss.Capacitors.AllNames())
     network_capacitors = len(network.capacitors)
@@ -49,7 +56,8 @@ def test_init_from_dss(get_network) -> None:
     dss_transformers = len(dss.Transformers.AllNames())
     network_transformers = len(network.transformers)
     transformer_check = dss_transformers == network_transformers
-    assert node_check and line_check and load_check and capacitor_check and transformer_check
+    assert node_check and line_check and load_check and load_list_check
+    assert capacitor_check and transformer_check
 
 def test_topo_sort() -> None:
     network = init_from_dss(dss_file)
