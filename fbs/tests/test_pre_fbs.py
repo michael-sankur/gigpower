@@ -5,10 +5,10 @@ from fbs.fbs import topo_sort
 import pytest
 import opendssdirect as dss
 
-# dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss'
 # dss_file = 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
+dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss'
 # dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss'
-dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss'
+# dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss'
 
 @pytest.fixture
 def get_network():
@@ -34,6 +34,22 @@ def test_init_from_dss(get_network) -> None:
     network_edges = sum([len(node_list) for node_list in network.adj.values()])
     line_check = (dss_lines == network_lines) and (dss_lines == network_edges)
     assert node_check and line_check
+
+    # check that the number of loads match
+    dss_loads = len(dss.Loads.AllNames())
+    network_loads = len(network.loads)
+    load_check = dss_loads == network_loads
+
+    # check that the number of capacitors match
+    dss_capacitors = len(dss.Capacitors.AllNames())
+    network_capacitors = len(network.capacitors)
+    capacitor_check = dss_capacitors == network_capacitors
+
+    # check that number of transformers match
+    dss_transformers = len(dss.Transformers.AllNames())
+    network_transformers = len(network.transformers)
+    transformer_check = dss_transformers == network_transformers
+    assert node_check and line_check and load_check and capacitor_check and transformer_check
 
 def test_topo_sort() -> None:
     network = init_from_dss(dss_file)
