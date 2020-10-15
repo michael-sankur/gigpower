@@ -9,15 +9,14 @@ New object=circuit.ieee37
 !~ basekv=4.80 pu=1.00 baseMVA=1 MVAsc3=200000 MVAsc1=210000
 
 ! Substation Transformer
-New Transformer.SubXF Phases=3 Windings=2 Xhl=8
-~ wdg=1 bus=sourcebus conn=Wye kv=115 kva=2500 %r=1
-~ wdg=2 bus=A01 conn=Wye kv=4.8 kva=2500 %r=1
+New Transformer.SubXF Phases=3 Windings=2 Xhl=0.00001
+~ wdg=1 bus=sourcebus conn=Wye kv=115 kva=2500 !%r=1
+~ wdg=2 bus=A01 conn=Wye kv=4.8 kva=2500 !%r=1
 
 ! Load Transformer
-New Transformer.XFM1 Phases=3 Windings=2 Xhl=1.81
-~ wdg=1 bus=A03 conn=Wye kv=4.80 kva=500 %r=[0, 0]
-~ wdg=2 bus=A07 conn=Wye kv=0.48 kva=500 %r=[0, 0]
-
+New Transformer.XFM1 Phases=3 Windings=2 Xhl=0.00001
+~ wdg=1 bus=A03 conn=Wye kv=4.80 kva=500 !%r=0.045
+~ wdg=2 bus=A07 conn=Wye kv=0.48 kva=500 !%r=0.045
 
 ! import line codes with phase impedance matrices
 ! Redirect IEEELineCodes.dss

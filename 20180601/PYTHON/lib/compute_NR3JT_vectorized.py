@@ -9,8 +9,8 @@ def compute_NR3JT_vectorized(X, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg):
         + (g[i, 0, :])
         JKCL[i,:] = r
 
-    JVR = np.zeros((6, 2*3*(nnode+nline)))
-    for i in range(6):
+    JVR = np.zeros((2*3*3, 2*3*(nnode+nline))) # I need to fix this later, but it's not a problem now.
+    for i in range(2*3*3):
         r = (2* (X.T @ H_reg[i, :, :]))
         JVR[i, :] = r
 

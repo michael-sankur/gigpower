@@ -9,36 +9,33 @@ def compute_KCL_matrices(fn, t, der, capacitance):
     # Allocate transformer lines
     tf_no = len(dss.Transformers.AllNames()) - len(dss.RegControls.AllNames()) #number of transformers
     vr_no = len(dss.RegControls.AllNames()) #number of voltage regulators
+
     tf_bus = np.zeros((2, tf_no), dtype = int) #tf has in and out bus
-    vr_bus = np.zeros((3, vr_no), dtype = int) #vr has in and out bus and phase
-    tf_count = 0
+    vr_bus = np.zeros((5, vr_no), dtype = int) #vr has in and out bus and phase
+
     vr_count = 0
-    whichone = -1
+    vr_lines = 0
+    tf_count = 0
 
     for tf in range(len(dss.Transformers.AllNames())):
-        dss.Transformers.Name(dss.Transformers.AllNames()[tf])
-        for i in range(2):
-            if dss.Transformers.AllNames()[tf] in dss.RegControls.AllNames():     
+        dss.Transformers.Name(dss.Transformers.AllNames()[tf])     
+        if dss.Transformers.AllNames()[tf] in dss.RegControls.AllNames(): #start and end bus
+            for i in range(2):
                 bus = dss.CktElement.BusNames()[i].split('.')
-                vr_bus[i, vr_count] = int(dss.Circuit.AllBusNames().index(bus[0]))    
-                vr_bus[2, vr_count] = int(bus[1]) #phase
-                whichone = 0            
-            else:
-                tf_bus[i, tf_count] =  int(dss.Circuit.AllBusNames().index(dss.CktElement.BusNames()[i])) #stuff the in and out bus of the tf into an array          
-                whichone = 1
-        if whichone == 1:
-            tf_count += 1
+                vr_bus[i, vr_count] = int(dss.Circuit.AllBusNames().index(bus[0]))
+            for n in range(len(bus[1:])):          
+                vr_lines += 1
+                vr_bus[int(bus[1:][n]) + 1, vr_count] = int(bus[1:][n])             
+            vr_count += 1             
         else:
-            vr_count += 1
-        whichone = -1
- 
-    # vr_no = 1
-    # vr_bus = vr_bus[0:2, 0:1]
-    
-    nline = len(dss.Lines.AllNames()) + tf_no + (2* vr_no)
+            for i in range(2):
+                tf_bus[i, tf_count] =  int(dss.Circuit.AllBusNames().index(dss.CktElement.BusNames()[i])) #stuff the in and out bus of the tf into an array          
+            tf_count += 1
+    #vr_lines = 1
+    nline = len(dss.Lines.AllNames()) + tf_no + (2 * vr_lines) #should have usual lines, a line for every TF, and 2 lines for every VR  
     nnode = len(dss.Circuit.AllBusNames())
     Sbase = 1000000.0
-   
+    
     line_in_idx_vr = range(len(dss.Lines.AllNames()) + tf_no, nline, 2)
     line_out_idx_vr = range(len(dss.Lines.AllNames()) + tf_no + 1, nline, 2)
 
@@ -145,8 +142,8 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                                     [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                 if available_phases[ph] == 1:                 #quadratic terms
-                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = -load_val * (beta_Z)# + (0.5 * beta_I* hessian_mag[0][0])) # TE replace assignment w/ -load_val * beta_Z; #a**2
-                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = -load_val * (beta_Z)#  + (0.5 * beta_I * hessian_mag[1][1])) # TE replace assignment w/ -load_val * beta_Z; #b**2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = -load_val * (beta_Z+ (0.5 * beta_I* hessian_mag[0][0])) # TE replace assignment w/ -load_val * beta_Z; #a**2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[1][1])) # TE replace assignment w/ -load_val * beta_Z; #b**2
                         #H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1] = -load_val * beta_I * hessian_mag[0][1] / 2 #remove for TE
                         #H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] =  -load_val * beta_I * hessian_mag[1][0] / 2 #remove for TE
 
@@ -201,7 +198,8 @@ def compute_KCL_matrices(fn, t, der, capacitance):
         for cplx in range(2):     
             for i in range(tf_no):
                 k2 = int(tf_bus[1, i])
-                if k2 != 0:
+                if k2 != 0:    
+                    print('transformer kcl ???')               
                     line_idx = line_idx_tf[i]  
                     if cplx == 0: #real residual
                         #A_m and C_lm
@@ -237,11 +235,13 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                         H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
                         H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
 
-    #Voltage Regulator KCL    
+    #Voltage Regulator KCL 
+    counter = 0
+    countout = 0   
     if vr_no > 0:
         print('voltage regulator KCL')
-        for ph in range(0,3):
-            for cplx in range(2):
+        for i in range(vr_lines): #in lines 
+            for ph in range(0,3):          
                 if ph == 0: #set nominal voltage based on phase
                     A0 = 1
                     B0 = 0
@@ -251,43 +251,55 @@ def compute_KCL_matrices(fn, t, der, capacitance):
                 elif ph == 2:
                     A0 = -1/2
                     B0 = np.sqrt(3)/2
-                for i in range(vr_no): #in lines 
-                    k2 = int(vr_bus[1, i])
-                    if k2 != 0:
-                        line_idx = line_in_idx_vr[i]       
-                        if cplx == 0: #real residual
-                            #A_m and C_lm
-                            H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = 1/2
-                            #B_m and D_lm
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = 1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 1/2
-                        if cplx == 1: #imaginary residual                        
-                            # #A_m, D_lm
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = -1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = -1/2
-                            #B_m and C_lm
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
+                k2 = int(vr_bus[1, i])
+                if k2 != 0 and vr_bus[ph + 2, i] != 0:
+                    line_idx = line_in_idx_vr[counter]   
+                    #real residual
+                    #A_m and C_lm
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 0][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 0][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = 1/2
+                    #B_m and D_lm
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 0][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = 1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 0][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 1/2
+                    #imaginary residual                        
+                    # #A_m, D_lm
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = -1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = -1/2
+                    #B_m and C_lm
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
+            counter += 1
 
-                for j in range(vr_no): #fill in H for the outlines                
-                    k2 = int(vr_bus[0, j])
-                    if k2 != 0:
-                        line_idx = line_out_idx_vr[j]
-                        if cplx == 0: #real residual
-                            #A_m and C_mn
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = -1/2
-                            #B_m and D_mn
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = -1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = -1/2
-                        if cplx == 1: #imaginary residual               
-                            #A_m and D_mn
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1]= 1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = 1/2
-                            #C_m and B_mn
-                            H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
-                            H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
+        for j in range(vr_lines): #fill in H for the outlines       
+            for ph in range(0,3):          
+                if ph == 0: #set nominal voltage based on phase
+                    A0 = 1
+                    B0 = 0
+                elif ph == 1:
+                    A0 = -1/2
+                    B0 = -1 * np.sqrt(3)/2
+                elif ph == 2:
+                    A0 = -1/2
+                    B0 = np.sqrt(3)/2         
+                k2 = int(vr_bus[0, j])
+                if k2 != 0 and vr_bus[ph + 2, j] != 0:
+                    line_idx = line_out_idx_vr[countout]     
+                   
+                    #real residual
+                    #A_m and C_mn
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 0][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 0][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = -1/2
+                    #B_m and D_mn
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 0][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = -1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 0][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = -1/2
+                    #imaginary residual
+                    #A_m and D_mn
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = 1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = 1/2
+                    #C_m and B_mn
+                    H[2*ph*(nnode-1) + (k2-1)*2+1][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2+1][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
+            countout += 1
 
     #Linear Term & Constant Term
     for ph in range(0,3):
@@ -303,7 +315,7 @@ def compute_KCL_matrices(fn, t, der, capacitance):
         for k2 in range(1, len(dss.Circuit.AllBusNames())):
             for cplx in range(0,2):
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
-                idxbs = dss.Circuit.AllBusNames().index(dss.Circuit.AllBusNames()[0])
+                idxbs = dss.Circuit.AllBusNames().index(dss.Circuit.AllBusNames()[k2])
                 if cplx == 0:
                     load_val = load_kw_arr_ph[ph][idxbs]
                 else:

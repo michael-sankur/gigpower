@@ -7,11 +7,19 @@ import time
 def basematrices(fn, slacknode, Vslack, V0, I0):
 
     dss.run_command('Redirect ' + fn)
+    
     tf_no = len(dss.Transformers.AllNames()) - len(dss.RegControls.AllNames()) #number of transformers
-    vr_no = len(dss.RegControls.AllNames()) #number of voltage regulators
-    #vr_no =1
+    
+    vr_lines = 0
+    for tf in range(len(dss.Transformers.AllNames())):
+        dss.Transformers.Name(dss.Transformers.AllNames()[tf])     
+        if dss.Transformers.AllNames()[tf] in dss.RegControls.AllNames(): #start and end bus
+            bus = dss.CktElement.BusNames()[0].split('.')
+            for _ in range(len(bus[1:])):          
+                vr_lines += 1 
 
-    nline = len(dss.Lines.AllNames()) + tf_no + (2* vr_no)
+                
+    nline = len(dss.Lines.AllNames()) + tf_no + (2 * vr_lines) #should have usual lines, a line for every TF, and 2 lines for every VR
     nnode = len(dss.Circuit.AllBusNames())
     XNR = np.zeros((2*3*(nnode + nline),1))
 
