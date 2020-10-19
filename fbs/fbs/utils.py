@@ -113,12 +113,12 @@ def get_loads_from_dss(network: Network, dss: Any) -> None:
         load = Load(load_name)
         load.phases = parse_phases(list(phase_chars))
         # save kw and kvar
-        load.kW = load_data['kW']
+        load.kw = load_data['kW']
         load.kvar = load_data['kvar']
         load.conn = 'delta' if load_data['IsDelta'] else 'wye'
 
         # divide ppu and qpu by number of phases
-        ppu = load.kW / 1000 / load.phases.count(True)
+        ppu = load.kw / 1000 / load.phases.count(True)
         qpu = load.kvar / 1000 / load.phases.count(True)
         # set aPQ, aI, aZ
         # TODO: get aPQ, aI for each load
