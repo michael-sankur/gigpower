@@ -7,7 +7,7 @@ import click
 from pathlib import Path
 from fbs.fbs import fbs
 from fbs.utils import init_from_dss
-from fbs.dss_solve import solve_with_dss
+from fbs.dss_solve import setup, solve
 from fbs.network import Network
 import time
 import functools
@@ -32,7 +32,8 @@ def solver_timer(solver_func : Any) -> Any:
 @solver_timer
 def time_dss(dss_file: str, i: int) -> None:
     """wrap dss solver in a timer"""
-    solve_with_dss(dss_file)
+    setup(dss_file)
+    solve()
     return None
 
 
@@ -46,7 +47,7 @@ def time_fbs(network: Network, i: int) -> None :
 @click.command( help='Compare running times between opendss and fbs. Please provide a full or relative path to a dss file.')
 @click.argument('dss_file')
 @click.option('--output', metavar='PATH', help='write output files to this directory')
-@click.option('--trials', default = '20', help = 'Specify max number of trials to run. Default is 20.')
+@click.option('--trials', default = '100', help = 'Specify max number of trials to run. Default is 20.')
 
 def main(dss_file: str, trials: int, output: str) -> None:
     """
