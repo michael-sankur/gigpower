@@ -1,8 +1,7 @@
 import numpy as np # type: ignore
 import opendssdirect as dss # type: ignore
 from typing import Iterable, List, Any
-from . network import Network, Node, Line, Load, Capacitor, Transformer
-import re
+from . network import Network, Node, Line, Load, Capacitor, Transformer, VoltageRegulator
 
 
 def init_from_dss(dss_fp: str) -> Network:
@@ -15,6 +14,7 @@ def init_from_dss(dss_fp: str) -> Network:
     get_loads_from_dss(network, dss)
     get_caps_from_dss(network, dss)
     get_transformers_from_dss(network, dss)
+    get_voltage_regulators_from_dss(network, dss)
 
     return network
 
@@ -37,16 +37,20 @@ def get_nodes_from_dss(network: Network, dss: Any) -> None:
         name, phase = node_name.split('.')
         # get the node corresponding to this name, or make a new one
         if name not in network.nodes.keys():
-            network.nodes[name] = Node(name)
-            network.nodes[name].phases = []  # replace default tuple with empty list so we can mutate it
-        dss.Circuit.SetActiveBus(name)
+            # initialize node
+            node = Node(name)
+            node.phases = []  # replace default tuple with empty list so we can mutate it
+            dss.Circuit.SetActiveBus(name)
+            node.Vbase = dss.Bus.kVBase() * 1000
+            node.Ibase = node.Sbase/node.Vbase
+            node.Zbase = node.Vbase/node.Ibase
+            network.nodes[name] = node  # add node to network
         node = network.nodes[name]
-        node.Vbase = dss.Bus.kVBase()
-        node.Ibase = node.Sbase/node.Vbase
-        node.Zbase = node.Vbase/node.Ibase
+
         # store phases as characters in phase list for now
         node.phases.append(phase)
-        # Add node to adjacency lisst. note: this means that every node has an entry. Nodes with no children will have an empty list.
+        # Add node to adjacency list. note: this means that every node has an entry.
+        # Nodes with no children will have an empty list.
         network.adj[name] = []
     # iterate through nodes to parse phase lists
     for node in network.get_nodes():
@@ -87,8 +91,7 @@ def get_lines_from_dss(network: Network, dss: Any) -> None:
         # parse line attributes from dss line data
         line.name = line_code
         line.length = line_data['Length']
-        fz_mult = 1 / network.Zbase * line.length
-
+        fz_mult = 1 / tx_node.Zbase * line.length  # use tx node's Z base
         line.FZpu = get_Z(line_data, line.phases, fz_mult)
 
 
@@ -98,20 +101,11 @@ def get_loads_from_dss(network: Network, dss: Any) -> None:
     load_names = all_loads_data.keys()
     for load_name in load_names:
         load_data = all_loads_data[load_name]
-        #node_name, phase_chars, load_idx = load_name.split('_')[1:]
         dss.Loads.Name(load_name)
         bus_phase = dss.CktElement.BusNames()[0].split('.')
         if len(bus_phase) == 1:
             bus_phase.extend(['1', '2', '3'])
-        phase_chars = ''
-        for i in range(dss.CktElement.NumPhases()):
-            if bus_phase[i+1] == '1':
-                phase_chars += 'a'
-            if bus_phase[i+1] == '2':
-                phase_chars += 'b'
-            if bus_phase[i+1] == '3':
-                phase_chars += 'c'
-        node_name = bus_phase[0]
+        node_name, phase_chars = bus_phase[0], bus_phase[1:]
         try:
             node = network.nodes[node_name]
         except KeyError:
@@ -121,11 +115,11 @@ def get_loads_from_dss(network: Network, dss: Any) -> None:
         # save kw and kvar
         load.kW = load_data['kW']
         load.kvar = load_data['kvar']
+        load.conn = 'delta' if load_data['IsDelta'] else 'wye'
 
         # divide ppu and qpu by number of phases
         ppu = load.kW / 1000 / load.phases.count(True)
         qpu = load.kvar / 1000 / load.phases.count(True)
-
         # set aPQ, aI, aZ
         # TODO: get aPQ, aI for each load
         load.aPQ = np.ones(3)
@@ -135,15 +129,16 @@ def get_loads_from_dss(network: Network, dss: Any) -> None:
         load.ppu = np.asarray([ppu if phase else 0 for phase in load.phases])
         load.qpu = np.asarray([qpu if phase else 0 for phase in load.phases])
         load.spu = load.ppu + 1j*load.qpu
-        load.conn = 'delta' if load_data['IsDelta'] else 'wye'
+
         # add a pointer to this load to the network
         network.loads[load_name] = load
         load.node = node  # assign the node to the load
         node.loads.append(load)  # add this load to its node's load list
         # TODO: set load.type
-    # sum all loads on each node and store on each node, to avoid re-calculating during
-    # fbs.update-voltage-dependent-load()
+
     for node in network.nodes.values():
+        # sum all loads on each node and store on each node, to avoid re-calculating during
+        # fbs.update-voltage-dependent-load()
         for load in node.loads:
             node.sum_spu = np.add(node.sum_spu, load.spu)
 
@@ -176,18 +171,32 @@ def get_caps_from_dss(network: Network, dss: Any) -> None:
             node.sum_cappu = np.add(node.sum_cappu, cap.cappu)
 
 
+def get_voltage_regulators_from_dss(network: Network, dss: Any) -> None:
+    # get Reg Controls from dss
+    regs = dss.RegControls.AllNames()
+    transformers = dss.Transformers.AllNames()
+    regcontrol_names = [n for n in regs if n not in transformers]
+    for regcontrol_name in regcontrol_names:
+        dss.RegControls.Name(regcontrol_name)  # set this reg as active
+        transformer = dss.RegControls.Transformer()  # stores transformer's name
+        dss.Transformers.Name(transformer)  # set this regcontrol's transformer as active
+        tx, rx = dss.CktElement.BusNames()  # get buses associated with the transformer
+        tx, *phases = tx.split('.')
+        rx = rx.split('.')[0]
+        voltageReg = VoltageRegulator(network, (tx, rx), regcontrol_name)
+        voltageReg.transformer = transformer
+        voltageReg.tapNumber = dss.RegControls.TapNumber()
+        voltageReg.phases = parse_phases(phases)
+
+
 def get_transformers_from_dss(network: Network, dss: Any) -> None:
     # make Transformers
     all_transformer_data = dss.utils.transformers_to_dataframe().transpose()
-    transformer_names = all_transformer_data.keys()
-    # loop through transformers
-    # loop through reg control obejcts
-    # find regcontrols associated with transformers
-    # is this a voltage regulator or transformer?
+    regs = dss.RegControls.AllNames()
+    transformers = dss.Transformers.AllNames()
+    transformer_names = [n for n in transformers if n not in regs]
     for transformer_name in transformer_names:
         transformer_data = all_transformer_data[transformer_name]
-        # TODO: Right now the key representing bus1, bus2 is hard-coded.
-        # Change this to query opendss for bus1 and bus2
         dss.Transformers.Name(transformer_name)
         bus1, bus2 = (b.split('.')[0] for b in dss.CktElement.BusNames())
         transformer = Transformer(network, (bus1, bus2), transformer_name, transformer_data['NumWindings'])
@@ -222,20 +231,18 @@ def get_phase_idx(phase_char: str) -> int:
         raise ValueError(f'Invalid argument for get_phase_idx {phase_char}')
 
 
-def get_Z(dss_data: Any, phase_list : List[bool], fz_mult: float ) -> Iterable:
+def get_Z(dss_data: Any, phase_list: List[bool], fz_mult: float) -> Iterable:
     """
     helper function to get the Z matrix from dss.lines.to_dataframe()
     Returns an ndarray.
     """
     num_phases = phase_list.count(True)
-    if num_phases == 0:
-        print(dss_data)
     RM = np.asarray(dss_data['RMatrix'])
     XM = np.asarray(dss_data['XMatrix'])
     ZM = fz_mult * (RM + 1j*XM)
     ZM = np.reshape(ZM, (ZM.shape[0]//num_phases, num_phases))  # reshape
     # pad the Z matrix
-    return pad_phases(ZM, (3,3), phase_list)
+    return pad_phases(ZM, (3, 3), phase_list)
 
 
 def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> Iterable:
