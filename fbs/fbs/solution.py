@@ -16,7 +16,7 @@ class Solution:
         # PARAMETERS
         self.iterations = 0  # stores number of iterations of FBS until convergence
         self.Vtest = np.zeros(3, dtype='complex')
-        self.Vref = np.array( [1, np.exp(1j*240*np.pi/180), np.exp(1j*120*np.pi/180)], dtype = complex)
+        self.Vref = np.array([1, np.exp(1j*240*np.pi/180), np.exp(1j*120*np.pi/180)], dtype = complex)
         self.tolerance = -1  # stores the tolerance at most recent completed iteration
         self.diff = -1  # stores the final value of Vtest - Vref at convergence
         # hard coded VREF = [1, 1*exp(j*240*pi/180), 1*exp(j*120*pi/180)]
@@ -93,8 +93,8 @@ class Solution:
         # child node voltage = parent node voltage - current(child_node, parent)
         new_child_V = parent_V - np.matmul(FZpu, I)
         # zero out voltages for non-existant phases at child node
-        self.V[ child.name ] = mask_phases(new_child_V, (3,), child.phases)
-        #TODO: find out what -0j is. This happens after masking phases on the child.
+        self.V[child.name] = mask_phases(new_child_V, (3,), child.phases)
+        #  TODO: find out what -0j is. This happens after masking phases on the child.
         return None
 
     def update_voltage_backward(self, network: Network, child: Node) -> None:
@@ -121,7 +121,7 @@ class Solution:
             if child.phases[phase_idx]:  # if this phase is present on child
                 parent_V[phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
         # zero out voltages for non-existant phases at parent node
-        self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases) # type: ignore
+        self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases)  # type: ignore
         return None
 
     def update_parent_current(self, network: Network, line_in: Line) -> None:
@@ -148,12 +148,14 @@ class Solution:
         upstream_node--->[line_in]---> downstream_node ===> [0 or many lines out] ===> 0 or many child nodes
         Used during backward sweep.
         """
-        node_name = line_in.key[1] # type: ignore
-        line_phases = network.lines[ line_in.key ].phases #type: ignore
+        node_name = line_in.key[1]  # type: ignore
+        line_phases = network.lines[line_in.key].phases #type: ignore
         node_s = self.s[node_name]
         node_V = self.V[node_name]
-        # np.divide produces a NaN for positions at which node_V is 0 because the phases are not existant on node
-        new_line_I = np.conj(np.divide(node_s, node_V)) # TODO: consider dividing manually only by phases on the node
+        # np.divide produces a NaN for positions at which node_V is 0
+        # because the phases are not existant on node
+        # TODO: consider dividing manually only by phases on the node
+        new_line_I = np.conj(np.divide(node_s, node_V))
         # sum currents over all node's child segments
         for child_name in network.adj[node_name]:
             child_segment = (node_name, child_name)
@@ -171,28 +173,30 @@ class Solution:
         aPQ = np.ones(3)
         aI = np.zeros(3)
         aZ = np.zeros(3)
-        # TODO; get aPQ, aI, aZ from dss file
+        # TODO; get aPQ, aI, aZ from dss file, or zip values
+        # for now these are determined by the Load.Model value in opendss
         # dss.LoadModels - above equal to constant p and q. We use model 1 and 8
 
         node_V = self.V[node.name]
-        wpu = np.zeros(3) # TODO: will be set as argument
+        wpu = np.zeros(3)  # TODO: will be set as argument
         cappu = node.sum_cappu
         spu = node.sum_spu
-        self.s[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs(node_V)) ) + np.multiply(aZ, (np.power(abs(node_V), 2))) - 1j * cappu + wpu
+        abs_nodeV = abs(node_V)
+        self.s[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs_nodeV)) + np.multiply(aZ, (np.power(abs_nodeV, 2))) - 1j * cappu + wpu
         return None
 
     def calc_S(self) -> None:
         """ Calculate Stx and Srx """
         for line in self.network.get_lines():
             tx_name, rx_name = line.key
-            self.Stx [ line.key ] = np.multiply(self.V[ tx_name ], np.conj(self.I[line.key]))
-            self.Srx [ line.key ] = np.multiply(self.V[ rx_name ], np.conj(self.I[line.key]))
+            self.Stx[line.key] = np.multiply(self.V[tx_name], np.conj(self.I[line.key]))
+            self.Srx[line.key] = np.multiply(self.V[rx_name], np.conj(self.I[line.key]))
 
     def calc_sV(self) -> None:
         """ Final calculation of voltage dependent complex loads. """
         # TODO: # handle multiple loads with update_s method. This is redundant (equivalent to update s)
         for node in self.network.get_nodes():
-            self.update_voltage_dependent_load(node) # update self.s one last time
+            self.update_voltage_dependent_load(node)  # update self.s one last time
         self.sV = self.s  # set self.sv to self.s
 
     def calc_Inode(self) -> None:
@@ -201,7 +205,7 @@ class Solution:
             node_V = self.V[ node.name ]
             node_sV = self.sV[ node.name ]
             node_I = np.conj(np.divide(node_sV,node_V))
-            self.Inode[ node.name ] = mask_phases(node_I, (3,), node.phases)
+            self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
 
     def V_df(self) -> Iterable:
         """
