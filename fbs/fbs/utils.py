@@ -160,7 +160,7 @@ def get_caps_from_dss(network: Network, dss: Any) -> None:
             cap.phases = parse_phases(list(phase_chars))
             cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
             # TODO: confirm that cappu is divided by num phases
-            cappu = cap_data['kvar'] * 1000 / network.Sbase / len(cap.phases)
+            cappu = cap_data['kvar'] * 1000 / network.Sbase / cap.phases.count(True)
             cap.cappu = np.asarray([cappu if phase else 0 for phase in cap.phases])
             network.capacitors[cap_name] = cap  # add a pointer to this cap to the network
             node.capacitors.append(cap)  # add capacitor to it's node's cap list
