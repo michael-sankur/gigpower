@@ -21,6 +21,7 @@ class Network:
         self.loads: Dict[str, Load] = dict()
         self.capacitors: Dict[str, Capacitor] = dict()
         self.transformers: Dict[str, Transformer] = dict()
+        self.voltageRegulators: Dict[str, VoltageRegulator] = dict()
         self.adj: Dict[str, List] = dict()
         self.Vbase = 0.0
         self.Sbase = 0.0
@@ -44,6 +45,10 @@ class Network:
     def get_transformers(self) -> ValuesView[Any]:
         """return a List-like view of network Transformer objects"""
         return self.transformers.values()
+
+    def get_voltageRegulators(self) -> ValuesView[Any]:
+        """return a List-like view of network Transformer objects"""
+        return self.voltageRegulators.values()
 
     def set_load_kw(self, load:str, kw:float) -> None:
         self.loads[load].set_kw(kw)
@@ -105,6 +110,7 @@ class Line:
     series_index = ['(tx,rx)', 'name', 'phases', 'config', 'length', 'FZpu']
     # TODO: might be helpful to include a list of pointers to all Lines in the class, and do the same for Node, etc.
     # see: http://effbot.org/pyfaq/how-do-i-get-a-list-of-all-instances-of-a-given-class.htm
+
     def __init__(self, network: Network, key: Tuple[str,str] = None, name: str = '') -> None:
         self.key = key # tuple of (txnode_name, rxnode_name)
         self.name = name # string, the name DSS uses to refer to this line
@@ -117,8 +123,12 @@ class Line:
         self.Ibase = 0.0
         self.Zbase = 0.0
         # add this Line to the network
-        network.lines[key] = self
-        tx, rx = key
+        self.add_to_network(network)
+
+    def add_to_network(self, network: Network) -> None:
+        """ add this line to the network """
+        network.lines[self.key] = self
+        tx, rx = self.key
         if rx not in network.adj[tx]:
             network.adj[tx].append(rx)  # add this as a Line in the adjacency list
 
@@ -221,16 +231,42 @@ class Capacitor:
     def __str__(self) -> str:
         return self.name
 
+class VoltageRegulator:
+    def __init__(self, network: Network, key: Tuple[str, str], name: str) -> None:
+        self.transformer = None  # pointer to the Transformer associated with this VoltageRegulator
+        self.key = key  # upstream, downstream buses associated with regulator
+        self.tapNumber = 0
+        self.name = name
+        self.phases = [False, False, False]
+        self.add_to_network(network)
+
+    def add_to_network(self, network: Network) -> None:
+        tx, rx = self.key
+        self.line_downstream = Line(network, (tx, rx), self.name)
+        self.line_upstream = Line(network, (rx, tx), self.name)  # creates a synthetic line pointint upstream
+        network.voltageRegulators[self.name] = self # add to the network's voltageRegulator dict
 
 class Transformer (Line):
     def __init__(self, network: Network, key: Tuple[str, str], name: str, num_windings: int) -> None:
-        super().__init__(network, key, name)  # initialize this as a Line with 0 length
+        # initialize this as a Line with 0 length, FZpu = zeroes(3x3)
+        super().__init__(network, key, name)
         self.num_windings = num_windings
         self.Vbase = np.zeros((3,), dtype='complex')  # 3x1, initialize to nominal voltage
         self.kV = 0.0
         self.kVA = 0
         self.conn = ''  # 'wye' or 'delta
 
+    def add_to_network(self, network: Network) -> None:
         # add this Transformer to the network
-        network.transformers[name] = self
+        network.transformers[self.name] = self
+        # add this Transformer as a synthetic line, represented by a list of Transformer objects
+        if self.key not in network.lines:
+            network.lines[self.key] = self
+        else:
+            raise ValueError(f'Line already defined: {self.key} for transformer {self.name}')
+        # if we have not added this Transformer to the adjacency list, add it now
+        tx, rx = self.key
+        if rx not in network.adj[tx]:
+            network.adj[tx].append(rx)
+
 
