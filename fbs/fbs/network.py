@@ -242,9 +242,13 @@ class VoltageRegulator:
 
     def add_to_network(self, network: Network) -> None:
         tx, rx = self.key
+        # creates a synthetic line pointing downstream
         self.line_downstream = Line(network, (tx, rx), self.name)
-        self.line_upstream = Line(network, (rx, tx), self.name)  # creates a synthetic line pointint upstream
-        network.voltageRegulators[self.name] = self # add to the network's voltageRegulator dict
+        # creates a synthetic line pointing upstreaam
+        self.line_upstream = Line(network, (rx, tx), self.name)
+        # remove tx from rx's adjacency list, otherwise it will not be a radial network!
+        network.adj[rx].remove(tx)
+        network.voltageRegulators[self.name] = self  # add to the network's voltageRegulator dict
 
 class Transformer (Line):
     def __init__(self, network: Network, key: Tuple[str, str], name: str, num_windings: int) -> None:

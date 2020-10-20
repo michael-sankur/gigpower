@@ -174,9 +174,7 @@ def get_caps_from_dss(network: Network, dss: Any) -> None:
 def get_voltage_regulators_from_dss(network: Network, dss: Any) -> None:
     # get Reg Controls from dss
     regs = dss.RegControls.AllNames()
-    transformers = dss.Transformers.AllNames()
-    regcontrol_names = [n for n in regs if n not in transformers]
-    for regcontrol_name in regcontrol_names:
+    for regcontrol_name in regs:
         dss.RegControls.Name(regcontrol_name)  # set this reg as active
         transformer = dss.RegControls.Transformer()  # stores transformer's name
         dss.Transformers.Name(transformer)  # set this regcontrol's transformer as active

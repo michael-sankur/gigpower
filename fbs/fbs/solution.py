@@ -74,24 +74,25 @@ class Solution:
         child_node_dict['V'] = parent_dict['V'] - (parent,child).FZpu * (parent,child).I
         """
         line_key = (parent.name, child.name)
-
-        # if line_key is a voltage_regulator:
-        #     # voltage regulator a pair of lines: open with upstream bus, one with downstream bus
-        #     # Vbase is the same on both sides
-        #     # power going in = power going out
-        #     child_V = gamma * parent_V # gamma is given
-        #     child_V * downstream_line_I == parent_V * upstream_line_I
-        #     for phase in phases:
-        #         VR_downstream_line_voltage =  gamma * VR_upstream_voltage
-        #         VR_downstream_line_current = VR_upstream_line_voltage * VR_upstream_line_current / VR_downstream_line_voltage
-        #         # VR_downstream_line_voltage * VR_downstream_line_current = VR_upstream_line_voltage * VR_downstream_line_current
+        line_out = network.lines[line_key]
 
         parent_V = self.V[parent.name]
-        FZpu = network.lines[line_key].FZpu
-        I = self.I[line_key]
 
-        # child node voltage = parent node voltage - current(child_node, parent)
-        new_child_V = parent_V - np.matmul(FZpu, I)
+        if line_out.name in network.voltageRegulators:  # if the line out is a voltage regulator
+            line_downstream = line_key
+            line_upstream = (line_key[1], line_key[0])
+            gamma = 1.0  # TODO: get gamma
+            new_child_V = gamma * parent_V
+            # Use this equation: child_V * downstream_line_I == parent_V * upstream_line_I
+            # VR_downstream_line_current = VR_upstream_line_voltage * VR_upstream_line_current / VR_downstream_line_voltage
+            self.I[line_downstream] = parent_V * self.I[line_upstream] / new_child_V
+
+        else:  # if not, calculate forward voltage in the usual way
+            # child node voltage = parent node voltage - current(child_node, parent)
+            FZpu = line_out.FZpu
+            I = self.I[line_key]
+            new_child_V = parent_V - np.matmul(FZpu, I)
+
         # zero out voltages for non-existant phases at child node
         self.V[child.name] = mask_phases(new_child_V, (3,), child.phases)
         #  TODO: find out what -0j is. This happens after masking phases on the child.
@@ -105,21 +106,33 @@ class Solution:
         child_V = self.V[child.name]
         parent_V = self.V[parent.name]  # type: ignore
         line_key = (parent.name, child.name)  # type: ignore
-        # if line_key is voltage_regulator:
-        #     line2 = VR_downstream_line
-        #     line1 = VR_upstream_line
-        #     for phase in phases:
-        #         VR_upstream_line_voltage = 1/ gamma * VR_downstream_voltage
-        #         VR_upstream_line_current = VR_downstream_line_voltage * VR_downstream_line_current / VR_upstream_line_voltage
-        #         # VR_downstream_line_voltage * VR_downstream_line_current = VR_upstream_line_voltage * VR_downstream_line_current
+        line_out = network.lines[line_key]
 
+        # if the line from parent to child is a voltage regulator
+        if line_out.name in network.voltageRegulators:
+            line_downstream = line_key
+            line_upstream = (line_key[1], line_key[0])
+            gamma = 1.0  # TODO: get gamma
+            # Translate the following
+            #     for phase in phases:
+            #         VR_upstream_line_voltage = 1/ gamma * VR_downstream_voltage
+            #         VR_upstream_line_current = VR_downstream_line_voltage * VR_downstream_line_current / VR_upstream_line_voltage
+            #    (VR_downstream_line_voltage * VR_downstream_line_current = VR_upstream_line_voltage * VR_downstream_line_current)
 
-        FZpu = network.lines[line_key].FZpu
-        I = self.I[line_key]
-        # update voltages at parent only for phases existing on child
-        for phase_idx in range(3):
-            if child.phases[phase_idx]:  # if this phase is present on child
-                parent_V[phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
+            # update voltages at parent only for phases existing on child
+            for phase_idx in range(3):
+                if child.phases[phase_idx]:  # if this phase is present on child
+                    parent_V[phase_idx] = 1/gamma * child_V[phase_idx]
+                    self.I[line_upstream] = self.I[line_downstream][phase_idx] * self.I[line_downstream][phase_idx] /parent_V[phase_idx]
+
+        else:  # otherwise, update backward voltage in the usual way
+            FZpu = network.lines[line_key].FZpu
+            I = self.I[line_key]
+            # update voltages at parent only for phases existing on child
+            for phase_idx in range(3):
+                if child.phases[phase_idx]:  # if this phase is present on child
+                    parent_V[phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
+
         # zero out voltages for non-existant phases at parent node
         self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases)  # type: ignore
         return None
