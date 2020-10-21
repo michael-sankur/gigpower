@@ -6,10 +6,10 @@ def compute_vecmat(XNR, fn, Vslack):
     dss.run_command('Redirect ' + fn)
 
     tf_no = len(dss.Transformers.AllNames()) - len(dss.RegControls.AllNames()) #number of transformers
-    vr_no = len(dss.RegControls.AllNames()) #number of voltage regulators, independent of phases on each
+    vr_no = len(dss.RegControls.AllNames()) #number of voltage regulators
   
-    tf_bus = np.zeros((5, tf_no), dtype = int) #tf has in and out bus
-    vr_bus = np.zeros((5, vr_no), dtype = int) #vr has in and out bus and phase
+    tf_bus = np.zeros((5, tf_no), dtype = int) #r1 = in bus, r2 = out bus, r3-5 phases; c = tf
+    vr_bus = np.zeros((5, vr_no), dtype = int) 
 
     vr_count = 0 
     vr_lines = 0
@@ -17,19 +17,19 @@ def compute_vecmat(XNR, fn, Vslack):
     tf_lines = 0
     for tf in range(len(dss.Transformers.AllNames())):
         dss.Transformers.Name(dss.Transformers.AllNames()[tf])     
-        if dss.Transformers.AllNames()[tf] in dss.RegControls.AllNames(): #start and end bus
+        if dss.Transformers.AllNames()[tf] in dss.RegControls.AllNames(): #is regulator?
             for i in range(2):
                 bus = dss.CktElement.BusNames()[i].split('.')
-                vr_bus[i, vr_count] = int(dss.Circuit.AllBusNames().index(bus[0]))
+                vr_bus[i, vr_count] = int(dss.Circuit.AllBusNames().index(bus[0])) #start / end bus
             for n in range(len(bus[1:])):   
                 vr_lines += 1                    
-                vr_bus[int(bus[1:][n]) + 1, vr_count] = int(bus[1:][n])             
+                vr_bus[int(bus[1:][n]) + 1, vr_count] = int(bus[1:][n]) # phases that exist         
             vr_count += 1    
-            if len(bus) == 1:
-                for n in range(1,4):
+            if len(bus) == 1: # unspecified phases, assume all 3 exist
+                for n in range(1,4): 
                     vr_lines += 1
                     vr_bus[n+1, vr_count] = n         
-        else:
+        else: # is transformer 
             for i in range(2):
                 bus = dss.CktElement.BusNames()[i].split('.')
                 tf_bus[i, tf_count] =  int(dss.Circuit.AllBusNames().index(dss.CktElement.BusNames()[i])) #stuff the in and out bus of the tf into an array          
@@ -187,18 +187,18 @@ def compute_vecmat(XNR, fn, Vslack):
 
     # KVL for transformer
     line_idx_tf = range(0, tf_lines)
-    count = 0
+    kvl_count = 0
 
     for tfbs in range(len(tf_bus[0])):
         for ph in range(0, 3):    
             if tf_bus[ph + 2, tfbs] != 0:
                 print('transformer kvl: ')
-                line = line_idx_tf[count]
+                line = line_idx_tf[kvl_count]
                 G_KVL[2*3*nline + 2*line][2*(nnode)*ph + 2*int(tf_bus[0, tfbs])] = 1 #A_m
                 G_KVL[2*3*nline + 2*line][2*(nnode)*ph + 2*int(tf_bus[1, tfbs])] = -1 #A_n
                 G_KVL[2*3*nline + 2*line+1][2*(nnode)*ph + 2*int(tf_bus[0, tfbs]) + 1] = 1 #B_m
                 G_KVL[2*3*nline + 2*line+1][2*(nnode)*ph + 2*int(tf_bus[1, tfbs]) + 1] = -1 #B_n
-                count += 1
+                kvl_count += 1
     b_kvl = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines, 1))
 
     # ---------- Voltage Regulator -----------
@@ -210,7 +210,7 @@ def compute_vecmat(XNR, fn, Vslack):
     line_in_idx = range(0, 2*vr_lines, 2)
     line_out_idx = range(1, 2*vr_lines, 2)    
     gain =  -1.05 * np.ones((1, vr_lines)) #list of gains
-    count_lines2 = 0
+    vr_counter = 0
     
     for m in range(vr_lines): #range(len(vr_bus[0])):         
         bus1_idx = vr_bus[0, m]
@@ -227,31 +227,31 @@ def compute_vecmat(XNR, fn, Vslack):
                 # j(B_1 * C_out - A_1 * D_out) - j(B_2 * C_in - A_2 * D_in)
 
                 #A_1 C_out
-                H_reg[2*m][2*nnode*ph + 2*bus1_idx][2*3*nnode + 2*3*(tf_no+nline) + 2*line_out_idx[count_lines2]] = 1
-                H_reg[2*m][2*3*nnode + 2*3*(tf_no+nline) + 2*line_out_idx[count_lines2]][2*nnode*ph + 2*bus1_idx] = 1
+                H_reg[2*m][2*nnode*ph + 2*bus1_idx][2*3*(nnode+nline) + 2*tf_lines + 2*line_out_idx[vr_counter]] = 1
+                H_reg[2*m][2*3*(nnode+nline) + 2*tf_lines + 2*line_out_idx[vr_counter]][2*nnode*ph + 2*bus1_idx] = 1
                 #B_1 D_out
-                H_reg[2*m][2*nnode*ph + 2*bus1_idx + 1][2*3*nnode + 2*3*(tf_no+nline) + 2*line_out_idx[count_lines2] + 1] = 1
-                H_reg[2*m][2*3*nnode + 2*3*(tf_no+nline) + 2*line_out_idx[count_lines2]+ 1][2*nnode*ph + 2*bus1_idx + 1] = 1
+                H_reg[2*m][2*nnode*ph + 2*bus1_idx + 1][2*3*(nnode+nline)+ 2*tf_lines + 2*line_out_idx[vr_counter] + 1] = 1
+                H_reg[2*m][2*3*(nnode+nline) + 2*tf_lines + 2*line_out_idx[vr_counter]+ 1][2*nnode*ph + 2*bus1_idx + 1] = 1
                 #A_2 C_in
-                H_reg[2*m][2*nnode*ph + 2*bus2_idx][2*3*nnode + 2*3*(tf_no+nline) + 2*line_in_idx[count_lines2]] = -1
-                H_reg[2*m][2*3*nnode + 2*3*(tf_no+nline) + 2*line_in_idx[count_lines2]][2*nnode*ph + 2*bus2_idx] = -1
+                H_reg[2*m][2*nnode*ph + 2*bus2_idx][2*3*(nnode+nline) + 2*tf_lines+ 2*line_in_idx[vr_counter]] = -1
+                H_reg[2*m][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter]][2*nnode*ph + 2*bus2_idx] = -1
                 #B_2 D_in
-                H_reg[2*m][2*nnode*ph + 2*bus2_idx + 1][2*3*nnode + 2*3*(tf_no+nline) + 2*line_in_idx[count_lines2] + 1] = -1
-                H_reg[2*m][2*3*nnode + 2*3*(tf_no+nline) + 2*line_in_idx[count_lines2] + 1][2*nnode*ph + 2*bus2_idx + 1] = -1
+                H_reg[2*m][2*nnode*ph + 2*bus2_idx + 1][2*3*(nnode+nline) + 2*tf_lines+ 2*line_in_idx[vr_counter] + 1] = -1
+                H_reg[2*m][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter] + 1][2*nnode*ph + 2*bus2_idx + 1] = -1
 
                 #B_1 * C_out
-                H_reg[2*m + 1][2*nnode*ph + 2*bus1_idx + 1][2*3*nnode + 2*3*(tf_no+nline) + 2*line_out_idx[count_lines2]] = 1
-                H_reg[2*m + 1][2*3*nnode + 2*3*(tf_no+nline) + 2*line_out_idx[count_lines2]][2*nnode*ph + 2*bus1_idx + 1] = 1
+                H_reg[2*m + 1][2*nnode*ph + 2*bus1_idx + 1][2*3*(nnode+nline) + 2*tf_lines+ 2*line_out_idx[vr_counter]] = 1
+                H_reg[2*m + 1][2*3*(nnode+nline) + 2*tf_lines+ 2*line_out_idx[vr_counter]][2*nnode*ph + 2*bus1_idx + 1] = 1
                 # A_1 * D_out
-                H_reg[2*m + 1][2*nnode*ph + 2*bus1_idx][2*3*nnode + 2*3*(tf_no+nline) + 2*line_out_idx[count_lines2] + 1] = -1
-                H_reg[2*m + 1][2*3*nnode + 2*3*(tf_no+nline) + 2*line_out_idx[count_lines2] + 1][2*nnode*ph + 2*bus1_idx] = -1
+                H_reg[2*m + 1][2*nnode*ph + 2*bus1_idx][2*3*(nnode+nline)+ 2*tf_lines + 2*line_out_idx[vr_counter] + 1] = -1
+                H_reg[2*m + 1][2*3*(nnode+nline)+ 2*tf_lines + 2*line_out_idx[vr_counter] + 1][2*nnode*ph + 2*bus1_idx] = -1
                 #B_2 * C_in
-                H_reg[2*m + 1][2*nnode*ph + 2*bus2_idx + 1][2*3*nnode + 2*3*(tf_no+nline) + 2*line_in_idx[count_lines2]] = -1
-                H_reg[2*m + 1][2*3*nnode + 2*3*(tf_no+nline) + 2*line_in_idx[count_lines2]][2*nnode*ph + 2*bus2_idx + 1] = -1
+                H_reg[2*m + 1][2*nnode*ph + 2*bus2_idx + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter]] = -1
+                H_reg[2*m + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter]][2*nnode*ph + 2*bus2_idx + 1] = -1
                 # A_2 * D_in
-                H_reg[2*m + 1][2*nnode*ph + 2*bus2_idx][2*3*nnode +2*3*(tf_no+nline) + 2*line_in_idx[count_lines2] + 1] = 1
-                H_reg[2*m + 1][2*3*nnode + 2*3*(tf_no+nline) + 2*line_in_idx[count_lines2] + 1][2*nnode*ph + 2*bus2_idx] = 1
-                count_lines2 += 1
+                H_reg[2*m + 1][2*nnode*ph + 2*bus2_idx][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter] + 1] = 1
+                H_reg[2*m + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter] + 1][2*nnode*ph + 2*bus2_idx] = 1
+                vr_counter += 1
   
    
     return X, g_SB, b_SB, G_KVL, b_kvl, H_reg, G_reg

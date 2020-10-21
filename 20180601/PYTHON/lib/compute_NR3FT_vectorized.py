@@ -1,5 +1,5 @@
 import numpy as np
-def compute_NR3FT_vectorized(X, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, tf_lines, vr_lines):
+def compute_NR3FT_vectorized(X, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines):
     FTSUBV = (g_SB @ X) - b_SB
     FTKVL = (G_KVL @ X) - b_KVL
 

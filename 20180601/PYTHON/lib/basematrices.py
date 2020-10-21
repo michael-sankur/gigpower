@@ -17,19 +17,19 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
         if dss.Transformers.AllNames()[tf] in dss.RegControls.AllNames(): #start and end bus
             for i in range(2):
                 bus = dss.CktElement.BusNames()[i].split('.')
-            for n in range(len(bus[1:])):   
+            for _ in range(len(bus[1:])):   
                 vr_lines += 1                              
             vr_count += 1    
             if len(bus) == 1:
-                for n in range(1,4):
+                for _ in range(1,4):
                     vr_lines += 1      
         else:
-            for i in range(2):
-                bus = dss.CktElement.BusNames()[i].split('.')        
-            for n in range(len(bus[1:])):
+            for j in range(2):
+                bus = dss.CktElement.BusNames()[j].split('.')        
+            for _ in range(len(bus[1:])):
                 tf_lines += 1                                    
             if len(bus) == 1:
-                for k in range(1,4):
+                for _ in range(1,4):
                     tf_lines += 1         
             tf_count += 1
 
@@ -62,7 +62,7 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
             for k1 in range(0,len(dss.Lines.AllNames())):
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1] = I0[ph,k1].real
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1+1] = I0[ph,k1].imag
-        XNR[(2*3*nnode + 2*3*nline):] = np.zeros((len(XNR) - 2*3*nnode + 2*3*nline), 1) #check this later
+        XNR[(2*3*nnode + 2*3*nline):] = np.zeros((len(XNR) - 2*3*nnode - 2*3*nline), 1) 
     
     # generate static matrices
     XNR, g_SB, b_SB, G_KVL, b_KVL, H_reg, G_reg = compute_vecmat(XNR, fn, Vslack)
