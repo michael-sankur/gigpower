@@ -14,8 +14,8 @@ import pytest
 # dss_files = ['fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss']
 # dss_files = ['fbs/tests/test_cases_dss/02node_threephase_unbalanced.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss']
-# dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss']
-dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss']
+dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss']
+# dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss']
 
 def test_all():
     """
@@ -44,13 +44,13 @@ def compare_fbs_sol(dss_file, tolerance):
     fbsV, fbsI, fbsStx, fbsSrx = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), fbs_sol.Srx_df()
     dssV, dssI, dssStx, dssSrx = dss_sol
     print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
-    print("\nCOMPARE V")
+    print("\n\nCOMPARE V")
     V_maxDiff = compare_dfs(fbsV, dssV)
-    print("\nCOMPARE I")
+    print("\n\nCOMPARE I")
     I_maxDiff = compare_dfs(fbsI, dssI)
-    print("\nCOMPARE Stx")
+    print("\n\nCOMPARE Stx")
     Stx_maxDiff = compare_dfs(fbsStx, dssStx)
-    print("\nCOMPARE Srx")
+    print("\n\nCOMPARE Srx")
     Srx_maxDiff = compare_dfs(fbsSrx, dssSrx)
 
     assert (V_maxDiff <= tolerance).all()
@@ -65,11 +65,12 @@ def compare_dfs(fbs_df : pd.DataFrame, dss_df : pd.DataFrame) -> None:
     compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
     compare = fbs_df.sub(dss_df)
     compare.columns = compare_cols
+    pd.options.display.float_format = '{:.4f}'.format
     print("Max |diff|:")
     print(compare.abs().max())
-    print(compare)
+    print(compare,"\n")
     print("FBS results")
-    print(fbs_df)
+    print(fbs_df,"\n")
     print("DSS results")
     print(dss_df)
     return compare.abs().max()
