@@ -11,30 +11,42 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     tf_no = len(dss.Transformers.AllNames()) - len(dss.RegControls.AllNames()) #number of transformers
     vr_no = len(dss.RegControls.AllNames()) #number of voltage regulators
 
-    tf_bus = np.zeros((2, tf_no), dtype = int) #tf has in and out bus
+    tf_bus = np.zeros((5, tf_no), dtype = int) #tf has in and out bus
     vr_bus = np.zeros((5, vr_no), dtype = int) #vr has in and out bus and phase
 
-    vr_count = 0
+    vr_count = 0 
     vr_lines = 0
     tf_count = 0
-
+    tf_lines = 0
     for tf in range(len(dss.Transformers.AllNames())):
         dss.Transformers.Name(dss.Transformers.AllNames()[tf])     
         if dss.Transformers.AllNames()[tf] in dss.RegControls.AllNames(): #start and end bus
             for i in range(2):
                 bus = dss.CktElement.BusNames()[i].split('.')
                 vr_bus[i, vr_count] = int(dss.Circuit.AllBusNames().index(bus[0]))
-            for n in range(len(bus[1:])):          
-                vr_lines += 1
-                vr_bus[int(bus[1:][n])+1, vr_count] = int(bus[1:][n])  
-            vr_count+=1             
+            for n in range(len(bus[1:])):   
+                vr_lines += 1                    
+                vr_bus[int(bus[1:][n]) + 1, vr_count] = int(bus[1:][n])             
+            vr_count += 1    
+            if len(bus) == 1:
+                for n in range(1,4):
+                    vr_lines += 1
+                    vr_bus[n+1, vr_count] = n         
         else:
             for i in range(2):
+                bus = dss.CktElement.BusNames()[i].split('.')
                 tf_bus[i, tf_count] =  int(dss.Circuit.AllBusNames().index(dss.CktElement.BusNames()[i])) #stuff the in and out bus of the tf into an array          
+            for n in range(len(bus[1:])): 
+                tf_lines += 1                                
+                tf_bus[int(bus[1:][n]) + 1, tf_count] = int(bus[1:][n])    
+            if len(bus) == 1:
+                for k in range(1,4):
+                    tf_lines += 1
+                    tf_bus[k+1, tf_count] = k          
             tf_count += 1
-    #vr_lines = 1
-    nline = len(dss.Lines.AllNames()) + tf_no + (2 * vr_lines) #should have usual lines, a line for every TF, and 2 lines for every VR
-   
+
+    print(' nr3', str(vr_count))
+    nline = len(dss.Lines.AllNames())  
     nnode = len(dss.Circuit.AllBusNames())
 
     if tol == None:
@@ -55,8 +67,8 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     t0 = time.time()
     while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
         print("Iteration number %f" % (itercount))
-        FT = ft(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg)
-        JT = jt(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg)
+        FT = ft(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
+        JT = jt(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
     
         if JT.shape[0] >= JT.shape[1]:
             XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT

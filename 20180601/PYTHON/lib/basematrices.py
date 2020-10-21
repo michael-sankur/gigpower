@@ -7,21 +7,36 @@ import time
 def basematrices(fn, slacknode, Vslack, V0, I0):
 
     dss.run_command('Redirect ' + fn)
-    
-    tf_no = len(dss.Transformers.AllNames()) - len(dss.RegControls.AllNames()) #number of transformers
-    
+      
+    vr_count = 0 
     vr_lines = 0
+    tf_count = 0
+    tf_lines = 0
     for tf in range(len(dss.Transformers.AllNames())):
         dss.Transformers.Name(dss.Transformers.AllNames()[tf])     
         if dss.Transformers.AllNames()[tf] in dss.RegControls.AllNames(): #start and end bus
-            bus = dss.CktElement.BusNames()[0].split('.')
-            for _ in range(len(bus[1:])):          
-                vr_lines += 1 
+            for i in range(2):
+                bus = dss.CktElement.BusNames()[i].split('.')
+            for n in range(len(bus[1:])):   
+                vr_lines += 1                              
+            vr_count += 1    
+            if len(bus) == 1:
+                for n in range(1,4):
+                    vr_lines += 1      
+        else:
+            for i in range(2):
+                bus = dss.CktElement.BusNames()[i].split('.')        
+            for n in range(len(bus[1:])):
+                tf_lines += 1                                    
+            if len(bus) == 1:
+                for k in range(1,4):
+                    tf_lines += 1         
+            tf_count += 1
 
-                
-    nline = len(dss.Lines.AllNames()) + tf_no + (2 * vr_lines) #should have usual lines, a line for every TF, and 2 lines for every VR
+    nline = len(dss.Lines.AllNames())  
     nnode = len(dss.Circuit.AllBusNames())
-    XNR = np.zeros((2*3*(nnode + nline),1))
+    XNR = np.zeros((2*3*(nnode + nline) + 2*tf_lines + 2*2*vr_lines,1))
+
 
     # intialize node voltage portion of XNR
     if V0 == None or len(V0) == 0:
@@ -39,16 +54,16 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
 
     # intialize line current portion of XNR
     if I0 == None or len(I0) == 0:
-        for k1 in range(0,nline):
-            XNR[(2*3*nnode):] = 0.0*np.ones((6*nline,1))
+        XNR[(2*3*nnode):] = 0.0*np.ones((6*nline + 2*tf_lines + 2*2*vr_lines ,1))
 
     # If initial I is given
     elif len(I0) != 0:
         for ph in range(0,3):
-            for k1 in range(0,nline):
+            for k1 in range(0,len(dss.Lines.AllNames())):
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1] = I0[ph,k1].real
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1+1] = I0[ph,k1].imag
-
+        XNR[(2*3*nnode + 2*3*nline):] = np.zeros((len(XNR) - 2*3*nnode + 2*3*nline), 1) #check this later
+    
     # generate static matrices
     XNR, g_SB, b_SB, G_KVL, b_KVL, H_reg, G_reg = compute_vecmat(XNR, fn, Vslack)
     # generate non-static matrices
