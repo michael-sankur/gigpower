@@ -18,32 +18,41 @@ def relevant_openDSS_parameters(fn, t):
     #Zbase = Vbase/Ibase
 
     #TRANSFORMER, VOLTAGE REGULATOR lines
-    tf_bus = np.zeros((2, tf_no), dtype = int) #tf has in and out bus
-    vr_bus = np.zeros((3, vr_no), dtype = int) #vr has in and out bus and phase
+    tf_bus = np.zeros((5, tf_no), dtype = int) #r1 = in bus, r2 = out bus, r3-5 phases; c = tf
+    vr_bus = np.zeros((5, vr_no), dtype = int) 
+    vr_count = 0 
+    vr_lines = 0
     tf_count = 0
-    vr_count = 0
-    whichone = -1
-    for tf in range(len(dss.Transformers.AllNames())):
-        dss.Transformers.Name(dss.Transformers.AllNames()[tf])
-        for i in range(2):
-            if dss.Transformers.AllNames()[tf] in dss.RegControls.AllNames():     
-                bus = dss.CktElement.BusNames()[i].split('.')
-                vr_bus[i, vr_count] = int(dss.Circuit.AllBusNames().index(bus[0]))    
-                vr_bus[2, vr_count] = int(bus[1]) #phase
-                whichone = 0            
-            else:
-                tf_bus[i, tf_count] =  int(dss.Circuit.AllBusNames().index(dss.CktElement.BusNames()[i])) #stuff the in and out bus of the tf into an array          
-                whichone = 1
-        if whichone == 1:
-            tf_count += 1
-        else:
-            vr_count += 1
-        whichone = -1
-    
-    # vr_no = 1
-    # vr_bus = vr_bus[0:2, 0:1]
+    tf_lines = 0
 
-    nline = len(dss.Lines.AllNames()) + tf_no + (2* vr_no)
+    for tf in range(len(dss.Transformers.AllNames())):
+        dss.Transformers.Name(dss.Transformers.AllNames()[tf])   
+        if dss.Transformers.AllNames()[tf] in dss.RegControls.AllNames(): #is regulator? 
+            for i in range(2):
+                bus = dss.CktElement.BusNames()[i].split('.')
+                vr_bus[i, vr_count] = int(dss.Circuit.AllBusNames().index(bus[0])) #start / end bus
+            for n in range(len(bus[1:])):  
+                vr_lines += 1                    
+                vr_bus[int(bus[1:][n]) + 1, vr_count] = int(bus[1:][n]) # phases that exist                   
+            if len(bus) == 1: # unspecified phases, assume all 3 exist
+                for n in range(1,4): 
+                    vr_lines += 1
+                    vr_bus[n+1, vr_count] = n   
+            vr_count += 1       
+        else: # is transformer 
+            for i in range(2):
+                bus = dss.CktElement.BusNames()[i].split('.')
+                tf_bus[i, tf_count] =  int(dss.Circuit.AllBusNames().index(bus[0])) #stuff the in and out bus of the tf into an array          
+            for n in range(len(bus[1:])):                 
+                tf_lines += 1                             
+                tf_bus[int(bus[1:][n]) + 1, tf_count] = int(bus[1:][n])    
+            if len(bus) == 1:
+                for k in range(1,4):
+                    tf_lines += 1
+                    tf_bus[k+1, tf_count] = k          
+            tf_count += 1
+
+    nline = len(dss.Lines.AllNames()) + tf_no + (2*vr_no)
     nnode = len(dss.Circuit.AllBusNames())
    
     line_in_idx_vr = range(len(dss.Lines.AllNames()) + tf_no, nline, 2)

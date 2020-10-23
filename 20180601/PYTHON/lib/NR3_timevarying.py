@@ -26,16 +26,16 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
                 vr_bus[i, vr_count] = int(dss.Circuit.AllBusNames().index(bus[0]))
             for n in range(len(bus[1:])):   
                 vr_lines += 1                    
-                vr_bus[int(bus[1:][n]) + 1, vr_count] = int(bus[1:][n])             
-            vr_count += 1    
+                vr_bus[int(bus[1:][n]) + 1, vr_count] = int(bus[1:][n])               
             if len(bus) == 1:
                 for n in range(1,4):
                     vr_lines += 1
-                    vr_bus[n+1, vr_count] = n         
+                    vr_bus[n+1, vr_count] = n 
+            vr_count += 1          
         else:
             for i in range(2):
                 bus = dss.CktElement.BusNames()[i].split('.')
-                tf_bus[i, tf_count] =  int(dss.Circuit.AllBusNames().index(dss.CktElement.BusNames()[i])) #stuff the in and out bus of the tf into an array          
+                tf_bus[i, tf_count] =  int(dss.Circuit.AllBusNames().index(bus[0])) #stuff the in and out bus of the tf into an array          
             for n in range(len(bus[1:])): 
                 tf_lines += 1                                
                 tf_bus[int(bus[1:][n]) + 1, tf_count] = int(bus[1:][n])    
@@ -45,7 +45,6 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
                     tf_bus[k+1, tf_count] = k          
             tf_count += 1
 
-    print(' nr3', str(vr_count))
     nline = len(dss.Lines.AllNames())  
     nnode = len(dss.Circuit.AllBusNames())
 
@@ -58,9 +57,7 @@ def NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, de
     FT = 1e99
     itercount = 0
     # adjust KCL based on capacitance, DER, and time-varying load
-
-    # if der != 0 or capacitance != 0 or time_delta != -1:
-    #   
+    # if der != 0 or capacitance != 0 or time_delta != -1:  
     #     H, b = change_KCL_matrices(fn, H, g, b, time_delta, der, capacitance)
 
     # solve power-flow
