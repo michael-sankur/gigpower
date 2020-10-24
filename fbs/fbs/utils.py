@@ -174,16 +174,16 @@ def get_caps_from_dss(network: Network, dss: Any) -> None:
 def get_voltage_regulators_from_dss(network: Network, dss: Any) -> None:
     # get Reg Controls from dss
     regs = dss.RegControls.AllNames()
-    for regcontrol_name in regs:
-        dss.RegControls.Name(regcontrol_name)  # set this reg as active
+    for regControl_name in regs:
+        dss.RegControls.Name(regControl_name)  # set this reg as active
         transformer = dss.RegControls.Transformer()  # stores transformer's name
         dss.Transformers.Name(transformer)  # set this regcontrol's transformer as active
-        tx, rx = dss.CktElement.BusNames()  # get buses associated with the transformer
+        tx, regControl_node = dss.CktElement.BusNames()  # get upstream, regcontrol nodes associated with this transformer
         tx, *phases = tx.split('.')
-        rx = rx.split('.')[0]
-        voltageReg = VoltageRegulator(network, (tx, rx), regcontrol_name)
+        regControl_node = regControl_node.split('.')[0]
+        voltageReg = VoltageRegulator(network, regControl_name, regControl_node, tx)
         voltageReg.transformer = transformer
-        voltageReg.tapNumber = dss.RegControls.TapNumber()
+        voltageReg.get_gamma(dss.RegControls.TapNumber())
         voltageReg.phases = parse_phases(phases)
 
 

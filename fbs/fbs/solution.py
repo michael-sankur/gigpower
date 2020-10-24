@@ -81,11 +81,13 @@ class Solution:
         if line_out.name in network.voltageRegulators:  # if the line out is a voltage regulator
             line_downstream = line_key
             line_upstream = (line_key[1], line_key[0])
-            gamma = 1.0  # TODO: get gamma
+            voltageReg = network.voltageRegulators[line_out.name]
+            gamma = voltageReg.gamma
             new_child_V = gamma * parent_V
             # Use this equation: child_V * downstream_line_I == parent_V * upstream_line_I
             # VR_downstream_line_current = VR_upstream_line_voltage * VR_upstream_line_current / VR_downstream_line_voltage
-            self.I[line_downstream] = parent_V * self.I[line_upstream] / new_child_V
+            I_downstream_conj = parent_V * np.conj(self.I[line_upstream]) / new_child_V
+            self.I[line_downstream] = np.conj(I_downstream_conj)
 
         else:  # if not, calculate forward voltage in the usual way
             # child node voltage = parent node voltage - current(child_node, parent)
@@ -112,18 +114,20 @@ class Solution:
         if line_out.name in network.voltageRegulators:
             line_downstream = line_key
             line_upstream = (line_key[1], line_key[0])
-            gamma = 1.0  # TODO: get gamma
+            voltageReg = network.voltageRegulators[line_out.name]
+            gamma = voltageReg.gamma
             # Translate the following
             #     for phase in phases:
             #         VR_upstream_line_voltage = 1/ gamma * VR_downstream_voltage
             #         VR_upstream_line_current = VR_downstream_line_voltage * VR_downstream_line_current / VR_upstream_line_voltage
-            #    (VR_downstream_line_voltage * VR_downstream_line_current = VR_upstream_line_voltage * VR_downstream_line_current)
+            #    (VR_downstream_line_voltage * VR_downstream_line_current = VR_upstream_line_voltage * VR_upstream_line_current)
 
             # update voltages at parent only for phases existing on child
             for phase_idx in range(3):
                 if child.phases[phase_idx]:  # if this phase is present on child
                     parent_V[phase_idx] = 1/gamma * child_V[phase_idx]
-                    self.I[line_upstream] = self.I[line_downstream][phase_idx] * self.I[line_downstream][phase_idx] /parent_V[phase_idx]
+                    I_upstream_conj = child_V[phase_idx] * np.conj(self.I[line_downstream][phase_idx]) / parent_V[phase_idx]
+                    self.I[line_upstream][phase_idx] = np.conj(I_upstream_conj)
 
         else:  # otherwise, update backward voltage in the usual way
             FZpu = network.lines[line_key].FZpu

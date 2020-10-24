@@ -232,23 +232,51 @@ class Capacitor:
         return self.name
 
 class VoltageRegulator:
-    def __init__(self, network: Network, key: Tuple[str, str], name: str) -> None:
+    def __init__(self, network: Network, reg_name: str, node_name:str, tx: str) -> None:
         self.transformer = None  # pointer to the Transformer associated with this VoltageRegulator
-        self.key = key  # upstream, downstream buses associated with regulator
-        self.tapNumber = 0
-        self.name = name
+        self.gamma = 0.0
+        self.reg_name = reg_name  # opendss RegControl Name
+        self.node_name = node_name  # name of the node corresponding to this regcontrol in opendss
         self.phases = [False, False, False]
-        self.add_to_network(network)
+        self.add_to_network(network, tx)
 
-    def add_to_network(self, network: Network) -> None:
-        tx, rx = self.key
-        # creates a synthetic line pointing downstream
-        self.line_downstream = Line(network, (tx, rx), self.name)
-        # creates a synthetic line pointing upstreaam
-        self.line_upstream = Line(network, (rx, tx), self.name)
-        # remove tx from rx's adjacency list, otherwise it will not be a radial network!
-        network.adj[rx].remove(tx)
-        network.voltageRegulators[self.name] = self  # add to the network's voltageRegulator dict
+    def add_to_network(self, network: Network, tx: str) -> None:
+        # find the line from the upstream node to this regControl
+        # if it does not exist, assign it
+        upstream_line_key = (tx, self.node_name)
+        if upstream_line_key not in network.lines:
+            # creates a synthetic line from the tx upstream node to this regControl
+            line_upstream = Line(network, upstream_line_key, self.reg_name)
+        self.line_upstream = network.lines[upstream_line_key]
+        # the connection between the regControl and the downstream rx node is defined in opendss as a Line.
+        # The Line should already have been mapped into our network.
+        # grab this line from the adjacency list to figure out our downstream node
+        if len(network.adj[self.node_name]) != 1:  # there should only be one node in the regControl's adjacency list
+            raise ValueError(
+                f'The regControl {self.name} has multiple downstream nodes: {network.adj[self.name]}')
+        rx = network.adj[self.node_name][0]
+        downstream_line_key = (self.node_name, rx)
+        # save a pointer to the downstream line (this regControl, rx node)
+        self.line_downstream = network.lines[downstream_line_key]
+        # save the regcontrol key as a 3 element tuple (tx_node, reg_control_name, rx_node)
+        self.key = (tx, self.node_name, rx)
+        # save this voltage regulator to the network
+        network.voltageRegulators[self.reg_name] = self
+
+
+    def get_gamma(self, tapNumber: int) -> None:
+        # Takes a Tap Number from opendss and maps it to a voltage ratio.
+        # There are 33 default integer Tap Numbers, from -16 to +16, corresponding to the defaults of 0.90 to 1.10 voltage ratio
+        VRMIN = .90
+        VRMAX = 1.10
+        # move range [-16,16] to [0,1]
+        result = (tapNumber + 16) / 32
+        #compress to VRMAX - VRMIN
+        result *= VRMAX - VRMIN
+        # move to [VRMIN, VRMAX]
+        result += VRMIN
+        # assign to self
+        self.gamma = result
 
 class Transformer (Line):
     def __init__(self, network: Network, key: Tuple[str, str], name: str, num_windings: int) -> None:

@@ -52,8 +52,7 @@ def fbs(network: Network) -> Solution:
                 # update current segment
                 solution.update_current(network, line_in)  # type: ignore
                 # update voltage at parent
-                solution.update_voltage_backward(
-                    network, node)  # type: ignore
+                solution.update_voltage_backward(network, node)  # type: ignore
 
         solution.iterations += 1
         # set Vtest to the root's voltage

@@ -4,10 +4,11 @@ from fbs.utils import init_from_dss
 from fbs.fbs import topo_sort
 import pytest
 import opendssdirect as dss
+from fbs.network import Transformer
 
 # dss_file = 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
-dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss'
-# dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss'
+# dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss'
+dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss'
 # dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss'
 
 @pytest.fixture
@@ -29,9 +30,20 @@ def test_init_from_dss(get_network) -> None:
     network_nodes = sum([node.phases.count(True) for node in network.get_nodes()])
     node_check = dss_nodes == network_nodes
     # check that number of lines match
-    dss_lines = len(dss.Lines.AllNames()) + len(network.transformers)
-    network_lines = len(network.lines)
+    dss_lines = len(dss.Lines.AllNames())
+
+    # count the number of lines in the network that do not represent transformers
+    network_lines = len(network.lines) - len(network.transformers)
+    # subtract the synthetic upstream lines for voltage regulators
+    # note that opendss already counts the voltage regulator downtream lines
+    vr_upstream_lines = set()
+    for vr in network.voltageRegulators.values():
+        vr_upstream_lines.add(vr.line_upstream.key)
+    network_lines -= len(vr_upstream_lines)
+    # check that the network adjacency list aligns with the number of lines
     network_edges = sum([len(node_list) for node_list in network.adj.values()])
+    # subtract out transformers and upstream lines
+    network_edges = network_edges - len(network.transformers) - len(vr_upstream_lines)
     line_check = (dss_lines == network_lines) and (dss_lines == network_edges)
     assert node_check and line_check
 
@@ -54,7 +66,7 @@ def test_init_from_dss(get_network) -> None:
 
     # check that number of transformers match
     dss_transformers = len(dss.Transformers.AllNames())
-    network_transformers = len(network.transformers)
+    network_transformers = len(network.transformers) + len(network.voltageRegulators)
     transformer_check = dss_transformers == network_transformers
     assert node_check and line_check and load_check and load_list_check
     assert capacitor_check and transformer_check
