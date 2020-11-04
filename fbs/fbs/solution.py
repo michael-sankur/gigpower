@@ -76,27 +76,36 @@ class Solution:
         line_key = (parent.name, child.name)
         line_out = network.lines[line_key]
 
-        parent_V = self.V[parent.name]
-
-        if line_out.name in network.voltageRegulators:  # if the line out is a voltage regulator
-            line_downstream = line_key
-            line_upstream = (line_key[1], line_key[0])
-            voltageReg = network.voltageRegulators[line_out.name]
-            gamma = voltageReg.gamma
-            new_child_V = gamma * parent_V
-            # Use this equation: child_V * downstream_line_I == parent_V * upstream_line_I
-            # VR_downstream_line_current = VR_upstream_line_voltage * VR_upstream_line_current / VR_downstream_line_voltage
-            I_downstream_conj = parent_V * np.conj(self.I[line_upstream]) / new_child_V
-            self.I[line_downstream] = np.conj(I_downstream_conj)
+        if line_out.voltageRegulators:
+            for vr in line_out.voltageRegulators:
+                tx, reg = vr.key
+                phases = vr.phases
+                gamma = vr.gamma
+                tx_V = self.V[tx]
+                reg_V = self.V[reg]
+                Itx = vr.Itx  # current at/leaving the tx node
+                Ireg = vr.Ireg  # current entering reg_node
+                # Enforce voltage regulator equations by phase.
+                # Voltage ratio equation: tx_node.V = gamma @ reg_node.V
+                # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
+                # [current @ reg_node]* = tx_node.V @ [current entering tx_node]* / reg_node.V
+                for idx, phase in enumerate(phases):
+                    if phase:
+                        reg_V[idx] = gamma * tx_V[idx]  # update tx voltage per phase
+                        # update reg current per phase
+                        # Ireg[idx] = np.conj(tx_V[idx] * np.conj(Itx[idx]) / reg_V[idx])
+                        Ireg[idx] = 1/gamma * Itx[idx]
 
         else:  # if not, calculate forward voltage in the usual way
+            parent_V = self.V[parent.name]
             # child node voltage = parent node voltage - current(child_node, parent)
             FZpu = line_out.FZpu
             I = self.I[line_key]
             new_child_V = parent_V - np.matmul(FZpu, I)
+            # update V at child
+            # zero out voltages for non-existant phases at child node
+            self.V[child.name] = mask_phases(new_child_V, (3,), child.phases)
 
-        # zero out voltages for non-existant phases at child node
-        self.V[child.name] = mask_phases(new_child_V, (3,), child.phases)
         #  TODO: find out what -0j is. This happens after masking phases on the child.
         return None
 
@@ -106,30 +115,25 @@ class Solution:
         """
         parent = child.parent
         child_V = self.V[child.name]
-        parent_V = self.V[parent.name]  # type: ignore
         line_key = (parent.name, child.name)  # type: ignore
         line_out = network.lines[line_key]
 
-        # if the line from parent to child is a voltage regulator
-        if line_out.name in network.voltageRegulators:
-            line_downstream = line_key
-            line_upstream = (line_key[1], line_key[0])
-            voltageReg = network.voltageRegulators[line_out.name]
-            gamma = voltageReg.gamma
-            # Translate the following
-            #     for phase in phases:
-            #         VR_upstream_line_voltage = 1/ gamma * VR_downstream_voltage
-            #         VR_upstream_line_current = VR_downstream_line_voltage * VR_downstream_line_current / VR_upstream_line_voltage
-            #    (VR_downstream_line_voltage * VR_downstream_line_current = VR_upstream_line_voltage * VR_upstream_line_current)
-
-            # update voltages at parent only for phases existing on child
-            for phase_idx in range(3):
-                if child.phases[phase_idx]:  # if this phase is present on child
-                    parent_V[phase_idx] = 1/gamma * child_V[phase_idx]
-                    I_upstream_conj = child_V[phase_idx] * np.conj(self.I[line_downstream][phase_idx]) / parent_V[phase_idx]
-                    self.I[line_upstream][phase_idx] = np.conj(I_upstream_conj)
+        for vr in line_out.voltageRegulators:
+            tx, reg = vr.key
+            phases = vr.phases
+            gamma = vr.gamma
+            tx_V = self.V[tx]
+            reg_V = self.V[reg]
+            # Enforce voltage regulator equations by phase.
+            # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
+            # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
+            # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
+            for idx, phase in enumerate(phases):
+                if phase:
+                    tx_V[idx] = 1/gamma * reg_V[idx]  # update tx voltage per phase
 
         else:  # otherwise, update backward voltage in the usual way
+            parent_V = self.V[parent.name]  # type: ignore
             FZpu = network.lines[line_key].FZpu
             I = self.I[line_key]
             # update voltages at parent only for phases existing on child
@@ -137,12 +141,15 @@ class Solution:
                 if child.phases[phase_idx]:  # if this phase is present on child
                     parent_V[phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
 
+        # update V at parent
         # zero out voltages for non-existant phases at parent node
         self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases)  # type: ignore
+
         return None
 
     def update_parent_current(self, network: Network, line_in: Line) -> None:
         """
+        NOT USED!!!
         Updates current at parent segment based on a line_in, according to:
         [parent_segment]---->parent_node---->[line_in]----->current_node
         Used during backward sweep
@@ -162,24 +169,49 @@ class Solution:
     def update_current(self, network: Network, line_in: Line) -> None:
         """
         Updates current on a line_in based on the downstream node, according to:
-        upstream_node--->[line_in]---> downstream_node ===> [0 or many lines out] ===> 0 or many child nodes
+        upstream_node---[line_in]---> downstream_node ===[0 or many lines out] ===> 0 or many child nodes
         Used during backward sweep.
         """
         node_name = line_in.key[1]  # type: ignore
-        line_phases = network.lines[line_in.key].phases #type: ignore
+        line_phases = network.lines[line_in.key].phases  # type: ignore
         node_s = self.s[node_name]
         node_V = self.V[node_name]
         # np.divide produces a NaN for positions at which node_V is 0
         # because the phases are not existant on node
         # TODO: consider dividing manually only by phases on the node
         new_line_I = np.conj(np.divide(node_s, node_V))
+
         # sum currents over all node's child segments
         for child_name in network.adj[node_name]:
-            child_segment = (node_name, child_name)
-            new_line_I = new_line_I + self.I[child_segment]
-
+            child_segment = network.lines[(node_name, child_name)]
+            if child_segment.voltageRegulators:
+                for vr in child_segment.voltageRegulators:
+                    new_line_I = new_line_I + vr.Itx
+            else:
+                new_line_I = new_line_I + self.I[(node_name, child_name)]
         new_line_I = mask_phases(new_line_I, (3,), line_phases)
         self.I[line_in.key] = new_line_I
+
+        if line_in.voltageRegulators:
+            for vr in line_in.voltageRegulators:
+                tx, reg = vr.key
+                phases = vr.phases
+                vr.Ireg = self.I[line_in.key]
+
+                Itx = vr.Itx  # current entering/leaving the tx node
+                Ireg = vr.Ireg  # current entering/leaving the reg_node
+                gamma = vr.gamma
+                # Enforce voltage regulator equations by phase.
+                # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
+                # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
+                # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
+                for idx, phase in enumerate(phases):
+                    if phase:
+                        # update reg current per phase
+                        # Itx[idx] = np.conj(reg_V[idx] * np.conj(Ireg[idx]) / tx_V[idx])
+                        Itx[idx] = gamma * Ireg[idx]
+
+
 
     def update_voltage_dependent_load(self, node: Node) -> None:
         """
@@ -236,7 +268,7 @@ class Solution:
         """
         Idf = pd.DataFrame.from_dict(self.I, orient='index', columns=['A', 'B', 'C'])
         # reindex lines to match opendss file
-        new_index = ( [ self.network.lines.get(k).name for k in self.I.keys()] ) # type: ignore
+        new_index = ([self.network.lines.get(k).name for k in self.I.keys()]) # type: ignore
         Idf.index = new_index
         return Idf
 

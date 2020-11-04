@@ -76,18 +76,11 @@ def get_lines_from_dss(network: Network, dss: Any) -> None:
             tx, rx = line_data['Bus1'], line_data['Bus2']
             tx_phases = ['1', '2', '3']
 
-        line = Line(network, (tx, rx), line_code)  # initialize line. Line constructor will add the line to the adjacency list
+        line = Line(network, (tx, rx), line_code)  # initialize line.
+        # Line constructor will add the line to the adjacency list, and set the rx.parent to tx
         # set phases according to tx
         line.phases = parse_phases(tx_phases)
-        network.lines[(tx, rx)] = line  # add line to network.line.
-        tx_node, rx_node = network.nodes.get(tx), network.nodes.get(rx)
-        # Make sure that rx does not yet have a parent assigned. If so, set rx's parent to tx
-        if rx_node.parent:  # type: ignore
-            # type: ignore
-            raise ValueError(f"Not a radial network. Node {rx_node.name} has more than one parent.")
-        else:
-            rx_node.parent = tx_node  # type: ignore
-
+        tx_node = network.nodes.get(tx)
         # parse line attributes from dss line data
         line.name = line_code
         line.length = line_data['Length']
@@ -193,14 +186,31 @@ def get_transformers_from_dss(network: Network, dss: Any) -> None:
     regs = dss.RegControls.AllNames()
     transformers = dss.Transformers.AllNames()
     transformer_names = [n for n in transformers if n not in regs]
+    # TODO: 634 needs a parent
+
     for transformer_name in transformer_names:
         transformer_data = all_transformer_data[transformer_name]
         dss.Transformers.Name(transformer_name)
+
         bus1, bus2 = (b.split('.')[0] for b in dss.CktElement.BusNames())
         transformer = Transformer(network, (bus1, bus2), transformer_name, transformer_data['NumWindings'])
+
+        dss.Transformers.Wdg(1)  # upstream side
+        if dss.CktElement.NumPhases() == 1: # 1 phase -> LN voltage,  2 or 3 -> LL voltage
+            upstream = dss.Transformers.kV()
+        else:
+            upstream = dss.Transformers.kV() / (3 ** 0.5)
+
+        dss.Transformers.Wdg(2)  # downstream side
+        if dss.CktElement.NumPhases() == 1:  # 1 phase -> LN voltage,  2 or 3 -> LL voltage
+            downstream = dss.Transformers.kV()
+        else:
+            downstream = dss.Transformers.kV() / (3 ** 0.5)
+        transformer.rated_voltages = (upstream, downstream)
+
         transformer.phases = network.nodes[bus1].phases
         transformer.conn = 'delta' if transformer_data['IsDelta'] else 'wye'
-        transformer.Vbase = transformer_data['WdgVoltages']
+
         transformer.kV = transformer_data['kV']
         transformer.kVA = transformer_data['kVA']
 

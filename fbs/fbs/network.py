@@ -122,6 +122,7 @@ class Line:
         self.Vbase = 0.0
         self.Ibase = 0.0
         self.Zbase = 0.0
+        self.voltageRegulators = []  # hold a list of voltage regulators
         # add this Line to the network
         self.add_to_network(network)
 
@@ -131,6 +132,10 @@ class Line:
         tx, rx = self.key
         if rx not in network.adj[tx]:
             network.adj[tx].append(rx)  # add this as a Line in the adjacency list
+        # store the a pointer to tx on rx.parent
+        if network.nodes[rx].parent:
+            raise ValueError(f"Error when processing line {line.name}. Node {rx} already has a parent.")
+        network.nodes[rx].parent = network.nodes[tx]
 
     def __str__(self) -> str:
         return str(self.key)
@@ -237,29 +242,29 @@ class VoltageRegulator:
         self.gamma = 0.0
         self.reg_name = reg_name  # opendss RegControl Name
         self.node_name = node_name  # name of the node corresponding to this regcontrol in opendss
-        self.phases = [False, False, False]
+        self.phases = [False, False, False]  # in the 13 node test case, there is only one phase on each VR
+        self.key = (tx, node_name)
         self.add_to_network(network, tx)
+        self.Itx = np.zeros((3,), dtype='float')  # complex current entering/leaving tx node
+        self.Ireg = np.zeros((3,), dtype='float')  # complex current entering/leaving the regControl node
 
     def add_to_network(self, network: Network, tx: str) -> None:
-        # find the line from the upstream node to this regControl
-        # if it does not exist, assign it
-        upstream_line_key = (tx, self.node_name)
-        if upstream_line_key not in network.lines:
-            # creates a synthetic line from the tx upstream node to this regControl
-            line_upstream = Line(network, upstream_line_key, self.reg_name)
-        self.line_upstream = network.lines[upstream_line_key]
-        # the connection between the regControl and the downstream rx node is defined in opendss as a Line.
-        # The Line should already have been mapped into our network.
-        # grab this line from the adjacency list to figure out our downstream node
-        if len(network.adj[self.node_name]) != 1:  # there should only be one node in the regControl's adjacency list
-            raise ValueError(
-                f'The regControl {self.name} has multiple downstream nodes: {network.adj[self.name]}')
-        rx = network.adj[self.node_name][0]
-        downstream_line_key = (self.node_name, rx)
-        # save a pointer to the downstream line (this regControl, rx node)
-        self.line_downstream = network.lines[downstream_line_key]
-        # save the regcontrol key as a 3 element tuple (tx_node, reg_control_name, rx_node)
-        self.key = (tx, self.node_name, rx)
+
+        # get the synthetic line (tx, node_name)
+        # if it does not exist, create it
+        if self.key not in network.lines:
+            syn_line = Line(network, self.key, self.reg_name)
+            network.lines[self.key] = syn_line
+
+        syn_line = network.lines[self.key]
+        syn_line.phases = [True, True, True]
+        # TODO: fix this
+        for idx, phase in enumerate(self.phases):
+            if phase:
+                syn_line.phases[idx] = True
+
+        # add voltage regulator to this line
+        syn_line.voltageRegulators.append(self)
         # save this voltage regulator to the network
         network.voltageRegulators[self.reg_name] = self
 
@@ -300,5 +305,6 @@ class Transformer (Line):
         tx, rx = self.key
         if rx not in network.adj[tx]:
             network.adj[tx].append(rx)
+        network.nodes[rx].parent = network.nodes[tx]
 
 
