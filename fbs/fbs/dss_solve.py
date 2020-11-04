@@ -89,8 +89,12 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
     IDSS = np.zeros((len(dss.Lines.AllNames()), 3), dtype='complex')
     for k1 in range(len(dss.Lines.AllNames())):
         dss.Lines.Name(dss.Lines.AllNames()[k1])
-
+        upstream_bus = dss.CktElement.BusNames()[0].split('.')[0]
         ph = np.asarray(dss.CktElement.BusNames()[0].split('.')[1:], dtype='int')-1
+        # get upstream bus voltage
+        dss.Circuit.SetActiveBus(upstream_bus)
+        upstream_Vbase = dss.Bus.kVBase()*1000
+        Ibase = Sbase/upstream_Vbase
         Imn = np.asarray(dss.CktElement.Currents())/Ibase
         Imn = Imn[0:int(len(Imn)/2)]
         Imn = Imn[0:5:2] + 1j*Imn[1:6:2]

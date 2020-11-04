@@ -118,19 +118,20 @@ class Solution:
         line_key = (parent.name, child.name)  # type: ignore
         line_out = network.lines[line_key]
 
-        for vr in line_out.voltageRegulators:
-            tx, reg = vr.key
-            phases = vr.phases
-            gamma = vr.gamma
-            tx_V = self.V[tx]
-            reg_V = self.V[reg]
-            # Enforce voltage regulator equations by phase.
-            # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
-            # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
-            # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
-            for idx, phase in enumerate(phases):
-                if phase:
-                    tx_V[idx] = 1/gamma * reg_V[idx]  # update tx voltage per phase
+        if line_out.voltageRegulators:
+            for vr in line_out.voltageRegulators:
+                tx, reg = vr.key
+                phases = vr.phases
+                gamma = vr.gamma
+                tx_V = self.V[tx]
+                reg_V = self.V[reg]
+                # Enforce voltage regulator equations by phase.
+                # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
+                # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
+                # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
+                for idx, phase in enumerate(phases):
+                    if phase:
+                        tx_V[idx] = 1/gamma * reg_V[idx]  # update tx voltage per phase
 
         else:  # otherwise, update backward voltage in the usual way
             parent_V = self.V[parent.name]  # type: ignore
@@ -140,10 +141,9 @@ class Solution:
             for phase_idx in range(3):
                 if child.phases[phase_idx]:  # if this phase is present on child
                     parent_V[phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I)
-
-        # update V at parent
-        # zero out voltages for non-existant phases at parent node
-        self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases)  # type: ignore
+            # update V at parent
+            # zero out voltages for non-existant phases at parent node
+            self.V[parent.name] = mask_phases(parent_V, (3,), parent.phases)  # type: ignore
 
         return None
 
