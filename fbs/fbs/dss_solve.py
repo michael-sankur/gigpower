@@ -51,7 +51,7 @@ def solve() -> None:
     # this would run for a default value of originalSteps = 100
     # TODO: confirm with Shammya that this is correct, specifically that we do one timestep and call Solution.SolveSnap()
     for stepNumber in range(1):  # simulate timesteps
-        # set_zip_values(dss)
+
         # set loads
         for load_name in dss.Loads.AllNames():
             load_data = orig_loads_data[load_name]
@@ -59,7 +59,7 @@ def solve() -> None:
             dss.Loads.kW(load_data['kW'])
             dss.Loads.kvar(load_data['kvar'])
 
-
+        set_zip_values(dss)
         # run solve for this timestep
         dss.Solution.SolveSnap()
         dss.Solution.FinishTimeStep()
