@@ -8,7 +8,7 @@ def init_from_dss(dss_fp: str) -> Network:
     """define a Network attributes from a dss file"""
     dss.run_command('Redirect ' + dss_fp)
     network = Network()
-    # set_zip_values(dss)
+    set_zip_values(dss)
     get_base_values_from_dss(network, dss)
     get_nodes_from_dss(network, dss)
     get_lines_from_dss(network, dss)

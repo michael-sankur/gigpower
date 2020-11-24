@@ -44,14 +44,14 @@ def solve() -> None:
     # Code based on https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/Examples/Python/Python-to-OpenDSS%20Control%20Interface.pdf
     # save original loads
 
-    # set_zip_values(dss)
+
     orig_loads_data = dss.utils.loads_to_dataframe()
     orig_loads_data = orig_loads_data.transpose()
 
     # this would run for a default value of originalSteps = 100
     # TODO: confirm with Shammya that this is correct, specifically that we do one timestep and call Solution.SolveSnap()
     for stepNumber in range(1):  # simulate timesteps
-
+        # set_zip_values(dss)
         # set loads
         for load_name in dss.Loads.AllNames():
             load_data = orig_loads_data[load_name]
