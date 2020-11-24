@@ -35,15 +35,16 @@ def test_init_from_dss(get_network) -> None:
     # count the number of lines in the network that do not represent transformers
     network_lines = len(network.lines) - len(network.transformers)
     # subtract the synthetic upstream lines for voltage regulators
-    # note that opendss already counts the voltage regulator downtream lines
-    vr_upstream_lines = set()
-    for vr in network.voltageRegulators.values():
-        vr_upstream_lines.add(vr.line_upstream.key)
-    network_lines -= len(vr_upstream_lines)
+    vr_lines = 0
+    for line in network.get_lines():
+        if line.voltageRegulators:
+            vr_lines += 1
+    network_lines -= vr_lines
+
     # check that the network adjacency list aligns with the number of lines
     network_edges = sum([len(node_list) for node_list in network.adj.values()])
     # subtract out transformers and upstream lines
-    network_edges = network_edges - len(network.transformers) - len(vr_upstream_lines)
+    network_edges = network_edges - len(network.transformers) - vr_lines
     line_check = (dss_lines == network_lines) and (dss_lines == network_edges)
     assert node_check and line_check
 

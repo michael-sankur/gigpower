@@ -211,27 +211,37 @@ class Solution:
                         # Itx[idx] = np.conj(reg_V[idx] * np.conj(Ireg[idx]) / tx_V[idx])
                         Itx[idx] = gamma * Ireg[idx]
 
-
-
     def update_voltage_dependent_load(self, node: Node) -> None:
         """
         updates voltage_dependent_load (Solution.s[node]) at the input node.
         Used during backward sweep.
         """
         # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
-        aPQ = np.ones(3)
-        aI = np.zeros(3)
-        aZ = np.zeros(3)
-        # TODO; get aPQ, aI, aZ from dss file, or zip values
-        # for now these are determined by the Load.Model value in opendss
-        # dss.LoadModels - above equal to constant p and q. We use model 1 and 8
 
         node_V = self.V[node.name]
         wpu = np.zeros(3)  # TODO: will be set as argument
         cappu = node.sum_cappu
-        spu = node.sum_spu
         abs_nodeV = abs(node_V)
-        self.s[node.name] = np.multiply(spu, aPQ + np.multiply(aI, abs_nodeV)) + np.multiply(aZ, (np.power(abs_nodeV, 2))) - 1j * cappu + wpu
+
+        if not node.loads:
+            return None
+
+        else:
+            self.s[node.name] = np.zeros(3, dtype=complex)
+            for load in node.loads:
+                spu_real, spu_imag = load.ppu, load.qpu
+                aPQ_p, aI_p, aZ_p = load.aPQ_p, load.aI_p, load.aZ_p
+                aPQ_q, aI_q, aZ_q = load.aPQ_q, load.aI_q, load.aZ_q
+                for idx, ph in enumerate(load.phases):
+                    if ph:
+                        self.s[node.name][idx] += \
+                            np.multiply(spu_real, aPQ_p +
+                                        np.multiply(aI_p, abs_nodeV[idx])) \
+                            + np.multiply(aZ_p, (np.power(abs_nodeV[idx], 2))) \
+                            + 1j*(np.multiply(spu_imag, aPQ_q
+                                              + np.multiply(aI_q, abs_nodeV[idx]))
+                                  + np.multiply(aZ_q, (np.power(abs_nodeV[idx], 2))))
+            self.s[node.name] += wpu - 1j * cappu
         return None
 
     def calc_S(self) -> None:
@@ -313,6 +323,9 @@ class Solution:
         index = ['iterations', 'Vtest', 'Vref', 'tolerance', 'diff']
         data = [self.iterations, self.Vtest, self.Vref, self.tolerance, self.diff]
         return pd.DataFrame(data, index).transpose()
+
+    def loads_df(self) -> Iterable:
+        pass
 
     def print_solution(self) -> None:
         """

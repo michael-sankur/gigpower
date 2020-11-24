@@ -7,6 +7,7 @@ import opendssdirect as dss # type: ignore
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 from typing import Tuple
+from . utils import set_zip_values
 
 
 def solve_with_dss(dss_file: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -16,6 +17,7 @@ def solve_with_dss(dss_file: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFr
     setup(dss_file)
     solve()
     return get_solution()
+
 
 def setup(dss_file: str) -> None:
     """
@@ -31,6 +33,7 @@ def setup(dss_file: str) -> None:
     dss.Solution.MaxControlIterations(1000000)
     dss.Solution.MaxIterations(30000)
 
+
 def solve() -> None:
     """
     Call SolveSnap() to solve powerflow for one timestep.
@@ -40,30 +43,34 @@ def solve() -> None:
     # Solve power flow with OpenDSS file, and updating loads before solving once
     # Code based on https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/Examples/Python/Python-to-OpenDSS%20Control%20Interface.pdf
     # save original loads
+
+    # set_zip_values(dss)
     orig_loads_data = dss.utils.loads_to_dataframe()
     orig_loads_data = orig_loads_data.transpose()
 
     # this would run for a default value of originalSteps = 100
     # TODO: confirm with Shammya that this is correct, specifically that we do one timestep and call Solution.SolveSnap()
-    for stepNumber in range(1): # simulate timesteps
+    for stepNumber in range(1):  # simulate timesteps
 
         # set loads
         for load_name in dss.Loads.AllNames():
             load_data = orig_loads_data[load_name]
             dss.Loads.Name(load_name)
-            dss.Loads.kW( load_data['kW'] )
-            dss.Loads.kvar( load_data['kvar'] )
+            dss.Loads.kW(load_data['kW'])
+            dss.Loads.kvar(load_data['kvar'])
 
-        #run solve for this timestep
+
+        # run solve for this timestep
         dss.Solution.SolveSnap()
         dss.Solution.FinishTimeStep()
 
         if not dss.Solution.Converged():
             print('Initial Solution Not Converged. Check Model for Convergence')
         else:
-            #Doing this solve command is required for GridPV, that is why the monitors
-            #go under a reset process
+            # Doing this solve command is required for GridPV, that is why the monitors
+            # go under a reset process
             dss.Monitors.ResetAll()
+
 
 def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
@@ -98,10 +105,7 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
         Imn = np.asarray(dss.CktElement.Currents())/Ibase
         Imn = Imn[0:int(len(Imn)/2)]
         Imn = Imn[0:5:2] + 1j*Imn[1:6:2]
-        temp = IDSS[k1,ph]
-        if temp.shape == (0,):
-            target = dss.Lines.AllNames()[k1]
-        IDSS[k1,ph] = Imn
+        IDSS[k1, ph] = Imn
     dssI = pd.DataFrame(IDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
 
     STXDSS = np.zeros((len(dss.Lines.AllNames()), 3), dtype='complex')
@@ -120,6 +124,10 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
 
     dssStx = pd.DataFrame(STXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
     dssSrx = pd.DataFrame(SRXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
-    print("OpenDSS Loads after solving, from dss.CktElement.Powers():")
-    print(dss.CktElement.Powers())
-    return dssV, dssI, dssStx, dssSrx
+
+    loads = dict()
+    for name in dss.Loads.AllNames():
+        dss.Loads.Name(name)
+        loads[name] = dss.CktElement.Powers()
+
+    return dssV, dssI, dssStx, dssSrx, loads

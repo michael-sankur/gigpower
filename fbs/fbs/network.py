@@ -84,14 +84,15 @@ class Network:
 
 class Node:
     series_index = ['name', 'phases', 'load', 'controller']
+
     def __init__(self, name: str = '') -> None:
         self.name = name
         self.phases = [False, False, False]
-        self.parent = None # pointer to parent Node. only one parent for radial networks
-        self.loads : List[Load] = []
-        self.capacitors : List[Capacitor] = []
-        self.sum_spu = np.zeros(3) # 3x1 complex array that holds the sum of all load.spu on this node
-        self.sum_cappu = np.zeros(3) # 3x1 array that holds the sum of all capacitor.cappu on this node
+        self.parent = None  # pointer to parent Node. only one parent for radial networks
+        self.loads: List[Load] = []
+        self.capacitors: List[Capacitor] = []
+        self.sum_spu = np.zeros(3)  # 3x1 complex array that holds the sum of all load.spu on this node
+        self.sum_cappu = np.zeros(3)  # 3x1 array that holds the sum of all capacitor.cappu on this node
         self.controller = None
         self.Sbase = 1000000.0
         self.Vbase = 0.0
@@ -132,9 +133,9 @@ class Line:
         tx, rx = self.key
         if rx not in network.adj[tx]:
             network.adj[tx].append(rx)  # add this as a Line in the adjacency list
-        # store the a pointer to tx on rx.parent
+        # store a pointer to tx on rx.parent
         if network.nodes[rx].parent:
-            raise ValueError(f"Error when processing line {line.name}. Node {rx} already has a parent.")
+            raise ValueError(f"Error when processing line {self.name}. Node {rx} already has a parent.")
         network.nodes[rx].parent = network.nodes[tx]
 
     def __str__(self) -> str:
@@ -146,15 +147,21 @@ class Line:
 
 
 class Load:
-    series_index = ['name', 'conn', 'phases', 'type', 'aPQ', 'aI', 'ppu', 'qpu', 'spu']
+    series_index = ['name', 'conn', 'phases', 'type', 'kw', 'kvar',
+                    'aPQ_p', 'aI_p', 'aZ_p', 'aPQ_q', 'aI_q', 'aZ_q',
+                    'ppu', 'qpu', 'spu']
     def __init__(self, name: str = '') -> None:
         self.name = name
         self.conn = ''
         self.phases = [False, False, False]
         self.type = None
-        self.aPQ = None
-        self.aI = None
-        self.aZ = None
+        self.zipV = [None] * 7  # array mapping: [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min votlage pu]
+        self.aPQ_p = None
+        self.aI_p = None
+        self.aZ_p = None
+        self.aPQ_q = None
+        self.aI_q = None
+        self.aZ_q = None
         self.ppu = 0.0 + 0j
         self.qpu = 0.0
         self.spu = 0.0 + 0j
@@ -206,7 +213,13 @@ class Load:
         self.node.sum_spu = np.add(self.node.sum_spu, self.spu)
 
     def to_series(self) -> pd.Series:
-        data = [self.name, self.conn, self.phases, self.type, self.aPQ, self.aI, self.ppu, self.qpu, self.spu]
+
+        ['name', 'conn', 'phases', 'type', 'kw', 'kvar',
+         'aPQ_p', 'aI_p', 'aZ_p', 'aPQ_q', 'aI_q', 'aZ_q',
+         'ppu', 'qpu', 'spu']
+        data = [self.name, self.conn, self.phases, self.type, self.kw, self.kvar,
+                self.aPQ_p, self.aI_p, self.aZ_p, self.aPQ_q, self.aI_q, self.aZ_q,
+                self.ppu, self.qpu, self.spu]
         return pd.Series(data, self.series_index)
 
 

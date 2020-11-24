@@ -8,6 +8,7 @@ def init_from_dss(dss_fp: str) -> Network:
     """define a Network attributes from a dss file"""
     dss.run_command('Redirect ' + dss_fp)
     network = Network()
+    # set_zip_values(dss)
     get_base_values_from_dss(network, dss)
     get_nodes_from_dss(network, dss)
     get_lines_from_dss(network, dss)
@@ -17,6 +18,16 @@ def init_from_dss(dss_fp: str) -> Network:
     get_voltage_regulators_from_dss(network, dss)
 
     return network
+
+
+def set_zip_values(dss:Any) -> None:
+    """sets custom zip values in dss by setting the dss.Loads.zipv() array."""
+    # array mapping: [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min votlage pu]
+    zipv = np.array([0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80])
+    for load_name in dss.Loads.AllNames():
+        dss.Loads.Name(load_name)
+        dss.Loads.Model(8)
+        dss.Loads.ZipV(zipv)
 
 
 def get_base_values_from_dss(network: Network, dss: Any) -> None:
@@ -111,16 +122,21 @@ def get_loads_from_dss(network: Network, dss: Any) -> None:
         load.conn = 'delta' if load_data['IsDelta'] else 'wye'
 
         # divide ppu and qpu by number of phases
-        ppu = load.kw / 1000 / load.phases.count(True)
-        qpu = load.kvar / 1000 / load.phases.count(True)
+        load.ppu = load.kw / 1000  / load.phases.count(True)
+        load.qpu = load.kvar / 1000  / load.phases.count(True)
         # set aPQ, aI, aZ
-        # TODO: get aPQ, aI for each load
-        load.aPQ = np.ones(3)
-        load.aI = np.zeros(3)
-        load.aZ = np.zeros(3)
-        # set load's ppu, qpu, and spu as a 3x1 based on load's phases
-        load.ppu = np.asarray([ppu if phase else 0 for phase in load.phases])
-        load.qpu = np.asarray([qpu if phase else 0 for phase in load.phases])
+        if load_data['ZipV']:
+            load.zipV = load_data['ZipV']
+            # array mapping: [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min votlage pu]
+            load.aZ_p = load.zipV[0]
+            load.aI_p = load.zipV[1]
+            load.aPQ_p = load.zipV[2]
+            load.aZ_q = load.zipV[3]
+            load.aI_q = load.zipV[4]
+            load.aPQ_q = load.zipV[5]
+        else:
+            load.aPQ_p, load.aI_p, load.aZ_p = 1, 0, 0
+            load.aPQ_q, load.aI_q, load.aZ_q = 1, 0, 0
         load.spu = load.ppu + 1j*load.qpu
 
         # add a pointer to this load to the network
@@ -128,12 +144,6 @@ def get_loads_from_dss(network: Network, dss: Any) -> None:
         load.node = node  # assign the node to the load
         node.loads.append(load)  # add this load to its node's load list
         # TODO: set load.type
-
-    for node in network.nodes.values():
-        # sum all loads on each node and store on each node, to avoid re-calculating during
-        # fbs.update-voltage-dependent-load()
-        for load in node.loads:
-            node.sum_spu = np.add(node.sum_spu, load.spu)
 
 
 def get_caps_from_dss(network: Network, dss: Any) -> None:
