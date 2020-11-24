@@ -5,17 +5,22 @@
 
 from fbs.utils import init_from_dss
 from fbs.fbs import fbs, get_solution as get_fbs_solution
-from fbs.dss_solve import solve_with_dss, get_solution as get_dss_solution
+from fbs.dss_solve import solve_with_dss
 
 import pandas as pd
 import pytest
 
-# dss_files = ['fbs/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss', 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss', 'fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
+
+# dss_files = ['fbs/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss']
+# dss_files = ['fbs/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss',
+#               'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss',
+#               'fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
 # dss_files = ['fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss']
 # dss_files = ['fbs/tests/test_cases_dss/02node_threephase_unbalanced.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss']
 dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss']
+
 
 def test_all():
     """
@@ -26,14 +31,15 @@ def test_all():
     $ pytest ./fbs/tests/test_compare_opendss.py -s > ./fbs/tests/06n3ph_unbal/06n3ph_out.txt
     $ pytest ./fbs/tests/test_compare_opendss.py -s > ./fbs/tests/05n3ph_unbal/05n3ph_out.txt
     """
-    tolerance = .01
+    tolerance = 10**-2
     for file in dss_files:
         print(f'\n\nTesting File: {file}')
         compare_fbs_sol(file, tolerance)
 
+
 # construct the python FBS solution
 def compare_fbs_sol(dss_file, tolerance):
-    #TODO: Figure out how to get Inode (iNR) and sV (sNR) at each node from dss and perform a compare
+    # TODO: Figure out how to get Inode (iNR) and sV (sNR) at each node from dss and perform a compare
     # solve with fbs
     network = init_from_dss(dss_file)
     fbs_sol = get_fbs_solution(fbs(network))
@@ -41,7 +47,8 @@ def compare_fbs_sol(dss_file, tolerance):
     # solve with dss
     dss_sol = solve_with_dss(dss_file)
 
-    fbsV, fbsI, fbsStx, fbsSrx = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), fbs_sol.Srx_df()
+    fbsV, fbsI, fbsStx, fbsSrx, fbs_sV = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), \
+        fbs_sol.Srx_df(), fbs_sol.sV_df()
     dssV, dssI, dssStx, dssSrx = dss_sol
     print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
     print("\n\nCOMPARE V")

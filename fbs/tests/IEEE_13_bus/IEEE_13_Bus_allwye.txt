@@ -1,5 +1,5 @@
 ============================= test session starts ==============================
-platform darwin -- Python 3.8.5, pytest-6.0.1, py-1.9.0, pluggy-0.13.1
+platform darwin -- Python 3.7.4, pytest-6.0.1, py-1.9.0, pluggy-0.13.1
 rootdir: /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/fbs
 collected 1 item
 
@@ -10,7 +10,7 @@ Testing File: fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss
 Opendss Iterations: 5	Opendss Convergence: 0.0001
 OpenDSS Loads after solving, from dss.CktElement.Powers():
 [573.3239120624032, 75.5205487461502, 68.95921783545916, -161.12784709327144, 375.5514884583057, 105.54289066318663, -573.3239061052059, -75.5205487461502, -68.95921735390412, 161.12784709327147, -375.5514855682394, -105.54289066318661]
-FBS iterations: 11	 FBS convergence:3.826272408237136e-10	 FBS tolerance: 1e-09
+FBS iterations: 7	 FBS convergence:4.855914716424339e-07	 FBS tolerance: 1e-06
 
 
 COMPARE V
@@ -245,57 +245,8 @@ line_671_684 0.1289+0.0863j 0.0000+0.0000j 0.1704-0.0102j
 line_684_611 0.0000+0.0000j 0.0000+0.0000j 0.1700-0.0106j
 line_684_652 0.1280+0.0860j 0.0000+0.0000j 0.0000+0.0000j
 line_671_692 0.5733+0.0755j 0.0690-0.1611j 0.3756+0.1055j
-F
+.
 
-=================================== FAILURES ===================================
-___________________________________ test_all ___________________________________
-
-    def test_all():
-        """
-        Compare the python FBS solution to the opendss solution.
-        To save output, run from command line:
-        pytest ./fbs/tests/test_compare_opendss.py -s >[OUTPUT FILE PATH]
-        Examples:
-        $ pytest ./fbs/tests/test_compare_opendss.py -s > ./fbs/tests/06n3ph_unbal/06n3ph_out.txt
-        $ pytest ./fbs/tests/test_compare_opendss.py -s > ./fbs/tests/05n3ph_unbal/05n3ph_out.txt
-        """
-        tolerance = .01
-        for file in dss_files:
-            print(f'\n\nTesting File: {file}')
->           compare_fbs_sol(file, tolerance)
-
-fbs/tests/test_compare_opendss.py:32: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss', tolerance = 0.01
-
-    def compare_fbs_sol(dss_file, tolerance):
-        #TODO: Figure out how to get Inode (iNR) and sV (sNR) at each node from dss and perform a compare
-        # solve with fbs
-        network = init_from_dss(dss_file)
-        fbs_sol = get_fbs_solution(fbs(network))
-    
-        # solve with dss
-        dss_sol = solve_with_dss(dss_file)
-    
-        fbsV, fbsI, fbsStx, fbsSrx = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), fbs_sol.Srx_df()
-        dssV, dssI, dssStx, dssSrx = dss_sol
-        print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
-        print("\n\nCOMPARE V")
-        V_maxDiff = compare_dfs(fbsV, dssV)
-        print("\n\nCOMPARE I")
-        I_maxDiff = compare_dfs(fbsI, dssI)
-        print("\n\nCOMPARE Stx")
-        Stx_maxDiff = compare_dfs(fbsStx, dssStx)
-        print("\n\nCOMPARE Srx")
-        Srx_maxDiff = compare_dfs(fbsSrx, dssSrx)
-    
->       assert (V_maxDiff <= tolerance).all()
-E       assert False
-E        +  where False = <bound method Series.all of A.(fbs - dss)    False\nB.(fbs - dss)    False\nC.(fbs - dss)    False\ndtype: bool>()
-E        +    where <bound method Series.all of A.(fbs - dss)    False\nB.(fbs - dss)    False\nC.(fbs - dss)    False\ndtype: bool> = A.(fbs - dss)   0.0290\nB.(fbs - dss)   0.0188\nC.(fbs - dss)   0.0228\ndtype: float64 <= 0.01.all
-
-fbs/tests/test_compare_opendss.py:56: AssertionError
 =============================== warnings summary ===============================
 tests/test_compare_opendss.py::test_all
   /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/fbs/fbs/solution.py:182: RuntimeWarning: invalid value encountered in true_divide
@@ -310,6 +261,4 @@ tests/test_compare_opendss.py::test_all
     node_I = np.conj(np.divide(node_sV,node_V))
 
 -- Docs: https://docs.pytest.org/en/stable/warnings.html
-=========================== short test summary info ============================
-FAILED fbs/tests/test_compare_opendss.py::test_all - assert False
-======================== 1 failed, 3 warnings in 1.52s =========================
+======================== 1 passed, 3 warnings in 0.66s =========================

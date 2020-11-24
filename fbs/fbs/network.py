@@ -134,7 +134,7 @@ class Line:
             network.adj[tx].append(rx)  # add this as a Line in the adjacency list
         # store the a pointer to tx on rx.parent
         if network.nodes[rx].parent:
-            raise ValueError(f"Error when processing line {line.name}. Node {rx} already has a parent.")
+            raise ValueError(f"Error when processing line {self.name}. Node {rx} already has a parent.")
         network.nodes[rx].parent = network.nodes[tx]
 
     def __str__(self) -> str:
