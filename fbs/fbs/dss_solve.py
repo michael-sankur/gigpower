@@ -7,8 +7,8 @@ import opendssdirect as dss # type: ignore
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 from typing import Tuple
-from . utils import set_zip_values
-
+from . utils import set_zip_values, parse_phases, pad_phases
+from collections import defaultdict
 
 def solve_with_dss(dss_file: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
@@ -125,9 +125,29 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
     dssStx = pd.DataFrame(STXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
     dssSrx = pd.DataFrame(SRXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
 
-    loads = dict()
+    """
+    dss.CktElement.Powers() gives the powers of the element,
+    for only the phases of the element, and the neutral line, if it is wye
+    connected. Which is why there are different array lengths,
+    and two 0.0s at the end of each array
+    """
+    bus_names = dss.Circuit.AllBusNames()
+    load_cols = ['A', 'B', 'C']
+    load_data = { b: np.zeros(3, dtype = complex) for b in bus_names }
+
     for name in dss.Loads.AllNames():
         dss.Loads.Name(name)
-        loads[name] = dss.CktElement.Powers()
+        bus_name = dss.CktElement.BusNames()[0]
+        bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
+        if len(bus_phase) == 0:
+            bus_phase.extend(['1', '2', '3'])
+        phases = parse_phases(list(bus_phase))
+        sparse = np.asarray(dss.CktElement.Powers())
+        # pull out real and imaginary components, pad by phase, ignore neutral
+        real = pad_phases(sparse[0:5:2], (3, ), phases)
+        imag = pad_phases(sparse[1:6:2], (3, ), phases)
+        load_data[bus_name] += (real + 1j * imag)
 
-    return dssV, dssI, dssStx, dssSrx, loads
+    dssLoads = pd.DataFrame.from_dict(load_data, orient='index', dtype=complex, columns=load_cols)
+
+    return dssV, dssI, dssStx, dssSrx, dssLoads

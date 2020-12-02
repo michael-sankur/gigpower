@@ -61,11 +61,9 @@ def compare_fbs_sol(dss_file, tolerance):
     Srx_maxDiff = compare_dfs(fbsSrx, dssSrx)
 
     print("\n\nCOMPARE LOADS\n")
-    print("FBS NODE.S")
-    print(fbs_sV, "\n")
-    print("DSS CktElement.Powers()")
-    for k, v in dssLoads.items():
-        print(f"{k}: {v}")
+    fbsLoads = fbs_sV.multiply(1000)
+
+    loads_maxDiff = compare_dfs(fbsLoads, dssLoads)
 
     assert (V_maxDiff <= tolerance).all()
     assert (I_maxDiff <= tolerance).all()
