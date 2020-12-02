@@ -133,7 +133,7 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
     """
     bus_names = dss.Circuit.AllBusNames()
     load_cols = ['A', 'B', 'C']
-    load_data = { b: np.zeros(3, dtype = complex) for b in bus_names }
+    load_data = {b: np.zeros(3, dtype = complex) for b in bus_names}
 
     for name in dss.Loads.AllNames():
         dss.Loads.Name(name)

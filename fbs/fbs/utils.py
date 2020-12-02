@@ -288,7 +288,8 @@ def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> Iterable
                         ("Cannot pad matrix.")
         else:
             try:
-                ret_mat[out_idx] = next(vals)
+                if phases[out_idx]:
+                    ret_mat[out_idx] = next(vals)
             except StopIteration:
                 ("Cannot pad matrix.")
     return ret_mat
