@@ -135,6 +135,19 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
     load_cols = ['A', 'B', 'C']
     load_data = {b: np.zeros(3, dtype = complex) for b in bus_names}
 
+    # for name in bus_names:
+    #     dss.Circuit.SetActiveBus(name)
+    #     if (dss.CktElement.Name() != name):
+    #         print("wrong")
+    #     bus_name = dss.CktElement.BusNames()[0]
+    #     phases = parse_phases(list(dss.Bus.Nodes()))
+    #     sparse = np.asarray(dss.CktElement.Powers())
+    #     # pull out real and imaginary components, pad by phase, ignore neutral
+    #     real = pad_phases(sparse[0:5:2], (3, ), phases)
+    #     imag = pad_phases(sparse[1:6:2], (3, ), phases)
+    #     load_data[bus_name] += (real + 1j * imag)
+
+    # change to loop over all buses in outer for loop.
     for name in dss.Loads.AllNames():
         dss.Loads.Name(name)
         bus_name = dss.CktElement.BusNames()[0]
@@ -147,6 +160,8 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
         real = pad_phases(sparse[0:5:2], (3, ), phases)
         imag = pad_phases(sparse[1:6:2], (3, ), phases)
         load_data[bus_name] += (real + 1j * imag)
+
+    # TODO: now add capacitors
 
     dssLoads = pd.DataFrame.from_dict(load_data, orient='index', dtype=complex, columns=load_cols)
 

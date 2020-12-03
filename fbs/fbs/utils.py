@@ -8,7 +8,7 @@ def init_from_dss(dss_fp: str) -> Network:
     """define a Network attributes from a dss file"""
     dss.run_command('Redirect ' + dss_fp)
     network = Network()
-    # set_zip_values(dss)
+    set_zip_values(dss)
     get_base_values_from_dss(network, dss)
     get_nodes_from_dss(network, dss)
     get_lines_from_dss(network, dss)
@@ -24,6 +24,7 @@ def set_zip_values(dss:Any) -> None:
     """sets custom zip values in dss by setting the dss.Loads.zipv() array."""
     # array mapping: [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min votlage pu]
     zipv = np.array([0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80])
+    # zipv = np.array([0.1, 0, .9, .1, 0, .9, .8])
     for load_name in dss.Loads.AllNames():
         dss.Loads.Name(load_name)
         dss.Loads.Model(8)

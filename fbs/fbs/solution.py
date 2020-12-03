@@ -222,6 +222,7 @@ class Solution:
         wpu = np.zeros(3)  # TODO: will be set as argument
         cappu = node.sum_cappu
         abs_nodeV = abs(node_V)
+        abs_nodeV_sq = np.power(abs(node_V), 2)
 
         if not node.loads:
             return None
@@ -234,13 +235,25 @@ class Solution:
                 aPQ_q, aI_q, aZ_q = load.aPQ_q, load.aI_q, load.aZ_q
                 for idx, ph in enumerate(load.phases):
                     if ph:
-                        self.s[node.name][idx] += \
-                            np.multiply(spu_real, aPQ_p +
-                                        np.multiply(aI_p, abs_nodeV[idx])) \
-                            + np.multiply(aZ_p, (np.power(abs_nodeV[idx], 2))) \
-                            + 1j*(np.multiply(spu_imag, aPQ_q
-                                              + np.multiply(aI_q, abs_nodeV[idx]))
-                                  + np.multiply(aZ_q, (np.power(abs_nodeV[idx], 2))))
+                        aI_real=aI_p * abs_nodeV[idx]
+                        temp1=aPQ_p + aI_p * abs_nodeV[idx] + aZ_p * abs_nodeV_sq[idx]
+                        real=temp1 * spu_real
+
+                        aI_imag = aI_q * abs_nodeV[idx]
+                        temp2 = aPQ_q + aI_q * abs_nodeV[idx] + aZ_q * abs_nodeV_sq[idx]
+                        imag = temp2 * spu_imag
+
+
+                        self.s[node.name][idx] = real + (1j * imag)
+
+
+                        # self.s[node.name][idx] += \
+                        #     np.multiply(spu_real, aPQ_p +
+                        #                 np.multiply(aI_p, abs_nodeV[idx]))
+                        #     + np.multiply(aZ_p, (np.power(abs_nodeV[idx], 2))) \
+                        #     + 1j*(np.multiply(spu_imag, aPQ_q
+                        #                       + np.multiply(aI_q, abs_nodeV[idx]))
+                        #           + np.multiply(aZ_q, (np.power(abs_nodeV[idx], 2))))
             self.s[node.name] += wpu - 1j * cappu
         return None
 
