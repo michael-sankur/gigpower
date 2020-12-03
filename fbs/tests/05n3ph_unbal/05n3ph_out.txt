@@ -1,0 +1,205 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.8.5, pytest-6.0.1, py-1.9.0, pluggy-0.13.1
+rootdir: /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/fbs
+plugins: cov-2.10.1
+collected 1 item
+
+fbs/tests/test_compare_opendss.py 
+
+Testing File: fbs/tests/05n3ph_unbal/compare_opendss_05node_threephase_unbalanced_oscillation_03.dss
+
+Opendss Iterations: 4	Opendss Convergence: 0.0001
+FBS iterations: 6	 FBS convergence:2.8649402600027747e-07	 FBS tolerance: 1e-06
+
+
+COMPARE V
+Max |diff|:
+A.(fbs - dss)   0.0002
+B.(fbs - dss)   0.0007
+C.(fbs - dss)   0.0006
+dtype: float64
+            A.(fbs - dss)   B.(fbs - dss)   C.(fbs - dss)
+sourcebus  0.0000+0.0000j  0.0000-0.0000j -0.0000-0.0000j
+a01       -0.0000-0.0000j -0.0000-0.0002j -0.0000-0.0001j
+a02       -0.0000-0.0001j -0.0001-0.0003j -0.0000-0.0003j
+a03       -0.0000-0.0001j -0.0001-0.0005j -0.0001-0.0006j
+a04       -0.0000-0.0001j  0.0000-0.0000j -0.0001-0.0006j
+a05       -0.0000-0.0002j -0.0002-0.0007j -0.0000+0.0000j
+a06        0.0000+0.0000j -0.0002-0.0007j -0.0000+0.0000j 
+
+FBS results
+                       A               B               C
+sourcebus 1.0000+0.0000j -0.5000-0.8660j -0.5000+0.8660j
+a01       0.9934+0.0167j -0.4890-0.8742j -0.5144+0.8578j
+a02       0.9867+0.0334j -0.4779-0.8824j -0.5289+0.8495j
+a03       0.9744+0.0585j -0.4636-0.8952j -0.5509+0.8382j
+a04       0.9805+0.0589j  0.0000-0.0000j -0.5503+0.8248j
+a05       0.9570+0.0747j -0.4644-0.8963j -0.0000+0.0000j
+a06       0.0000+0.0000j -0.4625-0.8914j -0.0000+0.0000j 
+
+DSS results
+                       A               B               C
+sourcebus 1.0000-0.0000j -0.5000-0.8660j -0.5000+0.8660j
+a01       0.9934+0.0168j -0.4889-0.8741j -0.5144+0.8579j
+a02       0.9867+0.0335j -0.4778-0.8821j -0.5288+0.8498j
+a03       0.9744+0.0586j -0.4634-0.8946j -0.5508+0.8387j
+a04       0.9805+0.0590j  0.0000+0.0000j -0.5503+0.8254j
+a05       0.9571+0.0749j -0.4642-0.8957j  0.0000+0.0000j
+a06       0.0000+0.0000j -0.4624-0.8908j  0.0000+0.0000j
+
+
+COMPARE I
+Max |diff|:
+A.(fbs - dss)   0.0026
+B.(fbs - dss)   0.0008
+C.(fbs - dss)   0.0004
+dtype: float64
+              A.(fbs - dss)  B.(fbs - dss)   C.(fbs - dss)
+line_sub_a01 0.0024-0.0010j 0.0002+0.0008j  0.0002+0.0004j
+line_a01_a02 0.0024-0.0009j 0.0003+0.0007j  0.0001+0.0003j
+line_a02_a03 0.0021-0.0007j 0.0003+0.0006j  0.0000+0.0003j
+line_a03_a04 0.0004-0.0002j 0.0000+0.0000j -0.0001+0.0003j
+line_a03_a05 0.0011-0.0003j 0.0002+0.0004j  0.0000+0.0000j
+line_a05_a06 0.0000+0.0000j 0.0001+0.0001j  0.0000+0.0000j 
+
+FBS results
+                          A               B               C
+line_sub_a01 0.4149-0.0785j -0.2946-0.2945j -0.1005+0.2929j
+line_a01_a02 0.4149-0.0785j -0.2946-0.2945j -0.1005+0.2929j
+line_a02_a03 0.3128-0.0566j -0.2252-0.2187j -0.0689+0.1949j
+line_a03_a04 0.1031-0.0193j  0.0000+0.0000j -0.0350+0.0979j
+line_a03_a05 0.1059-0.0179j -0.1576-0.1420j  0.0000+0.0000j
+line_a05_a06 0.0000+0.0000j -0.0901-0.0655j  0.0000+0.0000j 
+
+DSS results
+                          A               B               C
+line_sub_a01 0.4125-0.0775j -0.2948-0.2952j -0.1007+0.2926j
+line_a01_a02 0.4125-0.0776j -0.2949-0.2952j -0.1006+0.2926j
+line_a02_a03 0.3107-0.0559j -0.2255-0.2193j -0.0689+0.1946j
+line_a03_a04 0.1027-0.0191j  0.0000+0.0000j -0.0349+0.0976j
+line_a03_a05 0.1048-0.0176j -0.1578-0.1424j  0.0000+0.0000j
+line_a05_a06 0.0000+0.0000j -0.0901-0.0656j  0.0000+0.0000j
+
+
+COMPARE Stx
+Max |diff|:
+A.(fbs - dss)   0.0026
+B.(fbs - dss)   0.0008
+C.(fbs - dss)   0.0004
+dtype: float64
+              A.(fbs - dss)   B.(fbs - dss)  C.(fbs - dss)
+line_sub_a01 0.0024+0.0010j -0.0008+0.0002j 0.0003+0.0003j
+line_a01_a02 0.0024+0.0009j -0.0007+0.0001j 0.0002+0.0002j
+line_a02_a03 0.0021+0.0007j -0.0006+0.0001j 0.0002+0.0002j
+line_a03_a04 0.0004+0.0002j -0.0000+0.0000j 0.0002+0.0001j
+line_a03_a05 0.0010+0.0003j -0.0003+0.0001j 0.0000+0.0000j
+line_a05_a06 0.0000+0.0000j -0.0001+0.0000j 0.0000+0.0000j 
+
+FBS results
+                          A               B              C
+line_sub_a01 0.4149+0.0785j  0.4023+0.1079j 0.3040+0.0594j
+line_a01_a02 0.4108+0.0849j  0.4015+0.1136j 0.3030+0.0644j
+line_a02_a03 0.3068+0.0663j  0.3006+0.0942j 0.2020+0.0445j
+line_a03_a04 0.0994+0.0248j -0.0000+0.0000j 0.1013+0.0246j
+line_a03_a05 0.1021+0.0236j  0.2002+0.0753j 0.0000+0.0000j
+line_a05_a06 0.0000+0.0000j  0.1005+0.0503j 0.0000+0.0000j 
+
+DSS results
+                          A              B              C
+line_sub_a01 0.4125+0.0775j 0.4031+0.1077j 0.3037+0.0591j
+line_a01_a02 0.4084+0.0840j 0.4022+0.1134j 0.3028+0.0642j
+line_a02_a03 0.3047+0.0656j 0.3012+0.0942j 0.2018+0.0443j
+line_a03_a04 0.0990+0.0246j 0.0000+0.0000j 0.1011+0.0245j
+line_a03_a05 0.1011+0.0233j 0.2005+0.0752j 0.0000+0.0000j
+line_a05_a06 0.0000+0.0000j 0.1006+0.0503j 0.0000+0.0000j
+
+
+COMPARE Srx
+Max |diff|:
+A.(fbs - dss)   0.0026
+B.(fbs - dss)   0.0007
+C.(fbs - dss)   0.0003
+dtype: float64
+              A.(fbs - dss)   B.(fbs - dss)  C.(fbs - dss)
+line_sub_a01 0.0024+0.0009j -0.0007+0.0001j 0.0002+0.0002j
+line_a01_a02 0.0024+0.0008j -0.0007+0.0001j 0.0002+0.0002j
+line_a02_a03 0.0020+0.0007j -0.0005+0.0000j 0.0001+0.0001j
+line_a03_a04 0.0004+0.0001j  0.0000-0.0000j 0.0002+0.0000j
+line_a03_a05 0.0010+0.0002j -0.0003-0.0000j 0.0000+0.0000j
+line_a05_a06 0.0000+0.0000j -0.0001-0.0000j 0.0000+0.0000j 
+
+FBS results
+                          A              B              C
+line_sub_a01 0.4108+0.0849j 0.4015+0.1136j 0.3030+0.0644j
+line_a01_a02 0.4068+0.0913j 0.4006+0.1192j 0.3020+0.0695j
+line_a02_a03 0.3015+0.0734j 0.3002+0.1003j 0.2013+0.0496j
+line_a03_a04 0.1000+0.0250j 0.0000-0.0000j 0.1000+0.0250j
+line_a03_a05 0.1000+0.0250j 0.2005+0.0753j 0.0000+0.0000j
+line_a05_a06 0.0000+0.0000j 0.1000+0.0500j 0.0000+0.0000j 
+
+DSS results
+                          A              B              C
+line_sub_a01 0.4084+0.0840j 0.4022+0.1134j 0.3028+0.0642j
+line_a01_a02 0.4044+0.0905j 0.4013+0.1192j 0.3019+0.0693j
+line_a02_a03 0.2995+0.0728j 0.3007+0.1002j 0.2012+0.0495j
+line_a03_a04 0.0996+0.0249j 0.0000+0.0000j 0.0998+0.0250j
+line_a03_a05 0.0990+0.0248j 0.2008+0.0753j 0.0000+0.0000j
+line_a05_a06 0.0000+0.0000j 0.1001+0.0500j 0.0000+0.0000j
+
+
+COMPARE LOADS
+
+Max |diff|:
+A.(fbs - dss)   1.0133
+B.(fbs - dss)   0.2262
+C.(fbs - dss)   0.2053
+dtype: float64
+           A.(fbs - dss)   B.(fbs - dss)   C.(fbs - dss)
+sourcebus 0.0000+0.0000j  0.0000+0.0000j  0.0000+0.0000j
+a01       0.0000+0.0000j  0.0000+0.0000j  0.0000+0.0000j
+a02       0.3153+0.0786j -0.0795-0.0200j -0.0234-0.0054j
+a03       0.5894+0.1469j -0.1883-0.0473j -0.0868-0.0207j
+a04       0.4386+0.1091j  0.0000+0.0000j  0.1989+0.0509j
+a05       0.9832+0.2452j -0.2194-0.0550j  0.0000+0.0000j
+a06       0.0000+0.0000j -0.0889-0.0446j  0.0000+0.0000j 
+
+FBS results
+                          A                 B                 C
+sourcebus    0.0000+0.0000j    0.0000+0.0000j    0.0000+0.0000j
+a01          0.0000+0.0000j    0.0000+0.0000j    0.0000+0.0000j
+a02       100.0000+25.0000j 100.0000+25.0000j 100.0000+25.0000j
+a03       100.0000+25.0000j 100.0000+25.0000j 100.0000+25.0000j
+a04       100.0000+25.0000j    0.0000+0.0000j 100.0000+25.0000j
+a05       100.0000+25.0000j 100.0000+25.0000j    0.0000+0.0000j
+a06          0.0000+0.0000j 100.0000+50.0000j    0.0000+0.0000j 
+
+DSS results
+                         A                 B                 C
+sourcebus   0.0000+0.0000j    0.0000+0.0000j    0.0000+0.0000j
+a01         0.0000+0.0000j    0.0000+0.0000j    0.0000+0.0000j
+a02       99.6847+24.9214j 100.0795+25.0200j 100.0234+25.0054j
+a03       99.4106+24.8531j 100.1883+25.0473j 100.0868+25.0207j
+a04       99.5614+24.8909j    0.0000+0.0000j  99.8011+24.9491j
+a05       99.0168+24.7548j 100.2194+25.0550j    0.0000+0.0000j
+a06         0.0000+0.0000j 100.0889+50.0446j    0.0000+0.0000j
+.
+
+=============================== warnings summary ===============================
+tests/test_compare_opendss.py::test_all
+  /Users/elainelaguerta/Dropbox/LBNL/OpenDSSDirect.py/opendssdirect/utils.py:71: UserWarning: Empty list (opendssdirect.Capacitors)
+    warnings.warn("Empty list ({class_name})".format(class_name=class_name))
+
+tests/test_compare_opendss.py::test_all
+  /Users/elainelaguerta/Dropbox/LBNL/OpenDSSDirect.py/opendssdirect/utils.py:71: UserWarning: Empty list (opendssdirect.Transformers)
+    warnings.warn("Empty list ({class_name})".format(class_name=class_name))
+
+tests/test_compare_opendss.py::test_all
+  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/fbs/fbs/solution.py:182: RuntimeWarning: invalid value encountered in true_divide
+    new_line_I = np.conj(np.divide(node_s, node_V))
+
+tests/test_compare_opendss.py::test_all
+  /Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/fbs/fbs/solution.py:266: RuntimeWarning: invalid value encountered in true_divide
+    node_I = np.conj(np.divide(node_sV,node_V))
+
+-- Docs: https://docs.pytest.org/en/stable/warnings.html
+======================== 1 passed, 4 warnings in 1.20s =========================
