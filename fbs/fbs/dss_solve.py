@@ -133,21 +133,9 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
     """
     bus_names = dss.Circuit.AllBusNames()
     load_cols = ['A', 'B', 'C']
-    load_data = {b: np.zeros(3, dtype = complex) for b in bus_names}
+    load_data = {b: np.zeros(3, dtype=complex) for b in bus_names}
 
-    # for name in bus_names:
-    #     dss.Circuit.SetActiveBus(name)
-    #     if (dss.CktElement.Name() != name):
-    #         print("wrong")
-    #     bus_name = dss.CktElement.BusNames()[0]
-    #     phases = parse_phases(list(dss.Bus.Nodes()))
-    #     sparse = np.asarray(dss.CktElement.Powers())
-    #     # pull out real and imaginary components, pad by phase, ignore neutral
-    #     real = pad_phases(sparse[0:5:2], (3, ), phases)
-    #     imag = pad_phases(sparse[1:6:2], (3, ), phases)
-    #     load_data[bus_name] += (real + 1j * imag)
-
-    # change to loop over all buses in outer for loop.
+    # add all load powers to load data, based on bus index
     for name in dss.Loads.AllNames():
         dss.Loads.Name(name)
         bus_name = dss.CktElement.BusNames()[0]
@@ -161,7 +149,19 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
         imag = pad_phases(sparse[1:6:2], (3, ), phases)
         load_data[bus_name] += (real + 1j * imag)
 
-    # TODO: now add capacitors
+    # add all capacitors to load daata, based on bus index
+    for name in dss.Capacitors.AllNames():
+        dss.Capacitors.Name(name)
+        bus_name = dss.CktElement.BusNames()[0]
+        bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
+        if len(bus_phase) == 0:
+            bus_phase.extend(['1', '2', '3'])
+        phases = parse_phases(list(bus_phase))
+        sparse = np.asarray(dss.CktElement.Powers())
+        # pull out real and imaginary components, pad by phase, ignore neutral
+        real = pad_phases(sparse[0:5:2], (3, ), phases)
+        imag = pad_phases(sparse[1:6:2], (3, ), phases)
+        load_data[bus_name] += (real + 1j * imag)
 
     dssLoads = pd.DataFrame.from_dict(load_data, orient='index', dtype=complex, columns=load_cols)
 

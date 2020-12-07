@@ -19,7 +19,8 @@ import pytest
 # dss_files = ['fbs/tests/test_cases_dss/02node_threephase_unbalanced.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss']
-dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss']
+# dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss']
+dss_files = ['fbs/tests/IEEE_34/IEEE_34_Bus_allwye.dss']
 
 
 def test_all():
@@ -31,7 +32,7 @@ def test_all():
     $ pytest ./fbs/tests/test_compare_opendss.py -s > ./fbs/tests/06n3ph_unbal/06n3ph_out.txt
     $ pytest ./fbs/tests/test_compare_opendss.py -s > ./fbs/tests/05n3ph_unbal/05n3ph_out.txt
     """
-    tolerance = 10**-2
+    tolerance = 10**-1
     for file in dss_files:
         print(f'\n\nTesting File: {file}')
         compare_fbs_sol(file, tolerance)
@@ -60,7 +61,7 @@ def compare_fbs_sol(dss_file, tolerance):
     print("\n\nCOMPARE Srx")
     Srx_maxDiff = compare_dfs(fbsSrx, dssSrx)
 
-    print("\n\nCOMPARE LOADS\n")
+    print("\n\nCOMPARE TOTAL NODE POWERS\n")
     fbsLoads = fbs_sV.multiply(1000)
 
     loads_maxDiff = compare_dfs(fbsLoads, dssLoads)
@@ -70,9 +71,12 @@ def compare_fbs_sol(dss_file, tolerance):
     assert (Stx_maxDiff <= tolerance).all()
     assert (Srx_maxDiff <= tolerance).all()
 
-# construct the DSS solution. Copied form '20180601/opendss_nonvec_test_comparison.ipynb'
+    # convert node powers from kw
+    assert (loads_maxDiff/1000 <= tolerance).all()
 
-def compare_dfs(fbs_df : pd.DataFrame, dss_df : pd.DataFrame) -> None:
+
+# construct the DSS solution. Copied form '20180601/opendss_nonvec_test_comparison.ipynb'
+def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame) -> None:
     """ helper method to compare fbs vs. dss and print comparisons """
     compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
     compare = fbs_df.sub(dss_df)
