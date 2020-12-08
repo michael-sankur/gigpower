@@ -170,7 +170,6 @@ def get_caps_from_dss(network: Network, dss: Any) -> None:
             cap = Capacitor(cap_name)
             cap.phases = parse_phases(list(phase_chars))
             cap.conn = 'delta' if cap_data['IsDelta'] else 'wye'
-            # TODO: confirm that cappu is divided by num phases
             cappu = cap_data['kvar'] * 1000 / network.Sbase / cap.phases.count(True)
             cap.cappu = np.asarray([cappu if phase else 0 for phase in cap.phases])
             network.capacitors[cap_name] = cap  # add a pointer to this cap to the network
@@ -186,7 +185,7 @@ def get_voltage_regulators_from_dss(network: Network, dss: Any) -> None:
     # get Reg Controls from dss
     regs = dss.RegControls.AllNames()
     for regControl_name in regs:
-        dss.RegControls.Name(regControl_name)  # set this reg as active
+        dss.RegControls.Name(regControl_name)  # set this reg as active, to get the transformer
         transformer_name = dss.RegControls.Transformer()
         dss.Transformers.Name(transformer_name)  # set this regcontrol's transformer as active
         tx, regControl_node = dss.CktElement.BusNames()  # get upstream, regcontrol nodes
@@ -194,6 +193,7 @@ def get_voltage_regulators_from_dss(network: Network, dss: Any) -> None:
         regControl_node = regControl_node.split('.')[0]
         voltageReg = VoltageRegulator(network, regControl_name, regControl_node, tx)
         voltageReg.transformer_name = transformer_name
+        dss.RegControls.Name(regControl_name)  # set this reg as active, again, to get the tap number
         voltageReg.get_gamma(dss.RegControls.TapNumber())
         voltageReg.phases = parse_phases(phases)
 
