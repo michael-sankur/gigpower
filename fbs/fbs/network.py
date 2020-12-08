@@ -251,7 +251,7 @@ class Capacitor:
 
 class VoltageRegulator:
     def __init__(self, network: Network, reg_name: str, node_name:str, tx: str) -> None:
-        self.transformer = None  # pointer to the Transformer associated with this VoltageRegulator
+        self.transformer_name = None  # name of the Transformer associated with this VoltageRegulator
         self.gamma = 0.0
         self.reg_name = reg_name  # opendss RegControl Name
         self.node_name = node_name  # name of the node corresponding to this regcontrol in opendss
@@ -281,7 +281,6 @@ class VoltageRegulator:
         # save this voltage regulator to the network
         network.voltageRegulators[self.reg_name] = self
 
-
     def get_gamma(self, tapNumber: int) -> None:
         # Takes a Tap Number from opendss and maps it to a voltage ratio.
         # There are 33 default integer Tap Numbers, from -16 to +16, corresponding to the defaults of 0.90 to 1.10 voltage ratio
@@ -289,7 +288,7 @@ class VoltageRegulator:
         VRMAX = 1.10
         # move range [-16,16] to [0,1]
         result = (tapNumber + 16) / 32
-        #compress to VRMAX - VRMIN
+        # compress to VRMAX - VRMIN
         result *= VRMAX - VRMIN
         # move to [VRMIN, VRMAX]
         result += VRMIN

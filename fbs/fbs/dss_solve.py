@@ -98,6 +98,8 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
         dss.Lines.Name(dss.Lines.AllNames()[k1])
         upstream_bus = dss.CktElement.BusNames()[0].split('.')[0]
         ph = np.asarray(dss.CktElement.BusNames()[0].split('.')[1:], dtype='int')-1
+        if len(ph) == 0:  # if the name doesn't have phases, assume all three phases
+            ph = [0, 1, 2]
         # get upstream bus voltage
         dss.Circuit.SetActiveBus(upstream_bus)
         upstream_Vbase = dss.Bus.kVBase()*1000
@@ -114,6 +116,8 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
     for k1 in range(len(dss.Lines.AllNames())):
         dss.Lines.Name(dss.Lines.AllNames()[k1])
         ph = np.asarray(dss.CktElement.BusNames()[0].split('.')[1:], dtype='int')-1
+        if len(ph) == 0:  # if the name doesn't have phases, assume all three phases
+            ph = [0, 1, 2]
         Sk = np.asarray(dss.CktElement.Powers())/(Sbase/1000)
         STXtemp = Sk[0:int(len(Sk)/2)]
         SRXtemp = Sk[int(len(Sk)/2):]

@@ -16,8 +16,11 @@ def init_from_dss(dss_fp: str) -> Network:
     get_lines_from_dss(network, dss)
     get_loads_from_dss(network, dss)
     get_caps_from_dss(network, dss)
-    get_transformers_from_dss(network, dss)
+
+    # note: map voltage regulators before mapping transformers
+    # so that we only map transformers that are not voltage regulators
     get_voltage_regulators_from_dss(network, dss)
+    get_transformers_from_dss(network, dss)
 
     return network
 
@@ -184,13 +187,13 @@ def get_voltage_regulators_from_dss(network: Network, dss: Any) -> None:
     regs = dss.RegControls.AllNames()
     for regControl_name in regs:
         dss.RegControls.Name(regControl_name)  # set this reg as active
-        transformer = dss.RegControls.Transformer()  # stores transformer's name
-        dss.Transformers.Name(transformer)  # set this regcontrol's transformer as active
-        tx, regControl_node = dss.CktElement.BusNames()  # get upstream, regcontrol nodes associated with this transformer
+        transformer_name = dss.RegControls.Transformer()
+        dss.Transformers.Name(transformer_name)  # set this regcontrol's transformer as active
+        tx, regControl_node = dss.CktElement.BusNames()  # get upstream, regcontrol nodes
         tx, *phases = tx.split('.')
         regControl_node = regControl_node.split('.')[0]
         voltageReg = VoltageRegulator(network, regControl_name, regControl_node, tx)
-        voltageReg.transformer = transformer
+        voltageReg.transformer_name = transformer_name
         voltageReg.get_gamma(dss.RegControls.TapNumber())
         voltageReg.phases = parse_phases(phases)
 
@@ -198,9 +201,10 @@ def get_voltage_regulators_from_dss(network: Network, dss: Any) -> None:
 def get_transformers_from_dss(network: Network, dss: Any) -> None:
     # make Transformers
     all_transformer_data = dss.utils.transformers_to_dataframe().transpose()
-    regs = dss.RegControls.AllNames()
     transformers = dss.Transformers.AllNames()
-    transformer_names = [n for n in transformers if n not in regs]
+    # exclude the transformers that are paired with voltage regulators
+    vr_transformers = [r.transformer_name for r in network.voltageRegulators.values()]
+    transformer_names = [n for n in transformers if n not in vr_transformers]
 
     for transformer_name in transformer_names:
         transformer_data = all_transformer_data[transformer_name]
@@ -315,7 +319,7 @@ def mask_phases(matrix: Iterable, shape: tuple, phases: List[bool]) -> Iterable:
                 if phases[out_idx] and phases[col_idx]:
                     phase_matrix[out_idx][col_idx] = 1
         else:
-            if phases[out_idx] :
+            if phases[out_idx]:
                 phase_matrix[out_idx] = 1
     masked = np.multiply(matrix, phase_matrix)
     # change all NaN's to 0
