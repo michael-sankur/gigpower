@@ -296,6 +296,7 @@ class VoltageRegulator:
         # assign to self
         self.gamma = result
 
+
 class Transformer (Line):
     def __init__(self, network: Network, key: Tuple[str, str], name: str, num_windings: int) -> None:
         # initialize this as a Line with 0 length, FZpu = zeroes(3x3)

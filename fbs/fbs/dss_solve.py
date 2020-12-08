@@ -7,7 +7,7 @@ import opendssdirect as dss # type: ignore
 import numpy as np # type: ignore
 import pandas as pd # type: ignore
 from typing import Tuple
-from . utils import set_zip_values, parse_phases, pad_phases
+from . utils import set_zip_values, parse_phases, pad_phases, ZIPV
 from collections import defaultdict
 
 def solve_with_dss(dss_file: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -59,7 +59,7 @@ def solve() -> None:
             dss.Loads.kW(load_data['kW'])
             dss.Loads.kvar(load_data['kvar'])
 
-        set_zip_values(dss)
+        set_zip_values(dss, ZIPV)
         # run solve for this timestep
         dss.Solution.SolveSnap()
         dss.Solution.FinishTimeStep()

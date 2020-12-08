@@ -20,7 +20,7 @@ def fbs(network: Network) -> Solution:
     # keep a pointer to the root node
     solution.root = network.nodes.get(topo_order[0])  # type: ignore
     # TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
-    solution.tolerance = abs((solution.Vref[1]) * 10**-6)  # set tolerance with phase B reference voltage
+    solution.tolerance = abs((solution.Vref[1]) * 10**-9)  # set tolerance with phase B reference voltage
     converged = max(abs(solution.Vtest - solution.Vref)) <= solution.tolerance
     while not converged:
         # set V.root to Vref
