@@ -81,20 +81,20 @@ new regcontrol.reg2c transformer=reg2c winding=2 vreg=124 band=2 ptratio=120 ctp
 
 ! spot loads
 New Load.S860 Bus1=860 Phases=3 Conn=Wye Model=1 kV=24.900 kW=60.0 kVAR=48.0
-New Load.S840 Bus1=840 Phases=3 Conn=Wye Model=1 kV=24.900 kW=27.0 kVAR=21.0
-New Load.S844 Bus1=844 Phases=3 Conn=Wye Model=1 kV=24.900 kW=405.0 kVAR=315.0
+New Load.S840 Bus1=840 Phases=3 Conn=Wye Model=5 kV=24.900 kW=27.0 kVAR=21.0
+New Load.S844 Bus1=844 Phases=3 Conn=Wye Model=2 kV=24.900 kW=405.0 kVAR=315.0
 
 ! New Load.S848 Bus1=848 Phases=3 Conn=Delta Model=1 kV=24.900 kW=60.0 kVAR=48.0
-! New Load.S830a Bus1=830.1.2 Phases=1 Conn=Delta Model=1 kV=24.900 kW=10.0 kVAR=5.0
-! New Load.S830b Bus1=830.2.3 Phases=1 Conn=Delta Model=1 kV=24.900 kW=10.0 kVAR=5.0
-! New Load.S830c Bus1=830.3.1 Phases=1 Conn=Delta Model=1 kV=24.900 kW=25.0 kVAR=10.0
-! New Load.S890 Bus1=890 Phases=3 Conn=Delta Model=1 kV=4.160 kW=450.0 kVAR=225.0
+! New Load.S830a Bus1=830.1.2 Phases=1 Conn=Delta Model=2 kV=24.900 kW=10.0 kVAR=5.0
+! New Load.S830b Bus1=830.2.3 Phases=1 Conn=Delta Model=2 kV=24.900 kW=10.0 kVAR=5.0
+! New Load.S830c Bus1=830.3.1 Phases=1 Conn=Delta Model=2 kV=24.900 kW=25.0 kVAR=10.0
+! New Load.S890 Bus1=890 Phases=3 Conn=Delta Model=5 kV=4.160 kW=450.0 kVAR=225.0
 
 New Load.S848 Bus1=848.1.2.3 Phases=3 Conn=wye Model=1 kV=24.900 kW=60.0 kVAR=48.0
-New Load.S830a Bus1=830.1.2 Phases=2 Conn=wye Model=1 kV=24.900 kW=10.0 kVAR=5.0
-New Load.S830b Bus1=830.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=10.0 kVAR=5.0
-New Load.S830c Bus1=830.3.1 Phases=2 Conn=wye Model=1 kV=24.900 kW=25.0 kVAR=10.0
-New Load.S890 Bus1=890.1.2.3 Phases=3 Conn=wye Model=1 kV=4.160 kW=450.0 kVAR=225.0
+New Load.S830a Bus1=830.1.2 Phases=2 Conn=wye Model=2 kV=24.900 kW=10.0 kVAR=5.0
+New Load.S830b Bus1=830.2.3 Phases=2 Conn=wye Model=2 kV=24.900 kW=10.0 kVAR=5.0
+New Load.S830c Bus1=830.3.1 Phases=2 Conn=wye Model=2 kV=24.900 kW=25.0 kVAR=10.0
+New Load.S890 Bus1=890.1.2.3 Phases=3 Conn=wye Model=5 kV=4.160 kW=450.0 kVAR=225.0
 
 ! distributed loads
 New Load.D802_806sb Bus1=802.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=15.0 kVAR=7.5
@@ -102,23 +102,23 @@ New Load.D802_806rb Bus1=806.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=15.0 kVAR=
 New Load.D802_806sc Bus1=802.3 Phases=1 Conn=Wye Model=1 kV=14.376 kW=12.5 kVAR=7.0
 New Load.D802_806rc Bus1=806.3 Phases=1 Conn=Wye Model=1 kV=14.376 kW=12.5 kVAR=7.0
 
-New Load.D808_810sb Bus1=808.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=8.0 kVAR=4.0
-New Load.D808_810rb Bus1=810.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=8.0 kVAR=4.0
+New Load.D808_810sb Bus1=808.2 Phases=1 Conn=Wye Model=4 kV=14.376 kW=8.0 kVAR=4.0
+New Load.D808_810rb Bus1=810.2 Phases=1 Conn=Wye Model=4 kV=14.376 kW=8.0 kVAR=4.0
 
-New Load.D818_820sa Bus1=818.1 Phases=1 Conn=Wye Model=1 kV=14.376 kW=17.0 kVAR=8.5
-New Load.D818_820ra Bus1=820.1 Phases=1 Conn=Wye Model=1 kV=14.376 kW=17.0 kVAR=8.5
+New Load.D818_820sa Bus1=818.1 Phases=1 Conn=Wye Model=2 kV=14.376 kW=17.0 kVAR=8.5
+New Load.D818_820ra Bus1=820.1 Phases=1 Conn=Wye Model=2 kV=14.376 kW=17.0 kVAR=8.5
 
 New Load.D820_822sa Bus1=820.1 Phases=1 Conn=Wye Model=1 kV=14.376 kW=67.5 kVAR=35.0
 New Load.D820_822ra Bus1=822.1 Phases=1 Conn=Wye Model=1 kV=14.376 kW=67.5 kVAR=35.0
 
-! New Load.D816_824sb Bus1=816.2.3 Phases=1 Conn=Delta Model=1 kV=24.900 kW=2.5 kVAR=1.0
-! New Load.D816_824rb Bus1=824.2.3 Phases=1 Conn=Delta Model=1 kV=24.900 kW=2.5 kVAR=1.0
+! New Load.D816_824sb Bus1=816.2.3 Phases=1 Conn=Delta Model=5 kV=24.900 kW=2.5 kVAR=1.0
+! New Load.D816_824rb Bus1=824.2.3 Phases=1 Conn=Delta Model=5 kV=24.900 kW=2.5 kVAR=1.0
 
-New Load.D816_824sb Bus1=816.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=2.5 kVAR=1.0
-New Load.D816_824rb Bus1=824.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=2.5 kVAR=1.0
+New Load.D816_824sb Bus1=816.2.3 Phases=2 Conn=wye Model=5 kV=24.900 kW=2.5 kVAR=1.0
+New Load.D816_824rb Bus1=824.2.3 Phases=2 Conn=wye Model=5 kV=24.900 kW=2.5 kVAR=1.0
 
-New Load.D824_826sb Bus1=824.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=20.0 kVAR=10.0
-New Load.D824_826rb Bus1=826.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=20.0 kVAR=10.0
+New Load.D824_826sb Bus1=824.2 Phases=1 Conn=Wye Model=5 kV=14.376 kW=20.0 kVAR=10.0
+New Load.D824_826rb Bus1=826.2 Phases=1 Conn=Wye Model=5 kV=14.376 kW=20.0 kVAR=10.0
 New Load.D824_828sc Bus1=824.3 Phases=1 Conn=Wye Model=1 kV=14.376 kW=2.0 kVAR=1.0
 New Load.D824_828rc Bus1=828.3 Phases=1 Conn=Wye Model=1 kV=14.376 kW=2.0 kVAR=1.0
 
@@ -128,19 +128,19 @@ New Load.D828_830ra Bus1=830.1 Phases=1 Conn=Wye Model=1 kV=14.376 kW=3.5 kVAR=1
 New Load.D854_856sb Bus1=854.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=2.0 kVAR=1.0
 New Load.D854_856rb Bus1=856.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=2.0 kVAR=1.0
 
-! New Load.D832_858sa Bus1=832.1 Phases=1 Conn=Delta Model=1 kV=24.900 kW=3.5 kVAR=1.5
-! New Load.D832_858ra Bus1=858.1 Phases=1 Conn=Delta Model=1 kV=24.900 kW=3.5 kVAR=1.5
-! New Load.D832_858sb Bus1=832.2 Phases=1 Conn=Delta Model=1 kV=24.900 kW=1.0 kVAR=0.5
-! New Load.D832_858rb Bus1=858.2 Phases=1 Conn=Delta Model=1 kV=24.900 kW=1.0 kVAR=0.5
-! New Load.D832_858sc Bus1=832.3 Phases=1 Conn=Delta Model=1 kV=24.900 kW=3.0 kVAR=1.5
-! New Load.D832_858rc Bus1=858.3 Phases=1 Conn=Delta Model=1 kV=24.900 kW=3.0 kVAR=1.5
+! New Load.D832_858sa Bus1=832.1 Phases=1 Conn=Delta Model=2 kV=24.900 kW=3.5 kVAR=1.5
+! New Load.D832_858ra Bus1=858.1 Phases=1 Conn=Delta Model=2 kV=24.900 kW=3.5 kVAR=1.5
+! New Load.D832_858sb Bus1=832.2 Phases=1 Conn=Delta Model=2 kV=24.900 kW=1.0 kVAR=0.5
+! New Load.D832_858rb Bus1=858.2 Phases=1 Conn=Delta Model=2 kV=24.900 kW=1.0 kVAR=0.5
+! New Load.D832_858sc Bus1=832.3 Phases=1 Conn=Delta Model=2 kV=24.900 kW=3.0 kVAR=1.5
+! New Load.D832_858rc Bus1=858.3 Phases=1 Conn=Delta Model=2 kV=24.900 kW=3.0 kVAR=1.5
 
-New Load.D832_858sa Bus1=832.1.2 Phases=2 Conn=wye Model=1 kV=24.900 kW=3.5 kVAR=1.5
-New Load.D832_858ra Bus1=858.1.2 Phases=2 Conn=wye Model=1 kV=24.900 kW=3.5 kVAR=1.5
-New Load.D832_858sb Bus1=832.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=1.0 kVAR=0.5
-New Load.D832_858rb Bus1=858.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=1.0 kVAR=0.5
-New Load.D832_858sc Bus1=832.3.1 Phases=2 Conn=wye Model=1 kV=24.900 kW=3.0 kVAR=1.5
-New Load.D832_858rc Bus1=858.3.1 Phases=2 Conn=wye Model=1 kV=24.900 kW=3.0 kVAR=1.5
+New Load.D832_858sa Bus1=832.1.2 Phases=2 Conn=wye Model=2 kV=24.900 kW=3.5 kVAR=1.5
+New Load.D832_858ra Bus1=858.1.2 Phases=2 Conn=wye Model=2 kV=24.900 kW=3.5 kVAR=1.5
+New Load.D832_858sb Bus1=832.2.3 Phases=2 Conn=wye Model=2 kV=24.900 kW=1.0 kVAR=0.5
+New Load.D832_858rb Bus1=858.2.3 Phases=2 Conn=wye Model=2 kV=24.900 kW=1.0 kVAR=0.5
+New Load.D832_858sc Bus1=832.3.1 Phases=2 Conn=wye Model=2 kV=24.900 kW=3.0 kVAR=1.5
+New Load.D832_858rc Bus1=858.3.1 Phases=2 Conn=wye Model=2 kV=24.900 kW=3.0 kVAR=1.5
 
 ! 9-17-10 858-864 changed to phase A per error report
 New Load.D858_864sb Bus1=858.1 Phases=1 Conn=Wye Model=1 kV=14.376 kW=1.0 kVAR=0.5
@@ -160,19 +160,19 @@ New Load.D858_834rb Bus1=834.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=7.5 kVAR
 New Load.D858_834sc Bus1=858.3.1 Phases=2 Conn=wye Model=1 kV=24.900 kW=6.5 kVAR=3.5
 New Load.D858_834rc Bus1=834.3.1 Phases=2 Conn=wye Model=1 kV=24.900 kW=6.5 kVAR=3.5
 
-! New Load.D834_860sa Bus1=834.1.2 Phases=1 Conn=Delta Model=1 kV=24.900 kW=8.0 kVAR=4.0
-! New Load.D834_860ra Bus1=860.1.2 Phases=1 Conn=Delta Model=1 kV=24.900 kW=8.0 kVAR=4.0
-! New Load.D834_860sb Bus1=834.2.3 Phases=1 Conn=Delta Model=1 kV=24.900 kW=10.0 kVAR=5.0
-! New Load.D834_860rb Bus1=860.2.3 Phases=1 Conn=Delta Model=1 kV=24.900 kW=10.0 kVAR=5.0
-! New Load.D834_860sc Bus1=834.3.1 Phases=1 Conn=Delta Model=1 kV=24.900 kW=55.0 kVAR=27.5
-! New Load.D834_860rc Bus1=860.3.1 Phases=1 Conn=Delta Model=1 kV=24.900 kW=55.0 kVAR=27.5
+! New Load.D834_860sa Bus1=834.1.2 Phases=1 Conn=Delta Model=2 kV=24.900 kW=8.0 kVAR=4.0
+! New Load.D834_860ra Bus1=860.1.2 Phases=1 Conn=Delta Model=2 kV=24.900 kW=8.0 kVAR=4.0
+! New Load.D834_860sb Bus1=834.2.3 Phases=1 Conn=Delta Model=2 kV=24.900 kW=10.0 kVAR=5.0
+! New Load.D834_860rb Bus1=860.2.3 Phases=1 Conn=Delta Model=2 kV=24.900 kW=10.0 kVAR=5.0
+! New Load.D834_860sc Bus1=834.3.1 Phases=1 Conn=Delta Model=2 kV=24.900 kW=55.0 kVAR=27.5
+! New Load.D834_860rc Bus1=860.3.1 Phases=1 Conn=Delta Model=2 kV=24.900 kW=55.0 kVAR=27.5
 
-New Load.D834_860sa Bus1=834.1.2 Phases=2 Conn=wye Model=1 kV=24.900 kW=8.0 kVAR=4.0
-New Load.D834_860ra Bus1=860.1.2 Phases=2 Conn=wye Model=1 kV=24.900 kW=8.0 kVAR=4.0
-New Load.D834_860sb Bus1=834.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=10.0 kVAR=5.0
-New Load.D834_860rb Bus1=860.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=10.0 kVAR=5.0
-New Load.D834_860sc Bus1=834.3.1 Phases=2 Conn=wye Model=1 kV=24.900 kW=55.0 kVAR=27.5
-New Load.D834_860rc Bus1=860.3.1 Phases=2 Conn=wye Model=1 kV=24.900 kW=55.0 kVAR=27.5
+New Load.D834_860sa Bus1=834.1.2 Phases=2 Conn=wye Model=2 kV=24.900 kW=8.0 kVAR=4.0
+New Load.D834_860ra Bus1=860.1.2 Phases=2 Conn=wye Model=2 kV=24.900 kW=8.0 kVAR=4.0
+New Load.D834_860sb Bus1=834.2.3 Phases=2 Conn=wye Model=2 kV=24.900 kW=10.0 kVAR=5.0
+New Load.D834_860rb Bus1=860.2.3 Phases=2 Conn=wye Model=2 kV=24.900 kW=10.0 kVAR=5.0
+New Load.D834_860sc Bus1=834.3.1 Phases=2 Conn=wye Model=2 kV=24.900 kW=55.0 kVAR=27.5
+New Load.D834_860rc Bus1=860.3.1 Phases=2 Conn=wye Model=2 kV=24.900 kW=55.0 kVAR=27.5
 
 ! New Load.D860_836sa Bus1=860.1.2 Phases=1 Conn=Delta Model=1 kV=24.900 kW=15.0 kVAR=7.5
 ! New Load.D860_836ra Bus1=836.1.2 Phases=1 Conn=Delta Model=1 kV=24.900 kW=15.0 kVAR=7.5
@@ -188,15 +188,15 @@ New Load.D860_836rb Bus1=836.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=5.0 kVAR
 New Load.D860_836sc Bus1=860.3.1 Phases=2 Conn=wye Model=1 kV=24.900 kW=21.0 kVAR=11.0
 New Load.D860_836rc Bus1=836.3.1 Phases=2 Conn=wye Model=1 kV=24.900 kW=21.0 kVAR=11.0
 
-! New Load.D836_840sa Bus1=836.1.2 Phases=1 Conn=Delta Model=1 kV=24.900 kW=9.0 kVAR=4.5
-! New Load.D836_840ra Bus1=840.1.2 Phases=1 Conn=Delta Model=1 kV=24.900 kW=9.0 kVAR=4.5
-! New Load.D836_840sb Bus1=836.2.3 Phases=1 Conn=Delta Model=1 kV=24.900 kW=11.0 kVAR=5.5
-! New Load.D836_840rb Bus1=840.2.3 Phases=1 Conn=Delta Model=1 kV=24.900 kW=11.0 kVAR=5.5
+! New Load.D836_840sa Bus1=836.1.2 Phases=1 Conn=Delta Model=5 kV=24.900 kW=9.0 kVAR=4.5
+! New Load.D836_840ra Bus1=840.1.2 Phases=1 Conn=Delta Model=5 kV=24.900 kW=9.0 kVAR=4.5
+! New Load.D836_840sb Bus1=836.2.3 Phases=1 Conn=Delta Model=5 kV=24.900 kW=11.0 kVAR=5.5
+! New Load.D836_840rb Bus1=840.2.3 Phases=1 Conn=Delta Model=5 kV=24.900 kW=11.0 kVAR=5.5
 
-New Load.D836_840sa Bus1=836.1.2 Phases=2 Conn=wye Model=1 kV=24.900 kW=9.0 kVAR=4.5
-New Load.D836_840ra Bus1=840.1.2 Phases=2 Conn=wye Model=1 kV=24.900 kW=9.0 kVAR=4.5
-New Load.D836_840sb Bus1=836.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=11.0 kVAR=5.5
-New Load.D836_840rb Bus1=840.2.3 Phases=2 Conn=wye Model=1 kV=24.900 kW=11.0 kVAR=5.5
+New Load.D836_840sa Bus1=836.1.2 Phases=2 Conn=wye Model=5 kV=24.900 kW=9.0 kVAR=4.5
+New Load.D836_840ra Bus1=840.1.2 Phases=2 Conn=wye Model=5 kV=24.900 kW=9.0 kVAR=4.5
+New Load.D836_840sb Bus1=836.2.3 Phases=2 Conn=wye Model=5 kV=24.900 kW=11.0 kVAR=5.5
+New Load.D836_840rb Bus1=840.2.3 Phases=2 Conn=wye Model=5 kV=24.900 kW=11.0 kVAR=5.5
 
 New Load.D862_838sb Bus1=862.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=14.0 kVAR=7.0
 New Load.D862_838rb Bus1=838.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=14.0 kVAR=7.0
