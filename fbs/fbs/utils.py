@@ -154,7 +154,11 @@ def get_caps_from_dss(network: Network, dss: Any) -> None:
     for cap_name in cap_names:
         if cap_name != '':
             cap_data = all_cap_data[cap_name]
-            node_name, phase_chars, cap_idx = cap_name.split('_')[1:]
+            dss.Capacitors.Name(cap_name)
+            bus_phase = dss.CktElement.BusNames()[0].split('.')
+            if len(bus_phase) == 1:
+                bus_phase.extend(['1', '2', '3'])
+            node_name, phase_chars = bus_phase[0], bus_phase[1:]
             try:
                 node = network.nodes[node_name]
             except KeyError:
@@ -197,7 +201,6 @@ def get_transformers_from_dss(network: Network, dss: Any) -> None:
     regs = dss.RegControls.AllNames()
     transformers = dss.Transformers.AllNames()
     transformer_names = [n for n in transformers if n not in regs]
-    # TODO: 634 needs a parent
 
     for transformer_name in transformer_names:
         transformer_data = all_transformer_data[transformer_name]
