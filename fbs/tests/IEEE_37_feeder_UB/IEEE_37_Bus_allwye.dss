@@ -102,9 +102,11 @@ BusCoords IEEE37_BusXY.csv
 
 ! solve mode=direct
 set maxiterations=100
+Set Controlmode=OFF
 solve
 
 ! show voltages LL Nodes
 ! show currents residual=y elements
 ! show powers kva elements
 ! show taps
+
