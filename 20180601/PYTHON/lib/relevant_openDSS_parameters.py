@@ -86,7 +86,6 @@ def relevant_openDSS_parameters(fn, t):
 
     #TF
     for line in range(len(line_idx_tf)):
-        print('is there a trnasformer?')
         lineidx = line_idx_tf[line]
         TXnode[lineidx] = dss.Circuit.AllBusNames()[tf_bus[0, line]] #bus name
         RXnode[lineidx] = dss.Circuit.AllBusNames()[tf_bus[1, line]]
@@ -94,22 +93,19 @@ def relevant_openDSS_parameters(fn, t):
         RXnum[lineidx] = tf_bus[1, line]
     #VR in
     for line in range(len(line_in_idx_vr)):
-        print('is there a voltage regulator?')
         lineinidx = line_in_idx_vr[line]
-        
         TXnode[lineinidx] = dss.Circuit.AllBusNames()[vr_bus[0, line]]
         RXnode[lineinidx] = dss.Circuit.AllBusNames()[vr_bus[1, line]]
         TXnum[lineinidx] = vr_bus[0, line]
         RXnum[lineinidx] = vr_bus[1, line]
     #VR out
     for line in range(len(line_out_idx_vr)):
-        print('is there a voltage regulator part 2?')
         lineoutidx = line_out_idx_vr[line]    
         TXnode[lineoutidx] = dss.Circuit.AllBusNames()[vr_bus[0, line]]
         RXnode[lineoutidx] = dss.Circuit.AllBusNames()[vr_bus[1, line]]
         TXnum[lineoutidx] = vr_bus[0, line]
         RXnum[lineoutidx] = vr_bus[1, line]
-        
+
     #spu, apq, ai, az
     spu = np.zeros((3,nnode))
     ppu = np.zeros((3,nnode))
@@ -140,21 +136,20 @@ def relevant_openDSS_parameters(fn, t):
                 qpu[ph, knode] = dss.Loads.kvar() * 1e3 * var / Sbase
         if sum(load_phases) > 1: #if it is a multiphase load
             for ph in range(0,3):
-                ppu[ph, knode]/= sum(load_phases)
+                ppu[ph, knode] /= sum(load_phases)
                 qpu[ph, knode] /= sum(load_phases)
     spu = (ppu + 1j * qpu)
 
     #cappu, wpu, vvcpu
     cappu = np.zeros((3,nnode))
+ 
+    for n in range(len(dss.Capacitors.AllNames())):
+        dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
+        cap_data = dss.CktElement.BusNames()[0].split('.')
 
-    def cap_dict():
-        for n in range(len(dss.Capacitors.AllNames())):
-            dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
-            cap_data = dss.CktElement.BusNames()[0].split('.')
-
-            idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
-            for ph in range(1, len(cap_data)):
-                cappu[int(cap_data[ph]) - 1, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / (len(cap_data) - 1)
+        idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
+        for ph in range(1, len(cap_data)):
+            cappu[int(cap_data[ph]) - 1, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / (len(cap_data) - 1)
 
 
     wpu = np.zeros((3, nnode))

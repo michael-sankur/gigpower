@@ -48,9 +48,9 @@ New Transformer.Reg5 phases=1 bank=reg1 XHL=0.00001 kVAs=[10000 10000]
 ~ Buses=[A05.2 A06.2] kVs=[2.77128  2.77128] %LoadLoss=0.01
 new regcontrol.Reg5  transformer=Reg5 winding=2  vreg=138  band=2  ptratio=20 ctprim=700 TapNum=6 !  R=3   X=9 
 
-!New Transformer.Reg6 phases=1 bank=reg1 XHL=0.00001 kVAs=[10000 10000]
-!~ Buses=[A05.3 A06.3] kVs=[2.77128  2.77128] %LoadLoss=0.01
-!new regcontrol.Reg6  transformer=Reg6 winding=2  vreg=138  band=2  ptratio=20 ctprim=700 TapNum=8 !  R=3   X=9 
+New Transformer.Reg6 phases=1 bank=reg1 XHL=0.00001 kVAs=[10000 10000]
+~ Buses=[A05.3 A06.3] kVs=[2.77128  2.77128] %LoadLoss=0.01
+new regcontrol.Reg6  transformer=Reg6 winding=2  vreg=138  band=2  ptratio=20 ctprim=700 TapNum=8 !  R=3   X=9 
 
 ! import line codes with phase impedance matrices
 ! Redirect IEEELineCodes.dss

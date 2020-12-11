@@ -93,7 +93,7 @@ def change_KCL_matrices(fn, H, g, b, t, der, capacitance):
                         #H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] =  -load_val * beta_I * hessian_mag[1][0] / 2 #remove for TE
 
     # Constant Term
-    if t!= -1 or der != 0 or capacitance != 0:
+    if t != -1 or der != 0 or capacitance != 0:
         for ph in range(0,3):
             if ph == 0: #set nominal voltage based on phase
                 A0 = 1
