@@ -270,7 +270,7 @@ class VoltageRegulator:
             network.lines[self.key] = syn_line
 
         syn_line = network.lines[self.key]
-        syn_line.phases = [True, True, True]
+        # syn_line.phases = [True, True, True]
         # TODO: fix this
         for idx, phase in enumerate(self.phases):
             if phase:
