@@ -28,9 +28,11 @@ def compute_vecmat(XNR, fn, Vslack):
                 p = dss.RegControls.AllNames().index(dss.Transformers.Name()) # establish gain values based on tap numbers
                 dss.RegControls.Name(dss.RegControls.AllNames()[p])     
                 # tap numbers are evenly spaced from -16 to 16 (increments of 0.00625) from 0.9 to 1.1
-                # negative sign for voltage ratio purposes
+                # negative sign for voltage ratio purposes               
+                
                 gain_val = -(np.sign(int(dss.RegControls.TapNumber())) * 1 + 0.00625 * int(dss.RegControls.TapNumber())) 
                 gain[vr_count] = gain_val
+                print(gain_val)
                 vr_lines += 1                    
                 vr_bus[int(bus[1:][n]) + 1, vr_count] = int(bus[1:][n]) # phases that exist                   
             if len(bus) == 1: # unspecified phases, assume all 3 exist
@@ -85,18 +87,24 @@ def compute_vecmat(XNR, fn, Vslack):
 
     for k2 in range(len(dss.Lines.AllNames())):
         dss.Lines.Name(dss.Lines.AllNames()[k2]) #set the line
-        linecode = dss.Lines.LineCode() #get the linecode
-        dss.LineCodes.Name(linecode) #set the linecode
-        xmat = dss.LineCodes.Xmatrix() #get the xmat
-        rmat = dss.LineCodes.Rmatrix() #get the rmat
+        # linecode = dss.Lines.LineCode() #get the linecode
+        # dss.LineCodes.Name(linecode) #set the linecode
+        # xmat = dss.LineCodes.Xmatrix() #get the xmat
+        # rmat = dss.LineCodes.Rmatrix() #get the rmat
+        
+        xmat = np.multiply(dss.Lines.XMatrix(), 1609.34/.3048)
+        rmat = np.multiply(dss.Lines.RMatrix(), 1609.34/.3048)
+       
         start_bus = dss.Lines.Bus1().split('.')[0]
         dss.Circuit.SetActiveBus(start_bus)
         # establish base units
-        Vbase = dss.Bus.kVBase() * 1000    
+        Vbase = dss.Bus.kVBase() * 1000   
         Ibase = Sbase/Vbase
         Zbase = Vbase/Ibase
 
         line_phases = identify_line_phases(dss.Lines.AllNames()[k2])
+        if dss.Lines.IsSwitch():
+            line_phases = [1, 1, 1]
         if len(xmat) == 9:
             for i in range(len(xmat)):
                 X_matrix[k2][i] = xmat[i] #fill x/r where they are shaped like nline x 9 (for 9 components)
@@ -132,13 +140,13 @@ def compute_vecmat(XNR, fn, Vslack):
                 r_temp = np.vstack([rmat[:,:],np.zeros((1,2))])
                 r_temp2 = np.hstack((r_temp[:, :], np.zeros((3,1))))
                 R_matrix[k2, :] = r_temp2.flatten()
-        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() / Zbase #* 0.3048 #in feet for IEEE13
-        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() / Zbase #* 0.3048
+        X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() / Zbase * 0.3048 #in feet for IEEE13
+        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() / Zbase * 0.3048
 
     X = np.reshape(XNR, (2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 1))
    
-    R_matrix = R_matrix#/1609.34 #in miles for IEEE 13
-    X_matrix = X_matrix#/1609.34 #
+    R_matrix = R_matrix/1609.34 #in miles for IEEE 13
+    X_matrix = X_matrix/1609.34 #
     
     #------------ Slack Bus ------------------
 
@@ -163,13 +171,18 @@ def compute_vecmat(XNR, fn, Vslack):
             bus1 = dss.Lines.Bus1()
             bus2 = dss.Lines.Bus2()
             pattern =  r"(\w+)\."
-            
-            bus1_idx = dss.Circuit.AllBusNames().index(re.findall(pattern, bus1)[0]) #get the buses of the line
-            bus2_idx = dss.Circuit.AllBusNames().index(re.findall(pattern, bus2)[0])
-          
-            b1, _ = dss.CktElement.BusNames() #the buses on a line should have the same phase
-            bus1_phases = identify_bus_phases(b1) #identifies which phase is associated with the bus (which is the same as the line)
-
+            try:   
+                bus1_idx = dss.Circuit.AllBusNames().index(re.findall(pattern, bus1)[0]) #get the buses of the line
+                bus2_idx = dss.Circuit.AllBusNames().index(re.findall(pattern, bus2)[0])
+            except:
+                pattern = r"(\w+)"
+                bus1_idx = dss.Circuit.AllBusNames().index(re.findall(pattern, bus1)[0]) #get the buses of the line
+                bus2_idx = dss.Circuit.AllBusNames().index(re.findall(pattern, bus2)[0])
+            b1, _ = dss.CktElement.BusNames() #the buses on a line should have the same phase       
+            if not dss.Lines.IsSwitch(): 
+                bus1_phases = identify_bus_phases(b1) #identifies which phase is associated with the bus (which is the same as the line)
+            else: #is necessary for now, could fix later... look @ KCL code
+                bus1_phases = [1, 1, 1]
             if bus1_phases[ph] == 1:
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n

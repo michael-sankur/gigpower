@@ -78,11 +78,19 @@ def relevant_openDSS_parameters(fn, t):
         bus1 = dss.Lines.Bus1()
         bus2 = dss.Lines.Bus2()
         pattern = r"(\w+)." #this appears to wrok
-
-        TXnode[line] = re.findall(pattern, bus1)[0]
-        RXnode[line] = re.findall(pattern, bus2)[0]
-        TXnum[line] = dss.Circuit.AllBusNames().index(TXnode[line])
-        RXnum[line] = dss.Circuit.AllBusNames().index(RXnode[line])
+        try:
+            TXnode[line] = re.findall(pattern, bus1)[0]
+            RXnode[line] = re.findall(pattern, bus2)[0]
+            TXnum[line] = dss.Circuit.AllBusNames().index(TXnode[line])
+            RXnum[line] = dss.Circuit.AllBusNames().index(RXnode[line])
+        except:
+            print('enters exception \n ')
+            print(line)
+            pattern = r"(\w+)"
+            TXnode[line] = re.findall(pattern, bus1)[0]
+            RXnode[line] = re.findall(pattern, bus2)[0]
+            TXnum[line] = dss.Circuit.AllBusNames().index(TXnode[line])
+            RXnum[line] = dss.Circuit.AllBusNames().index(RXnode[line])
 
     #TF
     for line in range(len(line_idx_tf)):
