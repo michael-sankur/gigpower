@@ -65,13 +65,14 @@ def get_nodes_from_dss(network: Network, dss: Any) -> None:
             node.Ibase = node.Sbase/node.Vbase
             node.Zbase = node.Vbase/node.Ibase
             network.nodes[name] = node  # add node to network
+            # Add node to adjacency list. note: this means that every node has an entry.
+            # Nodes with no children will have an empty list.
+            network.adj[name] = []
         node = network.nodes[name]
 
         # store phases as characters in phase list for now
         node.phases.append(phase)
-        # Add node to adjacency list. note: this means that every node has an entry.
-        # Nodes with no children will have an empty list.
-        network.adj[name] = []
+
     # iterate through nodes to parse phase lists
     for node in network.get_nodes():
         node.phases = parse_phases(node.phases)  # type: ignore
