@@ -21,8 +21,9 @@ import pytest
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss']
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye.dss']
+dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss']
 # dss_files = ['fbs/tests/IEEE_37_feeder_UB/IEEE_37_Bus_allwye.dss']
-dss_files = ['fbs/tests/IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss']
+# dss_files = ['fbs/tests/IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss']
 
 
 
