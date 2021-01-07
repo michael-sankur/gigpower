@@ -3,7 +3,10 @@ import opendssdirect as dss # type: ignore
 from typing import Iterable, List, Any
 from . network import Network, Node, Line, Load, Capacitor, Transformer, VoltageRegulator
 
-ZIPV = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
+# ZIPV = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
+# ZIPV = [0, 0, 1, 0, 0, 1, 0.75]
+ZIPV = [1, 0, 0, 1, 0, 0, 0.75]
+ZIPV_caps = [1, 0, 0, 1, 0, 0]  # for reference, unused
 
 
 def init_from_dss(dss_fp: str) -> Network:
@@ -200,6 +203,7 @@ def get_voltage_regulators_from_dss(network: Network, dss: Any) -> None:
         voltageReg = VoltageRegulator(network, regControl_name, regControl_node, tx)
         voltageReg.transformer_name = transformer_name
         dss.RegControls.Name(regControl_name)  # set this reg as active, again, to get the tap number
+        voltageReg.tap = dss.RegControls.TapNumber()
         voltageReg.get_gamma(dss.RegControls.TapNumber())
         voltageReg.phases = parse_phases(phases)
 
