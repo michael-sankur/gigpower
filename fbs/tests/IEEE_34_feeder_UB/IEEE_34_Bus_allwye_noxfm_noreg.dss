@@ -62,7 +62,6 @@ New Line.line_862_838 Phases=1 Bus1=862.2 Bus2=838.2 LineCode=304 Length=4.86 un
 New Line.line_888_890 Phases=3 Bus1=888.1.2.3 Bus2=890.1.2.3 LineCode=300 Length=10.56 units=kft
 
 
-
 ! Capacitors
 New Capacitor.C844 Bus1=844.1.2.3 Phases=3 conn=wye kVAR=300 kV=24.9
 New Capacitor.C848 Bus1=848.1.2.3 Phases=3 conn=wye kVAR=450 kV=24.9
@@ -215,78 +214,78 @@ New Load.D844_846sc Bus1=844.3 Phases=1 Conn=Wye Model=1 kV=14.376 kW=10.0 kVAR=
 New Load.D844_846rc Bus1=846.3 Phases=1 Conn=Wye Model=1 kV=14.376 kW=10.0 kVAR=5.5
 
 New Load.D846_848sb Bus1=846.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=11.5 kVAR=5.5
-New Load.D846_848rb Bus1=848.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=11.5 kVAR=5.5
+! New Load.D846_848rb Bus1=848.2 Phases=1 Conn=Wye Model=1 kV=14.376 kW=11.5 kVAR=5.5
 
 ! Script to revise Vminpu property on all loads to allow voltage to sag to 85% without switching
 ! to constant Z model
-Load.s860.vminpu=.85
-Load.s840.vminpu=.85
-Load.s844.vminpu=.85
-Load.s848.vminpu=.85
-Load.s830a.vminpu=.85
-Load.s830b.vminpu=.85
-Load.s830c.vminpu=.85
-Load.s890.vminpu=.85
-Load.d802_806sb.vminpu=.85
-Load.d802_806rb.vminpu=.85
-Load.d802_806sc.vminpu=.85
-Load.d802_806rc.vminpu=.85
-Load.d808_810sb.vminpu=.85
-Load.d808_810rb.vminpu=.85
-Load.d818_820sa.vminpu=.85
-Load.d818_820ra.vminpu=.85
-Load.d820_822sa.vminpu=.85
-Load.d820_822ra.vminpu=.85
-Load.d816_824sb.vminpu=.85
-Load.d816_824rb.vminpu=.85
-Load.d824_826sb.vminpu=.85
-Load.d824_826rb.vminpu=.85
-Load.d824_828sc.vminpu=.85
-Load.d824_828rc.vminpu=.85
-Load.d828_830sa.vminpu=.85
-Load.d828_830ra.vminpu=.85
-Load.d854_856sb.vminpu=.85
-Load.d854_856rb.vminpu=.85
-Load.d832_858sa.vminpu=.85
-Load.d832_858ra.vminpu=.85
-Load.d832_858sb.vminpu=.85
-Load.d832_858rb.vminpu=.85
-Load.d832_858sc.vminpu=.85
-Load.d832_858rc.vminpu=.85
-Load.d858_864sb.vminpu=.85
-Load.d858_864rb.vminpu=.85
-Load.d858_834sa.vminpu=.85
-Load.d858_834ra.vminpu=.85
-Load.d858_834sb.vminpu=.85
-Load.d858_834rb.vminpu=.85
-Load.d858_834sc.vminpu=.85
-Load.d858_834rc.vminpu=.85
-Load.d834_860sa.vminpu=.85
-Load.d834_860ra.vminpu=.85
-Load.d834_860sb.vminpu=.85
-Load.d834_860rb.vminpu=.85
-Load.d834_860sc.vminpu=.85
-Load.d834_860rc.vminpu=.85
-Load.d860_836sa.vminpu=.85
-Load.d860_836ra.vminpu=.85
-Load.d860_836sb.vminpu=.85
-Load.d860_836rb.vminpu=.85
-Load.d860_836sc.vminpu=.85
-Load.d860_836rc.vminpu=.85
-Load.d836_840sa.vminpu=.85
-Load.d836_840ra.vminpu=.85
-Load.d836_840sb.vminpu=.85
-Load.d836_840rb.vminpu=.85
-Load.d862_838sb.vminpu=.85
-Load.d862_838rb.vminpu=.85
-Load.d842_844sa.vminpu=.85
-Load.d842_844ra.vminpu=.85
-Load.d844_846sb.vminpu=.85
-Load.d844_846rb.vminpu=.85
-Load.d844_846sc.vminpu=.85
-Load.d844_846rc.vminpu=.85
-Load.d846_848sb.vminpu=.85
-Load.d846_848rb.vminpu=.85
+Load.s860.vminpu=.75
+Load.s840.vminpu=.75
+Load.s844.vminpu=.75
+Load.s848.vminpu=.75
+Load.s830a.vminpu=.75
+Load.s830b.vminpu=.75
+Load.s830c.vminpu=.75
+Load.s890.vminpu=.75
+Load.d802_806sb.vminpu=.75
+Load.d802_806rb.vminpu=.75
+Load.d802_806sc.vminpu=.75
+Load.d802_806rc.vminpu=.75
+Load.d808_810sb.vminpu=.75
+Load.d808_810rb.vminpu=.75
+Load.d818_820sa.vminpu=.75
+Load.d818_820ra.vminpu=.75
+Load.d820_822sa.vminpu=.75
+Load.d820_822ra.vminpu=.75
+Load.d816_824sb.vminpu=.75
+Load.d816_824rb.vminpu=.75
+Load.d824_826sb.vminpu=.75
+Load.d824_826rb.vminpu=.75
+Load.d824_828sc.vminpu=.75
+Load.d824_828rc.vminpu=.75
+Load.d828_830sa.vminpu=.75
+Load.d828_830ra.vminpu=.75
+Load.d854_856sb.vminpu=.75
+Load.d854_856rb.vminpu=.75
+Load.d832_858sa.vminpu=.75
+Load.d832_858ra.vminpu=.75
+Load.d832_858sb.vminpu=.75
+Load.d832_858rb.vminpu=.75
+Load.d832_858sc.vminpu=.75
+Load.d832_858rc.vminpu=.75
+Load.d858_864sb.vminpu=.75
+Load.d858_864rb.vminpu=.75
+Load.d858_834sa.vminpu=.75
+Load.d858_834ra.vminpu=.75
+Load.d858_834sb.vminpu=.75
+Load.d858_834rb.vminpu=.75
+Load.d858_834sc.vminpu=.75
+Load.d858_834rc.vminpu=.75
+Load.d834_860sa.vminpu=.75
+Load.d834_860ra.vminpu=.75
+Load.d834_860sb.vminpu=.75
+Load.d834_860rb.vminpu=.75
+Load.d834_860sc.vminpu=.75
+Load.d834_860rc.vminpu=.75
+Load.d860_836sa.vminpu=.75
+Load.d860_836ra.vminpu=.75
+Load.d860_836sb.vminpu=.75
+Load.d860_836rb.vminpu=.75
+Load.d860_836sc.vminpu=.75
+Load.d860_836rc.vminpu=.75
+Load.d836_840sa.vminpu=.75
+Load.d836_840ra.vminpu=.75
+Load.d836_840sb.vminpu=.75
+Load.d836_840rb.vminpu=.75
+Load.d862_838sb.vminpu=.75
+Load.d862_838rb.vminpu=.75
+Load.d842_844sa.vminpu=.75
+Load.d842_844ra.vminpu=.75
+Load.d844_846sb.vminpu=.75
+Load.d844_846rb.vminpu=.75
+Load.d844_846sc.vminpu=.75
+Load.d844_846rc.vminpu=.75
+Load.d846_848sb.vminpu=.75
+! Load.d846_848rb.vminpu=.75
 
 
 ! let the DSS estimate voltage bases automatically
