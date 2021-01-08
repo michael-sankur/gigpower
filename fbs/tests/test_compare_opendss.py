@@ -21,7 +21,11 @@ import pytest
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss']
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye.dss']
-dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss']
+# dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test01.dss']
+# dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test02.dss']
+# dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test03.dss']
+dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test03a.dss']
+# dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss']
 # dss_files = ['fbs/tests/IEEE_37_feeder_UB/IEEE_37_Bus_allwye.dss']
 # dss_files = ['fbs/tests/IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss']
 
@@ -54,7 +58,8 @@ def compare_fbs_sol(dss_file, tolerance):
 
     fbsV, fbsI, fbsStx, fbsSrx, fbs_sV = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), \
         fbs_sol.Srx_df(), fbs_sol.sV_df()
-    dssV, dssI, dssStx, dssSrx, dssLoads = dss_sol
+    dssV, dssI, dssStx, dssSrx, dssLoads, dss = dss_sol
+
     print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
     print("\n\nCOMPARE V")
     V_maxDiff = compare_dfs(fbsV, dssV)
@@ -70,6 +75,11 @@ def compare_fbs_sol(dss_file, tolerance):
 
     loads_maxDiff = compare_dfs(fbsLoads, dssLoads)
 
+    print("\n\nCOMPARE TOTAL NODE POWERS - SUM OVER PHASE\n")
+    fbsLoads_sumPhase = fbsLoads.sum(axis = 0)
+    dssLoads_sumPhase = dssLoads.sum(axis = 0)
+    sumPhase_maxDiff = compare_dfs(fbsLoads_sumPhase, dssLoads_sumPhase)
+
     assert (V_maxDiff <= tolerance).all()
     assert (I_maxDiff <= tolerance).all()
     assert (Stx_maxDiff <= tolerance).all()
@@ -78,8 +88,6 @@ def compare_fbs_sol(dss_file, tolerance):
     # convert node powers from kw
     assert (loads_maxDiff/1000 <= tolerance).all()
 
-
-# construct the DSS solution. Copied form '20180601/opendss_nonvec_test_comparison.ipynb'
 def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame) -> None:
     """ helper method to compare fbs vs. dss and print comparisons """
     compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
