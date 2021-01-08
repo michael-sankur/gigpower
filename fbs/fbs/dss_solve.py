@@ -44,7 +44,6 @@ def solve() -> None:
     # Code based on https://sourceforge.net/p/electricdss/code/HEAD/tree/trunk/Version8/Distrib/Examples/Python/Python-to-OpenDSS%20Control%20Interface.pdf
     # save original loads
 
-
     orig_loads_data = dss.utils.loads_to_dataframe()
     orig_loads_data = orig_loads_data.transpose()
 
@@ -58,6 +57,8 @@ def solve() -> None:
             dss.Loads.Name(load_name)
             dss.Loads.kW(load_data['kW'])
             dss.Loads.kvar(load_data['kvar'])
+        SlackBusVoltage = 1.00
+        dss.Vsources.PU(SlackBusVoltage)
 
         set_zip_values(dss, ZIPV)
         # run solve for this timestep
@@ -169,4 +170,4 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
 
     dssLoads = pd.DataFrame.from_dict(load_data, orient='index', dtype=complex, columns=load_cols)
 
-    return dssV, dssI, dssStx, dssSrx, dssLoads
+    return dssV, dssI, dssStx, dssSrx, dssLoads, dss
