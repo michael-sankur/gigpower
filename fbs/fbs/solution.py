@@ -80,7 +80,8 @@ class Solution:
             for vr in line_out.voltageRegulators:
                 tx, reg = vr.key
                 phases = vr.phases
-                gamma = vr.gamma
+                # gamma = vr.gamma
+                gamma = 1
                 tx_V = self.V[tx]
                 reg_V = self.V[reg]
                 Itx = vr.Itx  # current at/leaving the tx node
@@ -122,7 +123,9 @@ class Solution:
             for vr in line_out.voltageRegulators:
                 tx, reg = vr.key
                 phases = vr.phases
-                gamma = vr.gamma
+                gamma = 1
+                # gamma = vr.gamma
+                tap = vr.tap
                 tx_V = self.V[tx]
                 reg_V = self.V[reg]
                 # Enforce voltage regulator equations by phase.
@@ -200,7 +203,8 @@ class Solution:
 
                 Itx = vr.Itx  # current entering/leaving the tx node
                 Ireg = vr.Ireg  # current entering/leaving the reg_node
-                gamma = vr.gamma
+                gamma = 1
+                # gamma = vr.gamma
                 # Enforce voltage regulator equations by phase.
                 # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
                 # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
@@ -220,7 +224,6 @@ class Solution:
 
         node_V = self.V[node.name]
         wpu = np.zeros(3)  # TODO: will be set as argument
-        cappu = node.sum_cappu
         abs_nodeV = abs(node_V)
         abs_nodeV_sq = np.power(abs(node_V), 2)
 
@@ -242,7 +245,20 @@ class Solution:
                         imag = temp2 * spu_imag
 
                         self.s[node.name][idx] += real + (1j * imag)
-            self.s[node.name] += wpu - 1j * cappu
+
+            for cap in node.capacitors:
+                cappu = cap.cappu
+                cap.imag = np.zeros(3)
+                for idx, ph in enumerate(cap.phases):
+                    if ph:
+                        real = 0
+                        if cap.constant_power:
+                            imag = cappu[idx]
+                        else:
+                            imag = cappu[idx] * abs_nodeV_sq[idx]
+                        cap.imag[idx] = imag
+                        self.s[node.name][idx] += real - (1j * imag)
+            self.s[node.name] += wpu
         return None
 
     def calc_S(self) -> None:
