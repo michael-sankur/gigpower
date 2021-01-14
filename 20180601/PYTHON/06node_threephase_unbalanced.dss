@@ -78,8 +78,8 @@ New Load.load_A05_a_01 Bus1=A05.1 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=50.0 k
 
 New Load.load_A06_b_01 Bus1=A06.2 Phases=1 Conn=Wye Model=1 kV=2.77128 kW=50.0 kVAR=25.0
 
-New Capacitor.cap_A03_abc_01 Bus1=A03.1.2.3 phases=3 kVAR=60 kV=4.8
-New Capacitor.cap_A06_b_01 Bus1=A06.2 phases=1 kVAR=10 kV=2.77128
+!New Capacitor.cap_A03_abc_01 Bus1=A03.1.2.3 phases=3 kVAR=60 kV=4.8
+!New Capacitor.cap_A06_b_01 Bus1=A06.2 phases=1 kVAR=10 kV=2.77128
 
 
 Set VoltageBases = "4.8"

@@ -134,34 +134,28 @@ def relevant_openDSS_parameters(fn, t):
     else:
         var = (1 + 0.1*np.sin(2*np.pi*0.01*t))
 
+        
     for n in range(len(dss.Loads.AllNames())): #go through the loads
         dss.Loads.Name(dss.Loads.AllNames()[n]) #set the load
         load_phases = [0, 0, 0] #instantiate load phases as all non-existent
-        pattern =  r"(\w+)\." #if bus name is 800.1.2.3
-        try:
-            load_bus = re.findall(pattern, dss.CktElement.BusNames()[0]) #determine bus name        
-            knode = dss.Circuit.AllBusNames().index(load_bus[0]) #match busname to index
-            all_phases = 0
-        except: #if bus name is 800, assumes three phase load
-            pattern =  r"(\w+)"
-            all_phases = 1
-            load_bus = re.findall(pattern, dss.CktElement.BusNames()[0]) #determine bus name
-            knode = dss.Circuit.AllBusNames().index(load_bus[0]) #match busname to index
-        
-        for ph in range(0, 3):
-            pattern =  r"\.%s" % (str(ph + 1))
-            m = re.findall(pattern, dss.CktElement.BusNames()[0])
-            if m or all_phases: #if phase exists for load or all phases assumed to exist
-                load_phases[ph - 1] = 1
+        load_data = dss.CktElement.BusNames()[0].split('.')[1:]
+        knode = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[0].split('.')[0])) #match busname to index
+        for i in load_data:
+            phase = int(i)
+            load_phases[phase-1] = 1
+        if len(load_data) == 0:
+            load_phases = [1, 1, 1]        
+        realstuff = dss.CktElement.Powers()[::2][:-1]
+        imagstuff = dss.CktElement.Powers()[1::2][:-1]     
+        rs = 0
+        for ph in range(len(load_phases)):      
+            if load_phases[ph] == 1:
                 aPQ[ph, knode] = 1
                 aZ[ph, knode] = 0
-                ppu[ph, knode] = dss.Loads.kW()* 1e3 * var / Sbase #check these lines later
-                qpu[ph, knode] = dss.Loads.kvar() * 1e3 * var / Sbase
-        if sum(load_phases) > 1 or all_phases: #if it is a multiphase load
-            for ph in range(0,3):
-                ppu[ph, knode] /= sum(load_phases)
-                qpu[ph, knode] /= sum(load_phases)
-        all_phases = 0
+                ppu[ph, knode] += realstuff[rs] * 1e3 * var / Sbase #check these lines later
+                qpu[ph, knode] += imagstuff[rs] * 1e3 * var / Sbase
+                rs += 1
+
     spu = (ppu + 1j * qpu)
 
     #cappu, wpu, vvcpu

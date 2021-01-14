@@ -44,8 +44,9 @@ def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count
         # rmat = dss.LineCodes.Rmatrix() #get the rmat
         
         # retrieve impedance and reactance matrices of a line
-        xmat = np.multiply(dss.Lines.XMatrix(), 304.8)#1609.34) #1 for the other 6-node networks, 1609.34 for ieee13, 304.8 for 34/37 networks
-        rmat = np.multiply(dss.Lines.RMatrix(), 304.8)#1609.34) 
+        xmat = np.multiply(dss.Lines.XMatrix(), 1)#304.8)#1609.34) 
+        #1 for the other 6-node networks, 1609.34 for ieee13, 304.8 for 34/37 networks
+        rmat = np.multiply(dss.Lines.RMatrix(),1)# 304.8)#1609.34) 
 
         # Aside about units
         # dss.Lines.XMatrix()  mi     * 1609.34 m   *     1 ft
@@ -99,7 +100,7 @@ def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count
                 r_temp2 = np.hstack((r_temp[:, :], np.zeros((3,1))))
                 R_matrix[k2, :] = r_temp2.flatten()
         X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() / Zbase 
-        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() / Zbase 
+        R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() / Zbase        
         # dss.Lines.Length()  [ft]   *   0.3048 m
         # -----------------------      -----------    = line length [m] 
         #                                 1 ft         

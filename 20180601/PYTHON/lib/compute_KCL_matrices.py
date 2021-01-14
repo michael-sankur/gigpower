@@ -27,9 +27,11 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
             dss.Loads.Name(dss.Loads.AllNames()[load])
             load_data = dss.CktElement.BusNames()[0].split('.')
             idxbs = dss.Circuit.AllBusNames().index(load_data[0])
+            realstuff = dss.CktElement.Powers()[::2][:-1]
+            imagstuff = dss.CktElement.Powers()[1::2][:-1]
             for ph in range(1, len(load_data)):
-                load_kw_arr_ph[int(load_data[ph]) - 1, idxbs] += dss.Loads.kW() * 1e3*var / Sbase / (len(load_data) - 1)
-                load_kvar_arr_ph[int(load_data[ph]) - 1, idxbs] += dss.Loads.kvar() * 1e3 *var/ Sbase / (len(load_data) - 1)
+                load_kw_arr_ph[int(load_data[ph]) - 1, idxbs] += realstuff[ph-1] * 1e3 * var / Sbase 
+                load_kvar_arr_ph[int(load_data[ph]) - 1, idxbs] += imagstuff[ph-1] * 1e3 * var/ Sbase
         return load_kw_arr_ph, load_kvar_arr_ph
     load_kw_arr_ph, load_kvar_arr_ph = load_values()
 
@@ -39,7 +41,6 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
         for n in range(len(dss.Capacitors.AllNames())):
             dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
             cap_data = dss.CktElement.BusNames()[0].split('.')
-
             idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
             for ph in range(1, len(cap_data)):
                 caparr[int(cap_data[ph]) - 1, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / (len(cap_data) - 1)
@@ -306,11 +307,14 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                     b_temp = 0
                 else:
                     b_temp = (-load_val * beta_S) + b_factor #TE version
+                    #1 was beta_S
                     # b_temp = -load_val * (beta_S \
                     # + (beta_I) * (((hessian_mag[0][1] * A0 * B0) + ((1/2)*hessian_mag[0][0] * ((A0)**2)) + ((1/2)*hessian_mag[1][1] * (B0**2))) \
                     # -  (A0 * gradient_mag[0] + B0* gradient_mag[1]) \
                     # +  (A0**2 + B0**2) ** (1/2))) \
                     # + b_factor #calculate out the constant term in the residual
+                    #b_temp = np.abs(-1j * b_factor**2 * np.abs(XNR[ph*2*nnode + k2*2 + cplx]**2) )
+                    #print(b_temp)
 
                 b[2*(nnode-1)*ph + 2*(k2-1) + cplx][0][0] = b_temp #store the in the b matrix
 

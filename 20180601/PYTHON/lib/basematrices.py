@@ -89,8 +89,8 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
             for k1 in range(0,len(dss.Lines.AllNames())):
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1] = I0[ph,k1].real
                 XNR[(2*3*nnode) + 2*ph*nline + 2*k1+1] = I0[ph,k1].imag
-        XNR[(2*3*nnode + 2*3*nline):] = np.zeros((len(XNR) - 2*3*nnode - 2*3*nline), 1) 
-      
+        XNR[(2*3*nnode + 2*3*nline):] = np.zeros((len(XNR) - 2*3*nnode - 2*3*nline), 1)
+
     # generate static matrices
     XNR, g_SB, b_SB, G_KVL, b_KVL, H_reg, G_reg = compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain)
     # generate non-static matrices
