@@ -3,9 +3,9 @@ import opendssdirect as dss # type: ignore
 from typing import Iterable, List, Any
 from . network import Network, Node, Line, Load, Capacitor, Transformer, VoltageRegulator
 
-# ZIPV = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
+ZIPV = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
 # ZIPV = [0, 0, 1, 0, 0, 1, 0.75]
-ZIPV = [1, 0, 0, 1, 0, 0, 0.75]
+# ZIPV = [1, 0, 0, 1, 0, 0, 0.75] # constance impedance
 ZIPV_caps = [1, 0, 0, 1, 0, 0]  # for reference, unused
 
 

@@ -80,8 +80,8 @@ class Solution:
             for vr in line_out.voltageRegulators:
                 tx, reg = vr.key
                 phases = vr.phases
-                # gamma = vr.gamma
-                gamma = 1
+                gamma = vr.gamma
+                # gamma = 1
                 tx_V = self.V[tx]
                 reg_V = self.V[reg]
                 Itx = vr.Itx  # current at/leaving the tx node
@@ -123,8 +123,8 @@ class Solution:
             for vr in line_out.voltageRegulators:
                 tx, reg = vr.key
                 phases = vr.phases
-                gamma = 1
-                # gamma = vr.gamma
+                # gamma = 1
+                gamma = vr.gamma
                 tap = vr.tap
                 tx_V = self.V[tx]
                 reg_V = self.V[reg]
@@ -203,8 +203,8 @@ class Solution:
 
                 Itx = vr.Itx  # current entering/leaving the tx node
                 Ireg = vr.Ireg  # current entering/leaving the reg_node
-                gamma = 1
-                # gamma = vr.gamma
+                # gamma = 1
+                gamma = vr.gamma
                 # Enforce voltage regulator equations by phase.
                 # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
                 # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
