@@ -23,10 +23,7 @@ class Network:
         self.transformers: Dict[str, Transformer] = dict()
         self.voltageRegulators: Dict[str, VoltageRegulator] = dict()
         self.adj: Dict[str, List] = dict()
-        self.Vbase = 0.0
-        self.Sbase = 0.0
-        self.Ibase = 0.0
-        self.Zbase = 0.0
+        self.Sbase = 10**6
         self.num_phases = num_phases
 
 

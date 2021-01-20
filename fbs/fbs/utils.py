@@ -15,7 +15,6 @@ def init_from_dss(dss_fp: str) -> Network:
     dss.run_command('Redirect ' + dss_fp)
     # solve, get Base values
     dss.Solution.Solve()
-    get_base_values_from_dss(network, dss)
     # set the load model and zip values
     set_zip_values(dss, ZIPV)
     # solve again
@@ -41,18 +40,6 @@ def set_zip_values(dss:Any, zipv: List) -> None:
         dss.Loads.Model(8)
         dss.Loads.ZipV(zipv)
         dss.Loads.ZipV()
-
-
-def get_base_values_from_dss(network: Network, dss: Any) -> None:
-    # set base values
-    # TODO: make it possible to set the base from a given bus
-    Vbase = dss.Bus.kVBase() * 1000
-    # TODO: get Sbase from opendss
-    Sbase = 1000000.0
-    Ibase = Sbase/Vbase
-    network.Zbase = Vbase/Ibase
-    network.Vbase, network.Sbase, network.Ibase = Vbase, Sbase, Ibase
-
 
 def get_nodes_from_dss(network: Network, dss: Any) -> None:
     # make Nodes
