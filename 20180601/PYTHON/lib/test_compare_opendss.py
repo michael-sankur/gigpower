@@ -19,21 +19,6 @@ dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye.dss']
 
 
 
-def test_all():
-    """
-    Compare the python FBS solution to the opendss solution.
-    To save output, run from command line:
-    pytest ./fbs/tests/test_compare_opendss.py -s >[OUTPUT FILE PATH]
-    Examples:
-    $ pytest ./fbs/tests/test_compare_opendss.py -s > ./fbs/tests/06n3ph_unbal/06n3ph_out.txt
-    $ pytest ./fbs/tests/test_compare_opendss.py -s > ./fbs/tests/05n3ph_unbal/05n3ph_out.txt
-    """
-    tolerance = 10**-1
-    for file in dss_files:
-        print(f'\n\nTesting File: {file}')
-        compare_fbs_sol(file, tolerance)
-
-
 # construct the python FBS solution
 def compare_fbs_sol(dss_file, tolerance):
     # TODO: Figure out how to get Inode (iNR) and sV (sNR) at each node from dss and perform a compare
@@ -48,7 +33,7 @@ def compare_fbs_sol(dss_file, tolerance):
         fbs_sol.Srx_df(), fbs_sol.sV_df()
     dssV, dssI, dssStx, dssSrx, dssLoads, dss = dss_sol
 
-    target_loads = ['S848']
+    target_loads = ['S848'] #Print load powers comparison
     for load in target_loads:
         dss.Loads.Name(load)
         dss_load_powers = dss.CktElement.Powers()
@@ -58,7 +43,7 @@ def compare_fbs_sol(dss_file, tolerance):
 
     print("\n\n")
 
-    for cap in network.capacitors.values():
+    for cap in network.capacitors.values(): #Print capacitor values comparison
         print(f"FBS Capacitor powers at {cap.name}: {cap.imag}")
         dss.Capacitors.Name(cap.name)
         dss_powers = dss.CktElement.Powers()

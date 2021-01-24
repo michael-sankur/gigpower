@@ -10,7 +10,7 @@ def relevant_openDSS_parameters(fn, t):
     #BASE values
     Vbase = dss.Bus.kVBase() * 1000
     Sbase = 1000000.0
-    Ibase = Sbase/Vbase
+    #Ibase = Sbase/Vbase
     #Zbase = Vbase/Ibase
 
     #TRANSFORMER, VOLTAGE REGULATOR lines
@@ -49,7 +49,7 @@ def relevant_openDSS_parameters(fn, t):
             # stuff the in and out bus of the tf into an array  
         if not np.size(np.where(vr_bus[0, :] == tf_bus_temp[0])) == 0 and \
         not np.size(np.where(vr_bus[1, :] == tf_bus_temp[1])) == 0:     
-            continue #if you have already seen the transformer from regulators, skip
+            continue #if you have already seen the transformer from regulators, skip       
         
         tf_bus[0:2, tf_count] = tf_bus_temp[:, 0] #otherwise add to the tf_bus matrix
         for n in range(len(bus[1:])):                 
@@ -145,14 +145,17 @@ def relevant_openDSS_parameters(fn, t):
             load_phases[phase-1] = 1
         if len(load_data) == 0:
             load_phases = [1, 1, 1]        
-        realstuff = dss.CktElement.Powers()[::2][:-1]
-        imagstuff = dss.CktElement.Powers()[1::2][:-1]     
+        realstuff = dss.CktElement.Powers()[::2]
+        imagstuff = dss.CktElement.Powers()[1::2]     
         rs = 0
         for ph in range(len(load_phases)):      
             if load_phases[ph] == 1:
                 aPQ[ph, knode] = 1
                 aZ[ph, knode] = 0
-                ppu[ph, knode] += realstuff[rs] * 1e3 * var / Sbase #check these lines later
+                # print(ph,dss.Circuit.AllBusNames()[knode])
+                # print(realstuff[rs])
+                # print("\n")
+                ppu[ph, knode] += realstuff[rs] * 1e3 * var / Sbase 
                 qpu[ph, knode] += imagstuff[rs] * 1e3 * var / Sbase
                 rs += 1
 
@@ -166,7 +169,7 @@ def relevant_openDSS_parameters(fn, t):
         cap_data = dss.CktElement.BusNames()[0].split('.')
 
         idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
-        for ph in range(1, len(cap_data)):
+        for ph in range(1, len(cap_data)):        
             cappu[int(cap_data[ph]) - 1, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / (len(cap_data) - 1)
 
 

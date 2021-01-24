@@ -107,8 +107,8 @@ def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count
 
     X = np.reshape(XNR, (2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 1))
    
-    R_matrix = R_matrix/1609.34 #in miles for IEEE 13
-    X_matrix = X_matrix/1609.34 
+    R_matrix = R_matrix#/1609.34 #in miles for IEEE 13
+    X_matrix = X_matrix#/1609.34 
     
     #------------ Slack Bus ------------------
 
