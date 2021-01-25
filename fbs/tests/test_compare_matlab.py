@@ -26,22 +26,6 @@ NODE_DICT = {
 }
 # CONFIRM NETWORK MAPPING-------------------------------------------------------
 
-
-def test_base(py_network, mat_network):
-    tolerance = 10**-2
-    # tolerance is generous because opendss uses LL base and matlab struct uses LN base
-    # where LN = LL/sqrt(3)
-    mat_base = mat_network.get('base')
-    py_base = py_network.get('Base')
-    base_keys = ['Vbase', 'Ibase', 'Sbase', 'Zbase']
-    base_cols = ['python', 'matlab', 'err']
-    data = [np.array([py_base[k], mat_base[k], abs(mat_base[k]-py_base[k])], dtype='float') for k in base_keys]
-    base_compare_df = pd.DataFrame(data, base_keys, base_cols)
-    # print(base_compare_df)
-    # TODO: Vbase is off by .0013. Figure out why!
-    assert (base_compare_df.err <= tolerance).all()
-
-
 def test_FZpu(py_network, mat_network):
     tolerance = 10**-6
     py_lines = py_network.get('Lines')
