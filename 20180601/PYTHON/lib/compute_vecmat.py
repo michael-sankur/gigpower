@@ -44,9 +44,9 @@ def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count
         # rmat = dss.LineCodes.Rmatrix() #get the rmat
         
         # retrieve impedance and reactance matrices of a line
-        xmat = np.multiply(dss.Lines.XMatrix(), 1)#304.8)#1609.34) 
+        xmat = np.multiply(dss.Lines.XMatrix(), 1)
         #1 for the other 6-node networks, 1609.34 for ieee13, 304.8 for 34/37 networks
-        rmat = np.multiply(dss.Lines.RMatrix(),1)# 304.8)#1609.34) 
+        rmat = np.multiply(dss.Lines.RMatrix(),1)
 
         # Aside about units
         # dss.Lines.XMatrix()  mi     * 1609.34 m   *     1 ft
@@ -107,9 +107,6 @@ def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count
 
     X = np.reshape(XNR, (2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 1))
    
-    R_matrix = R_matrix#/1609.34 #in miles for IEEE 13
-    X_matrix = X_matrix#/1609.34 
-    
     #------------ Slack Bus ------------------
 
     #assumes slack bus is at index 0

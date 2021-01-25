@@ -44,7 +44,7 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
             idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
             for ph in range(1, len(cap_data)):
                 #caparr[int(cap_data[ph]) - 1, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / (len(cap_data) - 1)
-                caparr[int(cap_data[ph]) - 1, idxbs] += dss.CktElement.Powers()[1::2][0] * 1e3 / Sbase 
+                caparr[int(cap_data[ph]) - 1, idxbs] -= dss.CktElement.Powers()[1::2][0] * 1e3 / Sbase 
         return caparr
 
     caparr = cap_arr()
@@ -91,9 +91,9 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
     beta_Z = 0.0
 
     # Capacitors
-    gamma_S = 0.0
+    gamma_S = 1.0
     gamma_I = 0.0
-    gamma_Z = 1
+    gamma_Z = 0.0
 
     H = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
     g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
@@ -128,12 +128,16 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                 if available_phases[ph] == 1:                 #quadratic terms
                     H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = \
                                                                                                     -load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) + \
-                                                                                                    cap_val * (gamma_Z + (gamma_I * hessian_mag[0][0]))# TE replace assignment w/ -load_val * beta_Z; #a**2
+                                                                                                    cap_val * (gamma_Z + (0.5*gamma_I * hessian_mag[0][0]))# TE replace assignment w/ -load_val * beta_Z; #a**2
                     H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = \
                                                                                                     -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[1][1])) + \
-                                                                                                    cap_val * (gamma_Z + (gamma_I * hessian_mag[1][1]))# TE replace assignment w/ -load_val * beta_Z; #b**2
+                                                                                                    cap_val * (gamma_Z + (0.5*gamma_I * hessian_mag[1][1]))# TE replace assignment w/ -load_val * beta_Z; #b**2
                         #H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1] = -load_val * beta_I * hessian_mag[0][1] / 2 #remove for TE
                         #H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] =  -load_val * beta_I * hessian_mag[1][0] / 2 #remove for TE
+
+       
+
+
 
                 for i in range(len(in_lines)): #fill in H for the inlines            
                     line_idx = get_line_idx(in_lines[i])
@@ -311,14 +315,14 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                         b_factor = capacitance - der.imag
                         b_factor = 0
                     else:                    
-                        cap_val = caparr[ph][k2]                      
+                        b_factor = caparr[ph][k2]                      
                 else:
                     b_factor = 0
 
                 if available_phases[ph] == 0: #if phase does not exist at bus, set b = 0
                     b_temp = 0
                 else:
-                    b_temp = (-load_val * beta_S) + (cap_val * gamma_S) #TE version
+                    b_temp = (-load_val * beta_S) + (b_factor * gamma_S) #TE version
                    
                     # b_temp = -load_val * (beta_S \
                     # + (beta_I) * (((hessian_mag[0][1] * A0 * B0) + ((1/2)*hessian_mag[0][0] * ((A0)**2)) + ((1/2)*hessian_mag[1][1] * (B0**2))) \
