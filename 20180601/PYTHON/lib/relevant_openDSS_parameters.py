@@ -150,15 +150,12 @@ def relevant_openDSS_parameters(fn, t):
         rs = 0
         for ph in range(len(load_phases)):      
             if load_phases[ph] == 1:
-                aPQ[ph, knode] = 1
-                aZ[ph, knode] = 0
-                # print(ph,dss.Circuit.AllBusNames()[knode])
-                # print(realstuff[rs])
-                # print("\n")
+                aPQ[ph, knode] = 0
+                aZ[ph, knode] = 1
                 ppu[ph, knode] += realstuff[rs] * 1e3 * var / Sbase 
                 qpu[ph, knode] += imagstuff[rs] * 1e3 * var / Sbase
                 rs += 1
-
+    
     spu = (ppu + 1j * qpu)
 
     #cappu, wpu, vvcpu
@@ -167,10 +164,10 @@ def relevant_openDSS_parameters(fn, t):
     for n in range(len(dss.Capacitors.AllNames())):
         dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
         cap_data = dss.CktElement.BusNames()[0].split('.')
-
         idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
-        for ph in range(1, len(cap_data)):        
-            cappu[int(cap_data[ph]) - 1, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / (len(cap_data) - 1)
+        for ph in range(1, len(cap_data)):
+            cappu[int(cap_data[ph]) - 1, idxbs] -= dss.CktElement.Powers()[1::2][ph-1] * 1e3 / Sbase 
+    
 
 
     wpu = np.zeros((3, nnode))
