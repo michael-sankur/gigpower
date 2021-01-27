@@ -8,7 +8,7 @@ def relevant_openDSS_parameters(fn, t):
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
     #BASE values
-    Vbase = dss.Bus.kVBase() * 1000
+    #Vbase = dss.Bus.kVBase() * 1000
     Sbase = 1000000.0
     #Ibase = Sbase/Vbase
     #Zbase = Vbase/Ibase

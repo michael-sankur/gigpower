@@ -34,6 +34,8 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                 load_kvar[int(load_data[ph]) - 1, idxbs] += imagstuff[ph-1] * 1e3 * var/ Sbase
         return load_kw, load_kvar
     load_kw, load_kvar = load_values()
+ 
+  
 
     # [[3 x nnode array of capacitance]]
     def cap_arr():
@@ -113,12 +115,12 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
             dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k2]) #set the bus
             in_lines, out_lines = linelist(dss.Circuit.AllBusNames()[k2]) #get in/out lines of bus
             for cplx in range(0,2):
-                idxbs = dss.Circuit.AllBusNames().index(dss.Circuit.AllBusNames()[0])
-                if cplx == 0:
-                    load_val = load_kw[ph][idxbs]
+                idxbs = dss.Circuit.AllBusNames().index(dss.Circuit.AllBusNames()[k2])      
+                if cplx == 0:               
+                    load_val = load_kw[ph,idxbs]
                     cap_val = 0
-                else:
-                    load_val = load_kvar[ph][idxbs]
+                else:  
+                    load_val = load_kvar[ph,idxbs]  
                     cap_val = caparr[ph][idxbs]
                 gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
                 hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
@@ -127,7 +129,7 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                 if available_phases[ph] == 1:                 #quadratic terms
                     H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = \
                                                                                                     -load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) + \
-                                                                                                    cap_val * (gamma_Z + (0.5 * gamma_I * hessian_mag[0][0]))# TE replace assignment w/ -load_val * beta_Z; #a**2
+                                                                                                    cap_val * (gamma_Z + (0.5 * gamma_I * hessian_mag[0][0]))# TE replace assignment w/ -load_val * beta_Z; #a**2               
                     H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = \
                                                                                                     -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[1][1])) + \
                                                                                                     cap_val * (gamma_Z + (0.5 * gamma_I * hessian_mag[1][1]))# TE replace assignment w/ -load_val * beta_Z; #b**2

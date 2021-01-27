@@ -41,14 +41,8 @@ def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count
         
         # retrieve impedance and reactance matrices of a line
         xmat = dss.Lines.XMatrix()
-        #1 for the other 6-node networks, 1609.34 for ieee13, 304.8 for 34/37 networks
         rmat = dss.Lines.RMatrix()
 
-        # Aside about units
-        # dss.Lines.XMatrix()  mi     * 1609.34 m   *     1 ft
-        #                               -----------     ------    = dss.LineCodes.Xmatrix() [ft] (does not always exist)
-        #                                1 mi          0.3048 m
-       
         # establish base units
         start_bus = dss.Lines.Bus1().split('.')[0]
         dss.Circuit.SetActiveBus(start_bus)
@@ -162,7 +156,8 @@ def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*3 + 2*ph*nline + 2*line] = 1 #C_mn
                 G_KVL[2*ph*nline + 2*line+1][2*(nnode)*3 + 2*ph*nline + 2*line+1] = 1 #D_mn
 
-     #------- Residuals for Transformer KVL ----------
+    #------- Residuals for Transformer KVL ----------
+    
     line_idx_tf = range(0, tf_lines)
     kvl_count = 0
     for tfbs in range(len(tf_bus[0])):
