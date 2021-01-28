@@ -5,7 +5,7 @@
 
 from fbs.utils import init_from_dss
 from fbs.fbs import fbs, get_solution as get_fbs_solution
-from fbs.dss_solve import solve_with_dss
+from fbs.dss_solve import solve_with_dss, getVMag
 
 import pandas as pd
 import pytest
@@ -17,18 +17,17 @@ import pytest
 #               'fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
 # dss_files = ['fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss']
 # dss_files = ['fbs/tests/test_cases_dss/02node_threephase_unbalanced.dss']
-# dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss']
+dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_13_Node/IEEE_13_Bus_allwye_noxfm_noreg.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss']
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye.dss']
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test01.dss']
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test02.dss']
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test03.dss']
-dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test03a.dss']
-# dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss']
+# dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test03a.dss']
+# dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss']
 # dss_files = ['fbs/tests/IEEE_37_feeder_UB/IEEE_37_Bus_allwye.dss']
-# dss_files = ['fbs/tests/IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss']
-
+# dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss']
 
 
 def test_all():
@@ -59,10 +58,13 @@ def compare_fbs_sol(dss_file, tolerance):
     fbsV, fbsI, fbsStx, fbsSrx, fbs_sV = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), \
         fbs_sol.Srx_df(), fbs_sol.sV_df()
     dssV, dssI, dssStx, dssSrx, dssLoads, dss = dss_sol
-
+    dssVMag = getVMag(dss)
+    fbsVMag = fbs_sol.VMag_df()
     print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
     print("\n\nCOMPARE V")
     V_maxDiff = compare_dfs(fbsV, dssV)
+    print("\n\nCOMPARE VMag (LN)")
+    VMag_maxDiff = compare_dfs(fbsVMag, dssVMag)
     print("\n\nCOMPARE I")
     I_maxDiff = compare_dfs(fbsI, dssI)
     print("\n\nCOMPARE Stx")
@@ -81,6 +83,7 @@ def compare_fbs_sol(dss_file, tolerance):
     sumPhase_maxDiff = compare_dfs(fbsLoads_sumPhase, dssLoads_sumPhase)
 
     assert (V_maxDiff <= tolerance).all()
+    assert (VMag_maxDiff <= tolerance).all()
     assert (I_maxDiff <= tolerance).all()
     assert (Stx_maxDiff <= tolerance).all()
     assert (Srx_maxDiff <= tolerance).all()

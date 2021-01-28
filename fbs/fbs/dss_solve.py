@@ -10,6 +10,7 @@ from typing import Tuple
 from . utils import set_zip_values, parse_phases, pad_phases, ZIPV
 from collections import defaultdict
 
+
 def solve_with_dss(dss_file: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Set up dss object, call solve, and return the solution.
@@ -171,3 +172,18 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
     dssLoads = pd.DataFrame.from_dict(load_data, orient='index', dtype=complex, columns=load_cols)
 
     return dssV, dssI, dssStx, dssSrx, dssLoads, dss
+
+
+def getVMag(dss) -> pd.DataFrame:
+    """Return VMag per bus in a DataFrame"""
+    buses = dss.Circuit.AllBusNames()
+    data = np.zeros((len(buses), 3), dtype=complex)
+
+    for i, b in enumerate(buses):
+        dss.Circuit.SetActiveBus(b)
+        ph = np.asarray(dss.Bus.Nodes(), dtype='int')-1
+        Vtemp = np.asarray(dss.Bus.Voltages())
+        Vtemp = Vtemp[0:5:2] + 1j*Vtemp[1:6:2]
+        data[i, ph] = Vtemp
+
+    return pd.DataFrame(data, buses, ['A', 'B', 'C'])

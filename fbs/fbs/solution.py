@@ -125,7 +125,6 @@ class Solution:
                 phases = vr.phases
                 # gamma = 1
                 gamma = vr.gamma
-                tap = vr.tap
                 tx_V = self.V[tx]
                 reg_V = self.V[reg]
                 # Enforce voltage regulator equations by phase.
@@ -287,7 +286,18 @@ class Solution:
         """
         returns self.V as a dataframe indexed by node name
         """
-        return pd.DataFrame.from_dict(self.V, orient = 'index', columns=['A', 'B', 'C'])
+        return pd.DataFrame.from_dict(self.V, orient='index', columns=['A', 'B', 'C'])
+
+    def VMag_df(self) -> Iterable:
+        """
+        returns VMag as a dataframe indexed by node name
+        """
+        Vbase_dict = {node_name: node.Vbase for node_name, node in self.network.nodes.items()}
+        VMag = np.zeros((len(self.network.nodes), 3), dtype=complex)
+        nodes = Vbase_dict.keys()
+        for i, n in enumerate(nodes):
+            VMag[i] = self.V[n] * complex(Vbase_dict[n])
+        return pd.DataFrame(VMag, nodes, columns=['A', 'B', 'C'])
 
     def I_df(self) -> Iterable:
         """
