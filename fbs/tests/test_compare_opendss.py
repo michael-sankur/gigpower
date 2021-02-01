@@ -17,7 +17,7 @@ import pytest
 #               'fbs/tests/06n3ph_rad_unbal/06node_threephase_radial_unbalanced.dss']
 # dss_files = ['fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss']
 # dss_files = ['fbs/tests/test_cases_dss/02node_threephase_unbalanced.dss']
-dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_13_Node/IEEE_13_Bus_allwye_noxfm_noreg.dss']
+# dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_13_Node/IEEE_13_Bus_allwye_noxfm_noreg.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss']
 # dss_files = ['fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss']
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye.dss']
@@ -27,7 +27,7 @@ dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_13_Node/I
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test03a.dss']
 # dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss']
 # dss_files = ['fbs/tests/IEEE_37_feeder_UB/IEEE_37_Bus_allwye.dss']
-# dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss']
+dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss']
 
 
 def test_all():
@@ -91,14 +91,16 @@ def compare_fbs_sol(dss_file, tolerance):
     # convert node powers from kw
     assert (loads_maxDiff/1000 <= tolerance).all()
 
+
 def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame) -> None:
     """ helper method to compare fbs vs. dss and print comparisons """
     compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
     compare = fbs_df.sub(dss_df)
     compare.columns = compare_cols
     pd.options.display.float_format = '{:.4f}'.format
-    print("Max |diff|:")
-    print(compare.abs().max())
+    print("Max |fbs - dss|:\n", compare.abs().max())
+    print("Sum |fbs - dss|:\n", compare.abs().sum())
+    print("Avg |fbd - dss|:\n", compare.abs().mean())
     print(compare, "\n")
     print("FBS results")
     print(fbs_df, "\n")
