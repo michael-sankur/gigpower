@@ -177,13 +177,12 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
 def getVMag(dss) -> pd.DataFrame:
     """Return VMag per bus in a DataFrame"""
     buses = dss.Circuit.AllBusNames()
-    data = np.zeros((len(buses), 3), dtype=complex)
+    data = np.zeros((len(buses), 3), dtype=float)
 
     for i, b in enumerate(buses):
         dss.Circuit.SetActiveBus(b)
         ph = np.asarray(dss.Bus.Nodes(), dtype='int')-1
-        Vtemp = np.asarray(dss.Bus.Voltages())
-        Vtemp = Vtemp[0:5:2] + 1j*Vtemp[1:6:2]
+        Vtemp = np.asarray(dss.Bus.puVmagAngle())[0::2]
         data[i, ph] = Vtemp
 
     return pd.DataFrame(data, buses, ['A', 'B', 'C'])

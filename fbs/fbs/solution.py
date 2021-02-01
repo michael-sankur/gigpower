@@ -292,12 +292,9 @@ class Solution:
         """
         returns VMag as a dataframe indexed by node name
         """
-        Vbase_dict = {node_name: node.Vbase for node_name, node in self.network.nodes.items()}
-        VMag = np.zeros((len(self.network.nodes), 3), dtype=complex)
-        nodes = Vbase_dict.keys()
-        for i, n in enumerate(nodes):
-            VMag[i] = self.V[n] * complex(Vbase_dict[n])
-        return pd.DataFrame(VMag, nodes, columns=['A', 'B', 'C'])
+        V = self.V_df()
+        return V.applymap(lambda cmplx_v: (np.real(cmplx_v)**2 + np.imag(cmplx_v)**2) ** .5)
+
 
     def I_df(self) -> Iterable:
         """

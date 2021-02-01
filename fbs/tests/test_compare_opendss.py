@@ -61,26 +61,19 @@ def compare_fbs_sol(dss_file, tolerance):
     dssVMag = getVMag(dss)
     fbsVMag = fbs_sol.VMag_df()
     print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
-    print("\n\nCOMPARE V")
-    V_maxDiff = compare_dfs(fbsV, dssV)
-    print("\n\nCOMPARE VMag (LN)")
-    VMag_maxDiff = compare_dfs(fbsVMag, dssVMag)
-    print("\n\nCOMPARE I")
-    I_maxDiff = compare_dfs(fbsI, dssI)
-    print("\n\nCOMPARE Stx")
-    Stx_maxDiff = compare_dfs(fbsStx, dssStx)
-    print("\n\nCOMPARE Srx")
-    Srx_maxDiff = compare_dfs(fbsSrx, dssSrx)
+    V_maxDiff = compare_dfs(fbsV, dssV, "COMPARE V")
+    VMag_maxDiff = compare_dfs(fbsVMag, dssVMag, "COMPARE VMag")
+    I_maxDiff = compare_dfs(fbsI, dssI, "COMPARE I")
+    Stx_maxDiff = compare_dfs(fbsStx, dssStx, "COMPARE Stx")
+    Srx_maxDiff = compare_dfs(fbsSrx, dssSrx, "COMPARE Srx")
 
-    print("\n\nCOMPARE TOTAL NODE POWERS\n")
     fbsLoads = fbs_sV.multiply(1000)
+    loads_maxDiff = compare_dfs(fbsLoads, dssLoads, "TOTAL LOAD POWERS")
 
-    loads_maxDiff = compare_dfs(fbsLoads, dssLoads)
-
-    print("\n\nCOMPARE TOTAL NODE POWERS - SUM OVER PHASE\n")
     fbsLoads_sumPhase = fbsLoads.sum(axis = 0)
     dssLoads_sumPhase = dssLoads.sum(axis = 0)
-    sumPhase_maxDiff = compare_dfs(fbsLoads_sumPhase, dssLoads_sumPhase)
+    sumPhase_maxDiff = compare_dfs(fbsLoads_sumPhase, dssLoads_sumPhase,
+    "TOTAL NODE POWERS - SUM OVER PHASE")
 
     assert (V_maxDiff <= tolerance).all()
     assert (VMag_maxDiff <= tolerance).all()
@@ -92,18 +85,20 @@ def compare_fbs_sol(dss_file, tolerance):
     assert (loads_maxDiff/1000 <= tolerance).all()
 
 
-def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame) -> None:
+def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame, title: str) -> None:
     """ helper method to compare fbs vs. dss and print comparisons """
     compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
     compare = fbs_df.sub(dss_df)
     compare.columns = compare_cols
     pd.options.display.float_format = '{:.4f}'.format
-    print("Max |fbs - dss|:\n", compare.abs().max())
-    print("Sum |fbs - dss|:\n", compare.abs().sum())
-    print("Avg |fbd - dss|:\n", compare.abs().mean())
+    print(f"{title} - SUMMARY STATS")
+    print(f"Max |fbs - dss|:\n{compare.abs().max()}\n")
+    print(f"Sum |fbs - dss|:\n{compare.abs().sum()}\n")
+    print(f"Avg |fbs - dss|:\n{compare.abs().mean()}\n")
+    print(f"{title} - ERROR, |fbs - dss|:")
     print(compare, "\n")
-    print("FBS results")
+    print(f"{title} - FBS RESULTS")
     print(fbs_df, "\n")
-    print("DSS results")
-    print(dss_df)
+    print(f"{title} - DSS RESULTS")
+    print(dss_df, "\n\n")
     return compare.abs().max()
