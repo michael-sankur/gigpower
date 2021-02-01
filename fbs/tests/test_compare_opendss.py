@@ -8,6 +8,7 @@ from fbs.fbs import fbs, get_solution as get_fbs_solution
 from fbs.dss_solve import solve_with_dss, getVMag
 
 import pandas as pd
+import numpy as np
 import pytest
 
 
@@ -58,30 +59,35 @@ def compare_fbs_sol(dss_file, tolerance):
     fbsV, fbsI, fbsStx, fbsSrx, fbs_sV = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), \
         fbs_sol.Srx_df(), fbs_sol.sV_df()
     dssV, dssI, dssStx, dssSrx, dssLoads, dss = dss_sol
+
+    print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:\
+        {fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
+    V_maxDiff = compare_dfs(fbsV, dssV, "COMPARE V")
+
     dssVMag = getVMag(dss)
     fbsVMag = fbs_sol.VMag_df()
-    print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:{fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
-    V_maxDiff = compare_dfs(fbsV, dssV, "COMPARE V")
     VMag_maxDiff = compare_dfs(fbsVMag, dssVMag, "COMPARE VMag")
+
     I_maxDiff = compare_dfs(fbsI, dssI, "COMPARE I")
+
     Stx_maxDiff = compare_dfs(fbsStx, dssStx, "COMPARE Stx")
+
     Srx_maxDiff = compare_dfs(fbsSrx, dssSrx, "COMPARE Srx")
 
-    fbsLoads = fbs_sV.multiply(1000)
-    loads_maxDiff = compare_dfs(fbsLoads, dssLoads, "TOTAL LOAD POWERS")
+    fbsLoads = fbs_sV * 1000  # convert to kW
+    loads_maxDiff = compare_dfs(fbsLoads, dssLoads, "TOTAL LOAD POWERS (kW/kVAR)")
+    compare_dfs(fbs_sV, dssLoads/1000, "TOTAL LOAD POWERS p.u.")
 
-    fbsLoads_sumPhase = fbsLoads.sum(axis = 0)
-    dssLoads_sumPhase = dssLoads.sum(axis = 0)
-    sumPhase_maxDiff = compare_dfs(fbsLoads_sumPhase, dssLoads_sumPhase,
-    "TOTAL NODE POWERS - SUM OVER PHASE")
+    fbsLoads_sumPhase = fbsLoads.sum(axis=0)
+    dssLoads_sumPhase = dssLoads.sum(axis=0)
+    compare_dfs(fbsLoads_sumPhase, dssLoads_sumPhase, "TOTAL NODE POWERS - SUM OVER PHASE (kW/kVAR)")
+    compare_dfs(fbsLoads_sumPhase / 1000, dssLoads_sumPhase / 1000, "TOTAL NODE POWERS p.u.")
 
     assert (V_maxDiff <= tolerance).all()
     assert (VMag_maxDiff <= tolerance).all()
     assert (I_maxDiff <= tolerance).all()
     assert (Stx_maxDiff <= tolerance).all()
     assert (Srx_maxDiff <= tolerance).all()
-
-    # convert node powers from kw
     assert (loads_maxDiff/1000 <= tolerance).all()
 
 
@@ -90,15 +96,17 @@ def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame, title: str) -> None:
     compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
     compare = fbs_df.sub(dss_df)
     compare.columns = compare_cols
+
     pd.options.display.float_format = '{:.4f}'.format
     print(f"{title} - SUMMARY STATS")
-    print(f"Max |fbs - dss|:\n{compare.abs().max()}\n")
-    print(f"Sum |fbs - dss|:\n{compare.abs().sum()}\n")
-    print(f"Avg |fbs - dss|:\n{compare.abs().mean()}\n")
+    print(f"Max |fbs - dss|:\n{np.round(compare.abs().max(), 4)}\n")
+    print(f"Sum |fbs - dss|:\n{np.round(compare.abs().sum(), 4)}\n")
+    print(f"Avg |fbs - dss|:\n{np.round(compare.abs().mean(), 4)}\n")
+
     print(f"{title} - ERROR, |fbs - dss|:")
     print(compare, "\n")
     print(f"{title} - FBS RESULTS")
     print(fbs_df, "\n")
     print(f"{title} - DSS RESULTS")
-    print(dss_df, "\n\n")
+    print(dss_df, "\n\n\n")
     return compare.abs().max()
