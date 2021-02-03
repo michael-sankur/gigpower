@@ -141,7 +141,6 @@ class Line:
         data = [self.key, self.name, self.phases, self.config, self.length, self.FZpu]
         return pd.Series(data, self.series_index)
 
-
 class Load:
     series_index = ['name', 'conn', 'phases', 'type', 'kw', 'kvar',
                     'aPQ_p', 'aI_p', 'aZ_p', 'aPQ_q', 'aI_q', 'aZ_q',

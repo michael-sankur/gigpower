@@ -5,7 +5,7 @@
 
 from fbs.utils import init_from_dss
 from fbs.fbs import fbs, get_solution as get_fbs_solution
-from fbs.dss_solve import solve_with_dss, getVMag
+from fbs.dss_solve import solve_with_dss, getVMag, getNominalNodePower
 
 import pandas as pd
 import numpy as np
@@ -76,12 +76,18 @@ def compare_fbs_sol(dss_file, tolerance):
 
     fbsLoads = fbs_sV * 1000  # convert to kW
     loads_maxDiff = compare_dfs(fbsLoads, dssLoads, "TOTAL LOAD POWERS (kW/kVAR)")
-    compare_dfs(fbs_sV, dssLoads/1000, "TOTAL LOAD POWERS p.u.")
+    compare_dfs(fbsLoads/network.Sbase, dssLoads/network.Sbase, "TOTAL LOAD POWERS p.u.")
+
+    dssNomPwrs = getNominalNodePower(dss)
+    fbsNomPwrs = fbs_sol.nomNodePwrs_df() * 1000  # convert to kW
+    compare_dfs(fbsNomPwrs, dssNomPwrs, "TOTAL NOMINAL NODE POWERS (kW/kVAR)")
 
     fbsLoads_sumPhase = fbsLoads.sum(axis=0)
     dssLoads_sumPhase = dssLoads.sum(axis=0)
     compare_dfs(fbsLoads_sumPhase, dssLoads_sumPhase, "TOTAL NODE POWERS - SUM OVER PHASE (kW/kVAR)")
-    compare_dfs(fbsLoads_sumPhase / 1000, dssLoads_sumPhase / 1000, "TOTAL NODE POWERS p.u.")
+
+    compare_dfs(fbsLoads_sumPhase / network.Sbase, dssLoads_sumPhase / network.Sbase, "TOTAL NODE POWERS p.u.")
+
 
     assert (V_maxDiff <= tolerance).all()
     assert (VMag_maxDiff <= tolerance).all()
@@ -93,16 +99,16 @@ def compare_fbs_sol(dss_file, tolerance):
 
 def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame, title: str) -> None:
     """ helper method to compare fbs vs. dss and print comparisons """
-    compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
-    compare = fbs_df.sub(dss_df)
-    compare.columns = compare_cols
-
+    compare = fbs_df - dss_df
     pd.options.display.float_format = '{:.4f}'.format
-    print(f"{title} - SUMMARY STATS")
-    print(f"Max |fbs - dss|:\n{np.round(compare.abs().max(), 4)}\n")
-    print(f"Sum |fbs - dss|:\n{np.round(compare.abs().sum(), 4)}\n")
-    print(f"Avg |fbs - dss|:\n{np.round(compare.abs().mean(), 4)}\n")
-
+    if len(compare.axes) == 2:
+        compare_cols = ['A.(fbs - dss)', 'B.(fbs - dss)', 'C.(fbs - dss)']
+        compare.columns = compare_cols
+        print(f"{title} - SUMMARY STATS")
+        summary_stats = np.asarray([compare.abs().max(), compare.abs().sum(), compare.abs().mean()])
+        summary = pd.DataFrame(summary_stats,
+            ['MAX |fbs - dss|', 'SUM |fbs - dss|', 'MEAN |fbs - dss|'], ['A', 'B', 'C'])
+        print(summary, '\n')
     print(f"{title} - ERROR, |fbs - dss|:")
     print(compare, "\n")
     print(f"{title} - FBS RESULTS")

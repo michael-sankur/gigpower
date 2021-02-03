@@ -41,6 +41,7 @@ def set_zip_values(dss:Any, zipv: List) -> None:
         dss.Loads.ZipV(zipv)
         dss.Loads.ZipV()
 
+
 def get_nodes_from_dss(network: Network, dss: Any) -> None:
     # make Nodes
     for node_name in dss.Circuit.AllNodeNames():
@@ -66,6 +67,9 @@ def get_nodes_from_dss(network: Network, dss: Any) -> None:
     # iterate through nodes to parse phase lists
     for node in network.get_nodes():
         node.phases = parse_phases(node.phases)  # type: ignore
+
+    # save a bus name: index dict on the network
+    network.bus_idx_dict = {b: i for i, b in enumerate(dss.Circuit.AllBusNames())}
 
 
 def get_lines_from_dss(network: Network, dss: Any) -> None:

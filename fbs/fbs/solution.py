@@ -35,8 +35,9 @@ class Solution:
         # HELPER VARIABLES
         # self.s: intermediate values for voltage dependent loads. 3 x num_nodes total datapoints. Indexed by node name.
         self.s = dict()
-        self.root = None # keeps a pointer to the root node
-        self.network = network # keeps a pointer to the network that it is solving
+
+        self.root = None  # keeps a pointer to the root node
+        self.network = network  # keeps a pointer to the network that it is solving
 
         """ Set up voltages and currents for all nodes """
         for node in network.get_nodes():
@@ -348,8 +349,53 @@ class Solution:
         data = [self.iterations, self.Vtest, self.Vref, self.tolerance, self.diff]
         return pd.DataFrame(data, index).transpose()
 
-    def loads_df(self) -> Iterable:
-        pass
+    def nomNodePwrs_df(self) -> Iterable:
+        """
+        One time calculation of total nominal node power based on solved V
+        equivalent to aP = 1, aI = aQ = 0
+        """
+
+        # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
+
+        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
+
+        for node in self.network.get_nodes():
+            node_idx = self.network.bus_idx_dict[node.name]
+            node_V = self.V[node.name]
+            wpu = np.zeros(3)  # TODO: will be set as argument
+            abs_nodeV = abs(node_V)
+            abs_nodeV_sq = np.power(abs(node_V), 2)
+            if not node.loads:
+                continue
+            else:
+                for load in node.loads:
+                    spu_real, spu_imag = load.ppu, load.qpu
+                    aPQ_p, aI_p, aZ_p = 0, 0, 1
+                    aPQ_q, aI_q, aZ_q = 0, 0, 1
+                    for ph_idx, ph in enumerate(load.phases):
+                        if ph:
+                            temp1 = aPQ_p + aI_p * abs_nodeV[ph_idx] + aZ_p * abs_nodeV_sq[ph_idx]
+                            real = temp1 * spu_real
+
+                            temp2 = aPQ_q + aI_q * abs_nodeV[ph_idx] + aZ_q * abs_nodeV_sq[ph_idx]
+                            imag = temp2 * spu_imag
+
+                            data[node_idx][ph_idx] += real + (1j * imag)
+
+                for cap in node.capacitors:
+                    cappu = cap.cappu
+                    cap.imag = np.zeros(3)
+                    for ph_idx, ph in enumerate(cap.phases):
+                        if ph:
+                            real = 0
+                            if cap.constant_power:
+                                imag = cappu[ph_idx]
+                            else:
+                                imag = cappu[ph_idx] * abs_nodeV_sq[idx]
+                            cap.imag[ph_idx] = imag
+                            data[node_idx][ph_idx] += real - (1j * imag)
+                data[node_idx] += wpu
+        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
 
     def print_solution(self) -> None:
         """

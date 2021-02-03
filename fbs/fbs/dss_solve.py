@@ -155,7 +155,7 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
         imag = pad_phases(sparse[1:6:2], (3, ), phases)
         load_data[bus_name] += (real + 1j * imag)
 
-    # add all capacitors to load daata, based on bus index
+    # add all capacitors to load data, based on bus index
     for name in dss.Capacitors.AllNames():
         dss.Capacitors.Name(name)
         bus_name = dss.CktElement.BusNames()[0]
@@ -186,3 +186,37 @@ def getVMag(dss) -> pd.DataFrame:
         data[i, ph] = Vtemp
 
     return pd.DataFrame(data, buses, ['A', 'B', 'C'])
+
+
+def getNominalNodePower(dss) -> pd.DataFrame:
+    """Return total nominal node power for loads and capacitors"""
+    bus_names = dss.Circuit.AllBusNames()
+    bus_idx_dict = { b: i for i, b in enumerate(bus_names)}
+    data = np.zeros((len(bus_names), 3), dtype=complex)
+
+    # add all load powers to load data, based on bus index
+    for load in dss.Loads.AllNames():
+        dss.Loads.Name(load)
+        bus_name = dss.CktElement.BusNames()[0]
+        bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
+        if len(bus_phase) == 0:
+            bus_phase.extend(['1', '2', '3'])
+        bus_idx = bus_idx_dict[bus_name]
+        phases = parse_phases(list(bus_phase))
+        dist_real = dss.Loads.kW() / len(bus_phase)
+        dist_imag = dss.Loads.kvar() / len(bus_phase)
+        data[bus_idx, phases] += (dist_real + 1j * dist_imag)
+
+    # add all capacitor powers to load data, based on bus index
+    for cap in dss.Capacitors.AllNames():
+        dss.Capacitor.Name(cap)
+        bus_name = dss.CktElement.BusNames()[0]
+        bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
+        if len(bus_phase) == 0:
+            bus_phase.extend(['1', '2', '3'])
+        bus_idx = bus_idx_dict[bus_name]
+        phases = parse_phases(list(bus_phase))
+        real, imag = 0, dss.Capacitors.kvar()
+        data[bus_idx, phases] += (real - 1j * imag)
+
+    return pd.DataFrame(data, bus_names, ['A', 'B', 'C'])
