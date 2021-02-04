@@ -138,6 +138,8 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
     for only the phases of the element, and the neutral line, if it is wye
     connected. Which is why there are different array lengths,
     and two 0.0s at the end of each array
+
+    To obtain total node powers, we ADD results from dss.CktElement.Powers()
     """
     bus_names = dss.Circuit.AllBusNames()
     load_cols = ['A', 'B', 'C']
@@ -191,7 +193,11 @@ def getVMag(dss) -> pd.DataFrame:
 
 
 def getNominalNodePower(dss) -> pd.DataFrame:
-    """Return total nominal node power for loads and capacitors"""
+    """
+    Return total nominal node power for loads and capacitors
+    Capacitors' signs must be reversed from dss.Capacitors.kvar(); we must
+    SUBTRACT capacitors
+    """
     bus_names = dss.Circuit.AllBusNames()
     bus_idx_dict = { b: i for i, b in enumerate(bus_names)}
     data = np.zeros((len(bus_names), 3), dtype=complex)
@@ -218,7 +224,7 @@ def getNominalNodePower(dss) -> pd.DataFrame:
             bus_phase.extend(['1', '2', '3'])
         bus_idx = bus_idx_dict[bus_name]
         phases = parse_phases(list(bus_phase))
-        real, imag = 0, dss.Capacitors.kvar()
+        real, imag = 0, dss.Capacitors.kvar() / phases.count(True)
         data[bus_idx, phases] += (real - 1j * imag)
 
     return pd.DataFrame(data, bus_names, ['A', 'B', 'C'])
