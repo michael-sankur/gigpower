@@ -4,7 +4,7 @@
 # Implement FBS to solve Power Flow for a radial distribution network.
 
 from typing import Iterable, Dict, Tuple
-from . utils import mask_phases
+from . utils import mask_phases, calc_total_node_power
 from . network import Network, Node, Line
 import pandas as pd # type: ignore
 import numpy as np # type: ignore
@@ -221,44 +221,8 @@ class Solution:
         Used during backward sweep.
         """
         # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
-
         node_V = self.V[node.name]
-        wpu = np.zeros(3)  # TODO: will be set as argument
-        abs_nodeV = abs(node_V)
-        abs_nodeV_sq = np.power(abs(node_V), 2)
-
-        if not node.loads:
-            return None
-
-        else:
-            self.s[node.name] = np.zeros(3, dtype=complex)
-            for load in node.loads:
-                spu_real, spu_imag = load.ppu, load.qpu
-                aPQ_p, aI_p, aZ_p = load.aPQ_p, load.aI_p, load.aZ_p
-                aPQ_q, aI_q, aZ_q = load.aPQ_q, load.aI_q, load.aZ_q
-                for idx, ph in enumerate(load.phases):
-                    if ph:
-                        temp1 = aPQ_p + aI_p * abs_nodeV[idx] + aZ_p * abs_nodeV_sq[idx]
-                        real = temp1 * spu_real
-
-                        temp2 = aPQ_q + aI_q * abs_nodeV[idx] + aZ_q * abs_nodeV_sq[idx]
-                        imag = temp2 * spu_imag
-
-                        self.s[node.name][idx] += real + (1j * imag)
-
-            for cap in node.capacitors:
-                cappu = cap.cappu
-                cap.imag = np.zeros(3)
-                for idx, ph in enumerate(cap.phases):
-                    if ph:
-                        real = 0
-                        if cap.constant_power:
-                            imag = cappu[idx]
-                        else:
-                            imag = cappu[idx] * abs_nodeV_sq[idx]
-                        cap.imag[idx] = imag
-                        self.s[node.name][idx] += real - (1j * imag)
-            self.s[node.name] += wpu
+        self.s[node.name] = calc_total_node_power(node, node_V)
         return None
 
     def calc_S(self) -> None:
@@ -361,40 +325,8 @@ class Solution:
 
         for node in self.network.get_nodes():
             node_idx = self.network.bus_idx_dict[node.name]
-            node_V = self.V[node.name]
-            wpu = np.zeros(3)  # TODO: will be set as argument
-            abs_nodeV = abs(node_V)
-            abs_nodeV_sq = np.power(abs(node_V), 2)
-            if not node.loads:
-                continue
-            else:
-                for load in node.loads:
-                    spu_real, spu_imag = load.ppu, load.qpu
-                    aPQ_p, aI_p, aZ_p = 0, 0, 1
-                    aPQ_q, aI_q, aZ_q = 0, 0, 1
-                    for ph_idx, ph in enumerate(load.phases):
-                        if ph:
-                            temp1 = aPQ_p + aI_p * abs_nodeV[ph_idx] + aZ_p * abs_nodeV_sq[ph_idx]
-                            real = temp1 * spu_real
-
-                            temp2 = aPQ_q + aI_q * abs_nodeV[ph_idx] + aZ_q * abs_nodeV_sq[ph_idx]
-                            imag = temp2 * spu_imag
-
-                            data[node_idx][ph_idx] += real + (1j * imag)
-
-                for cap in node.capacitors:
-                    cappu = cap.cappu
-                    cap.imag = np.zeros(3)
-                    for ph_idx, ph in enumerate(cap.phases):
-                        if ph:
-                            real = 0
-                            if cap.constant_power:
-                                imag = cappu[ph_idx]
-                            else:
-                                imag = cappu[ph_idx] * abs_nodeV_sq[idx]
-                            cap.imag[ph_idx] = imag
-                            data[node_idx][ph_idx] += real - (1j * imag)
-                data[node_idx] += wpu
+            nodeV = self.V[node.name]
+            data[node_idx] += calc_total_node_power(node, nodeV, [1, 0, 0, 1, 0, 0])
         return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
 
     def print_solution(self) -> None:

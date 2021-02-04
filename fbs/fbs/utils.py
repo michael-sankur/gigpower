@@ -325,3 +325,57 @@ def mask_phases(matrix: Iterable, shape: tuple, phases: List[bool]) -> Iterable:
     masked = np.multiply(matrix, phase_matrix)
     # change all NaN's to 0
     return np.nan_to_num(masked)
+
+
+def calc_total_node_power(node: Node, nodeV: Iterable, zipV: Iterable = None) -> Iterable:
+    """
+    helper function to calculate total node power given a Node, solved V value, and zip values
+    If zipV is not passed by argument, will default to values saved on the Load objects
+    pointed to by the given Node
+
+    node: Node object
+    nodeV: 3x1 complex volgaget
+    zipV: 6x1 zipV array
+    """
+    wpu = np.zeros(3)  # TODO: will be set as argument
+    abs_nodeV = abs(nodeV)
+    abs_nodeV_sq = np.power(abs(nodeV), 2)
+    total_powers = np.zeros(3, dtype=complex)
+
+    for load in node.loads:
+        spu_real, spu_imag = load.ppu, load.qpu
+        if not zipV:
+            aPQ_p, aI_p, aZ_p = load.aPQ_p, load.aI_p, load.aZ_p
+            aPQ_q, aI_q, aZ_q = load.aPQ_q, load.aI_q, load.aZ_q
+        else:
+            aZ_p = zipV[0]
+            aI_p = zipV[1]
+            aPQ_p = zipV[2]
+            aZ_q = zipV[3]
+            aI_q = zipV[4]
+            aPQ_q = zipV[5]
+
+        for idx, ph in enumerate(load.phases):
+            if ph:
+                temp1 = aPQ_p + aI_p * abs_nodeV[idx] + aZ_p * abs_nodeV_sq[idx]
+                real = temp1 * spu_real
+
+                temp2 = aPQ_q + aI_q * abs_nodeV[idx] + aZ_q * abs_nodeV_sq[idx]
+                imag = temp2 * spu_imag
+
+                total_powers[idx] += real + (1j * imag)
+
+    for cap in node.capacitors:
+        cappu = cap.cappu
+        cap.imag = np.zeros(3)
+        for idx, ph in enumerate(cap.phases):
+            if ph:
+                real = 0
+                if cap.constant_power:
+                    imag = cappu[idx]
+                else:
+                    imag = cappu[idx] * abs_nodeV_sq[idx]
+                cap.imag[idx] = imag
+                total_powers[idx] += real - (1j * imag)
+    total_powers += wpu
+    return total_powers

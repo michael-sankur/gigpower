@@ -5,7 +5,7 @@
 
 from fbs.utils import init_from_dss
 from fbs.fbs import fbs, get_solution as get_fbs_solution
-from fbs.dss_solve import solve_with_dss, getVMag, getNominalNodePower
+from fbs.dss_solve import solve_with_dss, getVMag, getNominalNodePower, getTotalNodePower
 
 import pandas as pd
 import numpy as np
@@ -26,9 +26,9 @@ import pytest
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test02.dss']
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test03.dss']
 # dss_files = ['fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_test03a.dss']
-# dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss']
+dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss']
 # dss_files = ['fbs/tests/IEEE_37_feeder_UB/IEEE_37_Bus_allwye.dss']
-dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss']
+# dss_files = ['/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss']
 
 
 def test_all():
@@ -58,7 +58,7 @@ def compare_fbs_sol(dss_file, tolerance):
 
     fbsV, fbsI, fbsStx, fbsSrx, fbs_sV = fbs_sol.V_df(), fbs_sol.I_df(), fbs_sol.Stx_df(), \
         fbs_sol.Srx_df(), fbs_sol.sV_df()
-    dssV, dssI, dssStx, dssSrx, dssLoads, dss = dss_sol
+    dssV, dssI, dssStx, dssSrx, dssNodePowers, dss = dss_sol
 
     print(f"FBS iterations: {fbs_sol.iterations}\t FBS convergence:\
         {fbs_sol.diff}\t FBS tolerance: {fbs_sol.tolerance}")
@@ -74,27 +74,35 @@ def compare_fbs_sol(dss_file, tolerance):
 
     Srx_maxDiff = compare_dfs(fbsSrx, dssSrx, "COMPARE Srx")
 
-    fbsLoads = fbs_sV * 1000  # convert to kW
-    loads_maxDiff = compare_dfs(fbsLoads, dssLoads, "TOTAL LOAD POWERS (kW/kVAR)")
-    compare_dfs(fbsLoads/network.Sbase, dssLoads/network.Sbase, "TOTAL LOAD POWERS p.u.")
-
-    dssNomPwrs = getNominalNodePower(dss)
     fbsNomPwrs = fbs_sol.nomNodePwrs_df() * 1000  # convert to kW
+    dssNomPwrs = getNominalNodePower(dss)
     compare_dfs(fbsNomPwrs, dssNomPwrs, "TOTAL NOMINAL NODE POWERS (kW/kVAR)")
 
-    fbsLoads_sumPhase = fbsLoads.sum(axis=0)
-    dssLoads_sumPhase = dssLoads.sum(axis=0)
-    compare_dfs(fbsLoads_sumPhase, dssLoads_sumPhase, "TOTAL NODE POWERS - SUM OVER PHASE (kW/kVAR)")
+    print("Total node power comparison, from dss.CktElement.Powers()")
+    fbsNodePowers = fbs_sV * 1000  # convert to kW
+    nodePowers_maxDiff1 = compare_dfs(fbsNodePowers, dssNodePowers, "TOTAL NODE POWERS (kW/kVAR)")
+    print("Total node power comparison, from dss.CktElement.Powers()")
+    compare_dfs(fbsNodePowers/network.Sbase, dssNodePowers/network.Sbase, "TOTAL NODE POWERS(pu)")
 
-    compare_dfs(fbsLoads_sumPhase / network.Sbase, dssLoads_sumPhase / network.Sbase, "TOTAL NODE POWERS p.u.")
+    print("Total node power comparison, from opendss voltage solution")
+    dssNodePowers_2 = getTotalNodePower(dss) * 1000
+    nodePowers_maxDiff2 = compare_dfs(fbsNodePowers, dssNodePowers_2, "TOTAL NODE POWERS (kW/kVAR)")
+    print("Total node power comparison, from opendss voltage solution")
+    compare_dfs(fbsNodePowers/network.Sbase, dssNodePowers_2/network.Sbase, "TOTAL NODE POWERS(pu)")
 
+    fbsNodePowers_sumPhase = fbsNodePowers.sum(axis=0)
+    dssNodePowers_sumPhase = dssNodePowers.sum(axis=0)
+    compare_dfs(fbsNodePowers_sumPhase, dssNodePowers_sumPhase, "TOTAL NODE POWERS - SUM OVER PHASE (kW/kVAR)")
+    compare_dfs(fbsNodePowers_sumPhase / network.Sbase, dssNodePowers_sumPhase /
+                network.Sbase, "TOTAL NODE POWERS = SUM OVER PHASE (pu)")
 
     assert (V_maxDiff <= tolerance).all()
     assert (VMag_maxDiff <= tolerance).all()
     assert (I_maxDiff <= tolerance).all()
     assert (Stx_maxDiff <= tolerance).all()
     assert (Srx_maxDiff <= tolerance).all()
-    assert (loads_maxDiff/1000 <= tolerance).all()
+    assert (nodePowers_maxDiff1/1000 <= tolerance).all()
+    assert (nodePowers_maxDiff2/1000 <= tolerance).all()
 
 
 def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame, title: str) -> None:
@@ -114,5 +122,6 @@ def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame, title: str) -> None:
     print(f"{title} - FBS RESULTS")
     print(fbs_df, "\n")
     print(f"{title} - DSS RESULTS")
-    print(dss_df, "\n\n\n")
+    print(dss_df, "\n")
+    print("~"*100, "\n")
     return compare.abs().max()
