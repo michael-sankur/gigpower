@@ -241,7 +241,6 @@ class Capacitor:
         self.phases = [False, False, False]
         self.conn = ''
         self.cappu = np.zeros((3, 3), dtype='float')
-        self.constant_power = False
     def __str__(self) -> str:
         return self.name
 
