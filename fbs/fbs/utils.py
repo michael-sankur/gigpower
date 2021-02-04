@@ -371,10 +371,7 @@ def calc_total_node_power(node: Node, nodeV: Iterable, zipV: Iterable = None) ->
         for idx, ph in enumerate(cap.phases):
             if ph:
                 real = 0
-                if cap.constant_power:
-                    imag = cappu[idx]
-                else:
-                    imag = cappu[idx] * abs_nodeV_sq[idx]
+                imag = cappu[idx] * abs_nodeV_sq[idx]
                 cap.imag[idx] = imag
                 total_powers[idx] += real - (1j * imag)
     total_powers += wpu
