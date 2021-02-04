@@ -82,18 +82,18 @@ def compare_fbs_sol(dss_file, tolerance):
     fbsNodePowers = fbs_sV * 1000  # convert to kW
     nodePowers_maxDiff1 = compare_dfs(fbsNodePowers, dssNodePowers, "TOTAL NODE POWERS (kW/kVAR)")
     print("Total node power comparison, from dss.CktElement.Powers()")
-    compare_dfs(fbsNodePowers/network.Sbase, dssNodePowers/network.Sbase, "TOTAL NODE POWERS(pu)")
+    compare_dfs(fbs_sV, dssNodePowers * 1000/network.Sbase, "TOTAL NODE POWERS(pu)")
 
     print("Total node power comparison, from opendss voltage solution")
     dssNodePowers_2 = getTotalNodePower(dss) * 1000
     nodePowers_maxDiff2 = compare_dfs(fbsNodePowers, dssNodePowers_2, "TOTAL NODE POWERS (kW/kVAR)")
     print("Total node power comparison, from opendss voltage solution")
-    compare_dfs(fbsNodePowers/network.Sbase, dssNodePowers_2/network.Sbase, "TOTAL NODE POWERS(pu)")
+    compare_dfs(fbs_sV, dssNodePowers_2 * 1000/network.Sbase, "TOTAL NODE POWERS(pu)")
 
     fbsNodePowers_sumPhase = fbsNodePowers.sum(axis=0)
     dssNodePowers_sumPhase = dssNodePowers.sum(axis=0)
     compare_dfs(fbsNodePowers_sumPhase, dssNodePowers_sumPhase, "TOTAL NODE POWERS - SUM OVER PHASE (kW/kVAR)")
-    compare_dfs(fbsNodePowers_sumPhase / network.Sbase, dssNodePowers_sumPhase /
+    compare_dfs(fbs_sV.sum(axis=0), dssNodePowers_sumPhase * 1000 /
                 network.Sbase, "TOTAL NODE POWERS = SUM OVER PHASE (pu)")
 
     assert (V_maxDiff <= tolerance).all()
