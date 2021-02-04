@@ -325,8 +325,8 @@ class Solution:
 
         for node in self.network.get_nodes():
             node_idx = self.network.bus_idx_dict[node.name]
-            nodeV = self.V[node.name]
-            data[node_idx] += calc_total_node_power(node, nodeV, [1, 0, 0, 1, 0, 0])
+            nodeV = np.ones((3,), dtype=complex)
+            data[node_idx] += calc_total_node_power(node, nodeV, [0, 0, 1, 0, 0, 1])
         return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
 
     def print_solution(self) -> None:
