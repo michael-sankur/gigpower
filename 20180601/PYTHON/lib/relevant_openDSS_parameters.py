@@ -112,10 +112,8 @@ def relevant_openDSS_parameters(fn, t):
     spu = (ppu + 1j * qpu)
 
     #cappu, wpu, vvcpu
-    cappu = cap_arr()
+    cappu = cap_arr() #a negative number
  
-    
-
     wpu = np.zeros((3, nnode))
     vvcpu = np.zeros((3,nnode))
 
