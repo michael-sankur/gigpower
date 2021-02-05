@@ -2,6 +2,8 @@ import numpy as np
 import opendssdirect as dss
 import re
 import sys
+from lib.helper import load_values, bus_phases, get_line_idx, linelist, cap_arr
+from lib.zipparameters import *
 def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_lines):
 
     dss.run_command('Redirect ' + fn)
@@ -10,86 +12,27 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
     nnode = len(dss.Circuit.AllBusNames())
     Sbase = 1000000.0
     
+    # Line Indices Associated with Voltage Regulators and Transformers 
     line_in_idx_vr = range(0, 2*vr_lines, 2)
     line_out_idx_vr = range(1, 2*vr_lines, 2)
 
     line_idx_tf = range(0, tf_lines)
 
-    # [[3 x nnode array of loads]]
-    def load_values():
-        load_kw = np.zeros((3, nnode))
-        load_kvar = np.zeros((3, nnode))
-        if t == -1:
-            var = 1
-        else:
-            var = (1 + 0.1*np.sin(2*np.pi*0.01*t))
-        for load in range(len(dss.Loads.AllNames())):
-            dss.Loads.Name(dss.Loads.AllNames()[load])
-            load_data = dss.CktElement.BusNames()[0].split('.')
-            idxbs = dss.Circuit.AllBusNames().index(load_data[0])
-            realstuff = dss.CktElement.Powers()[::2]
-            imagstuff = dss.CktElement.Powers()[1::2]
-            for ph in range(1, len(load_data)):
-                load_kw[int(load_data[ph]) - 1, idxbs] += realstuff[ph-1] * 1e3 * var / Sbase 
-                load_kvar[int(load_data[ph]) - 1, idxbs] += imagstuff[ph-1] * 1e3 * var/ Sbase
-        return load_kw, load_kvar
-    load_kw, load_kvar = load_values()
+    load_kw, load_kvar = load_values(t)
  
-  
-
     # [[3 x nnode array of capacitance]]
-    def cap_arr():
-        caparr = np.zeros((3, nnode))# dtype =complex )
-        for n in range(len(dss.Capacitors.AllNames())):
-            dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
-            cap_data = dss.CktElement.BusNames()[0].split('.')
-            idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
-            for ph in range(1, len(cap_data)):
-                caparr[int(cap_data[ph]) - 1, idxbs] -= dss.CktElement.Powers()[1::2][ph-1] * 1e3 / Sbase 
-        return caparr
+    
     
     caparr = cap_arr()
-
-    # {bus : [1 x 3 phase existence]}
-    def bus_phases():
-        dictionary = {}
-        for k2 in range(len(dss.Circuit.AllNodeNames())):
-            a, b = dss.Circuit.AllNodeNames()[k2].split('.')
-            if a in dictionary:
-                temp = dictionary[a]
-                temp[int(b) - 1] = 1
-                dictionary[a] = temp
-            elif a not in dictionary:
-                dictionary[a] = [0, 0, 0]
-                temp = dictionary[a]
-                temp[int(b) - 1] = 1
-                dictionary[a] = temp
-        return dictionary
-
-    #line index
-    def get_line_idx(line):
-        return dss.Lines.AllNames().index(line)
-
-    #in and out line lists
-    def linelist(busname):
-        in_lines = np.array([])
-        out_lines = np.array([])
-        for k in range(len(dss.Lines.AllNames())):
-            dss.Lines.Name(dss.Lines.AllNames()[k])
-            if busname in dss.Lines.Bus1():
-                out_lines = np.append(out_lines, dss.Lines.AllNames()[k])
-            elif busname in dss.Lines.Bus2():
-                in_lines = np.append(in_lines, dss.Lines.AllNames()[k])
-        return in_lines,out_lines
 
     # ----------Residuals for KCL at a bus (m) ----------
     bp = bus_phases()
 
     # Zip Parameters
     # Load
-    beta_S = 0
-    beta_I = 0.0
-    beta_Z = 1
+    beta_S = get_S()
+    beta_I = get_I()
+    beta_Z = get_Z()
 
     # Capacitors
     gamma_S = 0.0
@@ -100,7 +43,7 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
     g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
     b = np.zeros((2*3*(nnode-1), 1, 1))
 
-    # Quadratic Terms
+    # --------------- Quadratic Terms -----------------
     for ph in range(0,3):
         if ph == 0: #set nominal voltage based on phase
             A0 = 1
@@ -172,7 +115,7 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                             H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = -1/2
                             H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
 
-    # Transformer KCL
+    # ----------------------- Transformer KCL -----------------------
     tf_no = len(dss.Transformers.AllNames()) - len(dss.RegControls.AllNames())
     count_tf = 0
     count_tf2 = 0
@@ -222,7 +165,7 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                 H[2*ph*(nnode-1) + (k2-1)*2+1][2*3*(nnode+nline) + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
                 count_tf2+=1
 
-    #Voltage Regulator KCL 
+    # ----------------------- Voltage Regulator KCL -----------------------
     vr_count = len(dss.RegControls.AllNames())
     count_vr = 0
     count_vr2 = 0   
@@ -274,7 +217,7 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                     count_vr2 += 1
 
     
-    #Linear Term & Constant Term
+    # ----------------------- Linear Term & Constant Term -----------------------
     for ph in range(0,3):
         for k2 in range(1, len(dss.Circuit.AllBusNames())):
             for cplx in range(0,2):

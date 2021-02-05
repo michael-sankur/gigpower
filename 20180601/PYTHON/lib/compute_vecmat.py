@@ -1,6 +1,7 @@
 import numpy as np
 import opendssdirect as dss
 import re
+from lib.helper import identify_bus_phases, identify_line_phases
 def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_count, gain):
 
     dss.run_command('Redirect ' + fn)
@@ -8,29 +9,7 @@ def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count
     nnode = len(dss.Circuit.AllBusNames())
     Sbase = 1000000.0
  
-    # bus phases
-    def identify_bus_phases(bus):
-        k = np.zeros(3)
-        for i in range(1, 4):
-            pattern = r"\.%s" % (str(i))
-            m = re.findall(pattern, bus)
-            if m:
-                k[i - 1] = 1
-        return k
-
-    # line phases
-    def identify_line_phases(line):
-        k = np.zeros(3)
-        dss.Lines.Name(line)
-        bus = dss.Lines.Bus1()
-        for i in range(1, 4):
-            pattern = r"\.%s" % (str(i))
-            m = re.findall(pattern, bus)
-            if m:
-                k[i - 1] = 1
-        return k
-
-    # Generate resistance and reactance matrices for all lines
+    # ---------- Resistance and Reactance Matrix for lines ---------------
     R_matrix = np.zeros((nline,9))
     X_matrix = np.zeros((nline,9))
 
@@ -91,10 +70,7 @@ def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count
                 R_matrix[k2, :] = r_temp2.flatten()
         X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() / Zbase 
         R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() / Zbase        
-        # dss.Lines.Length()  [ft]   *   0.3048 m
-        # -----------------------      -----------    = line length [m] 
-        #                                 1 ft         
-
+        
     X = np.reshape(XNR, (2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 1))
    
     #------------ Slack Bus ------------------

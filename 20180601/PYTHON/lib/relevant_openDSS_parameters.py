@@ -2,6 +2,8 @@ import opendssdirect as dss
 import re
 import numpy as np
 import time
+from lib.zipparameters import *
+from lib.helper import load_values, transformer_regulator_parameters, cap_arr
 def relevant_openDSS_parameters(fn, t):
 
     dss.run_command('Redirect ' + fn)
@@ -15,51 +17,7 @@ def relevant_openDSS_parameters(fn, t):
 
     #TRANSFORMER, VOLTAGE REGULATOR lines
     tf_no = len(dss.Transformers.AllNames()) - len(dss.RegControls.AllNames()) #number of transformers
-    vr_no = len(dss.RegControls.AllNames()) #number of voltage regulators
-  
-    tf_bus = np.zeros((5, tf_no), dtype = int) #r1 = in bus, r2 = out bus, r3-5 phases; c = tf
-    vr_bus = np.zeros((5, vr_no), dtype = int) 
-   
-    vr_count = 0 
-    vr_lines = 0
-    tf_count = 0
-    tf_lines = 0
-
-    for vr in range(len(dss.RegControls.AllNames())):
-        dss.RegControls.Name(dss.RegControls.AllNames()[vr])  
-        for i in range(2): #start / end bus
-            dss.Transformers.Name(dss.RegControls.Transformer())     
-            bus = dss.CktElement.BusNames()[i].split('.')
-            vr_bus[i, vr_count] = int(dss.Circuit.AllBusNames().index(bus[0])) 
-        for n in range(len(bus[1:])):                 
-            vr_lines += 1                    
-            vr_bus[int(bus[1:][n]) + 1, vr_count] = int(bus[1:][n]) # phases that exist                   
-        if len(bus) == 1: # unspecified phases, assume all 3 exist
-            for n in range(1,4): 
-                vr_lines += 1
-                vr_bus[n+1, vr_count] = n   
-        vr_count += 1 
-   
-    tf_bus_temp = np.zeros((2, 1))
-    for tf in range(len(dss.Transformers.AllNames())):
-        dss.Transformers.Name(dss.Transformers.AllNames()[tf]) 
-        for i in range(2):     
-            bus = dss.CktElement.BusNames()[i].split('.')        
-            tf_bus_temp[i] = int(dss.Circuit.AllBusNames().index(bus[0])) 
-            # stuff the in and out bus of the tf into an array  
-        if not np.size(np.where(vr_bus[0, :] == tf_bus_temp[0])) == 0 and \
-        not np.size(np.where(vr_bus[1, :] == tf_bus_temp[1])) == 0:     
-            continue #if you have already seen the transformer from regulators, skip       
-        
-        tf_bus[0:2, tf_count] = tf_bus_temp[:, 0] #otherwise add to the tf_bus matrix
-        for n in range(len(bus[1:])):                 
-            tf_lines += 1                             
-            tf_bus[int(bus[1:][n]) + 1, tf_count] = int(bus[1:][n])   
-        if len(bus) == 1:
-            for k in range(1,4): #if all phases are assumed to exist
-                tf_lines += 1
-                tf_bus[k+1, tf_count] = k             
-        tf_count += 1
+    tf_bus, vr_bus, _, _, _, vr_no, _ = transformer_regulator_parameters()
 
     nline = len(dss.Lines.AllNames()) + tf_no + (2*vr_no)
     nnode = len(dss.Circuit.AllBusNames())
@@ -86,7 +44,7 @@ def relevant_openDSS_parameters(fn, t):
         dss.Lines.Name(dss.Lines.AllNames()[line]) #set the line
         bus1 = dss.Lines.Bus1()
         bus2 = dss.Lines.Bus2()
-        pattern = r"(\w+)." #this appears to wrok
+        pattern = r"(\w+)."
         try:
             TXnode[line] = re.findall(pattern, bus1)[0]
             RXnode[line] = re.findall(pattern, bus2)[0]
@@ -129,12 +87,10 @@ def relevant_openDSS_parameters(fn, t):
     aI = np.zeros((3,nnode))
     aZ = np.zeros((3,nnode))
 
-    if t == -1:
-        var = 1
-    else:
-        var = (1 + 0.1*np.sin(2*np.pi*0.01*t))
-
-        
+    beta_S = get_S()
+    beta_I = get_I()
+    beta_Z = get_Z()
+       
     for n in range(len(dss.Loads.AllNames())): #go through the loads
         dss.Loads.Name(dss.Loads.AllNames()[n]) #set the load
         load_phases = [0, 0, 0] #instantiate load phases as all non-existent
@@ -143,32 +99,22 @@ def relevant_openDSS_parameters(fn, t):
         for i in load_data:
             phase = int(i)
             load_phases[phase-1] = 1
+            aPQ[phase - 1, knode] = beta_S
+            aZ[phase - 1, knode] = beta_Z
+            aI[phase - 1, knode] = beta_I
         if len(load_data) == 0:
-            load_phases = [1, 1, 1]        
-        realstuff = dss.CktElement.Powers()[::2]
-        imagstuff = dss.CktElement.Powers()[1::2]     
-        rs = 0
-        for ph in range(len(load_phases)):      
-            if load_phases[ph] == 1:
-                aPQ[ph, knode] = 0
-                aZ[ph, knode] = 1
-                ppu[ph, knode] += realstuff[rs] * 1e3 * var / Sbase 
-                qpu[ph, knode] += imagstuff[rs] * 1e3 * var / Sbase
-                rs += 1
-    
+            load_phases = [1, 1, 1]  
+            aPQ[phase - 1, knode] = beta_S
+            aZ[phase - 1, knode] = beta_Z
+            aI[phase - 1, knode] = beta_I    
+             
+    ppu, qpu = load_values(t)
     spu = (ppu + 1j * qpu)
 
     #cappu, wpu, vvcpu
-    cappu = np.zeros((3,nnode))
+    cappu = cap_arr()
  
-    for n in range(len(dss.Capacitors.AllNames())):
-        dss.Capacitors.Name(dss.Capacitors.AllNames()[n])
-        cap_data = dss.CktElement.BusNames()[0].split('.')
-        idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
-        for ph in range(1, len(cap_data)):
-            cappu[int(cap_data[ph]) - 1, idxbs] -= dss.CktElement.Powers()[1::2][ph-1] * 1e3 / Sbase 
     
-
 
     wpu = np.zeros((3, nnode))
     vvcpu = np.zeros((3,nnode))
