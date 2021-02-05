@@ -19,8 +19,8 @@ def load_values(t):
         load_phases = [0, 0, 0] #instantiate load phases as all non-existent
         load_data = dss.CktElement.BusNames()[0].split('.')[1:]
         knode = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[0].split('.')[0])) #match busname to index
-        for i in load_data:
-            phase = int(i)
+        for p in load_data:
+            phase = int(p)
             load_phases[phase-1] = 1
         if len(load_data) == 0:
             load_phases = [1, 1, 1]        
@@ -76,8 +76,8 @@ def nominal_load_values(t):
         load_data = dss.CktElement.BusNames()[0].split('.')[1:]
         knode = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[0].split('.')[0])) #match busname to index
         no_phases = len(load_data)
-        for i in load_data:
-            phase = int(i)
+        for p in load_data:
+            phase = int(p)
             load_phases[phase-1] = 1
         if len(load_data) == 0:
             load_phases = [1, 1, 1]        
@@ -106,8 +106,8 @@ def nominal_cap_arr():
         if no_phases == 0:
             no_phases = 3
             
-        for i in range(len(cap_data[1:])):
-            cap_phases[int(cap_data[1:][i]) - 1] = 1
+        for p in range(len(cap_data[1:])):
+            cap_phases[int(cap_data[1:][p]) - 1] = 1
         if len(cap_phases) == 0:
             cap_phases = [1, 1, 1]  
     
