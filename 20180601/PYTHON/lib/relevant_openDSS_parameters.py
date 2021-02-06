@@ -3,7 +3,7 @@ import re
 import numpy as np
 import time
 from lib.zipparameters import *
-from lib.helper import load_values, transformer_regulator_parameters, cap_arr
+from lib.helper import transformer_regulator_parameters, nominal_load_values, nominal_cap_arr
 def relevant_openDSS_parameters(fn, t):
 
     dss.run_command('Redirect ' + fn)
@@ -108,11 +108,13 @@ def relevant_openDSS_parameters(fn, t):
             aZ[phase - 1, knode] = beta_Z
             aI[phase - 1, knode] = beta_I    
              
-    ppu, qpu = load_values(t)
+    #ppu, qpu = load_values(t)
+    ppu, qpu = nominal_load_values(-1)
     spu = (ppu + 1j * qpu)
 
     #cappu, wpu, vvcpu
-    cappu = cap_arr() #a negative number
+    #cappu = cap_arr() #a negative number
+    cappu = nominal_cap_arr()
  
     wpu = np.zeros((3, nnode))
     vvcpu = np.zeros((3,nnode))

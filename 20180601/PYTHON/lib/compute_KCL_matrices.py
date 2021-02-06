@@ -2,7 +2,7 @@ import numpy as np
 import opendssdirect as dss
 import re
 import sys
-from lib.helper import load_values, bus_phases, get_line_idx, linelist, cap_arr
+from lib.helper import bus_phases, get_line_idx, linelist, nominal_cap_arr, nominal_load_values
 from lib.zipparameters import *
 def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_lines):
 
@@ -18,12 +18,13 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
 
     line_idx_tf = range(0, tf_lines)
 
-    load_kw, load_kvar = load_values(t)
+    #load_kw, load_kvar = load_values(t)
+    load_kw, load_kvar = nominal_load_values(t)
  
     # [[3 x nnode array of capacitance]]
     
     
-    caparr = cap_arr()
+    caparr = nominal_cap_arr()
 
     # ----------Residuals for KCL at a bus (m) ----------
     bp = bus_phases()
