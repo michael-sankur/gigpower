@@ -228,3 +228,94 @@ def identify_line_phases(line):
         if m:
             k[i - 1] = 1
     return k
+
+
+def simple_reg_control(XNR):
+    # ptratio = np.array([])
+    # tap_winding = np.array([])
+    # tap_number = np.array([])
+    # forward_vreg = np.array([])
+    # kV_reg = np.array([])
+    # band = np.array([])
+    # reg_bus = np.array([])
+    for r in range(len(dss.RegControls.AllNames())):
+        dss.RegControls.Name(dss.RegControls.AllNames()[r])
+        dss.Transformers.Name(dss.RegControls.AllNames()[r])
+        dss.Circuit.SetActiveBus(dss.CktElement.BusNames()[0].split(".")[0])
+    
+        Vbase = dss.Bus.kVBase() * 1000
+        print(Vbase)
+        # print(dss.RegControls.AllNames()[r])
+        # print(dss.RegControls.PTRatio())
+        # print(dss.CktElement.BusNames())
+        # print(dss.RegControls.TapWinding())
+        # print(dss.RegControls.TapNumber())
+        # print(dss.RegControls.ForwardVreg())
+        # print(dss.Transformers.kV()) #kv
+        # print(dss.RegControls.ForwardBand(), "\n") #band
+
+
+        # ptratio[r] = dss.RegControls.PTRatio()
+        # tap_winding[r] =  dss.RegControls.TapWinding()
+        # tap_number[r] = dss.RegControls.TapNumber()
+        # forward_vreg[r] = dss.RegControls.ForwardVreg()
+        # kV_reg[r] = dss.Transformers.kV()
+        # band[r] = dss.RegControls.ForwardBand()
+        # reg_bus[r] = dss.CktElement.BusNames()[dss.RegControls.TapWinding() - 1]
+        # #need to know the phase and the bus index
+        #dss.Transformers.kV() * 1000
+        tw = dss.RegControls.TapWinding()
+        band = dss.RegControls.ForwardBand()
+        fwd_vreg = dss.RegControls.ForwardVreg()
+
+        idxbs = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[tw - 1].split('.')[0])) #match busname to index
+        ph = dss.CktElement.BusNames()[tw - 1].split('.')[1:] 
+        ph_arr = [0, 0, 0]
+        if len(ph) == 0:
+            ph_arr = [1, 1, 1]
+        else:
+            for i in ph:
+                num = int(i)
+                ph_arr[num - 1] = 1
+
+        #NR_voltage =  XNR[2*3*ph + 2*idxbs] / dss.RegControls.PTRatio()
+        target_voltage = fwd_vreg
+        XNR_final = 0
+        for ph in range(len(ph_arr)):
+            NR_voltage = np.abs(XNR[2*3*ph + 2*idxbs]) * Vbase
+            
+            print('NR v', NR_voltage)
+            diff = np.abs(NR_voltage - target_voltage)
+            print('diff', diff)
+
+            #compare voltage to target voltage
+             #assess the difference
+            if diff <= band: #converges
+                    XNR_final = XNR
+            elif diff > band:
+                if NR_voltage - target_voltage > 0:
+                    if dss.RegControls.TapNumber() >= 16 :
+                        print('Tap Number Out of Bounds' )
+                        XNR_final = XNR
+                 
+                    else:
+                        print('Increase Tap Number')
+                        dss.RegControls.TapNumber(dss.RegControls.TapNumber() + 1)
+                        #NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, der, capacitance, time_delta, H_reg, G_reg)
+
+                else:
+                    if dss.RegControls.TapNumber() <= -16:
+                        print('Tap Number Out of Bounds' )
+                        XNR_final = XNR
+                 
+                    else:
+                        print('decrease tap number')
+                        dss.RegControls.TapNumber(dss.RegControls.TapNumber() - 1)
+                        #NR3_timevarying(fn, XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, tol, maxiter, der, capacitance, time_delta, H_reg, G_reg)
+        return XNR_final
+       
+        #make decision about whether to move the tap number or if convergence
+        #move the tap number
+        #resolve and repeat 
+
+

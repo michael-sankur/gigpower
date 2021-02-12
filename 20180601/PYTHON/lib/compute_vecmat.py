@@ -4,7 +4,7 @@ import re
 from lib.helper import identify_bus_phases, identify_line_phases
 def compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_count, gain):
 
-    dss.run_command('Redirect ' + fn)
+    #dss.run_command('Redirect ' + fn)
     nline = len(dss.Lines.AllNames())    
     nnode = len(dss.Circuit.AllBusNames())
     Sbase = 1000000.0

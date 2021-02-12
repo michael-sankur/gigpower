@@ -6,7 +6,7 @@ from lib.helper import bus_phases, get_line_idx, linelist, nominal_cap_arr, nomi
 from lib.zipparameters import *
 def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_lines):
 
-    dss.run_command('Redirect ' + fn)
+    #dss.run_command('Redirect ' + fn)
 
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
