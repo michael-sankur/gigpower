@@ -4,7 +4,7 @@ import re
 import sys
 def change_KCL_matrices(fn, H, g, b, t, der, capacitance):
 
-    dss.run_command('Redirect ' + fn)
+    #dss.run_command('Redirect ' + fn)
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])

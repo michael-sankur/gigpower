@@ -6,9 +6,6 @@ import opendssdirect as dss
 import re
 import time
 def basematrices(fn, slacknode, Vslack, V0, I0):
-
-    dss.run_command('Redirect ' + fn)
-
     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = transformer_regulator_parameters()
 
     nline = len(dss.Lines.AllNames())  
