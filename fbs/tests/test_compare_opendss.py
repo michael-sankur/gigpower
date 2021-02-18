@@ -5,7 +5,7 @@
 
 from fbs.utils import init_from_dss
 from fbs.fbs import fbs, get_solution as get_fbs_solution
-from fbs.dss_solve import solve_with_dss, getVMag, getNominalNodePower, getTotalNodePower
+from fbs.dss_solve import solve_with_dss, getVMag, getNominalNodePower, getTotalNodePowers
 
 import pandas as pd
 import numpy as np
@@ -85,7 +85,7 @@ def compare_fbs_sol(dss_file, tolerance):
     compare_dfs(fbs_sV, dssNodePowers * 1000/network.Sbase, "TOTAL NODE POWERS(pu)")
 
     print("Total node power comparison, from opendss voltage solution")
-    dssNodePowers_2 = getTotalNodePower(dss) * 1000
+    dssNodePowers_2 = getTotalNodePowers(dss) * 1000
     nodePowers_maxDiff2 = compare_dfs(fbsNodePowers, dssNodePowers_2, "TOTAL NODE POWERS (kW/kVAR)")
     print("Total node power comparison, from opendss voltage solution")
     compare_dfs(fbs_sV, dssNodePowers_2 * 1000/network.Sbase, "TOTAL NODE POWERS(pu)")

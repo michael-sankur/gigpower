@@ -6,12 +6,11 @@ import pytest
 import opendssdirect as dss
 from fbs.network import Transformer
 
-# dss_file = 'fbs/tests/06n3ph_unbal/06node_threephase_unbalanced.dss'
-# dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye_noxfm_noreg.dss'
-# dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_allwye.dss'
-# dss_file = 'fbs/tests/IEEE_13_bus/IEEE_13_Bus_original.dss'
-# dss_file = 'fbs/tests/IEEE_37_feeder_UB/IEEE_37_Bus_allwye.dss'
-dss_file = 'fbs/tests/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss'
+CUR_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
+dss_file = CUR_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye_noxfm_noreg.dss'
+# dss_file = 'IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss'
+# dss_file = 'IEEE_37_Bus_allwye_noxfm_noreg.dss'
+
 
 @pytest.fixture
 def get_network():
