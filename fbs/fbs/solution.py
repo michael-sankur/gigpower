@@ -4,7 +4,7 @@
 # Implement FBS to solve Power Flow for a radial distribution network.
 
 from typing import Iterable, Dict, Tuple
-from . utils import mask_phases, calc_total_node_power
+from . utils import mask_phases, calc_total_node_power, calc_load_power, calc_cap_power
 from . network import Network, Node, Line
 import pandas as pd # type: ignore
 import numpy as np # type: ignore
@@ -242,9 +242,9 @@ class Solution:
     def calc_Inode(self) -> None:
         """ Calculate self.Inode (currents consumed at each node) """
         for node in self.network.get_nodes():
-            node_V = self.V[ node.name ]
-            node_sV = self.sV[ node.name ]
-            node_I = np.conj(np.divide(node_sV,node_V))
+            node_V = self.V[node.name]
+            node_sV = self.sV[node.name]
+            node_I = np.conj(np.divide(node_sV, node_V))
             self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
 
     def V_df(self) -> Iterable:
@@ -312,6 +312,33 @@ class Solution:
         index = ['iterations', 'Vtest', 'Vref', 'tolerance', 'diff']
         data = [self.iterations, self.Vtest, self.Vref, self.tolerance, self.diff]
         return pd.DataFrame(data, index).transpose()
+
+    def getLoadPowers(self) -> Iterable:
+        """
+        Return total load powers by bus, calculated from solved V value
+        per node.
+        """
+        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
+
+        for bus_name, bus_idx in self.network.bus_idx_dict.items():
+            node = self.network.nodes[bus_name]
+            data[bus_idx] = calc_load_power(node, self.V[bus_name])
+
+        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+
+    def getCapPowers(self) -> Iterable:
+        """
+        Return total cap powers by bus, calculated from solved V value
+        per node.
+        """
+        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
+
+        for bus_name, bus_idx in self.network.bus_idx_dict.items():
+            node = self.network.nodes[bus_name]
+            data[bus_idx] = calc_cap_power(node, self.V[bus_name])
+
+        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+
 
     def nomNodePwrs_df(self) -> Iterable:
         """

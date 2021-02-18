@@ -327,9 +327,9 @@ def mask_phases(matrix: Iterable, shape: tuple, phases: List[bool]) -> Iterable:
     return np.nan_to_num(masked)
 
 
-def calc_total_node_power(node: Node, nodeV: Iterable, zipV: Iterable = None) -> Iterable:
+def calc_load_power(node: Node, nodeV: Iterable, zipV: Iterable = None) -> Iterable:
     """
-    helper function to calculate total node power given a Node, solved V value, and zip values
+    helper function to calculate load powers over a node, given the solved V value, and zip values
     If zipV is not passed by argument, will default to values saved on the Load objects
     pointed to by the given Node
 
@@ -337,10 +337,9 @@ def calc_total_node_power(node: Node, nodeV: Iterable, zipV: Iterable = None) ->
     nodeV: 3x1 complex volgaget
     zipV: 6x1 zipV array
     """
-    wpu = np.zeros(3)  # TODO: will be set as argument
     abs_nodeV = abs(nodeV)
     abs_nodeV_sq = np.power(abs(nodeV), 2)
-    total_powers = np.zeros(3, dtype=complex)
+    load_powers = np.zeros(3, dtype=complex)
 
     for load in node.loads:
         spu_real, spu_imag = load.ppu, load.qpu
@@ -363,7 +362,19 @@ def calc_total_node_power(node: Node, nodeV: Iterable, zipV: Iterable = None) ->
                 temp2 = aPQ_q + aI_q * abs_nodeV[idx] + aZ_q * abs_nodeV_sq[idx]
                 imag = temp2 * spu_imag
 
-                total_powers[idx] += real + (1j * imag)
+                load_powers[idx] += real + (1j * imag)
+    return load_powers
+
+
+def calc_cap_power(node: Node, nodeV: Iterable) -> Iterable:
+    """
+    helper function to calculate cap powers over a node, given the solved V value
+
+    node: Node object
+    nodeV: 3x1 complex volgage
+    """
+    abs_nodeV_sq = np.power(abs(nodeV), 2)
+    cap_powers = np.zeros(3, dtype=complex)
 
     for cap in node.capacitors:
         cappu = cap.cappu
@@ -373,6 +384,24 @@ def calc_total_node_power(node: Node, nodeV: Iterable, zipV: Iterable = None) ->
                 real = 0
                 imag = cappu[idx] * abs_nodeV_sq[idx]
                 cap.imag[idx] = imag
-                total_powers[idx] += real - (1j * imag)
+                cap_powers[idx] += real - (1j * imag)
+    return cap_powers
+
+
+def calc_total_node_power(node: Node, nodeV: Iterable, zipV: Iterable = None) -> Iterable:
+    """
+    helper function to calculate total node power given a Node, solved V value, and zip values
+    If zipV is not passed by argument, will default to values saved on the Load objects
+    pointed to by the given Node
+
+    node: Node object
+    nodeV: 3x1 complex volgaget
+    zipV: 6x1 zipV array
+    """
+    wpu = np.zeros(3)  # TODO: will be set as argument
+
+    total_powers = calc_load_power(node, nodeV, zipV)
+    total_powers += calc_cap_power(node, nodeV)
     total_powers += wpu
+
     return total_powers

@@ -8,7 +8,8 @@ import numpy as np # type: ignore
 import pandas as pd # type: ignore
 from typing import Tuple
 from . utils import set_zip_values, parse_phases, pad_phases, ZIPV, \
-    get_nodes_from_dss, get_loads_from_dss, get_caps_from_dss, calc_total_node_power
+    get_nodes_from_dss, get_loads_from_dss, get_caps_from_dss, \
+    calc_load_power, calc_cap_power, calc_total_node_power
 from collections import defaultdict
 from . network import Network
 
@@ -132,48 +133,7 @@ def get_solution() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFra
 
     dssStx = pd.DataFrame(STXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
     dssSrx = pd.DataFrame(SRXDSS, dss.Lines.AllNames(), ['A', 'B', 'C'])
-
-    """
-    dss.CktElement.Powers() gives the powers of the element,
-    for only the phases of the element, and the neutral line, if it is wye
-    connected. Which is why there are different array lengths,
-    and two 0.0s at the end of each array
-
-    To obtain total node powers, we ADD results from dss.CktElement.Powers()
-    """
-    bus_names = dss.Circuit.AllBusNames()
-    load_cols = ['A', 'B', 'C']
-    node_powers = {b: np.zeros(3, dtype=complex) for b in bus_names}
-
-    # add all load powers to load data, based on bus index
-    for name in dss.Loads.AllNames():
-        dss.Loads.Name(name)
-        bus_name = dss.CktElement.BusNames()[0]
-        bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
-        if len(bus_phase) == 0:
-            bus_phase.extend(['1', '2', '3'])
-        phases = parse_phases(list(bus_phase))
-        sparse = np.asarray(dss.CktElement.Powers())
-        # pull out real and imaginary components, pad by phase, ignore neutral
-        real = pad_phases(sparse[0:5:2], (3, ), phases)
-        imag = pad_phases(sparse[1:6:2], (3, ), phases)
-        node_powers[bus_name] += (real + 1j * imag)
-
-    # add all capacitors to load data, based on bus index
-    for name in dss.Capacitors.AllNames():
-        dss.Capacitors.Name(name)
-        bus_name = dss.CktElement.BusNames()[0]
-        bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
-        if len(bus_phase) == 0:
-            bus_phase.extend(['1', '2', '3'])
-        phases = parse_phases(list(bus_phase))
-        sparse = np.asarray(dss.CktElement.Powers())
-        # pull out real and imaginary components, pad by phase, ignore neutral
-        real = pad_phases(sparse[0:5:2], (3, ), phases)
-        imag = pad_phases(sparse[1:6:2], (3, ), phases)
-        node_powers[bus_name] += (real + 1j * imag)
-
-    dssNodePowers = pd.DataFrame.from_dict(node_powers, orient='index', dtype=complex, columns=load_cols)
+    dssNodePowers = getTotalNodePowers_CktElement(dss)
 
     return dssV, dssI, dssStx, dssSrx, dssNodePowers, dss
 
@@ -230,25 +190,92 @@ def getNominalNodePower(dss) -> pd.DataFrame:
     return pd.DataFrame(data, bus_names, ['A', 'B', 'C'])
 
 
-def getTotalNodePower(dss) -> pd.DataFrame:
+def getLoadPowers_CktElement(dss) -> pd.DataFrame:
     """
-    Return total nominal node power for loads and capacitors.
+    Query opendss for Load powers by bus
+    helper method to getTotalNodePowers_CktElement
+    """
+    load_names = dss.Loads.AllNames()
+    cols = ['A', 'B', 'C']
+    load_powers_by_bus = {name: np.zeros(3, dtype=complex) for name in dss.Circuit.AllBusNames()}
+
+    for name in load_names:
+        dss.Loads.Name(name)
+        bus_name = dss.CktElement.BusNames()[0]
+        bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
+        if len(bus_phase) == 0:
+            bus_phase.extend(['1', '2', '3'])
+        phases = parse_phases(list(bus_phase))
+        sparse = np.asarray(dss.CktElement.Powers())
+        # pull out real and imaginary components, pad by phase, ignore neutral
+        real = pad_phases(sparse[0:5:2], (3, ), phases)
+        imag = pad_phases(sparse[1:6:2], (3, ), phases)
+        load_powers_by_bus[bus_name] += real + 1j * imag
+
+    return pd.DataFrame.from_dict(load_powers_by_bus, orient='index', dtype=complex, columns=cols)
+
+
+def getCapacitorPowers_CktElement(dss) -> pd.DataFrame:
+    """
+    Query opendss for Capacitor powers by bus
+    helper method to getTotalNodePowers_CktElement
+    """
+    cap_names = dss.Capacitors.AllNames()
+    cols = ['A', 'B', 'C']
+    cap_powers_by_bus = {b: np.zeros(3, dtype=complex) for b in dss.Circuit.AllBusNames()}
+
+    # add all capacitors to load data, based on bus index
+    for name in cap_names:
+        dss.Capacitors.Name(name)
+        bus_name = dss.CktElement.BusNames()[0]
+        bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
+        if len(bus_phase) == 0:
+            bus_phase.extend(['1', '2', '3'])
+        phases = parse_phases(list(bus_phase))
+        sparse = np.asarray(dss.CktElement.Powers())
+        # pull out real and imaginary components, pad by phase, ignore neutral
+        real = pad_phases(sparse[0:5:2], (3, ), phases)
+        imag = pad_phases(sparse[1:6:2], (3, ), phases)
+        cap_powers_by_bus[bus_name] += real + 1j * imag
+
+    return pd.DataFrame.from_dict(cap_powers_by_bus, orient='index', dtype=complex, columns=cols)
+
+
+def getTotalNodePowers_CktElement(dss) -> pd.DataFrame:
+    """
+    Query opendss for total node powers over loads and capacitors, by
+    using dss.CktElement.Powers()
+    Call this AFTER opendss has solved the current circuit.
+    Used to compare with calcTotalNodePowers()
+
+    To obtain total node powers, we ADD results from dss.CktElement.Powers()
+    """
+    bus_names = dss.Circuit.AllBusNames()
+    load_cols = ['A', 'B', 'C']
+    node_powers = {b: np.zeros(3, dtype=complex) for b in bus_names}
+    load_powers = getLoadPowers_CktElement(dss)
+    capacitor_powers = getCapacitorPowers_CktElement(dss)
+
+    return load_powers + capacitor_powers
+
+
+def getLoadPowers(dss) -> pd.DataFrame:
+    """
+    Calculate load powers over node,
+    the Voltage solution obtained by opendss' solver, along with the zip values
+    from opendss.
     Call this AFTER opendss has solved the current circuit.
 
-    Wraps utils.calc_total_node_power
+    Wraps utils.calc_load_power
     Maps some dss data to the Network interface
     """
-
     network = Network()
 
-    # map only nodes, loads, and caps from opendss, in their current (SOLVED) state
+    # map only nodes and loads in their current (SOLVED) state
     get_nodes_from_dss(network, dss)
     get_loads_from_dss(network, dss)
-    get_caps_from_dss(network, dss)
 
     data = np.zeros((len(network.nodes), 3), dtype=complex)
-    # use utils.calc_total_node_power to calculate node powers based on
-    # voltage computed by opendss.Solution
 
     for node in network.get_nodes():
         node_idx = network.bus_idx_dict[node.name]
@@ -256,8 +283,51 @@ def getTotalNodePower(dss) -> pd.DataFrame:
         dss.Circuit.SetActiveBus(node.name)
         ph = np.asarray(dss.Bus.Nodes(), dtype='int')-1
         Vtemp = np.asarray(dss.Bus.PuVoltage())
-        Vtemp = Vtemp[0:5:2] + 1j*Vtemp[1:6:2]
+        # Vtemp = np.asarray( [1,0] * len(ph))
+        Vtemp = Vtemp[0::2] + 1j*Vtemp[1::2]
         nodeV[ph] = Vtemp
-        data[node_idx] = calc_total_node_power(node, nodeV)
+        data[node_idx] = calc_load_power(node, nodeV)
 
     return pd.DataFrame(data, network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+
+
+def getCapacitorPowers(dss) -> pd.DataFrame:
+    """
+    Calculate load powers over node,
+    the Voltage solution obtained by opendss' solver, along with the zip values
+    from opendss.
+    Call this AFTER opendss has solved the current circuit.
+
+    Wraps utils.calc_load_power
+    Maps some dss data to the Network interface
+    """
+    network = Network()
+
+    # map only nodes and caps in their current (SOLVED) state
+    get_nodes_from_dss(network, dss)
+    get_caps_from_dss(network, dss)
+
+    data = np.zeros((len(network.nodes), 3), dtype=complex)
+
+    for node in network.get_nodes():
+        node_idx = network.bus_idx_dict[node.name]
+        nodeV = np.zeros(3, dtype=complex)
+        dss.Circuit.SetActiveBus(node.name)
+        ph = np.asarray(dss.Bus.Nodes(), dtype='int')-1
+        Vtemp = np.asarray(dss.Bus.PuVoltage())
+        # Vtemp = np.asarray( [1,0] * len(ph))
+        Vtemp = Vtemp[0::2] + 1j*Vtemp[1::2]
+        nodeV[ph] = Vtemp
+        data[node_idx] = calc_cap_power(node, nodeV)
+
+    return pd.DataFrame(data, network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+
+
+def getTotalNodePowers(dss) -> pd.DataFrame:
+    """
+    Calculate total node power for loads and capacitors, using
+    the Voltage solution obtained by opendss' solver, along with the zip values
+    from opendss.
+    Call this AFTER opendss has solved the current circuit.
+    """
+    return getLoadPowers(dss) + getCapacitorPowers(dss)
