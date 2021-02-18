@@ -11,17 +11,11 @@ from fbs.dss_solve import solve_with_dss, getTotalNodePowers, getNominalNodePowe
     getTotalNodePowers_CktElement
 
 import pandas as pd
-import sys
 
-LIN_DIST_DIR = '/Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow'
 CUR_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
-TEST_FILES = ['IEEE_13_Node/IEEE_13_Bus_allwye_noxfm_noreg.dss',
-              'IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss',
-              'IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss']
-# dss_file = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_04/4Bus-YY-Bal.dss'
-# dss_file = CUR_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye_noxfm_noreg.dss'
-# dss_file = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss'
-dss_file = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/IEEE_37_feeder_UB/IEEE_37_Bus_allwye_noxfm_noreg.dss'
+dss_file = CUR_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye_noxfm_noreg.dss'
+# dss_file = 'IEEE_34_feeder_UB/IEEE_34_Bus_allwye_noxfm_noreg.dss'
+# dss_file = 'IEEE_37_Bus_allwye_noxfm_noreg.dss'
 
 
 def relabelColumns(df, prefix):
