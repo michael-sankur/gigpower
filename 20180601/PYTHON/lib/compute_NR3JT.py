@@ -1,5 +1,5 @@
 import numpy as np
-def compute_NR3JT_vectorized(X, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines):
+def compute_NR3JT(X, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines):
     JSUBV = g_SB
     JKVL = G_KVL
 

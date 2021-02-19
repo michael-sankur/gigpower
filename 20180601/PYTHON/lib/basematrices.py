@@ -1,5 +1,5 @@
 import numpy as np
-from lib.compute_vecmat import compute_vecmat
+from lib.compute_SBKVL_matrices import compute_SBKVL_matrices
 from lib.compute_KCL_matrices import compute_KCL_matrices
 from lib.helper import transformer_regulator_parameters
 import opendssdirect as dss
@@ -40,7 +40,7 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
         XNR[(2*3*nnode + 2*3*nline):] = np.zeros((len(XNR) - 2*3*nnode - 2*3*nline), 1)
 
     # generate static matrices
-    XNR, g_SB, b_SB, G_KVL, b_KVL, H_reg, G_reg = compute_vecmat(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain)
+    XNR, g_SB, b_SB, G_KVL, b_KVL, H_reg, G_reg = compute_SBKVL_matrices(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain)
     # generate non-static matrices
     H, g, b = compute_KCL_matrices(fn, -1, 0, 0, tf_bus, vr_bus, tf_lines, vr_lines)
     return XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg

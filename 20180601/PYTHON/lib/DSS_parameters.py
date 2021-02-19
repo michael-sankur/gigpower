@@ -2,7 +2,7 @@ import opendssdirect as dss
 import re
 import numpy as np
 import time
-from lib.zipparameters import *
+from lib.zip_parameters import *
 from lib.helper import transformer_regulator_parameters, nominal_load_values, nominal_cap_arr
 def relevant_openDSS_parameters(fn, t):
 
@@ -11,7 +11,7 @@ def relevant_openDSS_parameters(fn, t):
 
     #BASE values
     #Vbase = dss.Bus.kVBase() * 1000
-    Sbase = 1000000.0
+    #Sbase = 1000000.0
     #Ibase = Sbase/Vbase
     #Zbase = Vbase/Ibase
 

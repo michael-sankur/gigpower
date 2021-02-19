@@ -1,5 +1,5 @@
 import numpy as np
-from lib.relevant_openDSS_parameters import relevant_openDSS_parameters
+from lib.DSS_parameters import relevant_openDSS_parameters
 
 def map_output(nline, nnode, XNR, fn, time_delta):
 

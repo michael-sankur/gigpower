@@ -3,14 +3,14 @@ import opendssdirect as dss
 import time
 import re
 
-from lib.compute_NR3FT_vectorized import compute_NR3FT_vectorized as ft
-from lib.compute_NR3JT_vectorized import compute_NR3JT_vectorized as jt
+from lib.compute_NR3FT import compute_NR3FT 
+from lib.compute_NR3JT import compute_NR3JT 
 from lib.change_KCL_matrices import change_KCL_matrices
 from lib.helper import transformer_regulator_parameters, voltage_regulator_index_dict
 from lib.map_output import map_output
 from lib.basematrices import basematrices
 
-def NR3_timevarying(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta):
+def NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta):
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = basematrices(fn, slacknode, Vslack, V0, I0)
    #need to move time, cap, DER into this function
     nline = len(dss.Lines.AllNames())  
@@ -34,8 +34,8 @@ def NR3_timevarying(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitanc
     # solve power-flow
     while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
         print("Iteration number %f" % (itercount))
-        FT = ft(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines)
-        JT = jt(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
+        FT = compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines)
+        JT = compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
     
         if JT.shape[0] >= JT.shape[1]:
             XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT

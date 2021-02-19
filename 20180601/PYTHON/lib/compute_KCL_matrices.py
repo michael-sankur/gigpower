@@ -3,7 +3,7 @@ import opendssdirect as dss
 import re
 import sys
 from lib.helper import bus_phases, get_line_idx, linelist, nominal_cap_arr, nominal_load_values
-from lib.zipparameters import *
+from lib.zip_parameters import *
 def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_lines):
 
     #dss.run_command('Redirect ' + fn)
