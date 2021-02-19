@@ -142,6 +142,39 @@ New Load.S742ab Bus1=742.1.2 Phases=2 Conn=Wye Model=2 kV=4.800 kW=8.0 kVAR=4.0
 New Load.S742bc Bus1=742.2.3 Phases=2 Conn=Wye Model=2 kV=4.800 kW=85.0 kVAR=40.0
 New Load.S744ab Bus1=744.1.2 Phases=2 Conn=Wye Model=1 kV=4.800 kW=42.0 kVAR=21.0
 
+
+
+Load.S701ab.vminpu=.8 
+Load.S701bc.vminpu=.8 
+Load.S701ca.vminpu=.8 
+Load.S712ca.vminpu=.8 
+Load.S713ca.vminpu=.8 
+Load.S714ab.vminpu=.8  
+Load.S714bc.vminpu=.8  
+Load.S718ab.vminpu=.8  
+Load.S720ca.vminpu=.8  
+Load.S722bc.vminpu=.8  
+Load.S722ca.vminpu=.8  
+Load.S724bc.vminpu=.8 
+Load.S725bc.vminpu=.8  
+Load.S727ca.vminpu=.8  
+Load.S728abc.vminpu=.8  
+Load.S729ab.vminpu=.8  
+Load.S730ca.vminpu=.8  
+Load.S731bc.vminpu=.8  
+Load.S732ca.vminpu=.8  
+Load.S733ab.vminpu=.8    
+Load.S734ca.vminpu=.8  
+Load.S735ca.vminpu=.8  
+Load.S736bc.vminpu=.8  
+Load.S737ab.vminpu=.8  
+Load.S738ab.vminpu=.8  
+Load.S740ca.vminpu=.8  
+Load.S741ca.vminpu=.8  
+Load.S742ab.vminpu=.8  
+Load.S742bc.vminpu=.8  
+Load.S744ab.vminpu=.8  
+
 Set VoltageBases = "230,4.8,0.48"
 CalcVoltageBases
 ! BusCoords IEEE37_BusXY.csv

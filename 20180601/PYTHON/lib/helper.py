@@ -80,6 +80,7 @@ def nominal_load_values(t):
             phase = int(p)
             load_phases[phase-1] = 1
         if len(load_data) == 0:
+            no_phases = 3
             load_phases = [1, 1, 1]        
         realstuff = dss.Loads.kW()
         imagstuff = dss.Loads.kvar()   

@@ -42,76 +42,80 @@ def NR3_timevarying(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitanc
         itercount+=1
  
     
-    vr_idx_dict = voltage_regulator_index_dict()
-    flag = 0
-    for k in vr_idx_dict.keys():
-        for p in vr_idx_dict[k]:
+    # vr_idx_dict = voltage_regulator_index_dict()
+    # flag = 0
+    # for k in vr_idx_dict.keys():
+    #     for p in vr_idx_dict[k]:
             
-            dss.RegControls.Name(dss.RegControls.AllNames()[p])
-            #dss.Transformers.Name(dss.RegControls.AllNames()[p])
-            #won't necessarily have the same name
-            print(dss.RegControls.Name())
-            tw = dss.RegControls.TapWinding()
-            #dss.Circuit.SetActiveBus(dss.CktElement.BusNames()[tw-1].split(".")[0])
-            dss.Circuit.SetActiveBus(dss.CktElement.BusNames()[0].split(".")[0])
+    #         dss.RegControls.Name(dss.RegControls.AllNames()[p])
+    #         #dss.Transformers.Name(dss.RegControls.AllNames()[p])
+    #         #won't necessarily have the same name
+    #         print(dss.RegControls.Name())
+    #         tw = dss.RegControls.TapWinding()
+    #         #dss.Circuit.SetActiveBus(dss.CktElement.BusNames()[tw-1].split(".")[0])
+    #         dss.Circuit.SetActiveBus(dss.CktElement.BusNames()[0].split(".")[0])
         
-            Vbase = dss.Bus.kVBase() * 1000
-            band = dss.RegControls.ForwardBand()
-            target_voltage = dss.RegControls.ForwardVreg()
+    #         Vbase = dss.Bus.kVBase() * 1000
+    #         band = dss.RegControls.ForwardBand()
+    #         target_voltage = dss.RegControls.ForwardVreg()
 
-            #idxbs = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[tw - 1].split('.')[0]))
-            idxbs = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[0].split('.')[0]))
+    #         #idxbs = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[tw - 1].split('.')[0]))
+    #         idxbs = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[0].split('.')[0]))
         
-            #ph = dss.CktElement.BusNames()[tw - 1].split('.')[1:] 
-            ph = dss.CktElement.BusNames()[0].split('.')[1:] 
-            ph_arr = [0, 0, 0]
-            for i in ph:
-                ph_arr[int(i) - 1] = 1
-            if len(ph) == 0:
-                ph_arr = [1, 1, 1]
+    #         #ph = dss.CktElement.BusNames()[tw - 1].split('.')[1:] 
+    #         ph = dss.CktElement.BusNames()[0].split('.')[1:] 
+    #         ph_arr = [0, 0, 0]
+    #         for i in ph:
+    #             ph_arr[int(i) - 1] = 1
+    #         if len(ph) == 0:
+    #             ph_arr = [1, 1, 1]
 
-            XNR_final = 0
-            for ph in range(len(ph_arr)):
-                #print(ph)
-                if ph_arr[ph] == 1:
-                    NR_voltage = np.abs(XNR[2*nnode*ph + 2*idxbs] + 1j*XNR[2*nnode*ph + 2*idxbs + 1]) * Vbase / dss.RegControls.PTRatio()
-                    
-                    diff = np.abs(NR_voltage - target_voltage)
+    #         XNR_final = 0
+    #         for ph in range(len(ph_arr)):
+    #             #print(ph)
+    #             if ph_arr[ph] == 1:
+    #                 NR_voltage = np.abs(XNR[2*nnode*ph + 2*idxbs] + 1j*XNR[2*nnode*ph + 2*idxbs + 1]) * Vbase / dss.RegControls.PTRatio()
+    #                 print(NR_voltage)
 
-                    # print('NR voltage: ', NR_voltage)
-                    # print('difference: ', diff)
-                    # print(ph, idxbs, dss.Bus.Name(), band, target_voltage)
+    #                 diff = np.abs(NR_voltage - target_voltage)
+    #                 print(diff)
 
-                    #compare voltage to target voltage
-                    #assess the difference
-                    if diff <= band: #converges
-                        print('Converges')
-                        XNR_final = XNR
-                        continue
+    #                 # print('NR voltage: ', NR_voltage)
+    #                 # print('difference: ', diff)
+    #                 # print(ph, idxbs, dss.Bus.Name(), band, target_voltage)
+
+    #                 #compare voltage to target voltage
+    #                 #assess the difference
+    #                 if diff <= band: #converges
+    #                     print('Converges')
+    #                     XNR_final = XNR
+    #                     continue
                             
-                    elif diff > band:
-                        if NR_voltage > (target_voltage + band): 
-                            if dss.RegControls.TapNumber() <= -16 :
-                                print('Tap Number Out of Bounds' )
-                                XNR_final = XNR
+    #                 elif diff > band:
+    #                     if NR_voltage > (target_voltage + band): 
+    #                         if dss.RegControls.TapNumber() <= -16 :
+    #                             print('Tap Number Out of Bounds' )
+    #                             XNR_final = XNR
                         
-                            else:
-                                print('Increase Tap Number')
-                                dss.RegControls.TapNumber(dss.RegControls.TapNumber() - 1)
-                                print('new tapnumber ', dss.RegControls.TapNumber())
-                                flag = 1
-                        else:
-                            if dss.RegControls.TapNumber() >= 16:
-                                print('Tap Number Out of Bounds' )
-                                XNR_final = XNR
+    #                         else:
+    #                             print('decrease Tap Number')
+    #                             dss.RegControls.TapNumber(dss.RegControls.TapNumber() - 1)
+    #                             print('new tapnumber ', dss.RegControls.TapNumber())
+    #                             flag = 1
+    #                     else:
+    #                         if dss.RegControls.TapNumber() >= 16:
+    #                             print('Tap Number Out of Bounds' )
+    #                             print('new tapnumber ', dss.RegControls.TapNumber())
+    #                             XNR_final = XNR
                         
-                            else:
-                                print('Decrease tap number')
-                                dss.RegControls.TapNumber(dss.RegControls.TapNumber() + 1)
-                                flag = 1
-            if flag == 1:                  
-                XNR_final = NR3_timevarying(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta)
-                flag = 0
+    #                         else:
+    #                             print('increase tap number')
+    #                             dss.RegControls.TapNumber(dss.RegControls.TapNumber() + 1)
+    #                             flag = 1
+    #     if flag == 1:  
+    #         print('different iteration ')                
+    #         XNR_final = NR3_timevarying(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta)
+    #         flag = 0
 
-    return XNR_final
+    return XNR
    

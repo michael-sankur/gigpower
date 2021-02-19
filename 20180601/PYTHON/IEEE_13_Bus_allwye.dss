@@ -149,6 +149,21 @@ New Line.line_684_652 Phases=1 Bus1=684.1 Bus2=652.1 LineCode=mtx607 Length=800 
 ! SWITCH DEFINITIONS 
 New Line.line_671_692 Phases=3 Bus1=671 Bus2=692 Switch=y r1=1e-4 r0=1e-4 x1=0.000 x0=0.000 c1=0.000 c0=0.000
 
+Load.671.vminpu=0.8
+Load.634a.vminpu=0.8
+Load.634b.vminpu=0.8
+Load.634c.vminpu=0.8
+Load.645.vminpu=0.8
+Load.692.vminpu=0.8
+Load.675a.vminpu=0.8
+Load.675b.vminpu=0.8
+Load.675c.vminpu=0.8
+Load.611.vminpu=0.8
+Load.652.vminpu=0.8
+Load.670a.vminpu=0.8
+Load.670b.vminpu=0.8
+Load.670c.vminpu=0.8
+
 Set Voltagebases=[115, 4.16, .48]
 calcv
 Solve
