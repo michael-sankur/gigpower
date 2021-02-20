@@ -13,6 +13,10 @@ from nr3.lib.compute_NR3JT_vectorized import compute_NR3JT_vectorized as jt1
 from nr3.lib.compute_vecmat import compute_vecmat
 from nr3.lib.relevant_openDSS_parameters import relevant_openDSS_parameters
 
+
+# import current mapping functions
+import Circuit
+
 LOCAL_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
 DSS_FILE = LOCAL_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye_noxfm_noreg.dss'
 
