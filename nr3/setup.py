@@ -5,7 +5,7 @@ from os.path import dirname, realpath
 from setuptools import find_packages, setup, Distribution
 import setuptools.command.build_ext as _build_ext
 import subprocess
-from pycigar import __version__
+# from pycigar import __version__
 
 
 def _read_requirements_file():
@@ -29,7 +29,7 @@ class BinaryDistribution(Distribution):
 
 setup(
     name='nr3',
-    version=__version__,
+    #version=__version__,
     #distclass=BinaryDistribution,
     #cmdclass={"build_ext": build_ext},
     packages=find_packages(),
