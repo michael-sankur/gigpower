@@ -1,3 +1,7 @@
+# installation
+
+install the package locally using 
+`$ python -m pip install -e .`
 # powerflowpy
 __About__: powerflowpy is a python module that parses dss files into Python data structures, implements a forward/backward sweep solver in python, and compares powerflow solution results with opendss.  
 
