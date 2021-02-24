@@ -32,16 +32,16 @@ def circuit():
 # NR3 TESTS---------------------------------------------------------------------
 def test_nr3_relevant_open_DSS_parameters(circuit):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = relevant_openDSS_parameters(DSS_FILE)
-    assert TXnum == circuit.get_line_TXnum()
-    assert RXnum == circuit.get_line_RXnum()
-    assert PH == circuit.get_bus_ph_mat()
-    assert spu == circuit.get_bus_spu_mat()
-    assert aPQ == circuit.get_bus_aPQ_mat()
-    assert aI == circuit.get_bus_aZ_mat()
-    assert aZ == circuit.get_bus_aI_mat()
-    assert cappu == circuit.get_bus_cappu_mat()
-    assert wpu == circuit.get_bus_wpu_mat()
-    assert vvcpu == circuit.get_bus_vvcpu_mat()
+    assert TXnum == circuit.lines.get_TXnum_matrix()
+    assert RXnum == circuit.lines.get_RXnum_matrix()
+    assert PH == circuit.buses.get_phase_matrix()
+    assert spu == circuit.buses.get_spu_matrix()
+    assert aPQ == circuit.buses.get_aPQ_matrix()
+    assert aI == circuit.buses.get_aZ_matrix()
+    assert aZ == circuit.buses.get_aI_matrix()
+    assert cappu == circuit.buses.get_cappu_matrix()
+    assert wpu == circuit.buses.get_wpu_matrix()
+    assert vvcpu == circuit.buses.get_vvcpu_matrix()
 
 
 def test_nr3_compute_vecmat(circuit):
