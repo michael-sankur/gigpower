@@ -1,4 +1,5 @@
 from typing import List
+import numpy as np
 
 
 def parse_phases(phase_char_lst: List[str]) -> List[bool]:
@@ -35,7 +36,7 @@ def set_zip_values(dss, zipv: List):
         dss.Loads.ZipV()
 
 
-def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> Iterable:
+def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> np.ndarray:
     """
     Helper method to reshape input matrix and set values set to 0
     for phases set to FALSE in phases tuple.
@@ -67,7 +68,7 @@ def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> Iterable
     return ret_mat
 
 
-def mask_phases(matrix: Iterable, shape: tuple, phases: List[bool]) -> Iterable:
+def mask_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> np.ndarray:
     """
     Zeroes out values in input matrix for phases set to FALSE in the phases tuple.
     Input:

@@ -1,6 +1,6 @@
 import CircuitElementGroup
 import VoltageRegulatorGroup
-from typing import Tuple
+import numpy as np
 
 class LineGroup(CircuitElementGroup):
     dss_module_name, ele_name = 'Lines', 'Line'
@@ -18,10 +18,6 @@ class LineGroup(CircuitElementGroup):
         if self.__class__ == 'LineGroup':
             self.voltage_regulators = VoltageRegulatorGroup(dss, self)
 
-    def get_line_from_key(self, key: Tuple[str, str]):
-        """ return the Line with the key (tx_bus, rx_bus)"""
-        return self._key_to_element_dict[key]
-
     def _set_topology(self):
         """ set adjacency matrices"""
         self.adj = {}  # adjacency matrix -> { bus_name: [downstream buses]}
@@ -37,3 +33,19 @@ class LineGroup(CircuitElementGroup):
                 self.reverse_adj[rx_bus] = [tx_bus]
             else:
                 self.reverse_adj[rx_bus].append(tx_bus)
+
+    def get_line_from_key(self, key: Tuple[str, str]):
+        """ return the Line with the key (tx_bus, rx_bus)"""
+        return self._key_to_element_dict[key]
+
+    def get_tx_idx_matrix(self, bus_group):
+        """
+        n x 1 matrix of tx bus indices. Indexed by line index,
+        which is the same value as in opendss
+        """
+        idx_matrix = np.zeros(self.num_elements)
+        for idx, line_name in self._idx_to_name_dict().items():
+            tx_bus = self.get_element(line_name).tx
+            idx_matrix[idx] = bus_group.get_idx(tx_bus)
+        return idx_matrix
+

@@ -1,7 +1,7 @@
 from utils import parse_phases
 import pandas as pd
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Union
 
 
 class CircuitElementGroup():
@@ -15,6 +15,7 @@ class CircuitElementGroup():
         for name, idx in enumerate(self._names):
             self._name_to_idx_dict[name] = idx
             self._idx_to_name_dict[idx] = name
+        self.num_elements = len(self._names)
 
     def _collect_elements(self, dss, **args):
         self._name_to_object_dict = {}
@@ -42,7 +43,7 @@ class CircuitElementGroup():
         return self._idx_to_name_dict[idx]
 
     def get_phase_matrix(self) -> np.ndarray:
-         """ n x 3 phase matrix of booleans """
+        """ n x 3 phase matrix of booleans """
         phase_matrix = np.zeros((len(self._names), 3), dtype=bool)
         for ele, idx in self._name_to_idx_dict.items():
             phase_matrix[idx] = parse_phases(ele.phases)
@@ -52,7 +53,7 @@ class CircuitElementGroup():
         phase_matrix = self.get_phase_matrix()
         return pd.DataFrame(data=phase_matrix, index=self._names, columns=['A', 'B', 'C'])
 
-    def get_ckt_element(self, key: Union[str, int, Tuple[str, str]]):
+    def get_element(self, key: Union[str, int, Tuple[str, str]]):
         """ Returns an element given a name, index, or tuple of (tx_name, rx_name)"""
         key_error_msg = "Invalid key. Key must be str, int, or (tx, rx) tuple."
         if isinstance(key, str):

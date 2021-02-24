@@ -14,10 +14,10 @@ class Line(CircuitElement):
     def _set_related_bus(self, dss):
         """ override super class to save two buses"""
         dss.Lines.Name(self.__name__)
-        tx, rx = dss.Lines.Bus1(), dss.Lines.Bus2()
-        super()._set_base_vals(tx)  # set base vals based on tx bus
-        super()._set_phases_from_bus(tx)  # set phases based on tx bus
-        self.key = (tx, rx)
+        self.tx, self.rx = dss.Lines.Bus1(), dss.Lines.Bus2()
+        super()._set_base_vals(self.tx)  # set base vals based on tx bus
+        super()._set_phases_from_bus(self.tx)  # set phases based on tx bus
+        self.key = (self.tx, self.rx)
 
     def _set_FZpu(self, dss):
         fz_mult = 1 / self.Zbase * self.length  # use tx node's Z base
