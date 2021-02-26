@@ -17,62 +17,50 @@ class Circuit():
     def __init__(self, dss, Sbase=10**6):
         """ initialize Circuit from an opendss object's current state"""
         self.Sbase = Sbase
-        self._init_buses()
-        self._init_lines()
+        self.buses = BusGroup(dss)
+        self.lines = LineGroup(dss)
+        self.loads = LoadGroup(dss)
+        self.capacitors = CapacitorGroup(dss)
+        self.voltage_regulators = VoltageRegulatorGroup(dss)
+        self.transformers = TransformerGroup(dss)
 
-    def _init_buses(self, dss):
-        self._all_buses = OrderedDict()  # { bus_name: Bus }
-        self._adj_matrix = OrderedDict()  # bus_name: [list of downstream buses]
+        self._assign_to_buses(self.loads)
+        self._assign_to_buses(self.capacitors)
+        self._assign_to_buses(self.voltage_regulators)
+        self._assign_to_buses(self.transformers)
 
+    def set_kW(self, load_name: str, kW: float):
+        """
+        sets a new kW for the given Load.
+        Updates Load.spu, Load.ppu, Load.qpu, and Bus.sum_spu
+        """
+        load = self.loads.get_ckt_element(load_name)
+        bus = self.bus.get_ckt_element(load.bus_name)
+        old_load_spu = load.spu
+        load._set_kW(kW)
+        new_load_spu = load.spu
+        bus._set_spu(old_load_spu, new_load_spu)
 
+    def set_kvar(self, load_name: str, kvar: float):
+        """
+        sets a new kvar for the given Load.
+        Updates Load.spu, Load.ppu, Load.qpu, and Bus.sum_spu
+        """
+        load = self.loads.get_ckt_element(load_name)
+        bus = self.bus.get_ckt_element(load.bus_name)
+        old_load_spu = load.spu
+        load._set_kvar(kvar)
+        new_load_spu = load.spu
+        bus._set_spu(old_load_spu, new_load_spu)
 
-    def _init_lines(self, dss):
-        self.nline = 0
-        all_lines_data = dss.utils.lines_to_dataframe().transpose()
-        line_codes = all_lines_data.keys()
-        # TODO: set line base values based on node Vbase
-        for line_code in line_codes:
-            line_data = all_lines_data[line_code]
-            # Handle bus names that include phases
-            if "." in line_data['Bus1']:
-                tx, *tx_phases = line_data['Bus1'].split('.')
-                rx, *rx_phases = line_data['Bus2'].split('.')
-                if tx_phases != rx_phases:
-                    raise ValueError(f'Tx phases do not match Rx phases for line {line_code}')
-            else:  # Otherwise, define the line for all 3 phases.
-                tx, rx = line_data['Bus1'], line_data['Bus2']
-                tx_phases = ['1', '2', '3']
-
-            line = Line(line_code, tx, rx)
-            line.phases = parse_phases(tx_phases)
-            tx_node = network.nodes.get(tx)
-
-            # parse line attributes from dss line data
-            line.length = line_data['Length']
-            # TODO: HERE 2/19
-
-            fz_mult = 1 / tx_node.Zbase * line.length
-            line.FZpu = get_Z(line_data, line.phases, fz_mult)
-            network.lines[self.key] = self
-            tx, rx = self.key
-            if rx not in network.adj[tx]:
-                network.adj[tx].append(rx)  # add this as a Line in the adjacency list
-            # store a pointer to tx on rx.parent
-            if network.nodes[rx].parent:
-                raise ValueError(f"Error when processing line {self.name}. Node {rx} already has a parent.")
-            network.nodes[rx].parent = network.nodes[tx]
-
-        pass
-
-
-    def _init_transformers(self, dss):
-        """ map Transformer objects. Save to network in an Ordered Dict"""
-        all_transformer_data = dss.utils.transformers_to_dataframe().transpose()
-        transformers = dss.Transformers.AllNames()
-        # exclude the transformers that are paired with voltage regulators
-        vr_transformers = [r.transformer_name for r in network.voltageRegulators.values()]
-        transformer_names = [n for n in transformers if n not in vr_transformers]
-
-
-
-
+    def _assign_to_buses(self, ckt_element_group):
+        """
+        For all elements in the ckt_element_group, gives the bus
+        associated with CircuitElement.bus_name a pointer to the element
+        """
+        for ele in ckt_element_group.elements():
+            bus = self.buses.get_ckt_element(ele.bus_name)
+            element_list_ptr = f'{ele.__class__.__name__}s'.lower()
+            if not getattr(bus, element_list_ptr):
+                setattr(bus, element_list_ptr, [])
+            getattr(bus, element_list_ptr).append(ele)
