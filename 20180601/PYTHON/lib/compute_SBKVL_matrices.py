@@ -107,7 +107,7 @@ def compute_SBKVL_matrices(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, 
             if not dss.Lines.IsSwitch(): 
                 bus1_phases = identify_bus_phases(b1) #identifies which phase is associated with the bus (which is the same as the line)
             else: 
-                # assume a switch is 3-phase        
+                # assume a switch is 3-phase      
                 bus1_phases = [1, 1, 1]
             if bus1_phases[ph] == 1:
                 G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m

@@ -6,6 +6,7 @@ def map_output(nline, nnode, XNR, fn, time_delta):
     #retrieve relevant parameters for formatting output
     TXnum, RXnum, PH, spu, APQ, AZ, AI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(fn, time_delta)
+        
     #remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
     VNR = np.zeros((3,nnode), dtype='complex')
     for ph in range(0,3):

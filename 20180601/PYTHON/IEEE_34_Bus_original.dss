@@ -6,11 +6,11 @@ Clear
 Set DefaultBaseFrequency=60
 
 New object=circuit.ieee_34_bus_original_model_1
-~ basekv=69 pu=1.05 angle=30 mvasc3=200000 ! stiffen up a bit over DSS default
+~ basekv=69 pu=1.05 angle=30 mvasc3=200000 !stiffen up a bit over DSS default
 
 ! Substation Transformer -- Modification: Make source very stiff by defining a tiny leakage Z
 New Transformer.SubXF Phases=3 Windings=2 Xhl=0.01 ! normally 8
-~ wdg=1 bus=sourcebus conn=Delta kv=69 kva=25000 %r=0.0005 ! reduce %r, too
+~ wdg=1 bus=sourcebus conn=Delta kv=69 kva=25000 %r=0.0005 !reduce %r, too
 ~ wdg=2 bus=800 conn=wye kv=24.9 kva=25000 %r=0.0005
 
 ! import line codes with phase impedance matrices

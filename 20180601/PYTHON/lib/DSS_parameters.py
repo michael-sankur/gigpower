@@ -6,14 +6,7 @@ from lib.zip_parameters import *
 from lib.helper import transformer_regulator_parameters, nominal_load_values, nominal_cap_arr
 def relevant_openDSS_parameters(fn, t):
 
-    dss.run_command('Redirect ' + fn)
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
-
-    #BASE values
-    #Vbase = dss.Bus.kVBase() * 1000
-    #Sbase = 1000000.0
-    #Ibase = Sbase/Vbase
-    #Zbase = Vbase/Ibase
 
     #TRANSFORMER, VOLTAGE REGULATOR lines
     tf_no = len(dss.Transformers.AllNames()) - len(dss.RegControls.AllNames()) #number of transformers
@@ -104,12 +97,10 @@ def relevant_openDSS_parameters(fn, t):
             aI[phase - 1, knode] = beta_I
         if len(load_data) == 0:
             load_phases = [1, 1, 1]  
-            for p in range(len(load_phases)):
-                if load_phases[p] == 1:
-                    phase = p
-                    aPQ[phase - 1, knode] = beta_S
-                    aZ[phase - 1, knode] = beta_Z
-                    aI[phase - 1, knode] = beta_I    
+            for p in range(len(load_phases)):            
+                aPQ[p, knode] = beta_S
+                aZ[p, knode] = beta_Z
+                aI[p, knode] = beta_I    
                 
     #ppu, qpu = load_values(t)
     ppu, qpu = nominal_load_values(-1)

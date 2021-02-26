@@ -6,11 +6,8 @@ from lib.helper import bus_phases, get_line_idx, linelist, nominal_cap_arr, nomi
 from lib.zip_parameters import *
 def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_lines):
 
-    #dss.run_command('Redirect ' + fn)
-
     nline = len(dss.Lines.AllNames())
     nnode = len(dss.Circuit.AllBusNames())
-    Sbase = 1000000.0
     
     # Line Indices Associated with Voltage Regulators and Transformers 
     line_in_idx_vr = range(0, 2*vr_lines, 2)
@@ -18,12 +15,7 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
 
     line_idx_tf = range(0, tf_lines)
 
-    #load_kw, load_kvar = load_values(t)
     load_kw, load_kvar = nominal_load_values(t)
- 
-    # [[3 x nnode array of capacitance]]
-    
-    
     caparr = nominal_cap_arr()
 
     # ----------Residuals for KCL at a bus (m) ----------
@@ -159,11 +151,11 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                 
                 #imaginary residual               
                 #A_m and D_mn
-                H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*line_idx + 1]= 1/2
-                H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*3*(nnode+nline) + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = 1/2
+                H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*line_idx + 1]= 1/2
+                H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*3*(nnode+nline) + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = 1/2
                 #C_m and B_mn
-                H[2*ph*(nnode-1) + (k2-1)*2+1][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*line_idx] = -1/2
-                H[2*ph*(nnode-1) + (k2-1)*2+1][2*3*(nnode+nline) + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
+                H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*line_idx] = -1/2
+                H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*3*(nnode+nline) + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
                 count_tf2+=1
 
     # ----------------------- Voltage Regulator KCL -----------------------
@@ -183,15 +175,15 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                     H[2*ph*(nnode-1) + (k2-1)*2 + 0][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx] = 1/2
                     H[2*ph*(nnode-1) + (k2-1)*2 + 0][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx][2*(nnode)*ph + 2*k2] = 1/2
                     #B_m and D_lm
-                    H[2*ph*(nnode-1) + (k2-1)*2+ 0][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1] = 1/2
-                    H[2*ph*(nnode-1) + (k2-1)*2+ 0][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 0][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1] = 1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 0][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 1/2
                     #imaginary residual                        
                     # #A_m, D_lm
-                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1] = -1/2
-                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = -1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1] = -1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = -1/2
                     #B_m and C_lm
-                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx] = 1/2
-                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx] = 1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
                     count_vr += 1
 
         for j in range(vr_count): #out lines       
@@ -210,11 +202,11 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                     H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = -1/2
                     #imaginary residual
                     #A_m and D_mn
-                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1] = 1/2
-                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = 1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1] = 1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = 1/2
                     #C_m and B_mn
-                    H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx] = -1/2
-                    H[2*ph*(nnode-1) + (k2-1)*2 +1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx] = -1/2
+                    H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
                     count_vr2 += 1
 
     
@@ -254,14 +246,7 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                 if available_phases[ph] == 0: #if phase does not exist
                     b_temp = 0
                 else:
-                    b_temp = (-load_val * beta_S) + (b_factor * gamma_S) #TE version
-                   
-                    # b_temp = -load_val * (beta_S \
-                    # + (beta_I) * (((hessian_mag[0][1] * A0 * B0) + ((1/2)*hessian_mag[0][0] * ((A0)**2)) + ((1/2)*hessian_mag[1][1] * (B0**2))) \
-                    # -  (A0 * gradient_mag[0] + B0* gradient_mag[1]) \
-                    # +  (A0**2 + B0**2) ** (1/2))) \
-                    # + b_factor #calculate out the constant term in the residual, note a0/b0
-
+                    b_temp = (-load_val * beta_S) + (b_factor * gamma_S)
                 b[2*(nnode-1)*ph + 2*(k2-1) + cplx][0][0] = b_temp
 
 

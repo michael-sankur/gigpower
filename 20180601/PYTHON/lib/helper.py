@@ -2,6 +2,8 @@ import numpy as np
 import opendssdirect as dss
 import re
 
+# -------------------------- Nominal and Effective Capacitor Functions
+
 def load_values(t):
     if t == -1:
         var = 1
@@ -20,8 +22,7 @@ def load_values(t):
         load_data = dss.CktElement.BusNames()[0].split('.')[1:]
         knode = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[0].split('.')[0])) #match busname to index
         for p in load_data:
-            phase = int(p)
-            load_phases[phase-1] = 1
+            load_phases[int(p)-1] = 1
         if len(load_data) == 0:
             load_phases = [1, 1, 1]        
         realstuff = dss.CktElement.Powers()[::2]
@@ -32,7 +33,6 @@ def load_values(t):
                 ppu[ph, knode] += realstuff[rs] * 1e3 * var / Sbase 
                 qpu[ph, knode] += imagstuff[rs] * 1e3 * var / Sbase
                 rs += 1
-     
     return ppu, qpu #positive real number
 
 def cap_arr():
@@ -77,8 +77,7 @@ def nominal_load_values(t):
         knode = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[0].split('.')[0])) #match busname to index
         no_phases = len(load_data)
         for p in load_data:
-            phase = int(p)
-            load_phases[phase-1] = 1
+            load_phases[int(p)-1] = 1
         if len(load_data) == 0:
             no_phases = 3
             load_phases = [1, 1, 1]        
@@ -89,7 +88,6 @@ def nominal_load_values(t):
             if load_phases[ph] == 1:
                 dsskw[ph, knode] += realstuff * 1e3 * var / Sbase / no_phases 
                 dsskvar[ph, knode] += imagstuff * 1e3 * var / Sbase / no_phases
-    
     return dsskw, dsskvar #positive real numbers
  
 
@@ -103,19 +101,16 @@ def nominal_cap_arr():
         cap_data = dss.CktElement.BusNames()[0].split('.')
         idxbs = dss.Circuit.AllBusNames().index(cap_data[0])
         cap_phases = [0, 0, 0]
-        no_phases = len(cap_data[1:])
-        if no_phases == 0:
-            no_phases = 3
-            
+   
         for p in range(len(cap_data[1:])):
             cap_phases[int(cap_data[1:][p]) - 1] = 1
         if len(cap_phases) == 0:
             cap_phases = [1, 1, 1]  
-    
+        no_phases = np.sum(cap_phases)
         for ph in range(len(cap_phases)):
             if cap_phases[ph] == 1:
                 caparr[ph, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / no_phases
-    return caparr #negative real number
+    return caparr #positive real number
 
 # -------------------------- KCL Functions
 
@@ -234,13 +229,13 @@ def voltage_regulator_index_dict():
 # -------------------------- Slack Bus and KVL Functions
 
 def identify_bus_phases(bus):
-        k = np.zeros(3)
-        for i in range(1, 4):
-            pattern = r"\.%s" % (str(i))
-            m = re.findall(pattern, bus)
-            if m:
-                k[i - 1] = 1
-        return k
+    k = np.zeros(3)
+    for i in range(1, 4):
+        pattern = r"\.%s" % (str(i))
+        m = re.findall(pattern, bus)
+        if m:
+            k[i - 1] = 1
+    return k
 
     
 def identify_line_phases(line):
