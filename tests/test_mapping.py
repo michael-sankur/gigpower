@@ -7,13 +7,11 @@ import numpy as np
 import opendssdirect as dss
 import pytest
 
+from circuit import Circuit
+
 # previous nr3 mapping functions
 from nr3.lib.compute_vecmat import compute_vecmat
 from nr3.lib.relevant_openDSS_parameters import relevant_openDSS_parameters
-
-
-# current mapper, the Circuit object
-import Circuit
 
 LOCAL_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
 DSS_FILE = LOCAL_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye_noxfm_noreg.dss'

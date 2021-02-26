@@ -6,7 +6,7 @@ class VoltageRegulator(Line):
     dss_module_name = 'RegControls'
 
     def __init__(self, name: str, dss):
-        super().__init__(self, name, dss)  # init with Line constructor
+        super().__init__(name, dss)  # init with Line constructor
         # set this regcontrol and its transformer as active,
         # in order to get the tap number
         dss.RegControls.Name(self.__name__)

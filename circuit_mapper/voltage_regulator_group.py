@@ -1,15 +1,14 @@
-import CircuitElementGroup
-
+from circuit_element_group import CircuitElementGroup
 
 class VoltageRegulatorGroup(CircuitElementGroup):
-    dss_module_name, ele_name = 'RegControls', 'VoltageRegulator'
+    dss_module_name, ele_name = 'RegControls', 'voltage_regulator.VoltageRegulator'
 
-    def __init__(self, dss, line_group):
+    def __init__(self, dss, name, line_group):
         """
         Pass the LineGroup to the constructor so that
         Voltage Regulators can be assigned to Lines.
         """
-        super().__init__(self, dss)
+        super().__init__(dss, name)
         self._collect_elements(dss, line_group)
 
     def _collect_elements(self, dss, line_group):

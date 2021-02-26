@@ -1,15 +1,15 @@
-import LineGroup
+from line_group import LineGroup
 
 
 class TransformerGroup(LineGroup):
-    dss_module_name, ele_name = 'Transformers', 'Transformer'
+    dss_module_name, ele_name = 'Transformers', 'transformer.Transformer'
 
     def __init__(self, dss, line_group):
         """
         Pass the LineGroup to the constructor so that
         Transformers can be added to LineGroup
         """
-        super().__init__(self, dss, line_group)
+        super().__init__(dss, line_group)
 
     def _collect_names(self, dss, line_group):
         """ Override LineGroup._collect_names to exclude voltage regulators"""

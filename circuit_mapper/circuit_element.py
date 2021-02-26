@@ -5,8 +5,9 @@
 from utils import parse_phases
 from typing import List
 
+
 class CircuitElement():
-    def __init__(self, name, dss):
+    def __init__(self, dss, name:str):
         self.__name__ = name
         self.phases = ''
         self.Sbase = 10**6
@@ -42,7 +43,7 @@ class CircuitElement():
         # Handle the typical case where bus names tell you the phases, e.g. 'BusName.1.2.'
         if "." in bus_name:
             bus_name, *phases = bus_name.split('.')
-        if not phases:  # if no phases are present in name, assume all 3 phases
+        else:  # if no phases are present in name, assume all 3 phases
             phases = ['1', '2', '3']
         self.phases = phases
 

@@ -1,11 +1,11 @@
-import CircuitElementGroup
+from circuit_element_group import CircuitElementGroup
 
 
 class LoadGroup(CircuitElementGroup):
-    dss_module_name, ele_name = 'Loads', 'Load'
+    dss_module_name, ele_name = 'Loads', 'load.Load'
 
     def __init__(self, dss):
-        super().__init__(self, dss)
+        super().__init__(dss)
 
     def _collect_elements(self, dss):
         self._names = dss.Loads.AllNames()

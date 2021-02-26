@@ -2,12 +2,14 @@ from utils import parse_phases
 import pandas as pd
 import numpy as np
 from typing import Tuple, Union
+from importlib import import_module
 
 
 class CircuitElementGroup():
-    def __init__(self, dss, Sbase: float = 10**6):
-        self._collect_names(self, dss)
-        self._collect_elements(self, dss)
+    def __init__(self, dss, **args):
+        self._name_to_object_dict = {}
+        self._collect_names(dss, **args)
+        self._collect_elements(dss, **args)
         if not self._names:
             raise ValueError('No names in the CircuitElementGroup.')
         self._name_to_idx_dict = {}
@@ -18,16 +20,15 @@ class CircuitElementGroup():
         self.num_elements = len(self._names)
 
     def _collect_elements(self, dss, **args):
-        self._name_to_object_dict = {}
+        dss_module = getattr(dss, f'{self.__class__.dss_module_name}')
+        ele_class = self.__class__.ele_class
         for name in self._names:
             dss_module.Name(name)  # set as active element
             # create element from ele_class
-            ckt_element = ele_class
-            self._name_to_object_dict[name] = ele_class(name, dss)
+            self._name_to_object_dict[name] = ele_class(dss, name)
 
     def _collect_names(self, dss, **args):
-        dss_module = __import__(f'opendssdirect.{self.__class__}.{dss_module_name}')
-        ele_class = __import__(f'{self.__class__}.{ele_name}')
+        dss_module = getattr(dss, f'{self.__class__.dss_module_name}')
         self._names = dss_module.AllNames()
 
     def all_names(self):
@@ -71,6 +72,3 @@ class CircuitElementGroup():
     def get_elements(self):
         """ returns an iterable View over all elements in the Group"""
         return self._name_to_object_dict.values()
-
-
-
