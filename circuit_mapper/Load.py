@@ -1,4 +1,4 @@
-import CircuitElement
+from circuit_element import CircuitElement
 from typing import List
 import numpy as np
 

@@ -1,4 +1,4 @@
-import CircuitElement
+from circuit_element import CircuitElement
 import numpy as np
 from utils import pad_phases, parse_phases
 

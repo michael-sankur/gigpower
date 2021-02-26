@@ -1,4 +1,4 @@
-import CircuitElement
+from circuit_element import CircuitElement
 import numpy as np
 
 

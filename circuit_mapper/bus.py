@@ -4,8 +4,9 @@
 
 import numpy as np  # type: ignore
 from typing import List
-import Load
-import Capacitor
+from load import Load
+from capacitor import Capacitor
+from circuit_element import CircuitElement
 
 
 class Bus(CircuitElement):

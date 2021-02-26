@@ -1,4 +1,4 @@
-import Line
+from line import Line
 import numpy as np
 
 

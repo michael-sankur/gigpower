@@ -8,8 +8,12 @@ from collections import OrderedDict
 import numpy as np
 import pandas as pd
 
-import BusGroup, CapacitorGroup, LineGroup, LoadGroup, TransformerGroup, VoltageRegulatorGroup
-
+from bus_group import BusGroup
+from capacitor_group import CapacitorGroup
+from line_group import LineGroup
+from load_group import LoadGroup
+from transformer_group import TransformerGroup
+from voltage_regulator_group import VoltageRegulatorGroup
 
 
 class Circuit():
