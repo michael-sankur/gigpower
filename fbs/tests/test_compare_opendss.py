@@ -11,11 +11,12 @@ import pandas as pd
 import numpy as np
 
 import sys
-import os.path
+import os
+from pathlib import Path
 import requests
 
 DSS_FILE_REPO = 'https://raw.githubusercontent.com/lbnl-cybersecurity/python-powerflow/master/'
-OUT_DIR = './test_compare_results'
+OUT_DIR = Path('./test_compare_results')
 
 # dictionaries with FILE_STEM: API TOKEN
 # API token is used to download source files from raw.githubuser.com
@@ -36,17 +37,6 @@ DSS_CONFIG_FILES = {
                     }
 
 
-def get_local_fp(file: str):
-    return os.path.join(OUT_DIR, file.split('/')[-1])
-
-
-def download_file(file: str, token: str):
-    url = f'{DSS_FILE_REPO}{file}?token={token}'
-    download = requests.get(url).text
-    f = open(get_local_fp(file), 'w')
-    f.write(download)
-
-
 def test_all():
     """
     Compare the python FBS solution to the opendss solution.
@@ -54,22 +44,23 @@ def test_all():
     """
     tolerance = 10**-1
 
-    if not os.path.exists(OUT_DIR):
-        os.makedirs(OUT_DIR)
-
     # download all files
     for file, token in DSS_CKT_FILES.items():
-        download_file(file, token)
+        if not get_local_source_fp(file).exists():
+            download_file(file, token)
     for file, token in DSS_CONFIG_FILES.items():
-        download_file(file, token)
+        if not get_local_source_fp(file).exists():
+            download_file(file, token)
 
     # test and compare all files
-    for file in DSS_CKT_FILES:
-        infile = get_local_fp(file)
-        out_file = file.split('/')[-1].split('.')[0] + '.out.txt'
+    if not OUT_DIR.exists():
+        os.makedirs(OUT_DIR)
 
-        sys.stdout = open(os.path.join(OUT_DIR, out_file), 'w')
-        compare_fbs_sol(infile, tolerance)
+    for file in DSS_CKT_FILES:
+        infile = get_local_source_fp(file)
+        out_file = Path(OUT_DIR, infile.stem).with_suffix('.out.txt')
+        sys.stdout = open(out_file, 'w')
+        compare_fbs_sol(str(infile), tolerance)
 
 
 # construct the python FBS solution
@@ -130,6 +121,20 @@ def compare_fbs_sol(dss_file, tolerance):
     # assert (Srx_maxDiff <= tolerance).all()
     # assert (nodePowers_maxDiff1/1000 <= tolerance).all()
     # assert (nodePowers_maxDiff2/1000 <= tolerance).all()
+
+
+def get_local_source_fp(file: str):
+    return Path(OUT_DIR, 'source_files', file)
+
+
+def download_file(file: str, token: str):
+    url = f'{DSS_FILE_REPO}{file}?token={token}'
+    download = requests.get(url).text
+    local_fp = get_local_source_fp(file)
+    if not local_fp.parent.exists():
+        os.makedirs(local_fp.parent)
+    f = open(get_local_source_fp(file), 'w')
+    f.write(download)
 
 
 def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame, title: str) -> None:
