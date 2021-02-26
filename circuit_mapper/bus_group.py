@@ -11,7 +11,7 @@ class BusGroup(CircuitElementGroup):
 
     def _collect_elements(self, dss, **args):
         for name in self._names:
-            self._name_to_object_dict[name] = Bus(dss, name)
+            self._name_to_object_dict[name] = Bus(name, dss)
 
         # get phases for each bus from Node Names
         for node_name in dss.Circuit.AllNodeNames():

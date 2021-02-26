@@ -6,10 +6,10 @@ from importlib import import_module
 
 
 class CircuitElementGroup():
-    def __init__(self, dss, **args):
+    def __init__(self, dss, *args):
         self._name_to_object_dict = {}
-        self._collect_names(dss, **args)
-        self._collect_elements(dss, **args)
+        self._collect_names(dss, *args)
+        self._collect_elements(dss, *args)
         if not self._names:
             raise ValueError('No names in the CircuitElementGroup.')
         self._name_to_idx_dict = {}
@@ -19,15 +19,15 @@ class CircuitElementGroup():
             self._idx_to_name_dict[idx] = name
         self.num_elements = len(self._names)
 
-    def _collect_elements(self, dss, **args):
+    def _collect_elements(self, dss, *args):
         dss_module = getattr(dss, f'{self.__class__.dss_module_name}')
         ele_class = self.__class__.ele_class
         for name in self._names:
             dss_module.Name(name)  # set as active element
             # create element from ele_class
-            self._name_to_object_dict[name] = ele_class(dss, name)
+            self._name_to_object_dict[name] = ele_class(name, dss)
 
-    def _collect_names(self, dss, **args):
+    def _collect_names(self, dss, *args):
         dss_module = getattr(dss, f'{self.__class__.dss_module_name}')
         self._names = dss_module.AllNames()
 

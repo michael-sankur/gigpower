@@ -25,8 +25,8 @@ class Circuit():
         self.lines = LineGroup(dss)
         self.loads = LoadGroup(dss)
         self.capacitors = CapacitorGroup(dss)
-        self.voltage_regulators = VoltageRegulatorGroup(dss)
-        self.transformers = TransformerGroup(dss)
+        self.voltage_regulators = VoltageRegulatorGroup(dss, self.lines)
+        self.transformers = TransformerGroup(dss, self.lines)
 
         self._assign_to_buses(self.loads)
         self._assign_to_buses(self.capacitors)

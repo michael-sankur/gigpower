@@ -1,4 +1,5 @@
 from circuit_element_group import CircuitElementGroup
+from load import Load
 
 
 class LoadGroup(CircuitElementGroup):

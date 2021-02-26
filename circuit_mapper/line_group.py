@@ -27,7 +27,7 @@ class LineGroup(CircuitElementGroup):
         self.adj = {}  # adjacency matrix -> { bus_name: [downstream buses]}
         # reverse adjacency matrix -> { bus_name: [upstream buses]}
         self.reverse_adj = {}
-        for line in self._name_to_idx_dict.values():
+        for line in self.get_elements():
             tx_bus, rx_bus = line.key
             if tx_bus not in self.adj:
                 self.adj[tx_bus] = [rx_bus]

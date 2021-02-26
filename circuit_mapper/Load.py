@@ -6,12 +6,8 @@ import numpy as np
 class Load(CircuitElement):
     dss_module_name = 'Loads'
 
-    def __init__(self, name: str, dss):
-        super().__init__(name)
-        dss.Loads.Name(name)
-        bus_name = dss.CktElement.BusNames()[0]
-        self._set_phases_from_bus(bus_name)
-        self._set_bus_from_name(bus_name)
+    def __init__(self, name, dss):
+        super().__init__(name, dss)
         self.kW = dss.Loads.kW()
         self.kvar = dss.Loads.kvar()
 
@@ -28,6 +24,10 @@ class Load(CircuitElement):
 
     def __str__(self) -> str:
         return self.name
+
+    def _set_related_bus(self, dss):
+        dss.Loads.Name(self.__name__)
+        self.related_bus = dss.CktElement.BusNames()[0]
 
     def set_zip_values(self, zipV: List):
         self.zipV = zipV
