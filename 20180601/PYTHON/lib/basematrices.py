@@ -10,7 +10,8 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
 
     nline = len(dss.Lines.AllNames())  
     nnode = len(dss.Circuit.AllBusNames())
-    XNR = np.zeros((2*3*(nnode + nline) + 2*tf_lines + 2*2*vr_lines,1))
+    #order is bus voltages, line currents, transformer line currents, voltage regulator line currents * 2
+    XNR = np.zeros((2*3*(nnode + nline) + 2*tf_lines + 2*2*vr_lines, 1))
 
 
     # intialize node voltage portion of XNR

@@ -26,6 +26,7 @@ def NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delt
     itercount = 0
 
     _, _, tf_lines, vr_lines, _, _, _ = transformer_regulator_parameters()
+
     
     # adjust KCL based on capacitance, DER, and time-varying load
     # if der != 0 or capacitance != 0 or time_delta != -1:  
@@ -42,68 +43,88 @@ def NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delt
         itercount += 1
     XNR_final = XNR
     # returns associated indices (values as list) of a bus's voltage regulators (keys)
-    # vr_idx_dict = voltage_regulator_index_dict() 
-    # # flag if need to rerun NR3
-    # flag = 0
-    # for k in vr_idx_dict.keys():
-    #     for p in vr_idx_dict[k]:
+    vr_idx_dict = voltage_regulator_index_dict() 
+    vr_line_idx = range(0, 2*vr_lines)
+
+    # flag if need to rerun NR3
+    flag = 0
+    vr_line_counter = 0
+    
+    for k in vr_idx_dict.keys():
+        for vridx in vr_idx_dict[k]: #{bus: [indices in dss.RegControls.AllNames(), ...]}
             
-    #         dss.RegControls.Name(dss.RegControls.AllNames()[p])
-    #         dss.Circuit.SetActiveBus(dss.CktElement.BusNames()[0].split(".")[0])
+            dss.RegControls.Name(dss.RegControls.AllNames()[vridx])
+            dss.Circuit.SetActiveBus(dss.CktElement.BusNames()[0].split(".")[0])
+            winding = dss.RegControls.Winding()
         
-    #         Vbase = dss.Bus.kVBase() * 1000
-    #         band = dss.RegControls.ForwardBand()
-    #         target_voltage = dss.RegControls.ForwardVreg()
+            Vbase = dss.Bus.kVBase() * 1000
+            band = dss.RegControls.ForwardBand()
+            target_voltage = dss.RegControls.ForwardVreg()
 
-    #         idxbs = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[0].split('.')[0]))
+            idxbs = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[0].split('.')[0]))
         
-    #         ph = dss.CktElement.BusNames()[0].split('.')[1:] 
-    #         ph_arr = [0, 0, 0]
-    #         for i in ph:
-    #             ph_arr[int(i) - 1] = 1
-    #         if len(ph) == 0:
-    #             ph_arr = [1, 1, 1]
+            ph = dss.CktElement.BusNames()[0].split('.')[1:] 
+            ph_arr = [0, 0, 0]
+            for i in ph:
+                ph_arr[int(i) - 1] = 1
+            if len(ph) == 0:
+                ph_arr = [1, 1, 1]
 
-    #         for ph in range(len(ph_arr)):
-    #             if ph_arr[ph] == 1: #loop over existing phases of voltage regulator
+            for ph in range(len(ph_arr)):
+                if ph_arr[ph] == 1: #loop over existing phases of voltage regulator
                     
-    #                 NR_voltage = np.abs(XNR[2*nnode*ph + 2*idxbs] + 1j*XNR[2*nnode*ph + 2*idxbs + 1]) * Vbase / dss.RegControls.PTRatio()
-    #                 print(NR_voltage)
+                    
+                    # print(NR_voltage)
+                    try:
+                        #vr_line_counter - counts the number of lines passed 
+                        #vridx - index of current voltage regulator in dss.RegControls.AllNames()
+                        #tf_lines - number of transformers
+                        
+                        line_idx =  2*(vr_line_idx[vr_line_counter + (winding - 1)])
 
-    #                 abs_diff = np.abs(NR_voltage - target_voltage)
-    #                 print(abs_diff)
-
-    #                 #compare NR3 voltage to forward Vreg voltage +- band
-    #                 if abs_diff <= band: #converges
-    #                     print('Converges')
-    #                     XNR_final = XNR
-    #                     continue
+                        I_reg = XNR[2*3*(nnode+nline) + 2*tf_lines + line_idx] + \
+                            1j * XNR[2*3*(nnode+nline) + 2*tf_lines +  line_idx + 1]
+                        V_drop = (dss.RegControls.ForwardR() + 1j*dss.RegControls.ForwardX()) / 0.2 * (I_reg / dss.RegControls.CTPrimary())
+                        NR_voltage = V_drop + dss.RegControls.ForwardVreg()
+                        abs_diff = np.abs(V_drop)
+                        
+                    except:
+                        print('Missing CT ************* ')
+                        NR_voltage = np.abs(XNR[2*nnode*ph + 2*idxbs] + 1j*XNR[2*nnode*ph + 2*idxbs + 1]) * Vbase / dss.RegControls.PTRatio()
+                        abs_diff = np.abs(NR_voltage - dss.RegControls.ForwardVreg())
+                    #abs_diff = np.abs(NR_voltage - target_voltage)
+            
+                    vr_line_counter += 1
+                    #compare NR3 voltage to forward Vreg voltage +- band
+                    if abs_diff <= band: #converges
+                        XNR_final = XNR
+                        continue
                             
-    #                 elif abs_diff > band:
-    #                     if NR_voltage > (target_voltage + band): #NR3 voltage above forward-Vreg
-    #                         if dss.RegControls.TapNumber() <= -16 :
-    #                             print('Tap Number Out of Bounds' )
-    #                             XNR_final = XNR
+                    elif abs_diff > band:
+                        if NR_voltage > (target_voltage + band): #NR3 voltage above forward-Vreg
+                            if dss.RegControls.TapNumber() <= -16 :
+                                print('Tap Number Out of Bounds' )
+                                XNR_final = XNR
                         
-    #                         else:
-    #                             print('Decrease Tap Number')
-    #                             dss.RegControls.TapNumber(dss.RegControls.TapNumber() - 1)
-    #                             print('New tap number ', dss.RegControls.TapNumber())
-    #                             flag = 1 #run NR3 again
-    #                     else: #NR3 voltage below forward-Vreg
-    #                         if dss.RegControls.TapNumber() >= 16:
-    #                             print('Tap Number Out of Bounds' )
-    #                             print('New tap number ', dss.RegControls.TapNumber())
-    #                             XNR_final = XNR
+                            else:
+                                print('Decrease Tap Number')
+                                dss.RegControls.TapNumber(dss.RegControls.TapNumber() - 1)
+                                print('New tap number ', dss.RegControls.TapNumber())
+                                flag = 1 #run NR3 again
+                        else: #NR3 voltage below forward-Vreg
+                            if dss.RegControls.TapNumber() >= 16:
+                                print('Tap Number Out of Bounds' )
+                                print('New tap number ', dss.RegControls.TapNumber())
+                                XNR_final = XNR
                         
-    #                         else:
-    #                             print('Increase tap number')
-    #                             dss.RegControls.TapNumber(dss.RegControls.TapNumber() + 1)
-    #                             flag = 1 #run NR3 again
-    #     if flag == 1:  
-    #         print('\n Next iteration: ')                
-    #         XNR_final = NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta)
-    #         flag = 0
+                            else:
+                                print('Increase tap number')
+                                dss.RegControls.TapNumber(dss.RegControls.TapNumber() + 1)
+                                flag = 1 #run NR3 again
+        if flag == 1:  
+            print('\n Next iteration: ')                
+            XNR_final = NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta)
+            flag = 0
 
     return XNR_final
    

@@ -162,7 +162,10 @@ def compute_SBKVL_matrices(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, 
         bus1_idx = vr_bus[0, m]
         bus2_idx = vr_bus[1, m] 
         for ph in range(0,3):            
-            if vr_bus[ph + 2,m] != 0:      
+            if vr_bus[ph + 2,m] != 0:    
+                # voltage gain: gamma*A_in = A_out
+                # gamma * B_in = B_out 
+                # Negative not shown below because inserted into gain term 
                 G_reg[2*vr_counter][2*nnode*ph + 2*bus1_idx] = gain[m] #A_in
                 G_reg[2*vr_counter][2*nnode*ph + 2*bus2_idx] = 1 #A_out
                 G_reg[2*vr_counter + 1][2*nnode*ph + 2*bus1_idx + 1] = gain[m]  #B_in
