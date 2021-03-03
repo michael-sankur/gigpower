@@ -20,7 +20,7 @@ SLACKIDX = 0
 VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
 
 
-@pytest.fixture
+# @pytest.fixture
 def circuit():
     """ map Circuit object once for use in all tests """
     dss.run_command('Redirect ' + DSS_FILE)
@@ -28,8 +28,12 @@ def circuit():
 
 
 # NR3 TESTS---------------------------------------------------------------------
-def test_nr3_relevant_open_DSS_parameters(circuit):
-    TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = relevant_openDSS_parameters(DSS_FILE)
+def test_nr3_relevant_open_DSS_parameters():
+    dss.run_command('Redirect ' + DSS_FILE)
+    circuit = Circuit(dss)
+
+    TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
+        relevant_openDSS_parameters(DSS_FILE, None)
     assert TXnum == circuit.lines.get_TXnum_matrix()
     assert RXnum == circuit.lines.get_RXnum_matrix()
     assert PH == circuit.buses.get_phase_matrix()

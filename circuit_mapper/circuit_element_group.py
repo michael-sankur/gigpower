@@ -10,8 +10,6 @@ class CircuitElementGroup():
         self._name_to_object_dict = {}
         self._collect_names(dss, *args)
         self._collect_elements(dss, *args)
-        if not self._names:
-            raise ValueError('No names in the CircuitElementGroup.')
         self._name_to_idx_dict = {}
         self._idx_to_name_dict = {}
         for name, idx in enumerate(self._names):

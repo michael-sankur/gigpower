@@ -9,12 +9,12 @@ class LineGroup(CircuitElementGroup):
     dss_module_name = 'Lines'
     ele_class = Line
 
-    def __init__(self, dss):
+    def __init__(self, dss, *args):
         """
         Call CircuitElementGroup.__init__, then map adjacency matrix
         and map voltage regulators
         """
-        super().__init__(dss)
+        super().__init__(dss, *args)
         self._key_to_element_dict = {line.key: line for line in self.get_elements()}
         self._set_topology()
         #  if this is a regular line group, and not any other subclass,

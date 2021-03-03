@@ -27,7 +27,7 @@ class Load(CircuitElement):
 
     def _set_related_bus(self, dss):
         dss.Loads.Name(self.__name__)
-        self.related_bus = dss.CktElement.BusNames()[0]
+        self.related_bus = dss.CktElement.BusNames()[0].split('.')[0]
 
     def set_zip_values(self, zipV: List):
         self.zipV = zipV

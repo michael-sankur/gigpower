@@ -60,10 +60,10 @@ class Circuit():
     def _assign_to_buses(self, ckt_element_group):
         """
         For all elements in the ckt_element_group, gives the bus
-        associated with CircuitElement.bus_name a pointer to the element
+        associated with CircuitElement.related_bus a pointer to the element
         """
-        for ele in ckt_element_group.elements():
-            bus = self.buses.get_ckt_element(ele.bus_name)
+        for ele in ckt_element_group.get_elements():
+            bus = self.buses.get_element(ele.related_bus)
             element_list_ptr = f'{ele.__class__.__name__}s'.lower()
             if not getattr(bus, element_list_ptr):
                 setattr(bus, element_list_ptr, [])
