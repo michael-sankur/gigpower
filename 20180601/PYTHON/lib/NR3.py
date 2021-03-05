@@ -10,7 +10,7 @@ from lib.helper import transformer_regulator_parameters, voltage_regulator_index
 from lib.map_output import map_output
 from lib.basematrices import basematrices
 
-def NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta):
+def NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta, vvc_objects):
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = basematrices(fn, slacknode, Vslack, V0, I0)
    #need to move time, cap, DER into this function
     nline = len(dss.Lines.AllNames())  
@@ -33,6 +33,7 @@ def NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delt
     #     H, b = change_KCL_matrices(fn, H, g, b, time_delta, der, capacitance)
 
     # solve power-flow
+    
     while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
         print("Iteration number %f" % (itercount))
         FT = compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines)
@@ -42,6 +43,34 @@ def NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delt
             XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
         itercount += 1
     XNR_final = XNR
+      
+    XNR_compare = np.zeros(XNR_final.shape)
+    ################ What a mess ....  
+    while np.linalg.norm(XNR_final - XNR_compare) > 1e-6: 
+        print('WPU') 
+        wpu = np.zeros((3, nnode))
+        for vvo in vvc_objects:
+            busName = vvo.get_busName()
+            idxbus = dss.Circuit.AllBusNames().index(busName)
+            phase = vvo.get_phase()
+            qpu = vvo.get_Q(np.abs(XNR[2*nnode*phase + 2 * idxbus] + (1j*XNR[2*nnode*phase + 2 * idxbus+1])))
+            print(qpu)
+            wpu[phase, idxbus] = qpu
+
+        H, b = change_KCL_matrices(H, g, b, time_delta, der, capacitance, wpu)
+
+        while np.amax(np.abs(FT)) >= 1e-6 and itercount < maxiter:
+            print("Iteration number %f" % (itercount))
+            FT = compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines)
+            JT = compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
+        
+            if JT.shape[0] >= JT.shape[1]:
+                XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
+            itercount += 1
+        XNR_compare = XNR
+    XNR_final = XNR_compare
+    ##############
+
     # returns associated indices (values as list) of a bus's voltage regulators (keys)
     vr_idx_dict = voltage_regulator_index_dict() 
     vr_line_idx = range(0, vr_lines)
@@ -136,7 +165,7 @@ def NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delt
                                 flag = 1 #run NR3 again
         if flag == 1:  
             print('\n Next iteration: ')                
-            XNR_final = NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta)
+            XNR_final = NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta, vvc_objects)
             flag = 0
 
     return XNR_final

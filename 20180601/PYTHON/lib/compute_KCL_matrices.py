@@ -56,9 +56,9 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                     load_val = load_kw[ph,idxbs]
                     cap_val = 0
                 else:  
-                    load_val = load_kvar[ph,idxbs]  
-                    cap_val = caparr[ph][idxbs]
-                gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
+                    load_val = load_kvar[ph,idxbs]  # WPU HERE !!
+                    cap_val = caparr[ph][idxbs]  
+                #gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
                 hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
                                     [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
                 available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
@@ -239,7 +239,7 @@ def compute_KCL_matrices(fn, t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_l
                         b_factor = capacitance - der.imag
                         b_factor = 0
                     else:                    
-                        b_factor = caparr[ph][k2]                      
+                        b_factor = caparr[ph][k2] # WPU HERE !!                     
                 else:
                     b_factor = 0
 
