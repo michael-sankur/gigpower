@@ -200,7 +200,7 @@ def transformer_regulator_parameters():
                 tf_lines += 1
                 tf_bus[k+1, tf_count] = k             
         tf_count += 1
-    
+        
     return tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain
 
 def voltage_regulator_phase_dict():
