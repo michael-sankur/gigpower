@@ -1,7 +1,7 @@
 from circuit_element import CircuitElement
 from typing import List
 import numpy as np
-from utils import parse_dss_bus_name
+from utils import parse_dss_bus_name, parse_phases, parse_dss_phases
 
 
 class Load(CircuitElement):
@@ -13,8 +13,10 @@ class Load(CircuitElement):
         self.kvar = dss.Loads.kvar()
 
         # divide ppu and qpu by number of phases
-        self.ppu = self.kW / 1000 / len(self.phases)
-        self.qpu = self.kvar / 1000 / len(self.phases)
+        # store as zero-padded 1x3 matrix
+        ppu, qpu = self.kW / 1000 / len(self.phases), self.kvar / 1000 / len(self.phases)
+        self.ppu = np.where(parse_phases(self.phases), ppu, 0)
+        self.qpu = np.where(parse_phases(self.phases), qpu, 0)
 
         # set aPQ, aI, aZ
         if dss.Loads.ZipV():
@@ -29,6 +31,10 @@ class Load(CircuitElement):
     def _set_related_bus(self, dss):
         dss.Loads.Name(self.__name__)
         self.related_bus = parse_dss_bus_name(dss.CktElement.BusNames()[0])
+
+    def _set_phases_from_bus(self, dss, bus_name):
+        dss.Loads.Name(self.__name__)
+        self.phases = parse_dss_phases(dss.CktElement.BusNames()[0])
 
     def set_zip_values(self, zipV: List):
         self.zipV = zipV
@@ -70,8 +76,3 @@ class Load(CircuitElement):
         self.ppu = np.zeros(3)
         self.ppu[np.asarray(self.phases) - 1] = ppu
         self.spu = self.ppu + 1j*self.qpu
-
-        # Update the sum_spu of the node that this load belongs to
-        # Subtracting the old value from the sum, then add the current value
-        self.node.sum_spu = np.subtract(self.node.sum_spu, old_spu)
-        self.node.sum_spu = np.add(self.node.sum_spu, self.spu)

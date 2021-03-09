@@ -26,7 +26,7 @@ def parse_dss_phases(dss_str: str, sep='.') -> List[str]:
         return ['1', '2', '3']
 
 
-def parse_phases(phase_list: List[Union[str, int]]) -> List[bool]:
+def parse_phases(phase_list: List[Union[str, int]]) -> np.ndarray:
     """
     helper function to return a list of phases represented as ints or
     strings into a list of booleans
@@ -36,7 +36,7 @@ def parse_phases(phase_list: List[Union[str, int]]) -> List[bool]:
     phase_bools = [False, False, False]
     for p in phase_list:
         phase_bools[get_phase_idx(p)] = True
-    return phase_bools
+    return np.asarray(phase_bools)
 
 
 def parse_phase_matrix(phase_char_lst: List[str]) -> List[int]:

@@ -79,6 +79,17 @@ class Circuit():
             idx_matrix[idx] = self.buses.get_idx(rx_bus)
         return idx_matrix
 
+    def get_spu_matrix(self) -> np.ndarray:
+        """
+        3 x n matrix of complex spu
+        """
+        spu_matrix = np.zeros((self.buses.num_elements, 3), dtype=complex)
+        for load in self.loads.get_elements():
+            load_bus = load.related_bus
+            bus_idx = self.buses.get_idx(load_bus)
+            spu_matrix[bus_idx] += load.spu
+        return spu_matrix.transpose()
+
     def _assign_to_buses(self, ckt_element_group):
         """
         For all elements in the ckt_element_group, gives the bus

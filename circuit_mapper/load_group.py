@@ -14,5 +14,3 @@ class LoadGroup(CircuitElementGroup):
             load = Load(name, dss)
             self._name_to_object_dict[name] = load
 
-    def get_sum_spu_by_bus(self):
-        pass
