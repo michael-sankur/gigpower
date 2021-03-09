@@ -12,7 +12,7 @@ class CircuitElementGroup():
         self._collect_elements(dss, *args)
         self._name_to_idx_dict = {}
         self._idx_to_name_dict = {}
-        for name, idx in enumerate(self._names):
+        for idx, name in enumerate(self._names):
             self._name_to_idx_dict[name] = idx
             self._idx_to_name_dict[idx] = name
         self.num_elements = len(self._names)

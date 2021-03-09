@@ -48,8 +48,7 @@ class LineGroup(CircuitElementGroup):
         which is the same value as in opendss
         """
         idx_matrix = np.zeros(self.num_elements)
-        for idx, line_name in self._idx_to_name_dict().items():
+        for idx, line_name in self._idx_to_name_dict.items():
             tx_bus = self.get_element(line_name).tx
             idx_matrix[idx] = bus_group.get_idx(tx_bus)
         return idx_matrix
-
