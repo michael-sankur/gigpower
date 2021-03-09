@@ -1,6 +1,6 @@
 from circuit_element import CircuitElement
 import numpy as np
-from utils import pad_phases, parse_phases, parse_dss_bus_name
+from utils import pad_phases, parse_phases, parse_dss_bus_name, parse_dss_phases
 
 
 class Line(CircuitElement):
@@ -18,6 +18,11 @@ class Line(CircuitElement):
             parse_dss_bus_name(dss.Lines.Bus2())
         self.related_bus = self.tx
         self.key = (self.tx, self.rx)
+
+    def _set_phases_from_bus(self, dss, bus_name):
+        """ override super class to save phases from dss.Lines.Bus1()"""
+        dss.Lines.Name(self.__name__)
+        self.phases = parse_dss_phases(dss.Lines.Bus1())
 
     def _set_FZpu(self, dss):
         fz_mult = 1 / self.Zbase * self.length  # use tx node's Z base

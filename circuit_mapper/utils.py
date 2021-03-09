@@ -2,14 +2,28 @@ from typing import List
 import numpy as np
 
 
-def parse_dss_bus_name(dss_bus_name: str) -> str:
+def parse_dss_bus_name(dss_bus_name: str, sep = '.') -> str:
     """
     Given a bus name string that may include phase from opendss, returns just
     the busname.
     Assumes that dss appends bus names with phases, separated by '.'
     Ex: 'sourcebus.1.2.3' -> 'sourcebus'
     """
-    return dss_bus_name.split('.')[0]
+    return dss_bus_name.split(sep)[0]
+
+
+def parse_dss_phases(dss_str: str, sep='.') -> List[str]:
+    """
+    Given a bus name string that may include phase from opendss, returns a list
+    of chars representing phases.
+    Assumes that dss appends bus names with phases, separated by '.'
+    Ex: 'sourcebus.2.3' -> ['2', '3']
+    If there are no phase numbers, assumes that all phases are present on the bus.
+    """
+    if sep in dss_str:
+        return [str(ph) for ph in dss_str.split(sep)[1:]]
+    else:
+        return ['1', '2', '3']
 
 
 def parse_phases(phase_char_lst: List[str]) -> List[bool]:

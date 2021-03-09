@@ -24,10 +24,6 @@ class Bus(CircuitElement):
     def _set_related_bus(self, dss):
         self.related_bus = self.__name__
 
-    def _set_phases_from_bus(self, dss, bus_name):
-        dss.Circuit.SetActiveBus(self.__name__)
-        self.phases = [str(ph) for ph in dss.Bus.Nodes()]
-
     def _set_spu(self, subtract_spu, add_spu):
         """set the bus' sum spu by subtracting subtract_spu, and adding add_spu"""
         self.sum_spu = -1 * subtract_spu + add_spu
