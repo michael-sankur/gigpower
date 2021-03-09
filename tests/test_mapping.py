@@ -31,7 +31,6 @@ def circuit():
 def test_nr3_relevant_open_DSS_parameters():
     dss.run_command('Redirect ' + DSS_FILE)
     circuit = Circuit(dss)
-    pd.options.display.float_format = '{:.3f}'.format
 
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(DSS_FILE, -1)

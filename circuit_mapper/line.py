@@ -19,7 +19,7 @@ class Line(CircuitElement):
         self.related_bus = self.tx
         self.key = (self.tx, self.rx)
 
-    def _set_phases_from_bus(self, dss, bus_name):
+    def _set_phases(self, dss):
         """ override super class to save phases from dss.Lines.Bus1()"""
         dss.Lines.Name(self.__name__)
         self.phases = parse_dss_phases(dss.Lines.Bus1())

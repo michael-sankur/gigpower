@@ -15,8 +15,8 @@ class CircuitElement():
         self.phases = ''
         self.Sbase = 10**6
         self._set_related_bus(dss)
-        self._set_base_vals(dss, self.related_bus)
-        self._set_phases_from_bus(dss, self.related_bus)
+        self._set_base_vals(dss)
+        self._set_phases(dss)
 
     def __str__(self) -> str:
         return f"{self.__class__}, {self.name}, {self.phases}"
@@ -37,16 +37,16 @@ class CircuitElement():
         bus_name = dss.CktElement.BusNames()[0]  # this is usually the related bus
         self.related_bus = parse_dss_bus_name(bus_name)
 
-    def _set_base_vals(self, dss, bus_name: str):
-        """ set Vbase, Ibase, and Zbase based on a certain bus"""
-        dss.Circuit.SetActiveBus(bus_name)
+    def _set_base_vals(self, dss):
+        """ set Vbase, Ibase, and Zbase based self.related_bus"""
+        dss.Circuit.SetActiveBus(self.related_bus)
         self.Vbase = dss.Bus.kVBase() * 1000
         self.Ibase = self.Sbase/self.Vbase
         self.Zbase = self.Vbase/self.Ibase
 
-    def _set_phases_from_bus(self, dss, bus_name: str):
-        """ set element's phases based on bus passed"""
-        dss.Circuit.SetActiveBus(bus_name)
+    def _set_phases(self, dss):
+        """ set element's phases based on self.related_bus"""
+        dss.Circuit.SetActiveBus(self.related_bus)
         self.phases = dss.Bus.Nodes()
 
     def get_spu_matrix(self, dss):

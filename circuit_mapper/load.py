@@ -32,7 +32,7 @@ class Load(CircuitElement):
         dss.Loads.Name(self.__name__)
         self.related_bus = parse_dss_bus_name(dss.CktElement.BusNames()[0])
 
-    def _set_phases_from_bus(self, dss, bus_name):
+    def _set_phases(self, dss):
         dss.Loads.Name(self.__name__)
         self.phases = parse_dss_phases(dss.CktElement.BusNames()[0])
 
