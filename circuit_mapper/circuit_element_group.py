@@ -19,8 +19,13 @@ class CircuitElementGroup():
     def _collect_elements(self, dss, *args):
         dss_module = getattr(dss, f'{self.__class__.dss_module_name}')
         ele_class = self.__class__.ele_class
+
+        # specify the dss method that sets the active element
+        dss_set_active = dss_module.Name
+        if self.__class__.__name__ == 'BusGroup':
+            dss_set_active = dss.Circuit.SetActiveBus # special case for Buses
         for name in self._names:
-            dss_module.Name(name)  # set as active element
+            dss_set_active(name)  # set as active element
             # create element from ele_class
             self._name_to_object_dict[name] = ele_class(name, dss)
 
