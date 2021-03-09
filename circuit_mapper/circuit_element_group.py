@@ -1,8 +1,7 @@
-from utils import parse_phases
+from utils import parse_phase_matrix
 import pandas as pd
 import numpy as np
 from typing import Tuple, Union
-from importlib import import_module
 
 
 class CircuitElementGroup():
@@ -42,10 +41,12 @@ class CircuitElementGroup():
         return self._idx_to_name_dict[idx]
 
     def get_phase_matrix(self) -> np.ndarray:
-        """ n x 3 phase matrix of booleans """
-        phase_matrix = np.zeros((len(self._names), 3), dtype=bool)
+        """ 3 x n phase matrix of 1's where phases are present, 0's otherwise """
+        phase_matrix = np.zeros((len(self._names), 3), dtype=int)
         for ele, idx in self._name_to_idx_dict.items():
-            phase_matrix[idx] = parse_phases(ele.phases)
+            bus_obj = self.get_element(ele)
+            phase_matrix[idx] = parse_phase_matrix(bus_obj.phases)
+        return phase_matrix.transpose()
 
     def get_phase_df(self) -> pd.DataFrame:
         """ n x 3 dataframe indexed by object names """

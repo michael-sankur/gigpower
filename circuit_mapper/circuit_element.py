@@ -47,13 +47,7 @@ class CircuitElement():
     def _set_phases_from_bus(self, dss, bus_name: str):
         """ set element's phases based on bus passed"""
         dss.Circuit.SetActiveBus(bus_name)
-        self.phases = parse_dss_phases(dss.Bus.Nodes())
-        # # Handle the typical case where bus names tell you the phases, e.g. 'BusName.1.2.'
-        # if "." in bus_name:
-        #     bus_name, *phases = bus_name.split('.')
-        # else:  # if no phases are present in name, assume all 3 phases
-        #     phases = ['1', '2', '3']
-        # self.phases = phases
+        self.phases = dss.Bus.Nodes()
 
     def get_spu_matrix(self, dss):
         pass

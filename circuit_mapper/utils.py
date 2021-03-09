@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Union
 import numpy as np
 
 
-def parse_dss_bus_name(dss_bus_name: str, sep = '.') -> str:
+def parse_dss_bus_name(dss_bus_name: str, sep='.') -> str:
     """
     Given a bus name string that may include phase from opendss, returns just
     the busname.
@@ -26,26 +26,36 @@ def parse_dss_phases(dss_str: str, sep='.') -> List[str]:
         return ['1', '2', '3']
 
 
-def parse_phases(phase_char_lst: List[str]) -> List[bool]:
+def parse_phases(phase_list: List[Union[str, int]]) -> List[bool]:
     """
-    helper function to return a list of phase characters into a boolean triple
+    helper function to return a list of phases represented as ints or
+    strings into a list of booleans
     ex: ['1', '3'] -> [True, False True]
     ex: ['a','b'] -> [True, True, False]
     """
-    phase_list = [False, False, False]
-    for p in phase_char_lst:
-        phase_list[get_phase_idx(p)] = True
-    return phase_list
+    phase_bools = [False, False, False]
+    for p in phase_list:
+        phase_bools[get_phase_idx(p)] = True
+    return phase_bools
 
 
-def get_phase_idx(phase_char: str) -> int:
+def parse_phase_matrix(phase_char_lst: List[str]) -> List[int]:
+    """
+    n x 3 phase matrix of 1's where phases are present, 0's otherwise
+    """
+    return np.asarray([1 if ph else 0 for ph in parse_phases(phase_char_lst)])
+
+
+def get_phase_idx(ph: Union[str, int]) -> int:
     """
     helper function to turn a phase letter into an index, where 'a' = 0
     """
-    if phase_char in ['a', 'b', 'c']:
-        return ord(phase_char.lower()) - ord('a')
-    elif phase_char in ['1', '2', '3']:
-        return int(phase_char) - 1
+    if ph in ['a', 'b', 'c']:
+        return ord(ph.lower()) - ord('a')
+    elif ph in ['1', '2', '3']:
+        return int(ph) - 1
+    elif ph in range(1, 4):
+        return ph - 1
     else:
         raise ValueError(f'Invalid argument for get_phase_idx {phase_char}')
 
