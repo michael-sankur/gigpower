@@ -46,11 +46,14 @@ class CircuitElementGroup():
         return self._idx_to_name_dict[idx]
 
     def get_phase_matrix(self) -> np.ndarray:
-        """ 3 x n phase matrix of 1's where phases are present, 0's otherwise """
+        """
+        3 x n phase matrix of 1's where phases are present, 0's otherwise
+        columns indexed by element index, which is the same as in opendss
+        """
         phase_matrix = np.zeros((len(self._names), 3), dtype=int)
         for ele, idx in self._name_to_idx_dict.items():
-            bus_obj = self.get_element(ele)
-            phase_matrix[idx] = parse_phase_matrix(bus_obj.phases)
+            obj = self.get_element(ele)
+            phase_matrix[idx] = parse_phase_matrix(obj.phases)
         return phase_matrix.transpose()
 
     def get_phase_df(self) -> pd.DataFrame:

@@ -14,7 +14,7 @@ from line_group import LineGroup
 from load_group import LoadGroup
 from transformer_group import TransformerGroup
 from voltage_regulator_group import VoltageRegulatorGroup
-
+from utils import parse_phase_matrix
 
 class Circuit():
 
@@ -89,6 +89,42 @@ class Circuit():
             bus_idx = self.buses.get_idx(load_bus)
             spu_matrix[bus_idx] += load.spu
         return spu_matrix.transpose()
+
+    def get_aPQ_matrix(self) -> np.ndarray:
+        """
+        3 x n matrix of all load.aPQ_p, aggregated by phase on bus,
+        columns indexed by bus
+        """
+        return self._get_zip_val_matrix('aPQ_p')
+
+    def get_aI_matrix(self) -> np.ndarray:
+        """
+        3 x n matrix of all load.aPQ_p, aggregated by phase on bus,
+        columns indexed by bus
+        """
+        return self._get_zip_val_matrix('aI_p')
+
+    def get_aZ_matrix(self) -> np.ndarray:
+        """
+        3 x n matrix of all load.aPQ_p, aggregated by phase on bus,
+        columns indexed by bus
+        """
+        return self._get_zip_val_matrix('aZ_p')
+
+    def _get_zip_val_matrix(self, zip_param=str) -> np.ndarray:
+        """
+        3 x n matrix of all load.zip_param, aggregated by phase on bus,
+        columns indexed by bus
+        Zip_params can take any values in
+        {'aPQ_p', 'aI_p', 'aZ_p','aPQ_q', 'aI_q', 'aZ_q'}
+        """
+        param_matrix = np.zeros((self.buses.num_elements, 3))
+        for load in self.loads.get_elements():
+            load_bus = load.related_bus
+            load_ph_matrix = parse_phase_matrix(load.phases)
+            bus_idx = self.buses.get_idx(load_bus)
+            param_matrix[bus_idx] += load_ph_matrix * getattr(load, zip_param)
+        return param_matrix.transpose()
 
     def _assign_to_buses(self, ckt_element_group):
         """
