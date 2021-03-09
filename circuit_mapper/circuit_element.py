@@ -6,6 +6,7 @@ from utils import parse_phases
 from typing import List
 from importlib import import_module
 import numpy as np
+from utils import parse_dss_bus_name
 
 
 class CircuitElement():
@@ -34,7 +35,7 @@ class CircuitElement():
         dss_module = import_module(f'opendssdirect.{self.__class__.dss_module_name}')
         dss_module.Name(self.__name__)  # set this element as active
         bus_name = dss.CktElement.BusNames()[0]  # this is usually the related bus
-        self.related_bus = bus_name.split('.')[0]
+        self.related_bus = parse_dss_bus_name(bus_name)
 
     def _set_base_vals(self, dss, bus_name: str):
         """ set Vbase, Ibase, and Zbase based on a certain bus"""

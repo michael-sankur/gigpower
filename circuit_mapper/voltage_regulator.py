@@ -1,5 +1,6 @@
 from line import Line
 import numpy as np
+from utils import parse_dss_bus_name
 
 
 class VoltageRegulator(Line):
@@ -44,6 +45,6 @@ class VoltageRegulator(Line):
         self.transformer_name = dss.RegControls.Transformer()
         tx, regControl_bus = dss.CktElement.BusNames()  # get upstream, regcontrol buses
         self._set_phases_from_bus(tx)
-        self.tx = tx.split('.')[0]
-        self.bus_name = regControl_bus.split('.')[0]
+        self.tx = parse_dss_bus_name(tx)
+        self.bus_name = parse_dss_bus_name(regControl_bus)
         self.key = (self.tx, self.bus_name)

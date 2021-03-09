@@ -1,6 +1,6 @@
 from circuit_element import CircuitElement
 import numpy as np
-from utils import pad_phases, parse_phases
+from utils import pad_phases, parse_phases, parse_dss_bus_name
 
 
 class Line(CircuitElement):
@@ -14,7 +14,8 @@ class Line(CircuitElement):
     def _set_related_bus(self, dss):
         """ override super class to save tx, rx, and two buses"""
         dss.Lines.Name(self.__name__)
-        self.tx, self.rx = dss.Lines.Bus1(), dss.Lines.Bus2()
+        self.tx, self.rx = parse_dss_bus_name(dss.Lines.Bus1()), \
+            parse_dss_bus_name(dss.Lines.Bus2())
         self.related_bus = self.tx
         self.key = (self.tx, self.rx)
 

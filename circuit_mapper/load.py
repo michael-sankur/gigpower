@@ -1,6 +1,7 @@
 from circuit_element import CircuitElement
 from typing import List
 import numpy as np
+from utils import parse_dss_bus_name
 
 
 class Load(CircuitElement):
@@ -27,7 +28,7 @@ class Load(CircuitElement):
 
     def _set_related_bus(self, dss):
         dss.Loads.Name(self.__name__)
-        self.related_bus = dss.CktElement.BusNames()[0].split('.')[0]
+        self.related_bus = parse_dss_bus_name(dss.CktElement.BusNames()[0])
 
     def set_zip_values(self, zipV: List):
         self.zipV = zipV

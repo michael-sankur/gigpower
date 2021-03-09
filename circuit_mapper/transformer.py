@@ -1,5 +1,6 @@
 from line import Line
 import numpy as np
+from utils import parse_dss_bus_name
 
 
 class Transformer (Line):
@@ -20,7 +21,7 @@ class Transformer (Line):
         Set phases based on tx bus
         """
         dss.Transformers.Name(self.__name__)
-        tx, rx = (b.split('.')[0] for b in dss.CktElement.BusNames())
+        tx, rx = (parse_dss_bus_name(b) for b in dss.CktElement.BusNames())
         self.key = (tx, rx)
         upstream = self._get_rated_voltages(dss, 1)
         downstream = self._get_rated_voltages(dss, 2)
