@@ -57,6 +57,28 @@ class Circuit():
         new_load_spu = load.spu
         bus._set_spu(old_load_spu, new_load_spu)
 
+    def get_lines_tx_idx_matrix(self):
+        """
+        n x 1 matrix of tx bus indices. Indexed by line index,
+        which is the same value as in opendss
+        """
+        idx_matrix = np.zeros(self.lines.num_elements)
+        for idx, line_name in self.lines._idx_to_name_dict.items():
+            tx_bus = self.lines.get_element(line_name).tx
+            idx_matrix[idx] = self.buses.get_idx(tx_bus)
+        return idx_matrix
+
+    def get_lines_rx_idx_matrix(self):
+        """
+        n x 1 matrix of rx bus indices. Indexed by line index,
+        which is the same value as in opendss
+        """
+        idx_matrix = np.zeros(self.lines.num_elements)
+        for idx, line_name in self.lines._idx_to_name_dict.items():
+            rx_bus = self.lines.get_element(line_name).rx
+            idx_matrix[idx] = self.buses.get_idx(rx_bus)
+        return idx_matrix
+
     def _assign_to_buses(self, ckt_element_group):
         """
         For all elements in the ckt_element_group, gives the bus

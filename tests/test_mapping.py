@@ -34,8 +34,8 @@ def test_nr3_relevant_open_DSS_parameters():
 
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(DSS_FILE, -1)
-    assert (TXnum == circuit.lines.get_tx_idx_matrix(circuit.buses)).all()
-    # assert RXnum == circuit.lines.get_RXnum_matrix()
+    assert (TXnum == circuit.get_lines_tx_idx_matrix()).all()
+    assert (RXnum == circuit.get_lines_rx_idx_matrix()).all()
     # assert PH == circuit.buses.get_phase_matrix()
     # assert spu == circuit.buses.get_spu_matrix()
     # assert aPQ == circuit.buses.get_aPQ_matrix()
