@@ -4,9 +4,7 @@
 # Create Circuit class to mirror a dss Circuit object
 # used by Solution objects to solve powerflow
 
-from collections import OrderedDict
 import numpy as np
-import pandas as pd
 
 from bus_group import BusGroup
 from capacitor_group import CapacitorGroup
@@ -15,6 +13,7 @@ from load_group import LoadGroup
 from transformer_group import TransformerGroup
 from voltage_regulator_group import VoltageRegulatorGroup
 from utils import parse_phase_matrix
+
 
 class Circuit():
 
@@ -81,14 +80,23 @@ class Circuit():
 
     def get_spu_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of complex spu
+        3 x n matrix of complex spu, columns indexed by bus index
         """
         spu_matrix = np.zeros((self.buses.num_elements, 3), dtype=complex)
         for load in self.loads.get_elements():
-            load_bus = load.related_bus
-            bus_idx = self.buses.get_idx(load_bus)
+            bus_idx = self.buses.get_idx(load.related_bus)
             spu_matrix[bus_idx] += load.spu
         return spu_matrix.transpose()
+
+    def get_cappu_matrix(self) -> np.ndarray:
+        """
+        3 x n matrix of complex spu, columns indexed by bus index
+        """
+        cappu_matrix = np.zeros((self.buses.num_elements, 3), dtype=complex)
+        for cap in self.capacitors.get_elements():
+            bus_idx = self.buses.get_idx(cap.related_bus)
+            cappu_matrix[bus_idx] += cap.cappu
+        return cappu_matrix.transpose()
 
     def get_aPQ_matrix(self) -> np.ndarray:
         """
@@ -110,6 +118,22 @@ class Circuit():
         columns indexed by bus
         """
         return self._get_zip_val_matrix('aZ_p')
+
+    def get_wpu_matrix(self) -> np.ndarray:
+        """
+        3 x n matrix of all wpu, columns indexed by bus
+        Currently set to all zeros.
+        TODO: Implement logic to set this as needed.
+        """
+        return np.zeros((3, self.buses.num_elements))
+
+    def get_vvcpu_matrix(self) -> np.ndarray:
+        """
+        3 x n matrix of all wpu, columns indexed by bus
+        Currently set to all zeros.
+        TODO: Implement logic to set this as needed.
+        """
+        return np.zeros((3, self.buses.num_elements))
 
     def _get_zip_val_matrix(self, zip_param=str) -> np.ndarray:
         """

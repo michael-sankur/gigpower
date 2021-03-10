@@ -145,7 +145,7 @@ def relevant_openDSS_parameters(fn, t):
             for ph in range(1, len(cap_data)):
                 cappu[int(cap_data[ph]) - 1, idxbs] += dss.Capacitors.kvar() * 1e3 / Sbase / (len(cap_data) - 1)
 
-
+    cap_dict()
     wpu = np.zeros((3, nnode))
     vvcpu = np.zeros((3,nnode))
 

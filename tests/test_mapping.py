@@ -41,9 +41,9 @@ def test_nr3_relevant_open_DSS_parameters():
     assert (aPQ == circuit.get_aPQ_matrix()).all()
     assert (aI == circuit.get_aZ_matrix()).all()
     assert (aZ == circuit.get_aI_matrix()).all()
-    # assert cappu == circuit.buses.get_cappu_matrix()
-    # assert wpu == circuit.buses.get_wpu_matrix()
-    # assert vvcpu == circuit.buses.get_vvcpu_matrix()
+    assert (cappu == circuit.get_cappu_matrix()).all()
+    assert (wpu == circuit.get_wpu_matrix()).all()
+    assert (vvcpu == circuit.get_vvcpu_matrix()).all()
 
 
 # def test_nr3_compute_vecmat(circuit):
