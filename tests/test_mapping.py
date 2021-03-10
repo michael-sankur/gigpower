@@ -46,12 +46,12 @@ def test_nr3_relevant_open_DSS_parameters():
     assert (vvcpu == circuit.get_vvcpu_matrix()).all()
 
 
-# def test_nr3_compute_vecmat(circuit):
-#     X, g_SB, b_SB, G_KVL, b_kvl, H_reg, G_reg = compute_vecmat(circuit.get_XNR_mat(), DSS_FILE, VSLACK)
-#     assert X == circuit.calc_nr3_X()
-#     assert g_SB == circuit.calc_nr3_g_SB()
-#     assert b_SB == circuit.calc_nr3_b_SB()
-#     assert G_KVL == circuit.calc_nr3_G_KVL()
-#     assert b_KVL == circuit.calc_nr3_b_kvl()
-#     assert H_reg == circuit.calc_nr3_H_reg()
-#     assert G_reg == circuit.calc_nr3_G_reg()
+def test_nr3_compute_vecmat(circuit):
+    X, g_SB, b_SB, G_KVL, b_kvl, H_reg, G_reg = compute_vecmat(circuit.get_XNR_mat(), DSS_FILE, VSLACK)
+    assert X == circuit.calc_nr3_X()
+    assert g_SB == circuit.calc_nr3_g_SB()
+    assert b_SB == circuit.calc_nr3_b_SB()
+    assert G_KVL == circuit.calc_nr3_G_KVL()
+    assert b_KVL == circuit.calc_nr3_b_kvl()
+    assert H_reg == circuit.calc_nr3_H_reg()
+    assert G_reg == circuit.calc_nr3_G_reg()
