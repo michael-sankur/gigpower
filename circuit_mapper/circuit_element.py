@@ -2,11 +2,10 @@
 # LBNL GIG
 # File created: 19 February 2021
 
-from utils import parse_phases
-from typing import List
+from utils import parse_phase_matrix, parse_dss_bus_name
+from typing import Union
 from importlib import import_module
 import numpy as np
-from utils import parse_dss_bus_name, parse_dss_phases
 
 
 class CircuitElement():
@@ -21,8 +20,9 @@ class CircuitElement():
     def __str__(self) -> str:
         return f"{self.__class__}, {self.name}, {self.phases}"
 
-    def get_phase_matrix(self) -> List[bool]:
-        return parse_phases(self.phases)
+    def get_phase_matrix(self) -> np.ndarray:
+        """ 1x3 with 1's indicating phases on the element, 0's elsewhere"""
+        return parse_phase_matrix(self.phases)
 
     def get_ph_idx_matrix(self) -> np.ndarray:
         return np.asarray([int(ph) - 1 for ph in self.phases])
@@ -48,6 +48,15 @@ class CircuitElement():
         """ set element's phases based on self.related_bus"""
         dss.Circuit.SetActiveBus(self.related_bus)
         self.phases = dss.Bus.Nodes()
+
+    def _set_attr_val_by_phase(self, attr: str, value: Union[float, complex]):
+        """
+        sets self.attr to a 1x3 matrix, where phases present on self
+        are set to value, 0 otherwise
+        EX: self.phases = ['1', '3']
+        self._set_attr_val_by_phase('ppu', .38) -> self.ppu = [.38, 0, .38]
+        """
+        setattr(self, attr, self.get_phase_matrix() * value)
 
     def get_spu_matrix(self, dss):
         pass

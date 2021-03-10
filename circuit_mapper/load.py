@@ -1,7 +1,6 @@
 from circuit_element import CircuitElement
 from typing import List
-import numpy as np
-from utils import parse_dss_bus_name, parse_phases, parse_dss_phases
+from utils import parse_dss_bus_name, parse_dss_phases
 
 
 class Load(CircuitElement):
@@ -15,8 +14,8 @@ class Load(CircuitElement):
         # divide ppu and qpu by number of phases
         # store as zero-padded 1x3 matrix
         ppu, qpu = self.kW / 1000 / len(self.phases), self.kvar / 1000 / len(self.phases)
-        self.ppu = np.where(parse_phases(self.phases), ppu, 0)
-        self.qpu = np.where(parse_phases(self.phases), qpu, 0)
+        self._set_attr_val_by_phase('ppu', ppu)
+        self._set_attr_val_by_phase('qpu', qpu)
 
         # set aPQ, aI, aZ
         if dss.Loads.ZipV():
@@ -49,15 +48,13 @@ class Load(CircuitElement):
         Bus.sum_spu will not be updated by this method.
         Use Circuit.set_kvar() to also update the Bus.sum_spu.
         """
-        old_spu = self.spu
         self.kvar = kvar
 
         # divide by number of phases
         qpu = self.kvar / 1000 / len(self.phases)
 
         # set to 3x1 based on phases
-        self.qpu = np.zeros(3)
-        self.qpu[np.asarray(self.phases) - 1] = qpu
+        self._set_attr_val_by_phase('qpu', qpu)
         self.spu = self.ppu + 1j*self.qpu
 
     def _set_kW(self, kW: float) -> None:
@@ -67,12 +64,10 @@ class Load(CircuitElement):
         Bus.sum_spu will not be updated by this method.
         Use Circuit.set_kvar() to also update the Bus.sum_spu.
         """
-        old_spu = self.spu
         self.kW = kW
 
         # divide by number of phases
         ppu = self.kW / 1000 / len(self.phases)
 
-        self.ppu = np.zeros(3)
-        self.ppu[np.asarray(self.phases) - 1] = ppu
+        self._set_attr_val_by_phase('ppu', ppu)
         self.spu = self.ppu + 1j*self.qpu
