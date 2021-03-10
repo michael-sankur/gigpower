@@ -1,6 +1,6 @@
 20170811/
 20180101/
-*__pycache__/
+*/__pycache__/*
 *.pyc
 .mypy_cache/
 .pytest_cache/
