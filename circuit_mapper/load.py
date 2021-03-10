@@ -20,8 +20,8 @@ class Load(CircuitElement):
         # set aPQ, aI, aZ
         if dss.Loads.ZipV():
             self.set_zip_values(dss.Loads.ZipV())
-        else:  # default to constant power, 0, 0, 1,
-            self.set_zip_values([0, 0, 1, 0, 0, 1])
+        else:  # default to constant impedance
+            self.set_zip_values([1, 0, 0, 1, 0, 0])
         self.spu = self.ppu + 1j*self.qpu
 
     def __str__(self) -> str:
