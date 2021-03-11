@@ -8,8 +8,12 @@ class Line(CircuitElement):
 
     def __init__(self, name: str, dss):
         super().__init__(name, dss)
-        self.length = dss.Lines.Length()
+        self._set_length(dss)
         self._set_FZpu(dss)
+
+    def _set_length(self, dss):
+        dss.Lines.Name(self.__name__)
+        self.length = dss.Lines.Length()
 
     def _set_related_bus(self, dss):
         """ override super class to save tx, rx, and two buses"""
