@@ -248,4 +248,14 @@ def identify_line_phases(line):
             k[i - 1] = 1
     return k
 
-
+# ---------------------
+def wpu_final_arr(nnode, vvc_objects):
+    wpu_final = np.zeros((3, nnode))
+    for vvo in vvc_objects:
+        busName = vvo.get_busName()
+        idxbus = dss.Circuit.AllBusNames().index(busName)
+        phase = vvo.get_phase()
+        wpu_values = vvo.get_prevQ_list()
+        qpu = np.sum(wpu_values)    
+        wpu_final[phase, idxbus] = qpu
+    return wpu_final

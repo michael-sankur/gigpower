@@ -32,12 +32,15 @@ class voltVARControl:
             self.prevQ = slope * V_pu + b
         else:
             self.prevQ = self.minQ
-        
+        self.prevQ = -self.prevQ
         self.prevQ_list.append(self.prevQ)
         return self.prevQ
     
     def get_prevQ(self):
         return self.prevQ
+    
+    def get_prevQ_list(self):
+        return self.prevQ_list
 
     def get_busName(self):
         return self.busName

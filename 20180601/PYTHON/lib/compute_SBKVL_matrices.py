@@ -2,9 +2,8 @@ import numpy as np
 import opendssdirect as dss
 import re
 from lib.helper import identify_bus_phases, identify_line_phases
-def compute_SBKVL_matrices(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_count, gain):
+def compute_SBKVL_matrices(XNR, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_count, gain):
 
-    #dss.run_command('Redirect ' + fn)
     nline = len(dss.Lines.AllNames())    
     nnode = len(dss.Circuit.AllBusNames())
     Sbase = 1000000.0

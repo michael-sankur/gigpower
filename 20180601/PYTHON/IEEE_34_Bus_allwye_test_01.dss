@@ -6,7 +6,7 @@ Clear
 Set DefaultBaseFrequency=60
 
 New object=circuit.ieee_34_bus_allwye
-~ basekv=69 pu=1.05 angle=0 mvasc3=200000 !stiffen up a bit over DSS default
+~ basekv=69 pu=1.00 angle=0 mvasc3=200000 !stiffen up a bit over DSS default
 
 ! Substation Transformer -- Modification: Make source very stiff by defining a tiny leakage Z
 New Transformer.SubXF Phases=3 Windings=2 Xhl=0.01 ! normally 8
@@ -46,8 +46,8 @@ New Line.line_852r_832 Phases=3 Bus1=852r.1.2.3 Bus2=832.1.2.3 LineCode=301 Leng
 
 ! 24.9/4.16 kV Transformer
 New Transformer.XFM1 Phases=3 Windings=2 Xhl=0.00408
-~ wdg=1 bus=832 conn=wye kv=24.9 kva=500 %r=0.0095
-~ wdg=2 bus=888 conn=Wye kv=4.16 kva=500 %r=0.095
+~ wdg=1 bus=832 conn=wye kv=24.9 kva=500 %r=0.00095
+~ wdg=2 bus=888 conn=Wye kv=4.16 kva=500 %r=0.00095
 
 New Line.line_854_856 Phases=1 Bus1=854.2 Bus2=856.2 LineCode=303 Length=23.33 units=kft
 New Line.line_854_852 Phases=3 Bus1=854.1.2.3 Bus2=852.1.2.3 LineCode=301 Length=36.83 units=kft

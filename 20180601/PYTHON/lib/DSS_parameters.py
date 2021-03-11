@@ -3,8 +3,8 @@ import re
 import numpy as np
 import time
 from lib.zip_parameters import *
-from lib.helper import transformer_regulator_parameters, nominal_load_values, nominal_cap_arr
-def relevant_openDSS_parameters(fn, t):
+from lib.helper import transformer_regulator_parameters, nominal_load_values, nominal_cap_arr, wpu_final_arr
+def relevant_openDSS_parameters(t, vvc_objects):
 
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
@@ -107,10 +107,11 @@ def relevant_openDSS_parameters(fn, t):
     spu = (ppu + 1j * qpu)
 
     #cappu, wpu, vvcpu
-    #cappu = cap_arr() #a negative number
     cappu = nominal_cap_arr()
  
     wpu = np.zeros((3, nnode))
+    wpu = wpu_final_arr(nnode, vvc_objects)
+
     vvcpu = np.zeros((3,nnode))
 
     return TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu
