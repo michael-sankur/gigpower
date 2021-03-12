@@ -5,33 +5,30 @@ from typing import Tuple, Union
 
 
 class CircuitElementGroup():
-    def __init__(self, dss, *args):
+    def __init__(self, dss, **kwargs):
+        self.num_elements = 0
         self._name_to_object_dict = {}
-        self._collect_names(dss, *args)
-        self._collect_elements(dss, *args)
-        self._name_to_idx_dict = {}
-        self._idx_to_name_dict = {}
-        for idx, name in enumerate(self._names):
-            self._name_to_idx_dict[name] = idx
-            self._idx_to_name_dict[idx] = name
-        self.num_elements = len(self._names)
+        self._collect_names(dss, **kwargs)
+        self._collect_elements(dss, **kwargs)
 
-    def _collect_elements(self, dss, *args):
+    def _collect_elements(self, dss, **kwargs):
         dss_module = getattr(dss, f'{self.__class__.dss_module_name}')
         ele_class = self.__class__.ele_class
 
         # specify the dss method that sets the active element
         dss_set_active = dss_module.Name
         if self.__class__.__name__ == 'BusGroup':
-            dss_set_active = dss.Circuit.SetActiveBus # special case for Buses
+            dss_set_active = dss.Circuit.SetActiveBus  # special case for Buses
         for name in self._names:
             dss_set_active(name)  # set as active element
-            # create element from ele_class
-            self._name_to_object_dict[name] = ele_class(name, dss)
+            ele = ele_class(name, dss)  # create element
+            self.add_element(ele)
 
-    def _collect_names(self, dss, *args):
+    def _collect_names(self, dss, **kwargs):
         dss_module = getattr(dss, f'{self.__class__.dss_module_name}')
-        self._names = dss_module.AllNames()
+        self._names = dss_module.AllNames()  # preserve index order in opendss
+        self._name_to_idx_dict = {name: idx for idx, name in enumerate(self._names)}
+        self._idx_to_name_dict = {idx: name for idx, name in enumerate(self._names)}
 
     def all_names(self):
         """ returns a View over all names in Group"""
@@ -79,3 +76,18 @@ class CircuitElementGroup():
     def get_elements(self):
         """ returns an iterable View over all elements in the Group"""
         return self._name_to_object_dict.values()
+
+    def add_element(self, ele):
+        """
+        adds a CircuitElement to this group
+        with index = current value of self.num_elements, making
+        this element the highest_index element in the group
+        """
+        if not isinstance(ele, self.__class__.ele_class):
+            raise ValueError(f"Cannot add element {ele.__class__} to group {self.__class__}")
+        if ele.__name__ not in self._names:
+            self._names.append(ele.__name__)
+            self._name_to_idx_dict[ele.__name__] = self.num_elements
+            self._idx_to_name_dict[self.num_elements] = ele.__name__
+        self._name_to_object_dict[ele.__name__] = ele
+        self.num_elements = len(self._names)
