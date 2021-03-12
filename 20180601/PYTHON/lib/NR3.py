@@ -110,7 +110,6 @@ def NR3(slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta, v
     print('VNR before VVC', np.abs(VNR))
     print('VNR after VVC', np.abs(VNR2))
     print('Absolute  VNR - VNR2', np.abs(VNR)-np.abs(VNR2))
-    # print('WPU FINAL : ', wpu_final)
     
     # dataframe print out
     VDSS_df = pd.DataFrame(data=np.abs(VNR),columns=[dss.Circuit.AllBusNames()],index=['A', 'B', 'C']).T
