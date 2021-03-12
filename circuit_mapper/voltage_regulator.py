@@ -1,9 +1,10 @@
 from line import Line
+from circuit_element import CircuitElement
 import numpy as np
 from utils import parse_dss_bus_name
 
 
-class VoltageRegulator(Line):
+class VoltageRegulator(CircuitElement):
     dss_module_name = 'RegControls'
 
     def __init__(self, name: str, dss):
@@ -38,13 +39,20 @@ class VoltageRegulator(Line):
 
     def _set_related_bus(self, dss):
         """
-        Overrides superclass method to get both tx and regControl node.
+        Overrides superclass method to get both tx and regControl Bus.
         Set base vals, phases, and self.bus_name based on this bus
         """
         dss.RegControls.Name(self.__name__)
         self.transformer_name = dss.RegControls.Transformer()
+        dss.Transformers.Name(self.transformer_name)
         tx, regControl_bus = dss.CktElement.BusNames()  # get upstream, regcontrol buses
-        self._set_phases_from_bus(tx)
+        self.related_bus = parse_dss_bus_name(regControl_bus)
+        self.regControl_bus = self.related_bus  # alias for related bus
         self.tx = parse_dss_bus_name(tx)
-        self.bus_name = parse_dss_bus_name(regControl_bus)
-        self.key = (self.tx, self.bus_name)
+        self.key = (self.tx, self.related_bus)
+
+    def _set_phases(self, dss):
+        """
+        Use the default CircuitElement method to set phases by regControl Bus
+        """
+        CircuitElement._set_phases(self, dss)

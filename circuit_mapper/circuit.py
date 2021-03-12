@@ -24,13 +24,17 @@ class Circuit():
         self.lines = LineGroup(dss)
         self.loads = LoadGroup(dss)
         self.capacitors = CapacitorGroup(dss)
-        self.voltage_regulators = VoltageRegulatorGroup(dss, self.lines)
-        self.transformers = TransformerGroup(dss, self.lines)
+        self.voltage_regulators = VoltageRegulatorGroup(dss, line_group=self.lines)
+        self.transformers = TransformerGroup(dss)
+        # print("Lines")
+        # print(self.lines._idx_to_name_dict)
+        # print("transformers")
+        # print(self.transformers._idx_to_name_dict)
 
-        self._assign_to_buses(self.loads)
-        self._assign_to_buses(self.capacitors)
-        self._assign_to_buses(self.voltage_regulators)
-        self._assign_to_buses(self.transformers)
+        # self._assign_to_buses(self.loads)
+        # self._assign_to_buses(self.capacitors)
+        # self._assign_to_buses(self.voltage_regulators)
+        # self._assign_to_buses(self.transformers)
 
     def set_kW(self, load_name: str, kW: float):
         """
@@ -56,18 +60,24 @@ class Circuit():
         new_load_spu = load.spu
         bus._set_spu(old_load_spu, new_load_spu)
 
-    def get_lines_tx_idx_matrix(self):
+    def get_tx_idx_matrix(self):
         """
-        n x 1 matrix of tx bus indices. Indexed by line index,
-        which is the same value as in opendss
-        """
-        idx_matrix = np.zeros(self.lines.num_elements)
-        for idx, line_name in self.lines._idx_to_name_dict.items():
-            tx_bus = self.lines.get_element(line_name).tx
-            idx_matrix[idx] = self.buses.get_idx(tx_bus)
-        return idx_matrix
+        n x 1 matrix of tx bus indices, for all Lines and Synthetic Lines.
+        Indexed as follows:
+        [0, len(Lines) - 1]: Lines
+        [len(Lines), len(Transformers)- 1]: Transformers
+        [len(Transformers), len(VoltageRegulators)- 1]: VoltageRegulators
 
-    def get_lines_rx_idx_matrix(self):
+        """
+        tx_buses = self.lines.get_tx_buses()
+        try:
+            tx_buses += self.transformers.get_tx_buses()
+            tx_buses += self.voltage_regulators.get_tx_buses()
+        except AttributeError:
+            pass
+        return np.asarray([self.buses.get_idx(bus) for bus in tx_buses])
+
+    def get_rx_idx_matrix(self):
         """
         n x 1 matrix of rx bus indices. Indexed by line index,
         which is the same value as in opendss

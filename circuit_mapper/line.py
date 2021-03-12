@@ -38,5 +38,27 @@ class Line(CircuitElement):
         # pad the Z matrix
         self.FZpu = pad_phases(ZM, (3, 3), parse_phases(self.phases))
 
+    def add_voltage_regulator(self, vreg):
+        try:
+            self.voltage_regulators.append(vreg)
+        except AttributeError:
+            self.voltage_regulators = [vreg]
+
     def __str__(self) -> str:
         return super().__str__() + f' txnode, rxnode: {self.key}'
+
+
+class SyntheticLine(Line):
+    """
+    Special class to handle voltage regulators and transformers
+    Synthetic Lines are used to handle topology information about voltage regulators
+    and transformers.
+    """
+    def __init__(self, ele):
+        """ ele: a Transformer or Voltage Regulator"""
+        self.__name__ = ele.__name__
+        self.key = ele.key
+        self.tx, self.rx = self.key
+        self.related_bus = ele.related_bus
+        self.length = 0
+        self.phases = ele.phases

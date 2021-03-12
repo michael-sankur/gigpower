@@ -17,13 +17,13 @@ from lib.basematrices import basematrices
 from lib.helper import transformer_regulator_parameters
 
 LOCAL_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
-DSS_FILE = LOCAL_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye_noxfm_noreg.dss'
+DSS_FILE = LOCAL_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye.dss'
 
 SLACKIDX = 0
 VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
 
 
-# @pytest.fixture
+@pytest.fixture
 def circuit():
     """ map Circuit object once for use in all tests """
     dss.run_command('Redirect ' + DSS_FILE)
@@ -31,25 +31,31 @@ def circuit():
 
 
 # NR3 TESTS---------------------------------------------------------------------
-def test_nr3_DSS_parameters():
-    dss.run_command('Redirect ' + DSS_FILE)
-    circuit = Circuit(dss)
+def test_nr3_DSS_parameters(circuit):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(DSS_FILE, -1)
-    assert (TXnum == circuit.get_lines_tx_idx_matrix()).all()
-    assert (RXnum == circuit.get_lines_rx_idx_matrix()).all()
-    assert (PH == circuit.buses.get_phase_matrix()).all()
-    assert (spu == circuit.get_spu_matrix()).all()
-    assert (aPQ == circuit.get_aPQ_matrix()).all()
-    assert (aI == circuit.get_aI_matrix()).all()
-    assert (aZ == circuit.get_aZ_matrix()).all()
-    assert (cappu == circuit.get_cappu_matrix()).all()
-    assert (wpu == circuit.get_wpu_matrix()).all()
-    assert (vvcpu == circuit.get_vvcpu_matrix()).all()
+    temp = circuit.get_tx_idx_matrix()
+    print(circuit.lines._idx_to_name_dict)
+    for line in circuit.lines.get_elements():
+        print(f'line_name: {line.__name__} line key: {line.key}')
+    print(temp)
+    print(dss.Lines.AllNames())
+    print(TXnum)
+    assert TXnum == circuit.get_tx_idx_matrix()
+    # assert (RXnum == circuit.get_rx_idx_matrix()).all()
+    # assert (PH == circuit.buses.get_phase_matrix()).all()
+    # assert (spu == circuit.get_spu_matrix()).all()
+    # assert (aPQ == circuit.get_aPQ_matrix()).all()
+    # assert (aI == circuit.get_aI_matrix()).all()
+    # assert (aZ == circuit.get_aZ_matrix()).all()
+    # assert (cappu == circuit.get_cappu_matrix()).all()
+    # assert (wpu == circuit.get_wpu_matrix()).all()
+    # assert (vvcpu == circuit.get_vvcpu_matrix()).all()
 
 
-def test_nr3_transformer_regulator_params():
-    pass
+# def test_nr3_transformer_regulator_params(circuit):
+#     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = transformer_regulator_parameters()
+#     assert (tf_bus == circuit.transformers.get_tf_bus_ph_matrix()).all()
 
 
 # def test_nr3_basematrices():
