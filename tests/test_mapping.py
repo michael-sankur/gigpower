@@ -81,17 +81,18 @@ def test_nr3_DSS_parameters_wpu_vvcpu(circuit):
     assert (vvcpu == circuit.get_vvcpu_matrix()).all()
 
 
-def print_compare(title, old, new):
-    print(title, '-'*70)
-    print("old:")
-    print(old)
-    print("new:")
-    print(new)
+def test_nr3_transformer_regulator_params_tf_bus(circuit):
+    tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
+        transformer_regulator_parameters()
+    print_compare('tf_bus', tf_bus, circuit.transformers.get_tf_bus_ph_matrix())
+    assert (tf_bus == circuit.transformers.get_tf_bus_ph_matrix()).all()
 
-# def test_nr3_transformer_regulator_params(circuit):
-#     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = transformer_regulator_parameters()
-#     assert (tf_bus == circuit.transformers.get_tf_bus_ph_matrix()).all()
 
+def test_nr3_transformer_regulator_params_vr_bus(circuit):
+    tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
+        transformer_regulator_parameters()
+    print_compare('vr_bus', vr_bus, circuit.voltage_regulators.get_vr_bus_ph_matrix())
+    assert (vr_bus == circuit.regulators.get_vr_bus_ph_matrix.all())
 
 # def test_nr3_basematrices():
 #     fn, slacknode, Vslack, V0, I0 = None, None, None, None, None
@@ -106,3 +107,11 @@ def print_compare(title, old, new):
 #     assert b_KVL == circuit.calc_nr3_b_kvl()
 #     assert H_reg == circuit.calc_nr3_H_reg()
 #     assert G_reg == circuit.calc_nr3_G_reg()
+
+
+def print_compare(title, old, new):
+    print(title, '-'*70)
+    print("old:")
+    print(old)
+    print("new:")
+    print(new)

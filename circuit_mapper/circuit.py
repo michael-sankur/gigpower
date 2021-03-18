@@ -25,16 +25,12 @@ class Circuit():
         self.loads = LoadGroup(dss)
         self.capacitors = CapacitorGroup(dss)
         self.voltage_regulators = VoltageRegulatorGroup(dss, line_group=self.lines)
-        self.transformers = TransformerGroup(dss)
-        # print("Lines")
-        # print(self.lines._idx_to_name_dict)
-        # print("transformers")
-        # print(self.transformers._idx_to_name_dict)
+        self.transformers = TransformerGroup(dss, bus_group=self.buses)
 
-        # self._assign_to_buses(self.loads)
-        # self._assign_to_buses(self.capacitors)
-        # self._assign_to_buses(self.voltage_regulators)
-        # self._assign_to_buses(self.transformers)
+        self._assign_to_buses(self.loads)
+        self._assign_to_buses(self.capacitors)
+        self._assign_to_buses(self.voltage_regulators)
+        self._assign_to_buses(self.transformers)
 
     def set_kW(self, load_name: str, kW: float):
         """
@@ -170,6 +166,8 @@ class Circuit():
         for ele in ckt_element_group.get_elements():
             bus = self.buses.get_element(ele.related_bus)
             element_list_ptr = f'{ele.__class__.__name__}s'.lower()
-            if not getattr(bus, element_list_ptr):
+            try:
+                getattr(bus, element_list_ptr)
+            except(AttributeError):
                 setattr(bus, element_list_ptr, [])
             getattr(bus, element_list_ptr).append(ele)

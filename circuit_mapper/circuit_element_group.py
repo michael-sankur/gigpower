@@ -27,6 +27,10 @@ class CircuitElementGroup():
     def _collect_names(self, dss, **kwargs):
         dss_module = getattr(dss, f'{self.__class__.dss_module_name}')
         self._names = dss_module.AllNames()  # preserve index order in opendss
+        self._populate_name_idx_dicts()
+
+    def _populate_name_idx_dicts(self):
+        """ only call AFTER self._names is set! """
         self._name_to_idx_dict = {name: idx for idx, name in enumerate(self._names)}
         self._idx_to_name_dict = {idx: name for idx, name in enumerate(self._names)}
 
@@ -34,9 +38,9 @@ class CircuitElementGroup():
         """ returns a View over all names in Group"""
         return self._name_to_idx_dict.keys()
 
-    def get_idx(self, name: str):
+    def get_idx(self, name: str) -> int:
         """ return the index of the object within the Group given its name"""
-        return self._name_to_idx_dict[name]
+        return int(self._name_to_idx_dict[name])
 
     def get_name(self, idx: int):
         """ return the name of the object given its Group idx"""
