@@ -30,83 +30,92 @@ def circuit():
     return Circuit(dss)
 
 
+@pytest.fixture
+def nr3_DSS_parameters():
+    return relevant_openDSS_parameters(DSS_FILE, -1)
+
+
+@pytest.fixture
+def xfm_vr_parameters():
+    return transformer_regulator_parameters()
+
 # NR3 TESTS---------------------------------------------------------------------
-def test_nr3_DSS_parameters_TXnum(circuit):
+def test_nr3_DSS_parameters_TXnum(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
-        relevant_openDSS_parameters(DSS_FILE, -1)
+        nr3_DSS_parameters
     print_compare("TX", TXnum, circuit.get_tx_idx_matrix())
     assert (TXnum == circuit.get_tx_idx_matrix()).all()
 
 
-def test_nr3_DSS_parameters_RXnum(circuit):
+def test_nr3_DSS_parameters_RXnum(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
-        relevant_openDSS_parameters(DSS_FILE, -1)
+        nr3_DSS_parameters
     print_compare("RX", RXnum, circuit.get_rx_idx_matrix())
     assert (RXnum == circuit.get_rx_idx_matrix()).all()
 
 
-def test_nr3_DSS_parameters_PH(circuit):
+def test_nr3_DSS_parameters_PH(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
-        relevant_openDSS_parameters(DSS_FILE, -1)
+        nr3_DSS_parameters
     print_compare("PH", PH, circuit.buses.get_phase_matrix())
     assert (PH == circuit.buses.get_phase_matrix()).all()
 
 
-def test_nr3_DSS_parameters_spu(circuit):
+def test_nr3_DSS_parameters_spu(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
-        relevant_openDSS_parameters(DSS_FILE, -1)
+        nr3_DSS_parameters
     print_compare("spu", spu, circuit.get_spu_matrix())
     assert (spu == circuit.get_spu_matrix()).all()
 
 
-def test_nr3_DSS_parameters_Z(circuit):
+def test_nr3_DSS_parameters_Z(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
-        relevant_openDSS_parameters(DSS_FILE, -1)
+        nr3_DSS_parameters
     assert (aPQ == circuit.get_aPQ_matrix()).all()
     assert (aI == circuit.get_aI_matrix()).all()
     assert (aZ == circuit.get_aZ_matrix()).all()
 
 
-def test_nr3_DSS_parameters_cappu(circuit):
+def test_nr3_DSS_parameters_cappu(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
-        relevant_openDSS_parameters(DSS_FILE, -1)
+        nr3_DSS_parameters
     print_compare("cappu", cappu, circuit.get_cappu_matrix())
     assert (cappu == circuit.get_cappu_matrix()).all()
 
 
-def test_nr3_DSS_parameters_wpu_vvcpu(circuit):
+def test_nr3_DSS_parameters_wpu_vvcpu(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
-        relevant_openDSS_parameters(DSS_FILE, -1)
+        nr3_DSS_parameters
     assert (wpu == circuit.get_wpu_matrix()).all()
     assert (vvcpu == circuit.get_vvcpu_matrix()).all()
 
 
-def test_nr3_transformer_regulator_params_tf_bus(circuit):
+def test_nr3_transformer_regulator_params_tf_bus(circuit, xfm_vr_parameters):
     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
-        transformer_regulator_parameters()
+        xfm_vr_parameters
     print_compare('tf_bus', tf_bus, circuit.transformers.get_bus_ph_matrix())
     assert (tf_bus == circuit.transformers.get_bus_ph_matrix()).all()
 
 
-def test_nr3_transformer_regulator_params_vr_bus(circuit):
+def test_nr3_transformer_regulator_params_vr_bus(circuit, xfm_vr_parameters):
     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
-        transformer_regulator_parameters()
+        xfm_vr_parameters
     print_compare('vr_bus', vr_bus, circuit.voltage_regulators.get_bus_ph_matrix())
     assert (vr_bus == circuit.voltage_regulators.get_bus_ph_matrix()).all()
 
 
-def test_nr3_transformer_regulator_params_counts(circuit):
+def test_nr3_transformer_regulator_params_counts(circuit, xfm_vr_parameters):
     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
-        transformer_regulator_parameters()
+        xfm_vr_parameters
     assert tf_lines == circuit.transformers.get_num_lines_x_ph()
     assert vr_lines == circuit.voltage_regulators.get_num_lines_x_ph()
     assert tf_count == circuit.transformers.num_elements
     assert vr_no == circuit.voltage_regulators.num_elements
 
 
-def test_nr3_transformer_regulator_params_gain(circuit):
+def test_nr3_transformer_regulator_params_gain(circuit, xfm_vr_parameters):
     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
-        transformer_regulator_parameters()
+        xfm_vr_parameters
     assert (gain == circuit.voltage_regulators.get_gain_matrix()).all()
 
 
