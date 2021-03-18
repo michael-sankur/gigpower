@@ -1,7 +1,7 @@
 from line import Line, SyntheticLine
 from circuit_element import CircuitElement
 import numpy as np
-from utils import parse_dss_bus_name
+from utils import parse_dss_bus_name, parse_dss_phases
 
 
 class VoltageRegulator(CircuitElement):
@@ -54,9 +54,10 @@ class VoltageRegulator(CircuitElement):
 
     def _set_phases(self, dss):
         """
-        Use the default CircuitElement method to set phases by regControl Bus
+        override super() to set name from CktElement.BusNames
         """
-        CircuitElement._set_phases(self, dss)
+        dss.RegControls.Name(self.__name__)
+        self.phases = parse_dss_phases(dss.CktElement.BusNames()[0])
 
     def _set_lines(self, line_group):
         """

@@ -84,15 +84,15 @@ def test_nr3_DSS_parameters_wpu_vvcpu(circuit):
 def test_nr3_transformer_regulator_params_tf_bus(circuit):
     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
         transformer_regulator_parameters()
-    print_compare('tf_bus', tf_bus, circuit.transformers.get_tf_bus_ph_matrix())
-    assert (tf_bus == circuit.transformers.get_tf_bus_ph_matrix()).all()
+    print_compare('tf_bus', tf_bus, circuit.transformers.get_bus_ph_matrix())
+    assert (tf_bus == circuit.transformers.get_bus_ph_matrix()).all()
 
 
 def test_nr3_transformer_regulator_params_vr_bus(circuit):
     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
         transformer_regulator_parameters()
-    print_compare('vr_bus', vr_bus, circuit.voltage_regulators.get_vr_bus_ph_matrix())
-    assert (vr_bus == circuit.regulators.get_vr_bus_ph_matrix.all())
+    print_compare('vr_bus', vr_bus, circuit.voltage_regulators.get_bus_ph_matrix())
+    assert (vr_bus == circuit.voltage_regulators.get_bus_ph_matrix().all())
 
 # def test_nr3_basematrices():
 #     fn, slacknode, Vslack, V0, I0 = None, None, None, None, None

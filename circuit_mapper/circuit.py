@@ -21,7 +21,7 @@ class Circuit():
         """ initialize Circuit from an opendss object's current state"""
         self.Sbase = Sbase
         self.buses = BusGroup(dss)
-        self.lines = LineGroup(dss)
+        self.lines = LineGroup(dss, bus_group=self.buses)
         self.loads = LoadGroup(dss)
         self.capacitors = CapacitorGroup(dss)
         self.voltage_regulators = VoltageRegulatorGroup(dss, line_group=self.lines)

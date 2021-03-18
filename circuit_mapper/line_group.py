@@ -1,20 +1,22 @@
 from circuit_element_group import CircuitElementGroup
 from typing import Tuple, List
 from line import Line
+import numpy as np
 
 
 class LineGroup(CircuitElementGroup):
     dss_module_name = 'Lines'
     ele_class = Line
 
-    def __init__(self, dss, **kwargs):
+    def __init__(self, dss, bus_group, **kwargs):
         """
-        Call CircuitElementGroup.__init__, then map adjacency matrix
-        and map voltage regulators
+        init self.adj, self.reverse_adj, self.buses
+        then call super
         """
         self.adj = {}  # adjacency matrix -> { bus_name: [downstream buses]}
         # reverse adjacency matrix -> { bus_name: [upstream buses]}
         self.reverse_adj = {}
+        self.buses = bus_group
         super().__init__(dss, **kwargs)
 
     def get_line_from_key(self, key: Tuple[str, str]):
@@ -44,3 +46,19 @@ class LineGroup(CircuitElementGroup):
             self.reverse_adj[rx_bus] = [tx_bus]
         else:
             self.reverse_adj[rx_bus].append(tx_bus)
+
+    def get_bus_ph_matrix(self) -> np.ndarray:
+        """
+        5 x self.num_elements matrix, columns indexed by line index
+        row 0: tx_bus_index
+        row 1: rx_bus_index
+        row 2 - 4: A, B, C phases
+        """
+        bp_matrix = np.zeros((self.num_elements, 5), dtype=int)
+        for line in self.get_elements():
+            bp_idx = self.get_idx(line.__name__)
+            tx_bus_name, rx_bus_name = line.key
+            bp_matrix[bp_idx][0:2] = np.asarray([self.buses.get_idx(
+                tx_bus_name), self.buses.get_idx(rx_bus_name)])
+            bp_matrix[bp_idx][2:] = line.get_phase_matrix()
+        return bp_matrix.transpose()

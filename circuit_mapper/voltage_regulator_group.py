@@ -8,7 +8,7 @@ class VoltageRegulatorGroup(LineGroup):
     ele_class = VoltageRegulator
 
     def __init__(self, dss, line_group):
-        super().__init__(dss, line_group=line_group)
+        super().__init__(dss, bus_group=line_group.buses, line_group=line_group)
 
     def _add_edge(self, vr):
         """
