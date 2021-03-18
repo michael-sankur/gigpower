@@ -21,13 +21,12 @@ class LineGroup(CircuitElementGroup):
         """ return the Line with the key (tx_bus, rx_bus)"""
         return self._key_to_element_dict[key]
 
-    def get_tx_buses(self) -> List:
-        """ Return a list of tx buses in this LineGroup, in line index order"""
-        return [line.tx for line in self.get_elements()]
-
-    def get_rx_buses(self) -> List:
-        """ Return a list of rx buses in this LineGroup, in line index order"""
-        return [line.rx for line in self.get_elements()]
+    def get_bus_ids(self, which: str) -> List:
+        """
+        Return a list of tx or rx buses in this LineGroup, in line index order
+        param which = 'tx' or 'rx'
+        """
+        return [getattr(line, which) for line in self.get_elements()]
 
     def add_element(self, line):
         """ Call super(), and add the new line's topology"""

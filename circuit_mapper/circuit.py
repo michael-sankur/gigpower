@@ -69,10 +69,10 @@ class Circuit():
         [len(Transformers), len(VoltageRegulators)- 1]: VoltageRegulators
 
         """
-        tx_buses = self.lines.get_tx_buses()
+        tx_buses = self.lines.get_bus_ids('tx')
         try:
-            tx_buses += self.transformers.get_tx_buses()
-            tx_buses += self.voltage_regulators.get_tx_buses()
+            tx_buses += self.transformers.get_bus_ids('tx')
+            tx_buses += self.voltage_regulators.get_bus_ids('tx')
         except AttributeError:
             pass
         return np.asarray([self.buses.get_idx(bus) for bus in tx_buses])
@@ -82,10 +82,10 @@ class Circuit():
         n x 1 matrix of rx bus indices. Indexed by line index,
         which is the same value as in opendss
         """
-        rx_buses = self.lines.get_rx_buses()
+        rx_buses = self.lines.get_bus_ids('rx')
         try:
-            rx_buses += self.transformers.get_rx_buses()
-            rx_buses += self.voltage_regulators.get_rx_buses()
+            rx_buses += self.transformers.get_bus_ids('rx')
+            rx_buses += self.voltage_regulators.get_bus_ids('rx')
         except AttributeError:
             pass
         return np.asarray([self.buses.get_idx(bus) for bus in rx_buses])
