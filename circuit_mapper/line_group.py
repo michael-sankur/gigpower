@@ -62,3 +62,7 @@ class LineGroup(CircuitElementGroup):
                 tx_bus_name), self.buses.get_idx(rx_bus_name)])
             bp_matrix[bp_idx][2:] = line.get_phase_matrix()
         return bp_matrix.transpose()
+
+    def get_num_lines_x_ph(self):
+        """ returns sum of active phases across all lines """
+        return sum([len(line.phases) for line in self.get_elements()])

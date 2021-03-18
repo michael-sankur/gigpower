@@ -92,7 +92,23 @@ def test_nr3_transformer_regulator_params_vr_bus(circuit):
     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
         transformer_regulator_parameters()
     print_compare('vr_bus', vr_bus, circuit.voltage_regulators.get_bus_ph_matrix())
-    assert (vr_bus == circuit.voltage_regulators.get_bus_ph_matrix().all())
+    assert (vr_bus == circuit.voltage_regulators.get_bus_ph_matrix()).all()
+
+
+def test_nr3_transformer_regulator_params_counts(circuit):
+    tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
+        transformer_regulator_parameters()
+    assert tf_lines == circuit.transformers.get_num_lines_x_ph()
+    assert vr_lines == circuit.voltage_regulators.get_num_lines_x_ph()
+    assert tf_count == circuit.transformers.num_elements
+    assert vr_no == circuit.voltage_regulators.num_elements
+
+
+def test_nr3_transformer_regulator_params_gain(circuit):
+    tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = \
+        transformer_regulator_parameters()
+    assert (gain == circuit.voltage_regulators.get_gain_matrix()).all()
+
 
 # def test_nr3_basematrices():
 #     fn, slacknode, Vslack, V0, I0 = None, None, None, None, None
