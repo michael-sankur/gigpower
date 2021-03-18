@@ -56,7 +56,7 @@ def compute_KCL_matrices(t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_lines
                     load_val = load_kw[ph,idxbs]
                     cap_val = 0
                 else:  
-                    load_val = load_kvar[ph,idxbs]  # WPU HERE !!
+                    load_val = load_kvar[ph,idxbs] 
                     cap_val = caparr[ph][idxbs]  
                 #gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
                 hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
@@ -234,14 +234,13 @@ def compute_KCL_matrices(t, der, capacitance, tf_bus, vr_bus, tf_lines, vr_lines
                         b_factor = 0
                     else:
                         b_factor = 0
-                elif cplx == 1:
+                else:
                     if capacitance != 0 or der.imag != 0:
                         b_factor = capacitance - der.imag
                         b_factor = 0
                     else:                    
-                        b_factor = caparr[ph][k2] # WPU HERE !!                     
-                else:
-                    b_factor = 0
+                        b_factor = caparr[ph][k2]                    
+                
 
                 if available_phases[ph] == 0: #if phase does not exist
                     b_temp = 0

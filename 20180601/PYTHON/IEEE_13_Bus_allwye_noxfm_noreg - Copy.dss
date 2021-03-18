@@ -46,11 +46,11 @@ new circuit.IEEE_13_Bus_allwye_noxfm_noreg
 !~ wdg=1 bus=633 conn=Wye kv=4.16 kva=500 %r=.55 XHT=1
 !~ wdg=2 bus=634 conn=Wye kv=0.480 kva=500 %r=.55 XLT=1
 
-new VVC.vvc_632a bus=632.1 phase=1 min_kvar=-150 max_kvar=150 BP=[0.92, 0.98, 1.02, 1.08]
-new VVC.vvc_632b bus=632.2 phase=2 min_kvar=-150 max_kvar=150 BP=[0.92, 0.98, 1.02, 1.08]
-new VVC.vvc_632c bus=632.3 phase=3 min_kvar=-150 max_kvar=150 BP=[0.92, 0.98, 1.02, 1.08]
-new VVC.vvc_684a bus=684.3 phase=3 min_kvar=-150 max_kvar=150 BP=[0.92, 0.98, 1.02, 1.08]
-new VVC.vvc_652a bus=652.1 phase=1 min_kvar=-150 max_kvar=150 BP=[0.92, 0.98, 1.02, 1.08]
+new VVC.vvc_632a bus=632.1 phase=1 min_kvar=-45 max_kvar=45 BP=[0.95, 0.99, 1.01, 1.05] 
+new VVC.vvc_632b bus=632.2 phase=2 min_kvar=-45 max_kvar=45 BP=[0.95, 0.99, 1.01, 1.05] 
+new VVC.vvc_632c bus=632.3 phase=3 min_kvar=-45 max_kvar=45 BP=[0.95, 0.99, 1.01, 1.05] 
+new VVC.vvc_684a bus=684.3 phase=3 min_kvar=-45 max_kvar=45 BP=[0.95, 0.99, 1.01, 1.05] 
+new VVC.vvc_652a bus=652.1 phase=1 min_kvar=-45 max_kvar=45 BP=[0.95, 0.99, 1.01, 1.05] 
 
 
 !LINE CODES

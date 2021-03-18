@@ -54,9 +54,10 @@ def NR3(slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta, v
     XNR_current = np.zeros(XNR_final.shape)
     XNR_previous = XNR_final
  
+    ############ WPU Iterations
     itercount = 0
-    while np.linalg.norm(XNR_previous - XNR_current) > 1e-6: 
-        print("Iteration number for VVC %f" % (itercount))
+    while np.linalg.norm(XNR_previous - XNR_current) > 1e-7 and itercount < 20: 
+        print("Iteration number for VVC %f" % (itercount), np.linalg.norm(XNR_previous - XNR_current) )
                
         if itercount != 0: #if you have already iterated
             XNR_previous = XNR_current
@@ -92,7 +93,7 @@ def NR3(slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta, v
         XNR_current = XNR_in_loop
         itercount += 1
     
-    # has exited
+    # WPU End
     XNR_final = XNR_current
   
     ##############

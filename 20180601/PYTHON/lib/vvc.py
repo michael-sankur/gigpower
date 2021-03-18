@@ -18,6 +18,7 @@ class voltVARControl:
         return self.busName
 
     def get_Q(self, V_pu):
+        # based on min/max kvar, get kvar for given voltage magnitude
         if V_pu <= self.V1:
             self.prevQ = self.maxQ
         elif V_pu <= self.V2:
@@ -32,14 +33,16 @@ class voltVARControl:
             self.prevQ = slope * V_pu + b
         else:
             self.prevQ = self.minQ
-        self.prevQ = -self.prevQ
-        self.prevQ_list.append(self.prevQ)
+        self.prevQ = -self.prevQ 
+        self.prevQ_list.append(self.prevQ) #store previous kvar injected
         return self.prevQ
     
     def get_prevQ(self):
+        #last query to get_Q
         return self.prevQ
     
     def get_prevQ_list(self):
+        # list of all Q, across all iterations
         return self.prevQ_list
 
     def get_busName(self):
