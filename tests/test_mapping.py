@@ -31,31 +31,62 @@ def circuit():
 
 
 # NR3 TESTS---------------------------------------------------------------------
-def test_nr3_DSS_parameters_1(circuit):
+def test_nr3_DSS_parameters_TXnum(circuit):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(DSS_FILE, -1)
-    print("TXnum", '-'*70)
-    print("old: ", TXnum)
-    print("new: ", circuit.get_tx_idx_matrix())
+    print_compare("TX", TXnum, circuit.get_tx_idx_matrix())
     assert (TXnum == circuit.get_tx_idx_matrix()).all()
 
 
-def test_nr3_DSS_parameters_2(circuit):
+def test_nr3_DSS_parameters_RXnum(circuit):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(DSS_FILE, -1)
-    print("RXnum", '-'*70)
-    print("old: ", RXnum)
-    print("new: ", circuit.get_rx_idx_matrix())
+    print_compare("RX", RXnum, circuit.get_rx_idx_matrix())
     assert (RXnum == circuit.get_rx_idx_matrix()).all()
-    # assert (PH == circuit.buses.get_phase_matrix()).all()
-    # assert (spu == circuit.get_spu_matrix()).all()
-    # assert (aPQ == circuit.get_aPQ_matrix()).all()
-    # assert (aI == circuit.get_aI_matrix()).all()
-    # assert (aZ == circuit.get_aZ_matrix()).all()
-    # assert (cappu == circuit.get_cappu_matrix()).all()
-    # assert (wpu == circuit.get_wpu_matrix()).all()
-    # assert (vvcpu == circuit.get_vvcpu_matrix()).all()
 
+
+def test_nr3_DSS_parameters_PH(circuit):
+    TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
+        relevant_openDSS_parameters(DSS_FILE, -1)
+    print_compare("PH", PH, circuit.buses.get_phase_matrix())
+    assert (PH == circuit.buses.get_phase_matrix()).all()
+
+
+def test_nr3_DSS_parameters_spu(circuit):
+    TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
+        relevant_openDSS_parameters(DSS_FILE, -1)
+    print_compare("spu", spu, circuit.get_spu_matrix())
+    assert (spu == circuit.get_spu_matrix()).all()
+
+
+def test_nr3_DSS_parameters_Z(circuit):
+    TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
+        relevant_openDSS_parameters(DSS_FILE, -1)
+    assert (aPQ == circuit.get_aPQ_matrix()).all()
+    assert (aI == circuit.get_aI_matrix()).all()
+    assert (aZ == circuit.get_aZ_matrix()).all()
+
+
+def test_nr3_DSS_parameters_cappu(circuit):
+    TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
+        relevant_openDSS_parameters(DSS_FILE, -1)
+    print_compare("cappu", cappu, circuit.get_cappu_matrix())
+    assert (cappu == circuit.get_cappu_matrix()).all()
+
+
+def test_nr3_DSS_parameters_wpu_vvcpu(circuit):
+    TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
+        relevant_openDSS_parameters(DSS_FILE, -1)
+    assert (wpu == circuit.get_wpu_matrix()).all()
+    assert (vvcpu == circuit.get_vvcpu_matrix()).all()
+
+
+def print_compare(title, old, new):
+    print(title, '-'*70)
+    print("old:")
+    print(old)
+    print("new:")
+    print(new)
 
 # def test_nr3_transformer_regulator_params(circuit):
 #     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = transformer_regulator_parameters()
