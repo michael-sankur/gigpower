@@ -1,4 +1,4 @@
-from line import Line
+from line import Line, SyntheticLine
 from circuit_element import CircuitElement
 import numpy as np
 from utils import parse_dss_bus_name
@@ -7,8 +7,9 @@ from utils import parse_dss_bus_name
 class VoltageRegulator(CircuitElement):
     dss_module_name = 'RegControls'
 
-    def __init__(self, name: str, dss):
-        super().__init__(name, dss)  # init with Line constructor
+    def __init__(self, name: str, dss, line_group):
+        super().__init__(name, dss)
+        self._set_lines(line_group)
         # set this regcontrol and its transformer as active,
         # in order to get the tap number
         dss.RegControls.Name(self.__name__)
@@ -56,3 +57,23 @@ class VoltageRegulator(CircuitElement):
         Use the default CircuitElement method to set phases by regControl Bus
         """
         CircuitElement._set_phases(self, dss)
+
+    def _set_lines(self, line_group):
+        """
+        Each voltage regulator is modeled with two lines:
+        1. upstream: txBus --> regControlBus
+        2. downstream: regControlBus--> rxBus
+        opendss already has a Line for the downstream line, so it should
+        be present in Circuit.lines
+        Creates a SyntheticLine for the upstream line, find the downstream line
+        from the line_group,  and assign voltage regulators to both lines
+        """
+        self.upstream_line = SyntheticLine(self)
+        self.downstream_line = self._find_downstream_line(line_group)
+        self.upstream_line.add_voltage_regulator(self)
+        self.downstream_line.add_voltage_regulator(self)
+
+    def _find_downstream_line(self, line_group):
+        for line in line_group.get_elements():
+            if line.tx == self.regControl_bus:
+                return line

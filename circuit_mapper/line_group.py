@@ -25,6 +25,10 @@ class LineGroup(CircuitElementGroup):
         """ Return a list of tx buses in this LineGroup, in line index order"""
         return [line.tx for line in self.get_elements()]
 
+    def get_rx_buses(self) -> List:
+        """ Return a list of rx buses in this LineGroup, in line index order"""
+        return [line.rx for line in self.get_elements()]
+
     def add_element(self, line):
         """ Call super(), and add the new line's topology"""
         super().add_element(line)

@@ -31,18 +31,22 @@ def circuit():
 
 
 # NR3 TESTS---------------------------------------------------------------------
-def test_nr3_DSS_parameters(circuit):
+def test_nr3_DSS_parameters_1(circuit):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         relevant_openDSS_parameters(DSS_FILE, -1)
-    temp = circuit.get_tx_idx_matrix()
-    print(circuit.lines._idx_to_name_dict)
-    for line in circuit.lines.get_elements():
-        print(f'line_name: {line.__name__} line key: {line.key}')
-    print(temp)
-    print(dss.Lines.AllNames())
-    print(TXnum)
-    assert TXnum == circuit.get_tx_idx_matrix()
-    # assert (RXnum == circuit.get_rx_idx_matrix()).all()
+    print("TXnum", '-'*70)
+    print("old: ", TXnum)
+    print("new: ", circuit.get_tx_idx_matrix())
+    assert (TXnum == circuit.get_tx_idx_matrix()).all()
+
+
+def test_nr3_DSS_parameters_2(circuit):
+    TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
+        relevant_openDSS_parameters(DSS_FILE, -1)
+    print("RXnum", '-'*70)
+    print("old: ", RXnum)
+    print("new: ", circuit.get_rx_idx_matrix())
+    assert (RXnum == circuit.get_rx_idx_matrix()).all()
     # assert (PH == circuit.buses.get_phase_matrix()).all()
     # assert (spu == circuit.get_spu_matrix()).all()
     # assert (aPQ == circuit.get_aPQ_matrix()).all()

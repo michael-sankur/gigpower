@@ -1,6 +1,6 @@
 from line_group import LineGroup
-from line import SyntheticLine
 from voltage_regulator import VoltageRegulator
+from typing import List
 
 
 class VoltageRegulatorGroup(LineGroup):
@@ -10,27 +10,38 @@ class VoltageRegulatorGroup(LineGroup):
     def __init__(self, dss, line_group):
         super().__init__(dss, line_group=line_group)
 
-    def _collect_elements(self, dss, line_group):
+    def _add_edge(self, vr):
         """
-        Each voltage regulator is modeled with two lines:
-        1. upstream: txBus --> regControlBus
-        2. downstream: regControlBus--> rxBus
-        opendss already has a Line for the downstream line, so it should
-        be present in Circuit.lines
-        Creates a SyntheticLine for the upstream line, find the downstream line
-        from the line_group,  and assign voltage regulators to both lines
+        Adds the upstream and downstream lines of voltage regulators to
+        self.adj and self.reverse_adj
         """
-        super()._collect_elements(dss)  # create VR, map self.adj and self.reverse_adj
-        for vreg in self.get_elements():
-            upstream_line = SyntheticLine(vreg)
-            rx_line = self._find_downstream_line(vreg, line_group)
-            downstream_line = SyntheticLine(rx_line)
-            upstream_line.add_voltage_regulator(vreg)
-            downstream_line.add_voltage_regulator(vreg)
-            self._add_edge(upstream_line)
-            self._add_edge(downstream_line)
+        super()._add_edge(vr.upstream_line)
+        super()._add_edge(vr.downstream_line)
 
-    def _find_downstream_line(self, vreg, line_group):
-        for line in line_group.get_elements():
-            if line.tx == vreg.regControl_bus:
-                return line
+    def get_tx_buses(self) -> List:
+        """
+        overwrite super to get tx buses of upstream, downstream lines
+        in vr index order
+        resulting list length is 2 * self.num_elements
+        even number indices are upstream_line tx bus indices
+        odd number indices are downstream_line tx bus indices
+        """
+        tx_buses = []
+        for vr in self.get_elements():
+            tx_buses.append(vr.upstream_line.tx)
+            tx_buses.append(vr.downstream_line.tx)
+        return tx_buses
+
+    def get_rx_buses(self) -> List:
+        """
+        overwrite super to get rx buses of upstream, downstream lines
+        in vr index order
+        resulting list length is 2 * self.num_elements
+        even number indices are upstream_line rx bus indices
+        odd number indices are downstream_line rx bus indices
+        """
+        tx_buses = []
+        for vr in self.get_elements():
+            tx_buses.append(vr.upstream_line.rx)
+            tx_buses.append(vr.downstream_line.rx)
+        return tx_buses

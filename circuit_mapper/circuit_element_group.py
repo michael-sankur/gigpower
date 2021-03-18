@@ -21,7 +21,7 @@ class CircuitElementGroup():
             dss_set_active = dss.Circuit.SetActiveBus  # special case for Buses
         for name in self._names:
             dss_set_active(name)  # set as active element
-            ele = ele_class(name, dss)  # create element
+            ele = ele_class(name, dss, **kwargs)  # create element
             self.add_element(ele)
 
     def _collect_names(self, dss, **kwargs):

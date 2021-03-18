@@ -82,11 +82,13 @@ class Circuit():
         n x 1 matrix of rx bus indices. Indexed by line index,
         which is the same value as in opendss
         """
-        idx_matrix = np.zeros(self.lines.num_elements)
-        for idx, line_name in self.lines._idx_to_name_dict.items():
-            rx_bus = self.lines.get_element(line_name).rx
-            idx_matrix[idx] = self.buses.get_idx(rx_bus)
-        return idx_matrix
+        rx_buses = self.lines.get_rx_buses()
+        try:
+            rx_buses += self.transformers.get_rx_buses()
+            rx_buses += self.voltage_regulators.get_rx_buses()
+        except AttributeError:
+            pass
+        return np.asarray([self.buses.get_idx(bus) for bus in rx_buses])
 
     def get_spu_matrix(self) -> np.ndarray:
         """
