@@ -38,7 +38,7 @@ def relevant_openDSS_parameters(t, vvc_objects):
         bus1 = dss.Lines.Bus1()
         bus2 = dss.Lines.Bus2()
         pattern = r"(\w+)."
-        try:
+        try:     
             TXnode[line] = re.findall(pattern, bus1)[0]
             RXnode[line] = re.findall(pattern, bus2)[0]
             TXnum[line] = dss.Circuit.AllBusNames().index(TXnode[line])
@@ -49,12 +49,12 @@ def relevant_openDSS_parameters(t, vvc_objects):
             RXnode[line] = re.findall(pattern, bus2)[0]
             TXnum[line] = dss.Circuit.AllBusNames().index(TXnode[line])
             RXnum[line] = dss.Circuit.AllBusNames().index(RXnode[line])
-
     #TF
     for line in range(len(line_idx_tf)):
         lineidx = line_idx_tf[line]
         TXnode[lineidx] = dss.Circuit.AllBusNames()[tf_bus[0, line]] #bus name
         RXnode[lineidx] = dss.Circuit.AllBusNames()[tf_bus[1, line]]
+        
         TXnum[lineidx] = tf_bus[0, line] #bus index
         RXnum[lineidx] = tf_bus[1, line]
     #VR in
@@ -67,10 +67,10 @@ def relevant_openDSS_parameters(t, vvc_objects):
     #VR out
     for line in range(len(line_out_idx_vr)):
         lineoutidx = line_out_idx_vr[line]    
-        TXnode[lineoutidx] = dss.Circuit.AllBusNames()[vr_bus[0, line]]
-        RXnode[lineoutidx] = dss.Circuit.AllBusNames()[vr_bus[1, line]]
-        TXnum[lineoutidx] = vr_bus[0, line]
-        RXnum[lineoutidx] = vr_bus[1, line]
+        TXnode[lineoutidx] = dss.Circuit.AllBusNames()[vr_bus[1, line]]
+        RXnode[lineoutidx] = dss.Circuit.AllBusNames()[vr_bus[0, line]]
+        TXnum[lineoutidx] = vr_bus[1, line]
+        RXnum[lineoutidx] = vr_bus[0, line]
 
     #spu, apq, ai, az
     spu = np.zeros((3,nnode))
