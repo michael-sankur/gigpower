@@ -11,7 +11,7 @@ class SolutionNR3(Solution):
 
     # class variables set for all SolutionNR3 instances
     # TODO: If any of these need to be set by instance, move into self.__init__
-    SLACKIDX = 0
+    SLACKIDX = 0  # assume slack bus is at index 0
     VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
     V0, I0 = None, None
     tolerance = 1e-9
@@ -20,6 +20,7 @@ class SolutionNR3(Solution):
     def __init__(self, dss_fp: str):
         super().__init__(dss_fp)  # sets self.circuit
         self._init_XNR()
+        self._init_slack_bus_matrices()
         # self._init_load_values()
 
     def _init_XNR(self):
@@ -67,6 +68,31 @@ class SolutionNR3(Solution):
 
         self.XNR = XNR
 
+    def _init_slack_bus_matrices(self):
+        """
+        Initializes g_SB and b_SB
+        adapted from
+        https://github.com/msankur/LinDist3Flow/blob/vectorized/20180601/PYTHON/lib/basematrices.py
+        """
+        tf_lines = self.circuit.transformers.get_num_lines_x_ph()
+        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
+
+        nline = self.circuit.lines.num_elements
+        nnode = self.circuit.buses.num_elements
+
+        Vslack = self.__class__.VSLACK
+
+        # ------------ Slack Bus ------------------
+        self.g_SB = np.zeros((6, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
+        sb_idx = [0, 1, 2*nnode, (2*nnode)+1, 4*nnode, (4*nnode)+1]
+        for i in range(len(sb_idx)):
+            self.g_SB[i, sb_idx[i]] = 1
+
+        self.b_SB = np.zeros((6, 1))
+        for i in range(3):
+            self.b_SB[2*i, 0] = Vslack[i].real
+            self.b_SB[(2*i) + 1] = Vslack[i].imag
+
     def compute_SBKVL_matrices(self):
         """
         adapted from
@@ -92,18 +118,7 @@ class SolutionNR3(Solution):
 
     #     X = np.reshape(XNR, (2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 1))
 
-    # #------------ Slack Bus ------------------
 
-    # #assumes slack bus is at index 0
-    # g_SB = np.zeros((6, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
-    # sb_idx = [0, 1, 2*nnode, (2*nnode)+1, 4*nnode, (4*nnode)+1]
-    # for i in range(len(sb_idx)):
-    #     g_SB[i, sb_idx[i]] = 1
-
-    # b_SB = np.zeros((6, 1))
-    # for i in range(3):
-    #     b_SB[2*i, 0] = Vslack[i].real
-    #     b_SB[(2*i) + 1] = Vslack[i].imag
 
     # #------- Residuals for KVL across line (m,n) ----------
 

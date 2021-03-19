@@ -141,6 +141,12 @@ def test_nr3_basematrices_XNR(nr3_solution, nr3_basematrices):
     assert (XNR == nr3_solution.XNR).all()
 
 
+def test_nr3_basematrices_SB(nr3_solution, nr3_basematrices):
+    XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
+    assert (g_SB == nr3_solution.g_SB).all()
+    assert (b_SB == nr3_solution.b_SB).all()
+
+
 def print_compare(title, old, new):
     print(title, '-'*70)
     print("old:")
