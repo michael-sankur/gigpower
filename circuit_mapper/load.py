@@ -1,6 +1,6 @@
 from circuit_element import CircuitElement
 from typing import List
-from utils import parse_dss_bus_name, parse_dss_phases
+from utils import parse_dss_bus_name, parse_dss_phases, parse_phase_matrix
 
 
 class Load(CircuitElement):
@@ -34,6 +34,7 @@ class Load(CircuitElement):
     def _set_phases(self, dss):
         dss.Loads.Name(self.__name__)
         self.phases = parse_dss_phases(dss.CktElement.BusNames()[0])
+        self.phase_matrix = parse_phase_matrix(self.phases)
 
     def set_zip_values(self, zipV: List):
         self.zipV = zipV

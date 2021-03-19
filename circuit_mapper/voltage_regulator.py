@@ -1,7 +1,7 @@
 from line import Line, SyntheticLine
 from circuit_element import CircuitElement
 import numpy as np
-from utils import parse_dss_bus_name, parse_dss_phases
+from utils import parse_dss_bus_name, parse_dss_phases, parse_phase_matrix
 
 
 class VoltageRegulator(CircuitElement):
@@ -58,6 +58,7 @@ class VoltageRegulator(CircuitElement):
         """
         dss.RegControls.Name(self.__name__)
         self.phases = parse_dss_phases(dss.CktElement.BusNames()[0])
+        self.phase_matrix = parse_phase_matrix(self.phases)
 
     def _set_lines(self, line_group):
         """

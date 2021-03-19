@@ -3,7 +3,7 @@
 # File created: 19 February 2021
 # Create Solution superclass
 
-import Circuit
+from circuit import Circuit
 import utils
 import opendssdirect as dss
 ZIPV = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]

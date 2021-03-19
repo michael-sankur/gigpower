@@ -8,6 +8,7 @@ import opendssdirect as dss
 import pytest
 
 from circuit import Circuit
+from solution_nr3 import SolutionNR3
 
 # current nr3 dependencies
 import sys
@@ -31,6 +32,11 @@ def circuit():
 
 
 @pytest.fixture
+def nr3_solution(circuit):
+    return SolutionNR3(circuit)
+
+
+@pytest.fixture
 def nr3_DSS_parameters():
     return relevant_openDSS_parameters(DSS_FILE, -1)
 
@@ -38,6 +44,15 @@ def nr3_DSS_parameters():
 @pytest.fixture
 def xfm_vr_parameters():
     return transformer_regulator_parameters()
+
+
+@pytest.fixture
+def nr3_basematrices():
+    slack_idx = 0
+    Vslack = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
+    V0, I0 = None, None
+    return basematrices(DSS_FILE, slack_idx, Vslack, V0, I0)
+
 
 # NR3 TESTS---------------------------------------------------------------------
 def test_nr3_DSS_parameters_TXnum(circuit, nr3_DSS_parameters):
@@ -119,19 +134,9 @@ def test_nr3_transformer_regulator_params_gain(circuit, xfm_vr_parameters):
     assert (gain == circuit.voltage_regulators.get_gain_matrix()).all()
 
 
-# def test_nr3_basematrices():
-#     fn, slacknode, Vslack, V0, I0 = None, None, None, None, None
-#     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = basematrices(fn, slacknode, Vslack, V0, I0)
-
-# def test_nr3_compute_vecmat(circuit):
-#     X, g_SB, b_SB, G_KVL, b_kvl, H_reg, G_reg = compute_vecmat(circuit.get_XNR_mat(), DSS_FILE, VSLACK)
-#     assert X == circuit.calc_nr3_X()
-#     assert g_SB == circuit.calc_nr3_g_SB()
-#     assert b_SB == circuit.calc_nr3_b_SB()
-#     assert G_KVL == circuit.calc_nr3_G_KVL()
-#     assert b_KVL == circuit.calc_nr3_b_kvl()
-#     assert H_reg == circuit.calc_nr3_H_reg()
-#     assert G_reg == circuit.calc_nr3_G_reg()
+def test_nr3_basematrices(nr3_solution, nr3_basematrices):
+    XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
+    assert XNR == nr3_solution.XNR
 
 
 def print_compare(title, old, new):

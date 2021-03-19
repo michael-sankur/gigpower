@@ -1,6 +1,6 @@
 from line import Line
 import numpy as np
-from utils import parse_dss_bus_name, parse_dss_phases
+from utils import parse_dss_bus_name, parse_dss_phases, parse_phase_matrix
 
 
 class Transformer (Line):
@@ -36,6 +36,7 @@ class Transformer (Line):
         """
         dss.Transformers.Name(self.__name__)
         self.phases = parse_dss_phases(dss.CktElement.BusNames()[0])
+        self.phase_matrix = parse_phase_matrix(self.phases)
 
     def _set_length(self, *args):
         self.length = 0

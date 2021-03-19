@@ -39,7 +39,7 @@ def parse_phases(phase_list: List[Union[str, int]]) -> np.ndarray:
     return np.asarray(phase_bools)
 
 
-def parse_phase_matrix(phase_char_lst: List[str]) -> List[int]:
+def parse_phase_matrix(phase_char_lst: List[str]) -> np.ndarray:
     """
     n x 3 phase matrix of 1's where phases are present, 0's otherwise
     """
@@ -70,17 +70,16 @@ def set_zip_values(dss, zipv: List):
         dss.Loads.ZipV()
 
 
-def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> np.ndarray:
+def pad_phases(matrix: np.ndarray, shape: tuple, phases: np.ndarray) -> np.ndarray:
     """
-    Helper method to reshape input matrix and set values set to 0
-    for phases set to FALSE in phases tuple.
+    Helper method to reshape input matrix according to a phases array
     Input:
         matrix: an nd array
         shape: a 2-element tuple indicating the output matrix's shape
-        phases: a tuple of booleans corresponding to phases to set on this matrix (A: T/F, B: T/F, C: T/F)
+        phases: 3 x 1 nd array with ones indicating phases present, 0's otherwshie
     Output:
         matrix reshaped with original values, and
-        with 0's for all row/column indices corresponding to phases set to FALSE
+        with 0's for all row/column indices corresponding to non-existent phases
     """
     # make the return matrix matrix
     ret_mat = np.zeros(shape, dtype=complex)
@@ -88,14 +87,14 @@ def pad_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> np.ndarr
     for out_idx in range(shape[0]):
         if len(shape) == 2:
             for col_idx in range(shape[1]):
-                if phases[out_idx] and phases[col_idx]:
+                if phases[out_idx] == 1 and phases[col_idx] == 1:
                     try:
                         ret_mat[out_idx][col_idx] = next(vals)
                     except StopIteration:
                         ("Cannot pad matrix.")
         else:
             try:
-                if phases[out_idx]:
+                if phases[out_idx] == 1:
                     ret_mat[out_idx] = next(vals)
             except StopIteration:
                 ("Cannot pad matrix.")

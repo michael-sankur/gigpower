@@ -51,16 +51,7 @@ class CircuitElementGroup():
         3 x n phase matrix of 1's where phases are present, 0's otherwise
         columns indexed by element index, which is the same as in opendss
         """
-        phase_matrix = np.zeros((len(self._names), 3), dtype=int)
-        for ele, idx in self._name_to_idx_dict.items():
-            obj = self.get_element(ele)
-            phase_matrix[idx] = parse_phase_matrix(obj.phases)
-        return phase_matrix.transpose()
-
-    def get_phase_df(self) -> pd.DataFrame:
-        """ n x 3 dataframe indexed by object names """
-        phase_matrix = self.get_phase_matrix()
-        return pd.DataFrame(data=phase_matrix, index=self._names, columns=['A', 'B', 'C'])
+        return self._get_attr_by_idx('phases_matrix', 'col')
 
     def get_element(self, key: Union[str, int, Tuple[str, str]]):
         """ Returns an element given a name, index, or tuple of (tx_name, rx_name)"""
@@ -95,3 +86,28 @@ class CircuitElementGroup():
             self._idx_to_name_dict[self.num_elements] = ele.__name__
         self._name_to_object_dict[ele.__name__] = ele
         self.num_elements = len(self._names)
+
+    def _get_attr_by_idx(self, attr: str, orient='row') -> np.ndarray:
+        """
+        helper method to get an n x ? matrix of ele.attr values, indexed by
+        the element index (same as self._names order, and the index order in
+        opendss)
+        param attr: name of the element param
+        param orient: 'row' for n x ? matrix indexed by ele index, 'col' for its
+        transpose
+        """
+        try:
+            attr_size = getattr(self.get_element(0), attr).size  # np.ndarray.size
+        except AttributeError:
+            attr_size = len(self.get_element(0))  # len(List)
+
+        return_matrix = np.zeros((len(self._names), attr_size))
+
+        for ele, idx in self._name_to_idx_dict.items():
+            obj = self.get_element(ele)
+            return_matrix[idx] = getattr(obj, attr)
+
+        if orient == 'col':
+            return return_matrix.transpose()
+
+        return return_matrix.transpose()

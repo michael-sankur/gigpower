@@ -48,6 +48,7 @@ class CircuitElement():
         """ set element's phases based on self.related_bus"""
         dss.Circuit.SetActiveBus(self.related_bus)
         self.phases = dss.Bus.Nodes()
+        self.phases_matrix = parse_phase_matrix(self.phases)
 
     def _set_attr_val_by_phase(self, attr: str, value: Union[float, complex]):
         """
