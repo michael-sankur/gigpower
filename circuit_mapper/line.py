@@ -58,8 +58,8 @@ class Line(CircuitElement):
         """
         try:
             dss.Lines.Name(self.__name__)
-            xmat = dss.Lines.XMatrix()
-            rmat = dss.Lines.RMatrix()
+            xmat = np.asarray(dss.Lines.XMatrix())
+            rmat = np.asarray(dss.Lines.RMatrix())
         except Exception:  # for transformers, voltage regs, and Synthetic Lines
             xmat, rmat = np.zeros(9), np.zeros(9)
         if len(xmat) == 1:  # set the diagonals to the value
@@ -74,6 +74,9 @@ class Line(CircuitElement):
             self.rmat = pad_phases(rmat, (3, 3), self.phase_matrix).flatten()
         else:
             raise IndexError(f"Xmat is length {len(xmat)}, expected 1, 4, or 9 elements")
+
+        self.xmat = self.xmat * (1 / self.Zbase * self.length)
+        self.rmat = self.rmat * (1 / self.Zbase * self.length)
 
     def __str__(self) -> str:
         return super().__str__() + f' txnode, rxnode: {self.key}'

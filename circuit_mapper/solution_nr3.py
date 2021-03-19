@@ -21,6 +21,7 @@ class SolutionNR3(Solution):
         super().__init__(dss_fp)  # sets self.circuit
         self._init_XNR()
         self._init_slack_bus_matrices()
+        self._init_KVL_matrices()
         # self._init_load_values()
 
     def _init_XNR(self):
@@ -114,104 +115,72 @@ class SolutionNR3(Solution):
         R_matrix = circuit.lines.get_R_matrix()
         X_matrix = circuit.lines.get_X_matrix()
 
+    def _init_KVL_matrices(self):
+        """
+        set self.b_KVL and self.G_KVL
+        adapted from
+        https://github.com/msankur/LinDist3Flow/blob/vectorized/20180601/PYTHON/lib/compute_SBKVL_matrices.py
+        """
+        tf_bus = self.circuit.transformers.get_bus_ph_matrix()
+        tf_lines = self.circuit.transformers.get_num_lines_x_ph()
+        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
+        nline = self.circuit.lines.num_elements
+        nnode = self.circuit.buses.num_elements
+        X_matrix = self.circuit.lines.get_X_matrix()
+        R_matrix = self.circuit.lines.get_R_matrix()
+
+        # ------- Residuals for KVL across line (m,n) ----------
+        self.b_KVL = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines, 1))
+
+        G_KVL = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines,
+                         2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
+
+        for ph in range(3):
+            for line in range(nline):  # line = line index
+                line_ele = self.circuit.lines.get_element(line)
+                bus1_idx = self.circuit.buses.get_idx(line_ele.tx)
+                bus2_idx = self.circuit.buses.get_idx(line_ele.rx)
+                bus1_phases = line_ele.phase_matrix
+                if bus1_phases[ph] == 1:
+                    G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus1_idx)] = 1 #A_m
+                    G_KVL[2*ph*nline + 2*line][2*(nnode)*ph + 2*(bus2_idx)] = -1 #A_n
+                    G_KVL[2*ph*nline + 2*line+1][2*(nnode)*ph + 2*(bus1_idx) + 1] = 1 #B_m
+                    G_KVL[2*ph*nline + 2*line+1][2*(nnode)*ph + 2*(bus2_idx) + 1] = -1 #B_n
+
+                    G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 2*line] = -R_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
+                    G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 2*line + 1] = X_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
+                    G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 2*nline + 2*line] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
+                    G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 2*nline + 2*line + 1] = X_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
+                    G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 4*nline + 2*line] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
+                    G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 4*nline + 2*line + 1] = X_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
+
+                    G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 2*line] = -X_matrix[line][ph*3] * bus1_phases[0] #C_mn for a
+                    G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 2*line + 1] = -R_matrix[line][ph*3] * bus1_phases[0] #D_mn for a
+                    G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 2*nline + 2*line] = -X_matrix[line][ph*3 + 1] * bus1_phases[1] #C_mn for b
+                    G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 2*nline + 2*line + 1] = -R_matrix[line][ph*3 + 1] * bus1_phases[1] #D_mn for b
+                    G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 4*nline + 2*line] = -X_matrix[line][ph*3 + 2] * bus1_phases[2] #C_mn for c
+                    G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 4*nline + 2*line + 1] = -R_matrix[line][ph*3 + 2] * bus1_phases[2] #D_mn for c
+                else:
+                    G_KVL[2*ph*nline + 2*line][2*(nnode)*3 + 2*ph*nline + 2*line] = 1 #C_mn
+                    G_KVL[2*ph*nline + 2*line+1][2*(nnode)*3 + 2*ph*nline + 2*line+1] = 1 #D_mn
+
+        #------- Residuals for Transformer KVL ----------
+
+        line_idx_tf = range(0, tf_lines)
+        kvl_count = 0
+        for tfbs in range(len(tf_bus[0])):
+            for ph in range(0, 3):
+                if tf_bus[ph + 2, tfbs] != 0:
+                    line = line_idx_tf[kvl_count]
+                    G_KVL[2*3*nline + 2*line][2*nnode*ph + 2*int(tf_bus[0, tfbs])] = 1 #A_m
+                    G_KVL[2*3*nline + 2*line][2*nnode*ph + 2*int(tf_bus[1, tfbs])] = -1 #A_n
+                    G_KVL[2*3*nline + 2*line+1][2*nnode*ph + 2*int(tf_bus[0, tfbs]) + 1] = 1 #B_m
+                    G_KVL[2*3*nline + 2*line+1][2*nnode*ph + 2*int(tf_bus[1, tfbs]) + 1] = -1 #B_n
+                    kvl_count += 1
+
+        self.G_KVL = G_KVL
 
 
-    #     X = np.reshape(XNR, (2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 1))
-
-
-
-    # #------- Residuals for KVL across line (m,n) ----------
-
-    # G_KVL = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines,
-    #                   2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
-
-    # for ph in range(0, 3):
-    #     for line in range(len(dss.Lines.AllNames())):
-    #         dss.Lines.Name(dss.Lines.AllNames()[line])  # set the line
-    #         bus1 = dss.Lines.Bus1()
-    #         bus2 = dss.Lines.Bus2()
-    #         pattern = r"(\w+)\."
-    #         try:
-    #             bus1_idx = dss.Circuit.AllBusNames().index(
-    #                 re.findall(pattern, bus1)[0])  # get the buses of the line
-    #             bus2_idx = dss.Circuit.AllBusNames().index(
-    #                 re.findall(pattern, bus2)[0])
-    #         except:
-    #             pattern = r"(\w+)"
-    #             bus1_idx = dss.Circuit.AllBusNames().index(
-    #                 re.findall(pattern, bus1)[0])  # get the buses of the line
-    #             bus2_idx = dss.Circuit.AllBusNames().index(
-    #                 re.findall(pattern, bus2)[0])
-    #         # the buses on a line should have the same phase
-    #         b1, _ = dss.CktElement.BusNames()
-    #         if not dss.Lines.IsSwitch():
-    #             # identifies which phase is associated with the bus (which is the same as the line)
-    #             bus1_phases = identify_bus_phases(b1)
-    #         else:
-    #             # assume a switch is 3-phase
-    #             bus1_phases = [1, 1, 1]
-    #         if bus1_phases[ph] == 1:
-    #             G_KVL[2*ph*nline + 2*line][2 *
-    #                                        (nnode)*ph + 2*(bus1_idx)] = 1  # A_m
-    #             G_KVL[2*ph*nline + 2*line][2 *
-    #                                        (nnode)*ph + 2*(bus2_idx)] = -1  # A_n
-    #             G_KVL[2*ph*nline + 2*line+1][2 *
-    #                                          (nnode)*ph + 2*(bus1_idx) + 1] = 1  # B_m
-    #             G_KVL[2*ph*nline + 2*line+1][2 *
-    #                                          (nnode)*ph + 2*(bus2_idx) + 1] = -1  # B_n
-
-    #             # C_mn for a
-    #             G_KVL[2*ph*nline + 2*line][2*3 *
-    #                                        (nnode) + 2*line] = -R_matrix[line][ph*3] * bus1_phases[0]
-    #             # D_mn for a
-    #             G_KVL[2*ph*nline + 2*line][2*3 *
-    #                                        (nnode) + 2*line + 1] = X_matrix[line][ph*3] * bus1_phases[0]
-    #             G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 2*nline + 2*line] = - \
-    #                 R_matrix[line][ph*3 + 1] * bus1_phases[1]  # C_mn for b
-    #             G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 2*nline + 2*line +
-    #                                        1] = X_matrix[line][ph*3 + 1] * bus1_phases[1]  # D_mn for b
-    #             G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 4*nline + 2*line] = - \
-    #                 R_matrix[line][ph*3 + 2] * bus1_phases[2]  # C_mn for c
-    #             G_KVL[2*ph*nline + 2*line][2*3*(nnode) + 4*nline + 2*line +
-    #                                        1] = X_matrix[line][ph*3 + 2] * bus1_phases[2]  # D_mn for c
-
-    #             G_KVL[2*ph*nline + 2*line+1][2*3 *
-    #                                          (nnode) + 2*line] = -X_matrix[line][ph*3] * bus1_phases[0]  # C_mn for a
-    #             G_KVL[2*ph*nline + 2*line+1][2*3 *
-    #                                          (nnode) + 2*line + 1] = -R_matrix[line][ph*3] * bus1_phases[0]  # D_mn for a
-    #             G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 2*nline + 2*line] = - \
-    #                 X_matrix[line][ph*3 + 1] * bus1_phases[1]  # C_mn for b
-    #             G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 2*nline + 2*line + 1] = - \
-    #                 R_matrix[line][ph*3 + 1] * bus1_phases[1]  # D_mn for b
-    #             G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 4*nline + 2*line] = - \
-    #                 X_matrix[line][ph*3 + 2] * bus1_phases[2]  # C_mn for c
-    #             G_KVL[2*ph*nline + 2*line+1][2*3*(nnode) + 4*nline + 2*line + 1] = - \
-    #                 R_matrix[line][ph*3 + 2] * bus1_phases[2]  # D_mn for c
-    #         else:
-    #             G_KVL[2*ph*nline + 2*line][2 *
-    #                                        (nnode)*3 + 2*ph*nline + 2*line] = 1  # C_mn
-    #             G_KVL[2*ph*nline + 2*line+1][2 *
-    #                                          (nnode)*3 + 2*ph*nline + 2*line+1] = 1  # D_mn
-
-    # #------- Residuals for Transformer KVL ----------
-
-    # line_idx_tf = range(0, tf_lines)
-    # kvl_count = 0
-    # for tfbs in range(len(tf_bus[0])):
-    #     for ph in range(0, 3):
-    #         if tf_bus[ph + 2, tfbs] != 0:
-    #             line = line_idx_tf[kvl_count]
-    #             G_KVL[2*3*nline + 2*line][2*nnode*ph +
-    #                                       2*int(tf_bus[0, tfbs])] = 1  # A_m
-    #             G_KVL[2*3*nline + 2*line][2*nnode*ph +
-    #                                       2*int(tf_bus[1, tfbs])] = -1  # A_n
-    #             G_KVL[2*3*nline + 2*line+1][2*nnode*ph +
-    #                                         2*int(tf_bus[0, tfbs]) + 1] = 1  # B_m
-    #             G_KVL[2*3*nline + 2*line+1][2*nnode*ph +
-    #                                         2*int(tf_bus[1, tfbs]) + 1] = -1  # B_n
-    #             kvl_count += 1
-
-    # b_kvl = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines, 1))
 
     # # ---------- Voltage Regulator -----------
 

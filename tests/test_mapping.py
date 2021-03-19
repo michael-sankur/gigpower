@@ -147,6 +147,17 @@ def test_nr3_basematrices_SB(nr3_solution, nr3_basematrices):
     assert (b_SB == nr3_solution.b_SB).all()
 
 
+def test_nr3_basematrices_KVL(nr3_solution, nr3_basematrices):
+    tolerance = 1e-6
+    XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
+    assert (b_KVL == nr3_solution.b_KVL).all()
+    temp = np.where((abs(G_KVL - nr3_solution.G_KVL) > tolerance))
+    for row in temp:
+        print(row)
+    assert (abs(G_KVL - nr3_solution.G_KVL) <= tolerance).all()
+
+
+
 def print_compare(title, old, new):
     print(title, '-'*70)
     print("old:")
