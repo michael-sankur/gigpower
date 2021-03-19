@@ -51,7 +51,7 @@ class CircuitElementGroup():
         3 x n phase matrix of 1's where phases are present, 0's otherwise
         columns indexed by element index, which is the same as in opendss
         """
-        return self._get_attr_by_idx('phases_matrix', 'col')
+        return self._get_attr_by_idx('phase_matrix', 'col')
 
     def get_element(self, key: Union[str, int, Tuple[str, str]]):
         """ Returns an element given a name, index, or tuple of (tx_name, rx_name)"""
@@ -99,7 +99,7 @@ class CircuitElementGroup():
         try:
             attr_size = getattr(self.get_element(0), attr).size  # np.ndarray.size
         except AttributeError:
-            attr_size = len(self.get_element(0))  # len(List)
+            attr_size = len(getattr(self.get_element(0), attr))  # len(List)
 
         return_matrix = np.zeros((len(self._names), attr_size))
 
@@ -110,4 +110,4 @@ class CircuitElementGroup():
         if orient == 'col':
             return return_matrix.transpose()
 
-        return return_matrix.transpose()
+        return return_matrix

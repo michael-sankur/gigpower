@@ -62,17 +62,16 @@ class Line(CircuitElement):
             rmat = dss.Lines.RMatrix()
         except Exception:  # for transformers, voltage regs, and Synthetic Lines
             xmat, rmat = np.zeros(9), np.zeros(9)
-        line_phases = self.get_phase_matrix()
         if len(xmat) == 1:  # set the diagonals to the value
-            self.xmat = np.identity(9) * xmat
-            self.rmat = np.identity(9) * rmat
+            self.xmat = (np.identity(3) * xmat).flatten()
+            self.rmat = (np.identity(3) * rmat).flatten()
         elif len(xmat) == 9:
             self.xmat, self.rmat = xmat, rmat
         elif len(xmat) == 4:
             xmat = np.reshape(xmat, (2, 2))
             rmat = np.reshape(rmat, (2, 2))
-            self.xmat = pad_phases(xmat, (3, 3), line_phases).flatten()
-            self.rmat = pad_phases(rmat, (3, 3), line_phases).flatten()
+            self.xmat = pad_phases(xmat, (3, 3), self.phase_matrix).flatten()
+            self.rmat = pad_phases(rmat, (3, 3), self.phase_matrix).flatten()
         else:
             raise IndexError(f"Xmat is length {len(xmat)}, expected 1, 4, or 9 elements")
 

@@ -20,11 +20,11 @@ class CircuitElement():
     def __str__(self) -> str:
         return f"{self.__class__}, {self.name}, {self.phases}"
 
-    def get_phase_matrix(self) -> np.ndarray:
-        """ 1x3 with 1's indicating phases on the element, 0's elsewhere"""
-        return parse_phase_matrix(self.phases)
-
     def get_ph_idx_matrix(self) -> np.ndarray:
+        """
+        return indices of active phases on element
+        ex: self.phases = ['1', '2'] returns [0, 1]
+        """
         return np.asarray([int(ph) - 1 for ph in self.phases])
 
     def _set_related_bus(self, dss):
@@ -48,7 +48,7 @@ class CircuitElement():
         """ set element's phases based on self.related_bus"""
         dss.Circuit.SetActiveBus(self.related_bus)
         self.phases = dss.Bus.Nodes()
-        self.phases_matrix = parse_phase_matrix(self.phases)
+        self.phase_matrix = parse_phase_matrix(self.phases)
 
     def _set_attr_val_by_phase(self, attr: str, value: Union[float, complex]):
         """
@@ -57,7 +57,7 @@ class CircuitElement():
         EX: self.phases = ['1', '3']
         self._set_attr_val_by_phase('ppu', .38) -> self.ppu = [.38, 0, .38]
         """
-        setattr(self, attr, self.get_phase_matrix() * value)
+        setattr(self, attr, self.phase_matrix * value)
 
     def get_spu_matrix(self, dss):
         pass

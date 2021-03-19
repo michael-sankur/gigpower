@@ -61,7 +61,7 @@ class LineGroup(CircuitElementGroup):
             tx_bus_name, rx_bus_name = line.key
             bp_matrix[bp_idx][0:2] = np.asarray([self.buses.get_idx(
                 tx_bus_name), self.buses.get_idx(rx_bus_name)])
-            bp_matrix[bp_idx][2:] = line.get_phase_matrix()
+            bp_matrix[bp_idx][2:] = line.phase_matrix
         return bp_matrix.transpose()
 
     def get_num_lines_x_ph(self):
