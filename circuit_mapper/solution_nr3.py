@@ -20,7 +20,7 @@ class SolutionNR3(Solution):
     def __init__(self, dss_fp: str):
         super().__init__(dss_fp)  # sets self.circuit
         self._init_XNR()
-        self._init_load_values()
+        # self._init_load_values()
 
     def _init_XNR(self):
         """
@@ -32,6 +32,8 @@ class SolutionNR3(Solution):
 
         nline = self.circuit.lines.num_elements
         nnode = self.circuit.buses.num_elements
+        tf_lines = self.circuit.transformers.get_num_lines_x_ph()
+        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
 
         # XNR order is bus voltages, line currents, transformer line currents,
         # voltage regulator line currents * 2
@@ -83,71 +85,10 @@ class SolutionNR3(Solution):
         Sbase = self.circuit.Sbase
 
         # ---------- Resistance and Reactance Matrix for lines ---------------
-        R_matrix = np.zeros((nline, 9))
-        X_matrix = np.zeros((nline, 9))
+        R_matrix = circuit.lines.get_R_matrix()
+        X_matrix = circuit.lines.get_X_matrix()
 
-        dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
-        for k2 in range(len(dss.Lines.AllNames())):
-            dss.Lines.Name(dss.Lines.AllNames()[k2])  # set the line
-
-            # retrieve impedance and reactance matrices of a line
-            xmat = dss.Lines.XMatrix()
-            rmat = dss.Lines.RMatrix()
-
-            # establish base units
-            start_bus = dss.Lines.Bus1().split('.')[0]
-            dss.Circuit.SetActiveBus(start_bus)
-            Vbase = dss.Bus.kVBase() * 1000
-            Ibase = Sbase/Vbase
-            Zbase = Vbase/Ibase
-
-            # phases of line
-            line_phases = identify_line_phases(dss.Lines.AllNames()[k2])
-            if dss.Lines.IsSwitch():  # assume 3-phase
-                line_phases = [1, 1, 1]
-            if len(xmat) == 9:
-                for i in range(len(xmat)):
-                    # fill x/r where they are shaped like nline x 9 (for 9 components)
-                    X_matrix[k2][i] = xmat[i]
-                    R_matrix[k2][i] = rmat[i]
-            elif len(xmat) == 1:
-                X_matrix[k2][0] = xmat[0]
-                X_matrix[k2][4] = xmat[0]  # set the diagonals to the value
-                X_matrix[k2][8] = xmat[0]
-                R_matrix[k2][0] = rmat[0]
-                R_matrix[k2][4] = rmat[0]
-                R_matrix[k2][8] = rmat[0]
-            elif len(xmat) == 4:
-                xmat = np.reshape(xmat, (2, 2))
-                rmat = np.reshape(rmat, (2, 2))
-                if line_phases[0] == 0:  # becomes [0, 0, 0; 0, b, c; 0, d, e]
-                    xmatt = np.vstack([np.zeros((1, 2)), xmat[:, :]])
-                    xmatt2 = np.hstack((np.zeros((3, 1)), xmatt[:, :]))
-                    X_matrix[k2, :] = xmatt2.flatten()
-                    r_temp = np.vstack([np.zeros((1, 2)), rmat[:, :]])
-                    r_temp2 = np.hstack((np.zeros((3, 1)), r_temp[:, :]))
-                    R_matrix[k2, :] = r_temp2.flatten()
-                elif line_phases[1] == 0:  # becomes [a, 0, c; 0, 0, 0; a, 0, c]
-                    xmatt = np.vstack(
-                        (np.vstack((xmat[0, :], np.zeros((1, 2)))), xmat[len(xmat)-1, :]))
-                    xmatt2 = np.hstack((np.hstack((np.reshape(xmatt[:, 0], (3, 1)), np.zeros(
-                        (3, 1)))), np.reshape(xmatt[:, len(xmatt[0])-1], (3, 1))))
-                    X_matrix[k2, :] = xmatt2.flatten()
-                    r_temp = np.vstack(
-                        [np.vstack([rmat[0, :], np.zeros((1, 2))]), rmat[len(xmat)-1, :]])
-                    r_temp2 = np.hstack((np.hstack((np.reshape(r_temp[:, 0], (3, 1)), np.zeros(
-                        (3, 1)))), np.reshape(r_temp[:, len(r_temp[0])-1], (3, 1))))
-                    R_matrix[k2, :] = r_temp2.flatten()
-                else:
-                    xmatt = np.vstack([xmat[:, :], np.zeros((1, 2))])
-                    xmatt2 = np.hstack((xmatt[:, :], np.zeros((3, 1))))
-                    X_matrix[k2, :] = xmatt2.flatten()
-                    r_temp = np.vstack([rmat[:, :], np.zeros((1, 2))])
-                    r_temp2 = np.hstack((r_temp[:, :], np.zeros((3, 1))))
-                    R_matrix[k2, :] = r_temp2.flatten()
-            X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() / Zbase
-            R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() / Zbase
 
     #     X = np.reshape(XNR, (2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 1))
 

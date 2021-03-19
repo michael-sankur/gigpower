@@ -9,6 +9,7 @@ import pytest
 
 from circuit import Circuit
 from solution_nr3 import SolutionNR3
+from solution import Solution
 
 # current nr3 dependencies
 import sys
@@ -32,8 +33,8 @@ def circuit():
 
 
 @pytest.fixture
-def nr3_solution(circuit):
-    return SolutionNR3(circuit)
+def nr3_solution():
+    return SolutionNR3(DSS_FILE)
 
 
 @pytest.fixture
@@ -134,9 +135,10 @@ def test_nr3_transformer_regulator_params_gain(circuit, xfm_vr_parameters):
     assert (gain == circuit.voltage_regulators.get_gain_matrix()).all()
 
 
-def test_nr3_basematrices(nr3_solution, nr3_basematrices):
+def test_nr3_basematrices_XNR(nr3_solution, nr3_basematrices):
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
-    assert XNR == nr3_solution.XNR
+    print_compare("XNR", XNR, nr3_solution.XNR)
+    assert (XNR == nr3_solution.XNR).all()
 
 
 def print_compare(title, old, new):

@@ -68,20 +68,10 @@ class LineGroup(CircuitElementGroup):
         """ returns sum of active phases across all lines """
         return sum([len(line.phases) for line in self.get_elements()])
 
-    # def get_X_matrix(self):
-    #     """ n x 9 matrix, indexed by Line index"""
-    #     X_matrix = np.zeros((self.num_elements, 9))
-    #     R_matrix = np.zeros((self.num_elements, 9))
+    def get_X_matrix(self):
+        """ n x 9 matrix, indexed by Line index"""
+        return self._get_attr_by_idx('xmat')
 
-    #     for line in self.get_elements():
-    #         line_index = self.get_idx(line.__name__)
-    #         xmat, rmat = line.xmat, line.rmat
-    #         X_matrix[line_index] = line.xmat
-    #         R_matrix[line_index] = rmat
-
-    #         elif len(xmat) == 4:
-    #             xmat = np.reshape(xmat, (2, 2))
-    #             rmat = np.reshape(rmat, (2, 2))
-
-    #         X_matrix[k2, :] = X_matrix[k2, :] * dss.Lines.Length() / Zbase
-    #         R_matrix[k2, :] = R_matrix[k2, :] * dss.Lines.Length() / Zbase
+    def get_R_matrix(self):
+        """ n x 9 matrix, indexed by Line index"""
+        return self._get_attr_by_idx('rmat')
