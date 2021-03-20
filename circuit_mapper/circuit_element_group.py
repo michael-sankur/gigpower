@@ -2,6 +2,7 @@ from utils import parse_phase_matrix
 import pandas as pd
 import numpy as np
 from typing import Tuple, Union
+from circuit_element import CircuitElement
 
 
 class CircuitElementGroup():
@@ -38,8 +39,15 @@ class CircuitElementGroup():
         """ returns a View over all names in Group"""
         return self._name_to_idx_dict.keys()
 
-    def get_idx(self, name: str) -> int:
-        """ return the index of the object within the Group given its name"""
+    def get_idx(self, obj: Union[str, CircuitElement]) -> int:
+        """
+        return the index of the object within the Group
+        param obj: the object's __name__, or the object itself
+        """
+        if not isinstance(obj, str):
+            name = obj.__name__
+        else:
+            name = obj
         return int(self._name_to_idx_dict[name])
 
     def get_name(self, idx: int):
@@ -96,16 +104,52 @@ class CircuitElementGroup():
         param orient: 'row' for n x ? matrix indexed by ele index, 'col' for its
         transpose
         """
-        try:
-            attr_size = getattr(self.get_element(0), attr).size  # np.ndarray.size
-        except AttributeError:
-            attr_size = len(getattr(self.get_element(0), attr))  # len(List)
 
-        return_matrix = np.zeros((len(self._names), attr_size))
+        val = getattr(self.get_element(0), attr)
+
+        try:
+            attr_size = val.size  # np.ndarray.size
+        except AttributeError:
+            try:
+                attr_size = len(val)  # len(List)
+            except TypeError:
+                attr_size = 1  # a scalar
+
+        return_matrix = np.zeros((self.num_elements, attr_size))
 
         for ele, idx in self._name_to_idx_dict.items():
             obj = self.get_element(ele)
             return_matrix[idx] = getattr(obj, attr)
+
+        if orient == 'col':
+            return return_matrix.transpose()
+
+        return return_matrix
+
+    def _get_attr_by_bus(self, attr: str, orient='row') -> np.ndarray:
+        """
+        helper method to get a num_buses x ? matrix of ele.attr values, summed
+        over Buses, indexed by Bus index
+        param attr: name of the element param
+        param orient: 'row' for n_buses x ? matrix indexed by bus index, 'col'
+        for its transpose
+        """
+        val = getattr(self.get_element(0), attr)
+
+        try:
+            attr_size = val.size  # np.ndarray.size
+        except AttributeError:
+            try:
+                attr_size = len(val)  # len(List)
+            except TypeError:
+                attr_size = 1  # a scalar
+
+        return_matrix = np.zeros((self.buses.num_elements, attr_size))
+
+        for ele, idx in self._name_to_idx_dict.items():
+            obj = self.get_element(ele)
+            bus_idx = self.buses.get_idx(obj.related_bus)
+            return_matrix[bus_idx] += getattr(obj, attr)
 
         if orient == 'col':
             return return_matrix.transpose()

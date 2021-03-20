@@ -16,7 +16,7 @@ import sys
 sys.path.append('/Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/20180601/PYTHON')
 from lib.DSS_parameters import relevant_openDSS_parameters
 from lib.basematrices import basematrices
-from lib.helper import transformer_regulator_parameters
+from lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
 
 LOCAL_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
 DSS_FILE = LOCAL_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye.dss'
@@ -151,11 +151,22 @@ def test_nr3_basematrices_KVL(nr3_solution, nr3_basematrices):
     tolerance = 1e-6
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
     assert (b_KVL == nr3_solution.b_KVL).all()
-    temp = np.where((abs(G_KVL - nr3_solution.G_KVL) > tolerance))
-    for row in temp:
-        print(row)
     assert (abs(G_KVL - nr3_solution.G_KVL) <= tolerance).all()
 
+
+def test_nr3_helpers(circuit):
+    dsskw, dsskvar = nominal_load_values(-1)
+    cappu = cap_arr()
+    assert (circuit.loads.get_ppu_matrix == dsskw).all
+    assert (circuit.loads.get_qpu_matrix == dsskvar).all
+    assert (circuit.capacitors.get_cappu_matrix == cappu).all
+
+
+def test_nr3_basematrices_H_g_b(nr3_solution, nr3_basematrices):
+    XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
+    assert (H == nr3_solution.H).all()
+    assert (g == nr3_solution.g).all()
+    assert (b == nr3_solution.b).all()
 
 
 def print_compare(title, old, new):

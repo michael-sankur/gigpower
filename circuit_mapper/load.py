@@ -16,7 +16,6 @@ class Load(CircuitElement):
         ppu, qpu = self.kW / 1000 / len(self.phases), self.kvar / 1000 / len(self.phases)
         self._set_attr_val_by_phase('ppu', ppu)
         self._set_attr_val_by_phase('qpu', qpu)
-
         # set aPQ, aI, aZ
         if dss.Loads.ZipV():
             self.set_zip_values(dss.Loads.ZipV())

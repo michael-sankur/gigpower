@@ -69,6 +69,9 @@ class VoltageRegulator(CircuitElement):
         be present in Circuit.lines
         Creates a SyntheticLine for the upstream line, find the downstream line
         from the line_group,  and assign voltage regulators to both lines
+
+        Add the upstream line to the topology for the main line_group
+        and to the key_to_element_dict
         """
         self.upstream_line = SyntheticLine(self)
         self.downstream_line = self._find_downstream_line(line_group)

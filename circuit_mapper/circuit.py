@@ -13,7 +13,7 @@ from load_group import LoadGroup
 from transformer_group import TransformerGroup
 from voltage_regulator_group import VoltageRegulatorGroup
 from utils import parse_phase_matrix
-
+from typing import Tuple
 
 class Circuit():
 
@@ -22,8 +22,8 @@ class Circuit():
         self.Sbase = Sbase
         self.buses = BusGroup(dss)
         self.lines = LineGroup(dss, bus_group=self.buses)
-        self.loads = LoadGroup(dss)
-        self.capacitors = CapacitorGroup(dss)
+        self.loads = LoadGroup(dss, bus_group=self.buses)
+        self.capacitors = CapacitorGroup(dss, bus_group=self.buses)
         self.voltage_regulators = VoltageRegulatorGroup(dss, line_group=self.lines)
         self.transformers = TransformerGroup(dss, bus_group=self.buses)
 

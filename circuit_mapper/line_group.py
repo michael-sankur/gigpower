@@ -1,5 +1,6 @@
 from circuit_element_group import CircuitElementGroup
-from typing import Tuple, List
+from circuit_element import CircuitElement
+from typing import Tuple, List, Union
 from line import Line
 import numpy as np
 from utils import pad_phases
@@ -14,10 +15,12 @@ class LineGroup(CircuitElementGroup):
         init self.adj, self.reverse_adj, self.buses
         then call super
         """
-        self.adj = {}  # adjacency matrix -> { bus_name: [downstream buses]}
-        # reverse adjacency matrix -> { bus_name: [upstream buses]}
-        self.reverse_adj = {}
         self.buses = bus_group
+        # adjacency matrix -> { bus_name: [downstream buses]}
+        self.adj = {b.__name__: [] for b in bus_group.get_elements()}
+        # reverse adjacency matrix -> { bus_name: [upstream buses]}
+        self.reverse_adj = {b.__name__: [] for b in bus_group.get_elements()}
+        self._key_to_element_dict = {}
         super().__init__(dss, **kwargs)
 
     def get_line_from_key(self, key: Tuple[str, str]):
@@ -32,20 +35,18 @@ class LineGroup(CircuitElementGroup):
         return [getattr(line, which) for line in self.get_elements()]
 
     def add_element(self, line):
-        """ Call super(), and add the new line's topology"""
+        """ Call super(), and add the new line's topology.
+        add line to self._key_to_element_dict"""
         super().add_element(line)
+        self._key_to_element_dict[line.key] = line
         self._add_edge(line)
 
     def _add_edge(self, line):
         """ Adds line's topology to self.adj and self.reverse_adj"""
         tx_bus, rx_bus = line.key
-        if tx_bus not in self.adj:
-            self.adj[tx_bus] = [rx_bus]
-        else:
+        if rx_bus not in self.adj[tx_bus]:
             self.adj[tx_bus].append(rx_bus)
-        if rx_bus not in self.reverse_adj:
-            self.reverse_adj[rx_bus] = [tx_bus]
-        else:
+        if tx_bus not in self.reverse_adj[rx_bus]:
             self.reverse_adj[rx_bus].append(tx_bus)
 
     def get_bus_ph_matrix(self) -> np.ndarray:
@@ -57,12 +58,20 @@ class LineGroup(CircuitElementGroup):
         """
         bp_matrix = np.zeros((self.num_elements, 5), dtype=int)
         for line in self.get_elements():
-            bp_idx = self.get_idx(line.__name__)
+            bp_idx = self.get_idx(line)
             tx_bus_name, rx_bus_name = line.key
             bp_matrix[bp_idx][0:2] = np.asarray([self.buses.get_idx(
                 tx_bus_name), self.buses.get_idx(rx_bus_name)])
             bp_matrix[bp_idx][2:] = line.phase_matrix
         return bp_matrix.transpose()
+
+    def get_idx(self, obj: Union[str, CircuitElement, Tuple]) -> int:
+        """
+        override super to check for tuples first
+        """
+        if isinstance(obj, tuple):
+            return super().get_idx(self.get_line_from_key(obj))
+        return super().get_idx(obj)
 
     def get_num_lines_x_ph(self):
         """ returns sum of active phases across all lines """
