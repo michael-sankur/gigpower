@@ -23,12 +23,14 @@ class SolutionNR3(Solution):
         self._init_slack_bus_matrices()
         self._init_KVL_matrices()
         self._init_KCL_matrices()
-        # self._init_load_values()
+        self._init_KVL_matrices_vregs()
+
 
     def _init_XNR(self):
         """
         adapted from
         https://github.com/msankur/LinDist3Flow/blob/vectorized/20180601/PYTHON/lib/basematrices.py
+        written by @kathleenchang
         """
         V0, I0 = self.__class__.V0, self.__class__.I0
         Vslack = self.__class__.VSLACK
@@ -75,6 +77,7 @@ class SolutionNR3(Solution):
         Initializes g_SB and b_SB
         adapted from
         https://github.com/msankur/LinDist3Flow/blob/vectorized/20180601/PYTHON/lib/basematrices.py
+        written by @kathleenchang
         """
         tf_lines = self.circuit.transformers.get_num_lines_x_ph()
         vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
@@ -95,32 +98,12 @@ class SolutionNR3(Solution):
             self.b_SB[2*i, 0] = Vslack[i].real
             self.b_SB[(2*i) + 1] = Vslack[i].imag
 
-    def compute_SBKVL_matrices(self):
-        """
-        adapted from
-        https://github.com/msankur/LinDist3Flow/blob/vectorized/20180601/PYTHON/lib/compute_SBKVL_matrices.py
-        """
-        tf_bus = self.circuit.transformers.get_bus_ph_matrix()
-        vr_bus = self.circuit.voltage_regulators.get_bus_ph_matrix()
-        tf_lines = self.circuit.transformers.get_num_lines_x_ph()
-        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
-        tf_count = self.circuit.transformers.num_elements
-        vr_no = self.circuit.voltage_regulators.num_elements
-        gain = self.circuit.voltage_regulators.get_gain_matrix()
-
-        nline = self.circuit.lines.num_elements
-        nnode = self.circuit.buses.num_elements
-        Sbase = self.circuit.Sbase
-
-        # ---------- Resistance and Reactance Matrix for lines ---------------
-        R_matrix = circuit.lines.get_R_matrix()
-        X_matrix = circuit.lines.get_X_matrix()
-
     def _init_KVL_matrices(self):
         """
         set self.b_KVL and self.G_KVL
-        adapted from
+        copied from
         https://github.com/msankur/LinDist3Flow/blob/vectorized/20180601/PYTHON/lib/compute_SBKVL_matrices.py
+        written by @kathleenchang
         """
         tf_bus = self.circuit.transformers.get_bus_ph_matrix()
         tf_lines = self.circuit.transformers.get_num_lines_x_ph()
@@ -182,6 +165,11 @@ class SolutionNR3(Solution):
         self.G_KVL = G_KVL
 
     def _init_KCL_matrices(self):
+        """
+        set H, g, b
+        copied from 20180601/PYTHON/lib/compute_KCL_matrices.py
+        written by @kathleenchang
+        """
         der, capacitance = 0, 0
         tf_bus = self.circuit.transformers.get_bus_ph_matrix()
         vr_bus = self.circuit.voltage_regulators.get_bus_ph_matrix()
@@ -435,35 +423,72 @@ class SolutionNR3(Solution):
 
         self.H, self.g, self.b = H, g, b
 
+    def _init_KVL_matrices_vregs(self):
+        """
+        set H_reg, G_reg
+        copied from 20180601/PYTHON/lib/compute_SBKVL_matrices.py
+        written by @kathleenchang
+        """
+        # ---------- Voltage Regulator -----------
+        tf_bus = self.circuit.transformers.get_bus_ph_matrix()
+        vr_bus = self.circuit.voltage_regulators.get_bus_ph_matrix()
+        tf_lines = self.circuit.transformers.get_num_lines_x_ph()
+        tf_no = self.circuit.transformers.num_elements
+        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
+        vr_count = self.circuit.voltage_regulators.num_elements
+        nnode = self.circuit.buses.num_elements
+        nline = self.circuit.lines.num_elements
+        gain = self.circuit.voltage_regulators.get_gain_matrix()
 
-    def _init_load_values(self):
-        load_order_list = self._init_load_order_f()
-        bus_load = np.zeros((3, self.nnode, 2))
-        load_ph_arr = np.zeros((self.nload, 3))
+        H_reg = np.zeros((2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
+        G_reg = np.zeros((2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
 
-        load_ph_arr_origin = np.zeros((self.nnode, max(load_order_list.values()), 3))
-        bus_load_divide = np.zeros((3, self.nnode, 2))
+        #  voltage ratio: V_bus2 - gamma V_bus1 = 0
+        line_in_idx = range(0, 2*vr_lines, 2)
+        line_out_idx = range(1, 2*vr_lines, 2)
 
-        for load in range(self.nload):
-            dss.Loads.Name(self.all_load_names[load])
-            pattern =  r"(\w+)\."
-            load_bus = re.findall(pattern, dss.CktElement.BusNames()[0])
-            load_ph_arr_temp = [0, 0, 0]
-            for i in range(1, 4):
-                pattern = r"\.%s" % (str(i))
-                load_ph = re.findall(pattern, dss.CktElement.BusNames()[0])
-                if load_ph:
-                    load_ph_arr_temp[i - 1] = 1
-                    load_ph_arr[load, i - 1] = 1
-            for j in range(max(load_order_list.values())):
-                idxbs = dss.Circuit.AllBusNames().index(load_bus[0])
-                if np.all(load_ph_arr_origin[idxbs, j,:] == [0, 0, 0]):
-                    load_ph_arr_origin[idxbs, j, :] = load_ph_arr_temp
-                    for i in range(len(load_ph_arr_temp)):
-                        if load_ph_arr_temp[i] == 1:
-                            #bus_load[i, idxbs, 0] += dss.Loads.kW() *1e3*1 / self.Sbase / sum(load_ph_arr_temp)
-                            #bus_load[i, idxbs, 1] += dss.Loads.kvar()*1e3*1 / self.Sbase  / sum(load_ph_arr_temp)
-                            bus_load_divide[i, idxbs, 0] = 1e3 / self.Sbase / sum(load_ph_arr_temp)
-                            bus_load_divide[i, idxbs, 1] = 1e3 / self.Sbase  / sum(load_ph_arr_temp)
-                    break
-        return bus_load, bus_load_divide, load_ph_arr
+        vr_counter = 0
+        for m in range(vr_count):
+            bus1_idx = vr_bus[0, m]
+            bus2_idx = vr_bus[1, m]
+            for ph in range(0,3):
+                if vr_bus[ph + 2,m] != 0:
+                    # voltage gain: gamma*A_in = A_out
+                    # gamma * B_in = B_out
+                    # Negative not shown below because inserted into gain term
+                    G_reg[2*vr_counter][2*nnode*ph + 2*bus1_idx] = gain[m] #A_in
+                    G_reg[2*vr_counter][2*nnode*ph + 2*bus2_idx] = 1 #A_out
+                    G_reg[2*vr_counter + 1][2*nnode*ph + 2*bus1_idx + 1] = gain[m]  #B_in
+                    G_reg[2*vr_counter + 1][2*nnode*ph + 2*bus2_idx + 1] = 1 #B_out
+
+                    #conservation of power: V_bus1 (I_bus1,out)* -  V_bus2 (I_bus2,in)* = 0
+                    # A_1 * C_out + B_1 * D_out  - (A_2 * C_in + B_2 * D_in)
+                    # j(B_1 * C_out - A_1 * D_out) - j(B_2 * C_in - A_2 * D_in)
+
+                    #A_1 C_out
+                    H_reg[2*vr_counter][2*nnode*ph + 2*bus1_idx][2*3*(nnode+nline) + 2*tf_lines + 2*line_out_idx[vr_counter]] = 1
+                    H_reg[2*vr_counter][2*3*(nnode+nline) + 2*tf_lines + 2*line_out_idx[vr_counter]][2*nnode*ph + 2*bus1_idx] = 1
+                    #B_1 D_out
+                    H_reg[2*vr_counter][2*nnode*ph + 2*bus1_idx + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_out_idx[vr_counter] + 1] = 1
+                    H_reg[2*vr_counter][2*3*(nnode+nline) + 2*tf_lines + 2*line_out_idx[vr_counter]+ 1][2*nnode*ph + 2*bus1_idx + 1] = 1
+                    #A_2 C_in
+                    H_reg[2*vr_counter][2*nnode*ph + 2*bus2_idx][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter]] = -1
+                    H_reg[2*vr_counter][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter]][2*nnode*ph + 2*bus2_idx] = -1
+                    #B_2 D_in
+                    H_reg[2*vr_counter][2*nnode*ph + 2*bus2_idx + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter] + 1] = -1
+                    H_reg[2*vr_counter][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter] + 1][2*nnode*ph + 2*bus2_idx + 1] = -1
+
+                    #B_1 * C_out
+                    H_reg[2*vr_counter + 1][2*nnode*ph + 2*bus1_idx + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_out_idx[vr_counter]] = 1
+                    H_reg[2*vr_counter + 1][2*3*(nnode+nline) + 2*tf_lines+ 2*line_out_idx[vr_counter]][2*nnode*ph + 2*bus1_idx + 1] = 1
+                    # A_1 * D_out
+                    H_reg[2*vr_counter + 1][2*nnode*ph + 2*bus1_idx][2*3*(nnode+nline) + 2*tf_lines + 2*line_out_idx[vr_counter] + 1] = -1
+                    H_reg[2*vr_counter + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_out_idx[vr_counter] + 1][2*nnode*ph + 2*bus1_idx] = -1
+                    #B_2 * C_in
+                    H_reg[2*vr_counter + 1][2*nnode*ph + 2*bus2_idx + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter]] = -1
+                    H_reg[2*vr_counter + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter]][2*nnode*ph + 2*bus2_idx + 1] = -1
+                    # A_2 * D_in
+                    H_reg[2*vr_counter + 1][2*nnode*ph + 2*bus2_idx][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter] + 1] = 1
+                    H_reg[2*vr_counter + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_in_idx[vr_counter] + 1][2*nnode*ph + 2*bus2_idx] = 1
+                    vr_counter += 1
+        self.H_reg, self.G_reg = H_reg, G_reg

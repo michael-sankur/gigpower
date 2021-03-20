@@ -154,6 +154,13 @@ def test_nr3_basematrices_KVL(nr3_solution, nr3_basematrices):
     assert (abs(G_KVL - nr3_solution.G_KVL) <= tolerance).all()
 
 
+def test_nr3_basematrices_KVL_regs(nr3_solution, nr3_basematrices):
+    tolerance = 1e-6
+    XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
+    assert (H_reg == nr3_solution.H_reg).all()
+    assert (G_reg == nr3_solution.G_reg).all()
+
+
 def test_nr3_helpers(circuit):
     dsskw, dsskvar = nominal_load_values(-1)
     cappu = cap_arr()
