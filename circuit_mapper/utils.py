@@ -122,3 +122,4 @@ def mask_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> np.ndar
     masked = np.multiply(matrix, phase_matrix)
     # change all NaN's to 0
     return np.nan_to_num(masked)
+

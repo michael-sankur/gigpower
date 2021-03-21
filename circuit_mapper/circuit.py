@@ -12,13 +12,18 @@ from line_group import LineGroup
 from load_group import LoadGroup
 from transformer_group import TransformerGroup
 from voltage_regulator_group import VoltageRegulatorGroup
+
 from utils import parse_phase_matrix
-from typing import Tuple
+
 
 class Circuit():
 
     def __init__(self, dss, Sbase=10**6):
-        """ initialize Circuit from an opendss object's current state"""
+        """
+        initialize Circuit from a dss object
+        Note that the Solution class runs 'redirect' on the dss file
+        The Circuit does not call opendss functions directly
+        """
         self.Sbase = Sbase
         self.buses = BusGroup(dss)
         self.lines = LineGroup(dss, bus_group=self.buses)

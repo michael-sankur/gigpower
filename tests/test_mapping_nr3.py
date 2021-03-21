@@ -39,7 +39,7 @@ def nr3_solution():
 
 @pytest.fixture
 def nr3_DSS_parameters():
-    return relevant_openDSS_parameters(DSS_FILE, -1)
+    return relevant_openDSS_parameters(DSS_FILE, [])
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ def nr3_basematrices():
     slack_idx = 0
     Vslack = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
     V0, I0 = None, None
-    return basematrices(DSS_FILE, slack_idx, Vslack, V0, I0)
+    return basematrices(slack_idx, Vslack, V0, I0)
 
 
 # NR3 TESTS---------------------------------------------------------------------

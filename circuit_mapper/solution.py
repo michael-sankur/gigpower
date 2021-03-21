@@ -4,8 +4,12 @@
 # Create Solution superclass
 
 from circuit import Circuit
+from volt_var_controller import VoltVARController
 import utils
 import opendssdirect as dss
+
+import re
+
 ZIPV = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
 
 
@@ -13,10 +17,55 @@ class Solution():
 
     def __init__(self, dss_fp: str):
         """
-        sets up a solution object with circuit mapped from opendss
+        sets up a Solution object with a pointer to a Circuit mapped from opendss
+        Solutions keep a pointer to the dss object used to map the Circuit
         """
         self.dss = dss.run_command('Redirect ' + dss_fp)
         dss.Solution.Solve()  # solve first for base values
         utils.set_zip_values(dss, ZIPV)  # set zip values before mapping Circuit!
         dss.Solution.Solve()  # solve again to set zip values
         self.circuit = Circuit(dss)
+        self.volt_var_controllers = self.parse_vvc_objects(dss_fp)
+
+    def parse_vvc_objects(self, fn: str):
+        """ From 20180601/PYTHON/lib/dss_vvc.py by @kathleenchang"""
+        # Parse VVC lines in DSS file
+        vvarobjects = []
+        f = open(fn, "r")
+
+        for l in f:
+            if re.findall('(?i)New VVC', l):
+                bp = []
+
+                #array of VVC breakpoints
+                breakpoints = str.split(re.findall(r"(?i)BP=\s*([^\n\r]*)", l)[0], ',')
+
+                for elem in breakpoints:
+                    point = re.findall("[0-9.]*",  elem)
+                    for i in point:
+                        if i:
+                            bp.append(float(i))
+                print(bp)
+
+                # zero-indexed phase, is one-indexed in DSS file
+                phase = int(re.findall('(?i)phase=\s*([0-9]*)', l)[0]) - 1
+                print(phase)
+
+                minkvar = float(re.findall('(?i)min_kvar=([-0-9]*)', l)[0])
+                print(minkvar)
+
+                maxkvar = float(re.findall('(?i)max_kvar=([-0-9]*)', l)[0])
+                print(maxkvar)
+
+                bus = re.findall(r"(?i)bus=([\w.]*)\s", l)[0]
+                bus = re.findall(r"[\w]*", bus)[0]
+                print(bus)
+
+                # create volt var object
+                voltvarobject = VoltVARController(bp, minkvar, maxkvar, bus, phase)
+                vvarobjects.append(voltvarobject)
+                print("\n --------------")
+
+        for e in vvarobjects:
+            print(e)
+        return vvarobjects

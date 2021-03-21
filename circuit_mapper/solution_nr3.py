@@ -554,8 +554,10 @@ class SolutionNR3(Solution):
 
         return JT
 
-    def solve(self, time_delta, vvc_objects, der=0, capacitance=0):
+    def solve(self, time_delta, der=0, capacitance=0):
         """ From 20180601/PYTHON/lib/NR3.py, written by @Kathleen Chang"""
+        dss, vvc_objects = self.dss, self.volt_var_controllers
+
         nnode = self.circuit.buses.num_elements
         nline = self.circuit.lines.num_elements
         vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph
@@ -721,4 +723,5 @@ class SolutionNR3(Solution):
                 XNR_final = NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta, vvc_objects)
                 flag = 0
 
-        self.XNR = XNR
+        self.XNR = XNR_final
+
