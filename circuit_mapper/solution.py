@@ -9,6 +9,7 @@ import utils
 import opendssdirect as dss
 
 import re
+import numpy as np
 
 
 class Solution():
