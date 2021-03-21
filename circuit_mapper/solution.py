@@ -10,10 +10,17 @@ import opendssdirect as dss
 
 import re
 
-ZIPV = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
-
 
 class Solution():
+
+    # class variables set for all SolutionNR3 instances
+    # TODO: If any of these need to be set by instance, move into self.__init__
+    SLACKIDX = 0  # assume slack bus is at index 0
+    VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
+    V0, I0 = None, None
+    tolerance = 1e-9
+    maxiter = 100
+    ZIP_V = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
 
     def __init__(self, dss_fp: str):
         """
@@ -22,7 +29,7 @@ class Solution():
         """
         self.dss = dss.run_command('Redirect ' + dss_fp)
         dss.Solution.Solve()  # solve first for base values
-        utils.set_zip_values(dss, ZIPV)  # set zip values before mapping Circuit!
+        utils.set_zip_values(dss, self.__class__.ZIP_V)  # set zip values before mapping Circuit!
         dss.Solution.Solve()  # solve again to set zip values
         self.circuit = Circuit(dss)
         self.volt_var_controllers = self.parse_vvc_objects(dss_fp)

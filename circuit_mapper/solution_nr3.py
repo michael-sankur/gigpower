@@ -9,14 +9,6 @@ import numpy as np
 
 class SolutionNR3(Solution):
 
-    # class variables set for all SolutionNR3 instances
-    # TODO: If any of these need to be set by instance, move into self.__init__
-    SLACKIDX = 0  # assume slack bus is at index 0
-    VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
-    V0, I0 = None, None
-    tolerance = 1e-9
-    maxiter = 100
-
     def __init__(self, dss_fp: str):
         super().__init__(dss_fp)  # sets self.circuit
         self._init_XNR()
