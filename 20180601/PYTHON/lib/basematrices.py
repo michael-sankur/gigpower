@@ -5,7 +5,7 @@ from lib.helper import transformer_regulator_parameters
 import opendssdirect as dss
 import re
 import time
-def basematrices(fn, slacknode, Vslack, V0, I0):
+def basematrices(slacknode, Vslack, V0, I0):
     tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain = transformer_regulator_parameters()
 
 
@@ -42,7 +42,7 @@ def basematrices(fn, slacknode, Vslack, V0, I0):
         XNR[(2*3*nnode + 2*3*nline):] = np.zeros((len(XNR) - 2*3*nnode - 2*3*nline), 1)
 
     # generate static matrices
-    XNR, g_SB, b_SB, G_KVL, b_KVL, H_reg, G_reg = compute_SBKVL_matrices(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain)
+    XNR, g_SB, b_SB, G_KVL, b_KVL, H_reg, G_reg = compute_SBKVL_matrices(XNR, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain)
     # generate non-static matrices
-    H, g, b = compute_KCL_matrices(fn, -1, 0, 0, tf_bus, vr_bus, tf_lines, vr_lines)
+    H, g, b = compute_KCL_matrices(-1, 0, 0, tf_bus, vr_bus, tf_lines, vr_lines)
     return XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg

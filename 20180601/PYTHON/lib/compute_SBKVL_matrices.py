@@ -2,9 +2,8 @@ import numpy as np
 import opendssdirect as dss
 import re
 from lib.helper import identify_bus_phases, identify_line_phases
-def compute_SBKVL_matrices(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_count, gain):
+def compute_SBKVL_matrices(XNR, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_count, gain):
 
-    #dss.run_command('Redirect ' + fn)
     nline = len(dss.Lines.AllNames())    
     nnode = len(dss.Circuit.AllBusNames())
     Sbase = 1000000.0
@@ -140,10 +139,14 @@ def compute_SBKVL_matrices(XNR, fn, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, 
         for ph in range(0, 3):    
             if tf_bus[ph + 2, tfbs] != 0:
                 line = line_idx_tf[kvl_count]
-                G_KVL[2*3*nline + 2*line][2*nnode*ph + 2*int(tf_bus[0, tfbs])] = 1 #A_m
-                G_KVL[2*3*nline + 2*line][2*nnode*ph + 2*int(tf_bus[1, tfbs])] = -1 #A_n
-                G_KVL[2*3*nline + 2*line+1][2*nnode*ph + 2*int(tf_bus[0, tfbs]) + 1] = 1 #B_m
-                G_KVL[2*3*nline + 2*line+1][2*nnode*ph + 2*int(tf_bus[1, tfbs]) + 1] = -1 #B_n
+                in_bus = int(tf_bus[0, tfbs])
+                out_bus = int(tf_bus[1, tfbs])
+
+                G_KVL[2*3*nline + 2*line][2*nnode*ph + 2*in_bus] = 1 #A_m
+                G_KVL[2*3*nline + 2*line][2*nnode*ph + 2*out_bus] = -1 #A_n
+                G_KVL[2*3*nline + 2*line+1][2*nnode*ph + 2*in_bus + 1] = 1 #B_m
+                G_KVL[2*3*nline + 2*line+1][2*nnode*ph + 2*out_bus + 1] = -1 #B_n
+                
                 kvl_count += 1
 
     b_kvl = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines, 1))

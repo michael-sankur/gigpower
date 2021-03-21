@@ -3,8 +3,8 @@ import re
 import numpy as np
 import time
 from lib.zip_parameters import *
-from lib.helper import transformer_regulator_parameters, nominal_load_values, nominal_cap_arr
-def relevant_openDSS_parameters(fn, t):
+from lib.helper import transformer_regulator_parameters, nominal_load_values, nominal_cap_arr, wpu_final_arr
+def relevant_openDSS_parameters(t, vvc_objects):
 
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
 
@@ -38,7 +38,7 @@ def relevant_openDSS_parameters(fn, t):
         bus1 = dss.Lines.Bus1()
         bus2 = dss.Lines.Bus2()
         pattern = r"(\w+)."
-        try:
+        try:     
             TXnode[line] = re.findall(pattern, bus1)[0]
             RXnode[line] = re.findall(pattern, bus2)[0]
             TXnum[line] = dss.Circuit.AllBusNames().index(TXnode[line])
@@ -49,12 +49,12 @@ def relevant_openDSS_parameters(fn, t):
             RXnode[line] = re.findall(pattern, bus2)[0]
             TXnum[line] = dss.Circuit.AllBusNames().index(TXnode[line])
             RXnum[line] = dss.Circuit.AllBusNames().index(RXnode[line])
-
     #TF
     for line in range(len(line_idx_tf)):
         lineidx = line_idx_tf[line]
         TXnode[lineidx] = dss.Circuit.AllBusNames()[tf_bus[0, line]] #bus name
         RXnode[lineidx] = dss.Circuit.AllBusNames()[tf_bus[1, line]]
+        
         TXnum[lineidx] = tf_bus[0, line] #bus index
         RXnum[lineidx] = tf_bus[1, line]
     #VR in
@@ -67,10 +67,10 @@ def relevant_openDSS_parameters(fn, t):
     #VR out
     for line in range(len(line_out_idx_vr)):
         lineoutidx = line_out_idx_vr[line]    
-        TXnode[lineoutidx] = dss.Circuit.AllBusNames()[vr_bus[0, line]]
-        RXnode[lineoutidx] = dss.Circuit.AllBusNames()[vr_bus[1, line]]
-        TXnum[lineoutidx] = vr_bus[0, line]
-        RXnum[lineoutidx] = vr_bus[1, line]
+        TXnode[lineoutidx] = dss.Circuit.AllBusNames()[vr_bus[1, line]]
+        RXnode[lineoutidx] = dss.Circuit.AllBusNames()[vr_bus[0, line]]
+        TXnum[lineoutidx] = vr_bus[1, line]
+        RXnum[lineoutidx] = vr_bus[0, line]
 
     #spu, apq, ai, az
     spu = np.zeros((3,nnode))
@@ -107,10 +107,11 @@ def relevant_openDSS_parameters(fn, t):
     spu = (ppu + 1j * qpu)
 
     #cappu, wpu, vvcpu
-    #cappu = cap_arr() #a negative number
     cappu = nominal_cap_arr()
  
     wpu = np.zeros((3, nnode))
+    wpu = wpu_final_arr(nnode, vvc_objects)
+
     vvcpu = np.zeros((3,nnode))
 
     return TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu

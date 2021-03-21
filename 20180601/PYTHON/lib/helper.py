@@ -172,12 +172,12 @@ def transformer_regulator_parameters():
             gain_val = (((int(dss.RegControls.TapNumber()) + 16) * (1.1-0.9) / 32) + 0.9)
             gain[vr] = -gain_val
             vr_lines += 1                    
-            vr_bus[int(bus[1:][n]) + 1, vr] = int(bus[1:][n]) # phases that exist                   
+            vr_bus[int(bus[1:][n]) + 1, vr] = 1#int(bus[1:][n]) # phases that exist                   
         if len(bus) == 1: 
             # unspecified phases, assume all 3 exist
             for n in range(1,4): 
                 vr_lines += 1
-                vr_bus[n+1, vr] = n   
+                vr_bus[n+1, vr] = 1#n   
         print(dss.RegControls.TapNumber())
         
     tf_bus_temp = np.zeros((2, 1))
@@ -194,16 +194,17 @@ def transformer_regulator_parameters():
         tf_bus[0:2, tf_count] = tf_bus_temp[:, 0] #otherwise add to the tf_bus matrix
         for n in range(len(bus[1:])):                 
             tf_lines += 1                             
-            tf_bus[int(bus[1:][n]) + 1, tf_count] = int(bus[1:][n])   
+            tf_bus[int(bus[1:][n]) + 1, tf_count] = 1#int(bus[1:][n])   
         if len(bus) == 1:
             for k in range(1,4): #if all phases are assumed to exist
                 tf_lines += 1
-                tf_bus[k+1, tf_count] = k             
+                tf_bus[k+1, tf_count] = 1 #k             
         tf_count += 1
         
     return tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_no, gain
 
 def voltage_regulator_phase_dict():
+    # {Name : Phases}
     related_vr = {}
     for n in dss.RegControls.AllNames():
         dss.RegControls.Name(n)
@@ -215,6 +216,7 @@ def voltage_regulator_phase_dict():
     return related_vr
 
 def voltage_regulator_index_dict():
+    # {BusName : Associated RegControl }
     related_vr = {}
     for n in range(len(dss.RegControls.AllNames())):
         dss.RegControls.Name(dss.RegControls.AllNames()[n])
@@ -248,4 +250,14 @@ def identify_line_phases(line):
             k[i - 1] = 1
     return k
 
-
+# ---------------------
+def wpu_final_arr(nnode, vvc_objects):
+    wpu_final = np.zeros((3, nnode))
+    for vvo in vvc_objects:
+        busName = vvo.get_busName()
+        idxbus = dss.Circuit.AllBusNames().index(busName)
+        phase = vvo.get_phase()
+        wpu_values = vvo.get_prevQ_list()
+        qpu = np.sum(wpu_values)    
+        wpu_final[phase, idxbus] = qpu
+    return wpu_final
