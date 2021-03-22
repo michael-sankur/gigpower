@@ -162,8 +162,8 @@ def compute_SBKVL_matrices(XNR, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_c
  
     vr_counter = 0
     for m in range(vr_count):  
-        bus1_idx = vr_bus[0, m]
-        bus2_idx = vr_bus[1, m] 
+        bus1_idx = vr_bus[0, m] #out
+        bus2_idx = vr_bus[1, m] #in
         for ph in range(0,3):            
             if vr_bus[ph + 2,m] != 0:    
                 # voltage gain: gamma*A_in = A_out
