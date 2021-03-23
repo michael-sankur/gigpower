@@ -29,3 +29,7 @@ dependencies:
   - setuptools==49.6.0=py38_0
   - pluggy==0.13.1=py38_0
   - ipykernel
+  - numpy
+  - pandas
+  - pip:
+      - dss-python==0.10.6
