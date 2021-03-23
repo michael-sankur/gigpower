@@ -5,9 +5,9 @@ name: Python package
 
 on:
   push:
-    branches: [ python-package-CI ]
+    branches: [ python-package ]
   pull_request:
-    branches: [ python-package-CI ]
+    branches: [ python-package ]
 
 jobs:
   build:
