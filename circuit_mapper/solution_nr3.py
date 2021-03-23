@@ -219,7 +219,7 @@ class SolutionNR3(Solution):
                         load_val = load_kw[ph, idxbs]
                         cap_val = 0
                     else:
-                        load_val = load_kvar[ph, idxbs]  # WPU HERE !!
+                        load_val = load_kvar[ph, idxbs] 
                         cap_val = caparr[ph][idxbs]
                     # gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) # some derivatives
                     hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
@@ -548,6 +548,78 @@ class SolutionNR3(Solution):
 
         return JT
 
+    
+    def change_KCL_matrices(self, H, g, b, t, der, capacitance, wpu):
+
+        nnode = self.circuit.buses.num_elements
+
+        # load_kw, load_kvar = nominal_load_values(t) 
+        # caparr = nominal_cap_arr()
+
+        load_kw = self.circuit.loads.get_ppu_matrix()
+        load_kvar = self.circuit.loads.get_qpu_matrix()
+        caparr = self.circuit.capacitors.get_cappu_matrix()
+
+        # ----------Residuals for KCL at a bus (m) ----------
+        
+
+        #Zip Parameters
+        beta_S = self.circuit.loads.aPQ_p
+        beta_I = self.circuit.loads.aI_p
+        beta_Z = self.circuit.loads.aZ_p
+
+        # Capacitors
+        gamma_S = self.circuit.capacitors.aPQ_p
+        gamma_I = self.circuit.capacitors.aI_p
+        gamma_Z = self.circuit.capacitors.aZ_p
+
+        # Quadratic Terms
+
+        # Time varying load
+        if t != -1:
+            for ph in range(0,3):
+                for k2 in range(1, nnode): #skip slack bus
+                    bus = self.circuit.buses.get_element(k2)
+                    #dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k2]) #set the bus
+                    available_phases = bus.phase_matrix  #phase array at specific bus
+                    for cplx in range(0,2):
+                        if available_phases[ph] == 1: #quadratic terms
+                            H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] *= (1 + 0.1*np.sin(2*np.pi*0.01*t))
+                            #-load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) # TE replace assignment w/ -load_val * beta_Z; #a**2
+                            H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1]*= (1 + 0.1*np.sin(2*np.pi*0.01*t))
+                            #-load_val * (beta_Z  + (0.5 * beta_I * hessian_mag[1][1])) # TE replace assignment w/ -load_val * beta_Z; #b**2
+            
+        # Constant Term
+        if t != -1 or der != 0 or capacitance != 0:
+            for ph in range(0,3):
+                for k2 in range(1, nnode):
+                    bus = self.circuit.buses.get_element(k2)
+                    available_phases = bus.phase_matrix 
+                    if available_phases[ph] == 1:                             
+                        for cplx in range(0,2):
+                            if cplx == 0:
+                                load_val = load_kw[ph][k2]
+                                if der.real != 0:
+                                    b_factor = der.real
+                                else:
+                                    b_factor = 0
+                            else:
+                                load_val = load_kvar[ph][k2]
+                                if capacitance != 0 or der.imag != 0:
+                                    b_factor = capacitance - der.imag
+                                else:
+                                    b_factor = caparr[ph][k2] 
+                            if t != -1:
+                                print('Should not enter')
+                                load_val *= (1 + 0.1*np.sin(2*np.pi*0.01*t))
+
+                            b_temp = (-load_val * beta_S) + (b_factor * gamma_S) 
+
+                            b[2*(nnode-1)*ph + 2*(k2-1) + cplx][0][0] = b_temp - wpu[ph][k2]
+
+        return H, b
+
+
     def solve(self, time_delta, der=0, capacitance=0):
         """ From 20180601/PYTHON/lib/NR3.py, written by @Kathleen Chang"""
         dss, vvc_objects = self.dss, self.volt_var_controllers
@@ -666,7 +738,7 @@ class SolutionNR3(Solution):
                                 1j * XNR[2*3*(nnode+nline) + 2*tf_lines +  line_idx + 1]
 
                             V_drop = (dss.RegControls.ForwardR() + 1j*dss.RegControls.ForwardX()) / 0.2 * (I_reg * Ibase / dss.RegControls.CTPrimary())
-                            #print(V_drop)
+                    
                             V_drop = (dss.RegControls.ForwardR() + 1j*dss.RegControls.ForwardX()) / 0.2 * (I_reg * Ibase / (dss.RegControls.CTPrimary()/0.2))
                             V_R = np.abs(NR_voltage - V_drop)
 
