@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def compare_dfs(fbs_df: pd.DataFrame, dss_df: pd.DataFrame, title: str) -> None:

@@ -10,6 +10,16 @@ class VoltageRegulatorGroup(LineGroup):
 
     def __init__(self, dss, line_group):
         super().__init__(dss, bus_group=line_group.buses, line_group=line_group)
+        related_vr = {}
+        for n in range(len(dss.RegControls.AllNames())):
+            dss.RegControls.Name(dss.RegControls.AllNames()[n])
+            dss.Circuit.SetActiveBus(
+                dss.CktElement.BusNames()[0].split(".")[0])
+            if dss.Bus.Name() in related_vr.keys():
+                related_vr[dss.Bus.Name()].append(n)
+            else:
+                related_vr[dss.Bus.Name()] = [n]
+        self.voltage_regulator_index_dict = related_vr
 
     def _add_edge(self, vr):
         """
@@ -40,3 +50,5 @@ class VoltageRegulatorGroup(LineGroup):
         Negative sign for voltage ratio purposes
         """
         return [-1 * vr.gamma for vr in self.get_elements()]
+
+        

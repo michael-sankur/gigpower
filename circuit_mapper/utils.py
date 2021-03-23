@@ -57,7 +57,7 @@ def get_phase_idx(ph: Union[str, int]) -> int:
     elif ph in range(1, 4):
         return ph - 1
     else:
-        raise ValueError(f'Invalid argument for get_phase_idx {phase_char}')
+        raise ValueError(f'Invalid argument for get_phase_idx {ph}')
 
 
 def set_zip_values(dss, zipv: List):

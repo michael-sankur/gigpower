@@ -51,7 +51,7 @@ class SolutionNR3(Solution):
 
         # intialize line current portion of XNR
         if I0 is None or len(I0) == 0:
-            XNR[(2*3*nnode):] = 0.0*np.ones((6*nline + 2*tf_lines + 2*2*vr_lines, 1))
+            XNR[(2*3*nnode):] = 0.0*np.ones((6*nline + 2*tf_lines + 2*2* vr_lines, 1))
 
         # If initial I is given
         elif len(I0) != 0:
@@ -519,7 +519,9 @@ class SolutionNR3(Solution):
         """ From 20180601/PYTHON/lib/compute_NR3JT.py, written by @kathleenchang """
         nnode = self.circuit.buses.num_elements
         nline = self.circuit.lines.num_elements
-        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph
+        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
+        tf_lines = self.circuit.transformers.get_num_lines_x_ph()
+
         X = self.XNR
         g_SB, b_SB = self.g_SB, self.b_SB
         G_KVL, b_KVL = self.G_KVL, self.b_KVL
@@ -553,6 +555,7 @@ class SolutionNR3(Solution):
         nnode = self.circuit.buses.num_elements
         nline = self.circuit.lines.num_elements
         vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph
+        tf_lines = self.circuit.transformers.get_num_lines_x_ph
 
         XNR = self.XNR
         g_SB, b_SB = self.g_SB, self.b_SB
@@ -572,8 +575,6 @@ class SolutionNR3(Solution):
         FT = 1e99
         itercount = 0
 
-        _, _, tf_lines, vr_lines, _, _, _ = transformer_regulator_parameters()
-
 
         # adjust KCL based on capacitance, DER, and time-varying load
         # if der != 0 or capacitance != 0 or time_delta != -1:
@@ -583,8 +584,8 @@ class SolutionNR3(Solution):
 
         while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
             print("Iteration number %f" % (itercount))
-            FT = compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines)
-            JT = compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
+            FT = self.compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines)
+            JT = self.compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
 
             if JT.shape[0] >= JT.shape[1]:
                 XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
@@ -604,12 +605,12 @@ class SolutionNR3(Solution):
                 print(qpu)
                 wpu[phase, idxbus] = qpu
 
-            H, b = change_KCL_matrices(H, g, b, time_delta, der, capacitance, wpu)
+            H, b = self.change_KCL_matrices(H, g, b, time_delta, der, capacitance, wpu)
 
             while np.amax(np.abs(FT)) >= 1e-6 and itercount < maxiter:
                 print("Iteration number %f" % (itercount))
-                FT = compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines)
-                JT = compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
+                FT = self.compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines)
+                JT = self.compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
 
                 if JT.shape[0] >= JT.shape[1]:
                     XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
@@ -619,7 +620,7 @@ class SolutionNR3(Solution):
         ##############
 
         # returns associated indices (values as list) of a bus's voltage regulators (keys)
-        vr_idx_dict = voltage_regulator_index_dict()
+        vr_idx_dict = self.circuit.voltage_regulators.voltage_regulator_index_dict
         vr_line_idx = range(0, vr_lines)
 
         # flag if need to rerun NR3
@@ -712,7 +713,7 @@ class SolutionNR3(Solution):
                                     flag = 1 #run NR3 again
             if flag == 1:
                 print('\n Next iteration: ')
-                XNR_final = NR3(fn, slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta, vvc_objects)
+                XNR_final = self.solve(time_delta, der=0, capacitance=0)
                 flag = 0
 
         self.XNR = XNR_final
