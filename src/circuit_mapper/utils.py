@@ -101,25 +101,26 @@ def pad_phases(matrix: np.ndarray, shape: tuple, phases: np.ndarray) -> np.ndarr
     return ret_mat
 
 
-def mask_phases(matrix: np.ndarray, shape: tuple, phases: List[bool]) -> np.ndarray:
+def mask_phases(matrix: np.ndarray, shape: tuple, phases: np.ndarray) -> np.ndarray:
     """
-    Zeroes out values in input matrix for phases set to FALSE in the phases tuple.
+    Zeroes out values in input matrix for phases set to ZERO in the phase matrix
     Input:
         matrix: a 3x3 ndarray
-        phases: a tuple of booleans corresponding to phases to set on this matrix (A: T/F, B: T/F, C: T/F)
+        phases: nd array with 1's where phases exist, zeros otherwise
     Output:
-        input matrix with 0's for all row/column indices corresponding to phases set to FALSE
+        input matrix with 0's for all row/column indices corresponding 
+        to phases that are 0 in the phase matrix
     """
-    phase_matrix = np.zeros(shape, dtype=complex)
+    out_matrix = np.zeros(shape, dtype=complex)
     for out_idx in range(shape[0]):
         if len(shape) == 2:
             for col_idx in range(shape[1]):
-                if phases[out_idx] and phases[col_idx]:
-                    phase_matrix[out_idx][col_idx] = 1
+                if phases[out_idx] == 1 and phases[col_idx] == 1:
+                    out_matrix[out_idx][col_idx] = 1
         else:
             if phases[out_idx]:
-                phase_matrix[out_idx] = 1
-    masked = np.multiply(matrix, phase_matrix)
+                out_matrix[out_idx] = 1
+    masked = np.multiply(matrix, out_matrix)
     # change all NaN's to 0
     return np.nan_to_num(masked)
 
