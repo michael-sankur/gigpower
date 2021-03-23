@@ -17,9 +17,9 @@ class LineGroup(CircuitElementGroup):
         """
         self.buses = bus_group
         # adjacency matrix -> { bus_name: [downstream buses]}
-        self.adj = {b.__name__: [] for b in bus_group.get_elements()}
+        self.adj = {}
         # reverse adjacency matrix -> { bus_name: [upstream buses]}
-        self.reverse_adj = {b.__name__: [] for b in bus_group.get_elements()}
+        self.reverse_adj = {}
         self._key_to_element_dict = {}
         super().__init__(dss, **kwargs)
 
@@ -44,10 +44,17 @@ class LineGroup(CircuitElementGroup):
     def _add_edge(self, line):
         """ Adds line's topology to self.adj and self.reverse_adj"""
         tx_bus, rx_bus = line.key
-        if rx_bus not in self.adj[tx_bus]:
-            self.adj[tx_bus].append(rx_bus)
-        if tx_bus not in self.reverse_adj[rx_bus]:
-            self.reverse_adj[rx_bus].append(tx_bus)
+        try:
+            if rx_bus not in self.adj[tx_bus]:
+                self.adj[tx_bus].append(rx_bus)
+        except KeyError:
+            self.adj[tx_bus] = [rx_bus]
+
+        try: 
+            if tx_bus not in self.reverse_adj[rx_bus]:
+                self.reverse_adj[rx_bus].append(tx_bus)
+        except KeyError:
+            self.reverse_adj[rx_bus] = [tx_bus]
 
     def get_bus_ph_matrix(self) -> np.ndarray:
         """
@@ -88,3 +95,6 @@ class LineGroup(CircuitElementGroup):
     def get_parents(self, bus_name: str) -> List[str]:
         """ returns a list of buses upstream of bus_name """
         return self.reverse_adj[bus_name]
+
+
+  
