@@ -1,7 +1,7 @@
 import numpy as np
-from lib.compute_SBKVL_matrices import compute_SBKVL_matrices
-from lib.compute_KCL_matrices import compute_KCL_matrices
-from lib.helper import transformer_regulator_parameters
+from . compute_SBKVL_matrices import compute_SBKVL_matrices
+from . compute_KCL_matrices import compute_KCL_matrices
+from . helper import transformer_regulator_parameters
 import opendssdirect as dss
 import re
 import time

@@ -1,6 +1,6 @@
 import opendssdirect as dss
 import numpy as np
-from lib.helper import voltage_regulator_index_dict
+from . helper import voltage_regulator_index_dict
 
 def regulator_control(XNR, vr_lines, tf_lines, nnode, nline):
 # returns associated indices (values as list) of a bus's voltage regulators (keys)

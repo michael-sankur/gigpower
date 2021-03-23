@@ -4,13 +4,13 @@ import time
 import re
 import pandas as pd
 
-from lib.compute_NR3FT import compute_NR3FT 
-from lib.compute_NR3JT import compute_NR3JT 
-from lib.change_KCL_matrices import change_KCL_matrices
-from lib.helper import transformer_regulator_parameters, wpu_final_arr
-from lib.map_output import map_output
-from lib.basematrices import basematrices
-from lib.regulator_control import regulator_control
+from . compute_NR3FT import compute_NR3FT 
+from . compute_NR3JT import compute_NR3JT 
+from . change_KCL_matrices import change_KCL_matrices
+from . helper import transformer_regulator_parameters, wpu_final_arr
+from . map_output import map_output
+from . basematrices import basematrices
+from . regulator_control import regulator_control
 
 def NR3(slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta, vvc_objects):
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = basematrices(slacknode, Vslack, V0, I0)

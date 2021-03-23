@@ -12,11 +12,9 @@ from circuit_mapper.solution_nr3 import SolutionNR3
 from circuit_mapper.solution import Solution
 
 # current nr3 dependencies
-import sys
-sys.path.append('/Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/20180601/PYTHON')
-from lib.DSS_parameters import relevant_openDSS_parameters
-from lib.basematrices import basematrices
-from lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
+from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters
+from nr3_python.lib.basematrices import basematrices
+from nr3_python.lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
 
 LOCAL_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
 DSS_FILE = LOCAL_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye.dss'

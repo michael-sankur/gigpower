@@ -2,8 +2,8 @@ import numpy as np
 import opendssdirect as dss
 import re
 import sys
-from lib.helper import bus_phases, nominal_load_values, nominal_cap_arr
-from lib.zip_parameters import *
+from . helper import bus_phases, nominal_load_values, nominal_cap_arr
+from . zip_parameters import *
 
 def change_KCL_matrices(H, g, b, t, der, capacitance, wpu):
 

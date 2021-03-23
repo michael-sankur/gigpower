@@ -1,7 +1,7 @@
 import numpy as np
 import opendssdirect as dss
 import re
-from lib.helper import identify_bus_phases, identify_line_phases
+from . helper import identify_bus_phases, identify_line_phases
 def compute_SBKVL_matrices(XNR, Vslack, tf_bus, vr_bus, tf_lines, vr_lines, tf_count, vr_count, gain):
 
     nline = len(dss.Lines.AllNames())    

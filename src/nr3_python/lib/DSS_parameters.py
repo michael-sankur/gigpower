@@ -2,8 +2,8 @@ import opendssdirect as dss
 import re
 import numpy as np
 import time
-from lib.zip_parameters import *
-from lib.helper import transformer_regulator_parameters, nominal_load_values, nominal_cap_arr, wpu_final_arr
+from . zip_parameters import *
+from . helper import transformer_regulator_parameters, nominal_load_values, nominal_cap_arr, wpu_final_arr
 def relevant_openDSS_parameters(t, vvc_objects):
 
     dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[0])
