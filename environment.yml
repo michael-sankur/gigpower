@@ -3,7 +3,7 @@ channels:
   - anaconda
   - defaults
 dependencies:
-  - appnope=0.1.0
+  - appnope
   - attrs=19.3.0
   - backcall=0.2.0
   - blas=1.0
@@ -21,10 +21,10 @@ dependencies:
   - jedi=0.17.2
   - jupyter_client=6.1.7
   - jupyter_core=4.6.3
-  - libcxx=10.0.0
+  - libcxx
   - libedit=3.1.20191231
   - libffi=3.3
-  - libgfortran=3.0.1
+  - libgfortran
   - libsodium=1.0.18
   - mccabe=0.6.1
   - mkl=2019.4
