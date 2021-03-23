@@ -1,7 +1,7 @@
-name: Python Package using Conda
+name: Python Package
 # based on this workflow : https://github.com/actions/starter-workflows/blob/af51c4b131dbf613bdf369873b9575612522433b/ci/python-package-conda.yml
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   build-linux:
