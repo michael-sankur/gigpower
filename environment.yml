@@ -21,7 +21,6 @@ dependencies:
   - jedi=0.17.2
   - jupyter_client=6.1.7
   - jupyter_core=4.6.3
-  - libcxx
   - libedit=3.1.20191231
   - libffi=3.3
   - libgfortran
