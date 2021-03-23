@@ -16,8 +16,8 @@ from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters
 from nr3_python.lib.basematrices import basematrices
 from nr3_python.lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
 
-LOCAL_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
-DSS_FILE = LOCAL_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye.dss'
+LOCAL_DIR = 'src/nr3_python/'
+DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye.dss'
 
 SLACKIDX = 0
 VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
