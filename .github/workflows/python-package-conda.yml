@@ -33,5 +33,5 @@ jobs:
     #     $CONDA/bin/mypy circuit_mapper
     - name: Test with pytest
       run: |
-        $CONDA/bin/conda install pytest
+        $CONDA/bin/conda activate pfp-env
         $CONDA/bin/pytest tests
