@@ -31,4 +31,6 @@ dependencies:
   - ipykernel
   - numpy
   - pandas
-  - opendssdirect-py
+  - pip:
+      - dss-python==0.10.6
+      - OpenDSSDirect.py==0.5.0 
