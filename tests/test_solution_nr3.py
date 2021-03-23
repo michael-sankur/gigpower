@@ -7,8 +7,8 @@ import numpy as np
 import opendssdirect as dss
 import pytest
 
-from circuit import Circuit
-from solution_nr3 import SolutionNR3
+from circuit_mapper.circuit import Circuit
+from circuit_mapper.solution_nr3 import SolutionNR3
 
 # current nr3 dependencies
 import sys

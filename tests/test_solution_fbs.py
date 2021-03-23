@@ -7,11 +7,11 @@ import numpy as np
 import pytest
 import pandas as pd
 
-from circuit import Circuit
-from solution_fbs import SolutionFBS
+from circuit_mapper.circuit import Circuit
+from circuit_mapper.solution_fbs import SolutionFBS
 
-from fbs.utils import init_from_dss
-from fbs.fbs import fbs, get_solution as get_fbs_solution
+from fbs.fbs.utils import init_from_dss
+from fbs.fbs.fbs import fbs, get_solution as get_fbs_solution
 
 LOCAL_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
 DSS_FILE = LOCAL_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye.dss'
