@@ -19,7 +19,7 @@ jobs:
       run: |
         # $CONDA is an environment variable pointing to the root of the miniconda directory
         $CONDA/bin/conda config --set restore_free_channel true
-        $CONDA/bin/conda env update --file environment.yml --name pfp-env
+        $CONDA/bin/conda env update --file environment.yml --name base
     - name: Lint with flake8
       run: |
         $CONDA/bin/conda install flake8
@@ -33,5 +33,5 @@ jobs:
     #     $CONDA/bin/mypy circuit_mapper
     - name: Test with pytest
       run: |
-        $CONDA/bin/conda activate pfp-env
+        conda install pytest
         $CONDA/bin/pytest tests
