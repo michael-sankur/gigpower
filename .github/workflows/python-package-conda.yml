@@ -33,8 +33,7 @@ jobs:
     #     $CONDA/bin/mypy circuit_mapper
     - name: Upgrade pip, install local modules, test with pytest
       run: |
-        conda install pytest
         python3 -m pip install --upgrade pip
         python3 -m pip install setuptools wheel twine
-        python -m pip install -e .
-        $CONDA/bin/pytest tests
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pytest tests
