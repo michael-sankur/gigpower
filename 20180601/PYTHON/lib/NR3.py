@@ -54,7 +54,7 @@ def NR3(slacknode, Vslack, V0, I0, tol, maxiter, der, capacitance, time_delta, v
     XNR_current = np.zeros(XNR_final.shape)
     XNR_previous = XNR_final
  
-    ############ WPU Iterations
+    ############ WPU / Volt VAR Control Iterations
     # itercount = 0
     # while np.linalg.norm(XNR_previous - XNR_current) > 1e-7 and itercount < 20: 
     #     print("Iteration number for VVC %f" % (itercount), np.linalg.norm(XNR_previous - XNR_current) )

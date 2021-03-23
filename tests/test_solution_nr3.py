@@ -72,12 +72,5 @@ def test_vvc_parameters(circuit, circuit_object, nr3_object):
     assert(nr_busName == ckt_busName)
     assert(nr_phase == ckt_phase)
 
-# NR3 CHANGE KCL TESTS---------------------------------------------------------------------
 
-def test_change_KCL(circuit, H, g, b, t, der, capacitance, wpu):
-    ckt_H, ckt_b = circuit.change_KCL_matrices( H, g, b, t, der, capacitance, wpu)
-    nr3_H, nr3_b = change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
-    
-    assert(ckt_H == nr3_H)
-    assert(ckt_b == nr3_b)
 

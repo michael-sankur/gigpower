@@ -13,13 +13,16 @@ from solution import Solution
 
 # current nr3 dependencies
 import sys
-sys.path.append('/Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/20180601/PYTHON')
+#sys.path.append('/Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/20180601/PYTHON')
+sys.path.append("C:\\Users\\kathl\\Desktop\\GitHub\\LinDist3Flow\\20180601\\PYTHON")
+
 from lib.DSS_parameters import relevant_openDSS_parameters
 from lib.basematrices import basematrices
 from lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
 
 LOCAL_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
-DSS_FILE = LOCAL_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye.dss'
+LOCAL_DIR = "C:\\Users\\kathl\\Desktop\\GitHub\\LinDist3Flow\\20180601\\PYTHON"
+DSS_FILE = LOCAL_DIR + '\\IEEE_13_Bus_allwye.dss'
 
 SLACKIDX = 0
 VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
@@ -182,3 +185,12 @@ def print_compare(title, old, new):
     print(old)
     print("new:")
     print(new)
+
+# NR3 CHANGE KCL TESTS---------------------------------------------------------------------
+
+def test_change_KCL(circuit, H, g, b, t, der, capacitance, wpu):
+    ckt_H, ckt_b = circuit.change_KCL_matrices( H, g, b, t, der, capacitance, wpu)
+    nr3_H, nr3_b = change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
+    
+    assert(ckt_H == nr3_H)
+    assert(ckt_b == nr3_b)
