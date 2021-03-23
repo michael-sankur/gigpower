@@ -84,3 +84,7 @@ class LineGroup(CircuitElementGroup):
     def get_R_matrix(self):
         """ n x 9 matrix, indexed by Line index"""
         return self._get_attr_by_idx('rmat')
+
+    def get_parents(self, bus_name: str) -> List[str]:
+        """ returns a list of buses upstream of bus_name """
+        return self.reverse_adj[bus_name]
