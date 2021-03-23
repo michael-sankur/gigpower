@@ -24,7 +24,6 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install setuptools wheel twine
-        python3 setup.py install
         python -m pip install -e .
     - name: Lint with flake8
       run: |
