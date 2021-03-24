@@ -29,18 +29,19 @@ class Circuit():
         self.lines = LineGroup(dss, bus_group=self.buses)
         self.loads = LoadGroup(dss, bus_group=self.buses)
         self.capacitors = CapacitorGroup(dss, bus_group=self.buses)
-        self.voltage_regulators = VoltageRegulatorGroup(dss, line_group=self.lines)
         self.transformers = TransformerGroup(dss, bus_group=self.buses)
+        self.lines.add_line_group(self.transformers)
+        self.voltage_regulators = VoltageRegulatorGroup(dss, line_group=self.lines)
 
         # Lines need to know topology and index info 
         # for VoltageRegulators and Transformers
-        self.lines.add_line_group(self.transformers)
+        
         self.lines.add_line_group(self.voltage_regulators)
 
-        self._assign_to_buses(self.loads)
-        self._assign_to_buses(self.capacitors)
-        self._assign_to_buses(self.voltage_regulators)
-        self._assign_to_buses(self.transformers)
+        # self._assign_to_buses(self.loads)
+        # self._assign_to_buses(self.capacitors)
+        # self._assign_to_buses(self.voltage_regulators)
+        # self._assign_to_buses(self.transformers)
 
     def set_kW(self, load_name: str, kW: float):
         """
@@ -68,14 +69,15 @@ class Circuit():
 
     def get_tx_idx_matrix(self):
         """
-        n x 1 matrix of tx bus indices, for all Lines and Synthetic Lines.
+        n x 1 matrix of tx bus indices, for all Lines
         Indexed as follows:
         [0, len(Lines) - 1]: Lines
         [len(Lines), len(Transformers)- 1]: Transformers
         [len(Transformers), len(VoltageRegulators)- 1]: VoltageRegulators
 
         """
-        tx_buses = self.lines.get_bus_ids('tx')
+        nlines = self.lines.num_elements
+        tx_buses = self.lines.get_bus_ids('tx')[0: nlines]
         try:
             tx_buses += self.transformers.get_bus_ids('tx')
             tx_buses += self.voltage_regulators.get_bus_ids('tx')
@@ -88,7 +90,8 @@ class Circuit():
         n x 1 matrix of rx bus indices. Indexed by line index,
         which is the same value as in opendss
         """
-        rx_buses = self.lines.get_bus_ids('rx')
+        nlines = self.lines.num_elements
+        rx_buses = self.lines.get_bus_ids('rx')[0: nlines]
         try:
             rx_buses += self.transformers.get_bus_ids('rx')
             rx_buses += self.voltage_regulators.get_bus_ids('rx')
