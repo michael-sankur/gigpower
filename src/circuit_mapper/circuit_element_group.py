@@ -70,7 +70,7 @@ class CircuitElementGroup():
             return self._name_to_object_dict[self._idx_to_name_dict[key]]
         elif isinstance(key, tuple):
             try:
-                return self._key_to_element_dict[key]()
+                return self._key_to_element_dict[key]
             except KeyError:
                 print(key_error_msg)
         else:
@@ -87,7 +87,7 @@ class CircuitElementGroup():
         this element the highest_index element in the group
         """
         if not isinstance(ele, self.__class__.ele_class):
-            raise ValueError(f"Cannot add element {ele.__class__} to group {self.__class__}")
+            print(f"Warning: adding a {ele.__class__} to group {self.__class__}")
         if ele.__name__ not in self._names:
             self._names.append(ele.__name__)
             self._name_to_idx_dict[ele.__name__] = self.num_elements
