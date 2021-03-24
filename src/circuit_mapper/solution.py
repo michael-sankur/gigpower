@@ -78,7 +78,10 @@ class Solution():
         """
         for param in self.__class__.SOLUTION_PARAMS:
             element_group, cols, datatype = self.__class__.SOLUTION_PARAMS[param]
-            num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
+            if element_group == 'lines': # include transformers and vrs
+                num_rows = self.circuit.get_total_lines()
+            else:
+                num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
             setattr(self, param, np.zeros((num_rows, len(cols)), dtype=datatype))
 
     def get_data_frame(self, param: str) -> pd.DataFrame:

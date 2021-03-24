@@ -35,10 +35,13 @@ class LineGroup(CircuitElementGroup):
         """
         return [getattr(line, which) for line in self.get_elements()]
 
-    def add_element(self, line):
-        """ Call super(), and add the new line's topology.
-        add line to self._key_to_element_dict"""
-        super().add_element(line)
+    def add_element(self, line, **kwargs):
+        """
+        Call super(), and add the new line's topology.
+        add line to self._key_to_element_dict
+        note that adding a SyntheticLine will NOT increment self.num_elements
+        """
+        super().add_element(line, **kwargs)
         self._key_to_element_dict[line.key] = line
         self._add_edge(line)
 
@@ -108,19 +111,5 @@ class LineGroup(CircuitElementGroup):
         if bus_name in self.adj:
             return self.adj[bus_name]
         return []
-
-    def add_line_group(self, group):
-        """ 
-        Param group: a Transformer group or VoltageRegulator group
-        Adds groups topology info and updates name, key, and idx lookups
-        """
-        if not isinstance(group, LineGroup):
-            raise ValueError(f"Cannot add element {ele.__class__} to LineGroup")
-        if group.__class__.__name__ == 'VoltageRegulatorGroup':
-            self.adj.update(group.adj)
-            self.reverse_adj.update(group.reverse_adj)
-        else:
-            for ele in group.get_elements(): 
-                self.add_element(ele)
 
   

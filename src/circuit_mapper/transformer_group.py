@@ -6,7 +6,7 @@ import numpy as np
 class TransformerGroup(LineGroup):
     dss_module_name, ele_class = 'Transformers', Transformer
 
-    def _collect_names(self, dss):
+    def _collect_names(self, dss, **kwargs):
         """ Override LineGroup._collect_names to exclude voltage regulators"""
         transformers = dss.Transformers.AllNames()
         vregs = dss.RegControls.AllNames()

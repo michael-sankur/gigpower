@@ -21,13 +21,6 @@ class VoltageRegulatorGroup(LineGroup):
                 related_vr[dss.Bus.Name()] = [n]
         self.voltage_regulator_index_dict = related_vr
 
-    def _add_edge(self, vr):
-        """
-        Adds the upstream and downstream lines of voltage regulators to
-        self.adj and self.reverse_adj
-        """
-        super()._add_edge(vr.upstream_line)
-        super()._add_edge(vr.downstream_line)
 
     def get_bus_ids(self, which: str) -> List:
         """

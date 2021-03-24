@@ -29,14 +29,8 @@ class Circuit():
         self.lines = LineGroup(dss, bus_group=self.buses)
         self.loads = LoadGroup(dss, bus_group=self.buses)
         self.capacitors = CapacitorGroup(dss, bus_group=self.buses)
-        self.transformers = TransformerGroup(dss, bus_group=self.buses)
-        self.lines.add_line_group(self.transformers)
+        self.transformers = TransformerGroup(dss, bus_group=self.buses, line_group=self.lines)
         self.voltage_regulators = VoltageRegulatorGroup(dss, line_group=self.lines)
-
-        # Lines need to know topology and index info 
-        # for VoltageRegulators and Transformers
-        
-        self.lines.add_line_group(self.voltage_regulators)
 
         # self._assign_to_buses(self.loads)
         # self._assign_to_buses(self.capacitors)
@@ -155,6 +149,10 @@ class Circuit():
         TODO: Implement logic to set this as needed.
         """
         return np.zeros((3, self.buses.num_elements))
+    
+    def get_total_lines(self):
+        """ returns number of Lines and Synthetic Lines"""
+        return len(self.lines.all_names())
 
     def _get_zip_val_matrix(self, zip_param=str) -> np.ndarray:
         """

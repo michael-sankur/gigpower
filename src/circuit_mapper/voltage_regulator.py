@@ -78,8 +78,9 @@ class VoltageRegulator(CircuitElement):
         try:
             self.upstream_line = line_group.get_element(self.key)
         except KeyError:
-            self.upstream_line = SyntheticLine(self)
-            line_group.add_element(self.upstream_line)
+            # create upstream line as a Synthetic line and add it to the linegroup
+            self.upstream_line = SyntheticLine(
+                line_group=line_group, name=self.__name__, key=self.key)
         self.downstream_line = self._find_downstream_line(line_group)
         self.upstream_line.add_voltage_regulator(self)
         # self.downstream_line.add_voltage_regulator(self)

@@ -1,19 +1,22 @@
-from . line import Line
+from . line import SyntheticLine
+from . circuit_element import CircuitElement
 import numpy as np
 from . utils import parse_dss_bus_name, parse_dss_phases, parse_phase_matrix
 
 
-class Transformer (Line):
+class Transformer (SyntheticLine):
 
-    def __init__(self, name, dss):
-        super().__init__(name, dss)
-        # initialize this as a Line with 0 length, FZpu = zeroes(3x3)
-        self.length = 0
-        self.FZpu = np.zeros((3, 3), dtype='complex')
+    def __init__(self, name: str, dss, line_group):
+        # call CircuitElement to set name, related bus, phases
+        CircuitElement.__init__(self, name, dss)
         # get kV, kVA
         dss.Transformers.Name(self.__name__)
+        self.reg_control = dss.RegControls.Name()
         self.kV = dss.Transformers.kV()
         self.kVA = dss.Transformers.kVA()
+        # call SyntheticLine to set line attrs and
+        # add self to the linegroup
+        super().__init__(line_group=line_group)
 
     def _set_related_bus(self, dss):
         """
@@ -37,12 +40,6 @@ class Transformer (Line):
         dss.Transformers.Name(self.__name__)
         self.phases = parse_dss_phases(dss.CktElement.BusNames()[0])
         self.phase_matrix = parse_phase_matrix(self.phases)
-
-    def _set_length(self, *args):
-        self.length = 0
-
-    def _set_FZpu(self, *args):
-        self.FZpu = np.zeros((3,3))
 
     def _get_rated_voltages(self, dss, winding):
         """ --winding-- Set to 1 for upstream side, 2 for downstream side"""
