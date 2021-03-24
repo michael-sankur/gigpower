@@ -97,25 +97,25 @@ class SolutionFBS(Solution):
         line_key = (parent.__name__, child.__name__)
         line_out = self.circuit.lines.get_element(line_key)
 
-        if line_out.__class__.__name__ == 'VoltageRegulator':
-            vr = line_out
-            tx, reg = vr.key
-            tx_idx = self.circuit.buses.get_idx(tx)
-            reg_idx = self.circuit.buses.get_idx(reg)
-            phases = vr.get_ph_idx_matrix()
-            gamma = vr.gamma
-            tx_V = self.V[tx_idx]
-            reg_V = self.V[reg_idx]
-            Itx = vr.Itx  # current at/leaving the tx node
-            Ireg = vr.Ireg  # current entering reg_node
-            # Enforce voltage regulator equations by phase.
-            # Voltage ratio equation: tx_node.V = gamma @ reg_node.V
-            # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
-            # [current @ reg_node]* = tx_node.V @ [current entering tx_node]* / reg_node.V
-            reg_V[phases] = gamma * tx_V[phases]
-            Ireg[phases] = 1/gamma * Itx[phases]
+        try:
+            for vr in line_out.voltage_regulators:
+                tx, reg = vr.key
+                tx_idx = self.circuit.buses.get_idx(tx)
+                reg_idx = self.circuit.buses.get_idx(reg)
+                phases = vr.get_ph_idx_matrix()
+                gamma = vr.gamma
+                tx_V = self.V[tx_idx]
+                reg_V = self.V[reg_idx]
+                Itx = vr.Itx  # current at/leaving the tx node
+                Ireg = vr.Ireg  # current entering reg_node
+                # Enforce voltage regulator equations by phase.
+                # Voltage ratio equation: tx_node.V = gamma @ reg_node.V
+                # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
+                # [current @ reg_node]* = tx_node.V @ [current entering tx_node]* / reg_node.V
+                reg_V[phases] = gamma * tx_V[phases]
+                Ireg[phases] = 1/gamma * Itx[phases]
 
-        else:
+        except AttributeError:
             parent_idx = self.circuit.buses.get_idx(parent)
             child_idx = self.circuit.buses.get_idx(child)
             line_out_idx = self.circuit.lines.get_idx(line_key)
@@ -139,23 +139,23 @@ class SolutionFBS(Solution):
         line_in = self.circuit.lines.get_element(line_key)
         line_in_idx = self.circuit.lines.get_idx(line_in)
 
-        if line_in.__class__.__name__ == 'VoltageRegulator':
-            vr = line_in
-            tx, reg = vr.key
-            tx_idx = self.circuit.buses.get_idx(tx)
-            reg_idx = self.circuit.buses.get_idx(reg)
-            phases = vr.get_ph_idx_matrix()
-            gamma = vr.gamma
-            tx_V = self.V[tx_idx]
-            reg_V = self.V[reg_idx]
-            # Enforce voltage regulator equations by phase.
-            # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
-            # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
-            # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
-            #  update tx voltage per phase
-            tx_V[phases] = 1/gamma * reg_V[phases]
+        try:
+            for vr in line_in.voltage_regulators:
+                tx, reg = vr.key
+                tx_idx = self.circuit.buses.get_idx(tx)
+                reg_idx = self.circuit.buses.get_idx(reg)
+                phases = vr.get_ph_idx_matrix()
+                gamma = vr.gamma
+                tx_V = self.V[tx_idx]
+                reg_V = self.V[reg_idx]
+                # Enforce voltage regulator equations by phase.
+                # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
+                # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
+                # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
+                #  update tx voltage per phase
+                tx_V[phases] = 1/gamma * reg_V[phases]
 
-        else:
+        except AttributeError:
             parent_V = self.V[parent_idx]
             FZpu = line_in.FZpu
             I_backwards = self.I[line_in_idx]
@@ -179,18 +179,19 @@ class SolutionFBS(Solution):
 
         new_line_I = np.conj(np.divide(self.sV[rx_bus_idx], self.V[rx_bus_idx]))
         line_in_idx = self.circuit.lines.get_idx(line_in)
-
-        # sum currents over all node's child segments
+        # # sum currents over all node's child segments
         if rx_bus_name in self.adj:
             for child_name in self.adj[rx_bus_name]:
                 line_out = self.circuit.lines.get_element((rx_bus_name, child_name))
                 line_out_idx = self.circuit.lines.get_idx(line_out)
                 try:
-                    vrs = line_out.voltage_regulators
-                    new_line_I += sum([vr.Itx for vr in vrs])
+                    for vr in line_out.voltage_regulators:
+                        new_line_I += vr.Itx
                 except AttributeError:
                     new_line_I = new_line_I + self.I[line_out_idx]
         # zero out non-existant phases
+        # TODO: should SyntheticLines have phases? the old FBS would zero out I for
+        # all SyntheticLines
         self.I[line_in_idx] = np.nan_to_num(new_line_I * line_in.phase_matrix)
 
         try:
