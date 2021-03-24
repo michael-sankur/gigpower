@@ -18,6 +18,7 @@ from nr3_python.lib.helper import transformer_regulator_parameters, nominal_load
 
 LOCAL_DIR = 'src/nr3_python/'
 DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye.dss'
+# DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye_noxfm_noreg.dss'
 
 SLACKIDX = 0
 VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
@@ -169,6 +170,10 @@ def test_nr3_helpers(circuit):
 
 def test_nr3_basematrices_H_g_b(nr3_solution, nr3_basematrices):
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
+    conflicts = np.where(H != nr3_solution.H)
+    print(conflicts)
+    print(H[conflicts])
+    print(nr3_solution.H[conflicts])
     assert (H == nr3_solution.H).all()
     assert (g == nr3_solution.g).all()
     assert (b == nr3_solution.b).all()
