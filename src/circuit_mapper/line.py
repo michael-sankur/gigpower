@@ -54,7 +54,7 @@ class Line(CircuitElement):
             dss.Lines.Name(self.__name__)
             xmat = np.asarray(dss.Lines.XMatrix())
             rmat = np.asarray(dss.Lines.RMatrix())
-        except Exception:  # for transformers, voltage regs, and Synthetic Lines
+        except Exception:  # for transformers, voltage regs
             xmat, rmat = np.zeros(9), np.zeros(9)
         if len(xmat) == 1:  # set the diagonals to the value
             self.xmat = (np.identity(3) * xmat).flatten()
@@ -90,6 +90,7 @@ class SyntheticLine(Line):
         self.related_bus = ele.related_bus
         self.length = 0
         self.phases = ele.phases
+        self.xmat, self.rmat = np.zeros(9), np.zeros(9)
 
     def add_voltage_regulator(self, vreg):
         try:
