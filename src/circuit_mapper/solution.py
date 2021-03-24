@@ -35,9 +35,6 @@ class Solution():
     SOLUTION_PARAMS = {
         'V': ['buses', ['A', 'B', 'C'], complex],
         'I': ['lines', ['A', 'B', 'C'], complex],
-        'Inode': ['buses', ['A', 'B', 'C'], complex],
-        'Stx': ['lines', ['A', 'B', 'C'], complex],
-        'Srx': ['lines', ['A', 'B', 'C'],  complex],
         'sV': ['buses', ['A', 'B', 'C'], complex]}
 
     def __init__(self, dss_fp: str):
@@ -140,3 +137,113 @@ class Solution():
         for e in vvarobjects:
             print(e)
         return vvarobjects
+
+    def get_bus_powers(self):
+        """
+        Total complex powers by bus (load powers and capacitor powers)
+        indexed by bus 
+        """
+        return self.get_load_powers() + self.get_capacitor_powers()
+
+    def calc_Stx(self):
+        tx_bus_matrix = self.circuit.get_tx_idx_matrix()
+        num_lines = self.circuit.lines.num_elements
+        self.Stx = self.V[tx_bus_matrix] * np.conj(self.I)
+    
+    def calc_Srx(self):
+        rx_bus_matrix = self.circuit.get_rx_idx_matrix()
+        num_lines = self.circuit.lines.num_elements
+        self.Stx = self.V[tx_bus_matrix] * np.conj(self.I)
+
+    def calc_Inode(self) -> None:
+        """ Calculate self.Inode (currents consumed at each node) """
+        for node in self.network.get_nodes():
+            node_V = self.V[node.name]
+            node_sV = self.sV[node.name]
+            node_I = np.conj(np.divide(node_sV, node_V))
+            self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
+
+    def VMag_df(self):
+        """
+        returns VMag as a dataframe indexed by node name
+        """
+        V = self.V_df()
+        return V.applymap(lambda cmplx_v: (np.real(cmplx_v)**2 + np.imag(cmplx_v)**2) ** .5)
+
+    def params_df(self):
+        """
+        returns solution paramaters as a dataframe
+        """
+        index = ['iterations', 'Vtest', 'Vref', 'tolerance', 'diff']
+        data = [self.iterations, self.Vtest,
+                self.Vref, self.tolerance, self.diff]
+        return pd.DataFrame(data, index).transpose()
+
+    def getLoadPowers(self):
+        """
+        Return total load powers by bus, calculated from solved V value
+        per node.
+        """
+        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
+
+        for bus_name, bus_idx in self.network.bus_idx_dict.items():
+            node = self.network.nodes[bus_name]
+            data[bus_idx] = calc_load_power(node, self.V[bus_name])
+
+        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+
+    def getCapPowers(self):
+        """
+        Return total cap powers by bus, calculated from solved V value
+        per node.
+        """
+        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
+
+        for bus_name, bus_idx in self.network.bus_idx_dict.items():
+            node = self.network.nodes[bus_name]
+            data[bus_idx] = calc_cap_power(node, self.V[bus_name])
+
+        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+
+    def nomNodePwrs_df(self):
+        """
+        One time calculation of total nominal node power based on solved V
+        equivalent to aP = 1, aI = aQ = 0
+        """
+
+        # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
+
+        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
+
+        for node in self.network.get_nodes():
+            node_idx = self.network.bus_idx_dict[node.name]
+            nodeV = np.ones((3,), dtype=complex)
+            data[node_idx] += calc_total_node_power(
+                node, nodeV, [0, 0, 1, 0, 0, 1])
+        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+
+    def print_solution(self):
+        """
+        prints solution to stdout
+        """
+        print("\n Parameters:")
+        print(self.params_df())
+
+        print("\n V solution")
+        print(self.V_df())
+
+        print("\n I solution")
+        print(self.I_df())
+
+        print("\n Inode solution")
+        print(self.Inode_df())
+
+        print("\n Stx solution")
+        print(self.Stx_df())
+
+        print("\n Srx solution")
+        print(self.Srx_df())
+
+        print("\n sV solution")
+        print(self.sV_df())
+        print()
