@@ -211,8 +211,8 @@ class SolutionNR3(Solution):
                 B0 = np.sqrt(3)/2
             for k2 in range(1, nnode):  # skip slack bus
                 bus = self.circuit.buses.get_element(k2)
-                in_lines = self.circuit.lines.reverse_adj[bus.__name__]  # upstream buses
-                out_lines = self.circuit.lines.adj[bus.__name__]  # downstream buses
+                in_lines = self.circuit.lines.get_parents(bus.__name__)  # upstream buses
+                out_lines = self.circuit.lines.get_children(bus.__name__)  # downstream buses
                 for cplx in range(2):
                     idxbs = k2
                     if cplx == 0:

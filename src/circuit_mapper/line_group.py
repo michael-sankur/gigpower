@@ -22,6 +22,7 @@ class LineGroup(CircuitElementGroup):
         self.reverse_adj = {}
         self._key_to_element_dict = {}
         super().__init__(dss, **kwargs)
+        
 
     def get_line_from_key(self, key: Tuple[str, str]):
         """ return the Line with the key (tx_bus, rx_bus)"""
@@ -100,6 +101,12 @@ class LineGroup(CircuitElementGroup):
         """ returns a list of buses upstream of bus_name """
         if bus_name in self.reverse_adj:
             return self.reverse_adj[bus_name]
+        return []
+
+    def get_children(self, bus_name: str) -> List[str]:
+        """ returns a list of buses downstream of bus_name """
+        if bus_name in self.adj:
+            return self.adj[bus_name]
         return []
 
     def add_line_group(self, group):
