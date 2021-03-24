@@ -7,19 +7,18 @@ import numpy as np
 import opendssdirect as dss
 import pytest
 
-from circuit import Circuit
-from solution_nr3 import SolutionNR3
-from solution import Solution
+from circuit_mapper.circuit import Circuit
+from circuit_mapper.solution_nr3 import SolutionNR3
+from circuit_mapper.solution import Solution
 
 # current nr3 dependencies
-import sys
-sys.path.append('/Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/20180601/PYTHON')
-from lib.DSS_parameters import relevant_openDSS_parameters
-from lib.basematrices import basematrices
-from lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
+from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters
+from nr3_python.lib.basematrices import basematrices
+from nr3_python.lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
 
-LOCAL_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
-DSS_FILE = LOCAL_DIR + 'IEEE_13_Node/IEEE_13_Bus_allwye.dss'
+LOCAL_DIR = 'src/nr3_python/'
+DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye.dss'
+# DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye_noxfm_noreg.dss'
 
 SLACKIDX = 0
 VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
@@ -171,6 +170,10 @@ def test_nr3_helpers(circuit):
 
 def test_nr3_basematrices_H_g_b(nr3_solution, nr3_basematrices):
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
+    conflicts = np.where(H != nr3_solution.H)
+    print(conflicts)
+    print(H[conflicts])
+    print(nr3_solution.H[conflicts])
     assert (H == nr3_solution.H).all()
     assert (g == nr3_solution.g).all()
     assert (b == nr3_solution.b).all()
