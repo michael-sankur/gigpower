@@ -9,13 +9,13 @@ import numpy as np
 
 
 class CircuitElement():
-    def __init__(self, name, dss):
+    def __init__(self, name, dss, **kwargs):
         self.__name__ = name
         self.phases = ''
         self.Sbase = 10**6
-        self._set_related_bus(dss)
-        self._set_base_vals(dss)
-        self._set_phases(dss)
+        self._set_related_bus(dss, **kwargs)
+        self._set_base_vals(dss, **kwargs)
+        self._set_phases(dss, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.__class__}, {self.name}, {self.phases}"
@@ -37,7 +37,7 @@ class CircuitElement():
         bus_name = dss.CktElement.BusNames()[0]  # this is usually the related bus
         self.related_bus = parse_dss_bus_name(bus_name)
 
-    def _set_base_vals(self, dss):
+    def _set_base_vals(self, dss, **kwargs):
         """ set Vbase, Ibase, and Zbase based self.related_bus"""
         dss.Circuit.SetActiveBus(self.related_bus)
         self.Vbase = dss.Bus.kVBase() * 1000
