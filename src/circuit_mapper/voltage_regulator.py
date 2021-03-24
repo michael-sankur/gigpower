@@ -67,18 +67,25 @@ class VoltageRegulator(CircuitElement):
         2. downstream: regControlBus--> rxBus
         opendss already has a Line for the downstream line, so it should
         be present in Circuit.lines
-        Creates a SyntheticLine for the upstream line, find the downstream line
+        Finds or creates a SyntheticLine for the upstream line, 
+        finds the downstream line
         from the line_group,  and assign voltage regulators to both lines
 
         Add the upstream line to the topology for the main line_group
         and to the key_to_element_dict
         """
-        self.upstream_line = SyntheticLine(self)
+        
+        try:
+            self.upstream_line = line_group.get_element(self.key)
+        except KeyError:
+            self.upstream_line = SyntheticLine(self)
+            line_group.add_element(self.upstream_line)
         self.downstream_line = self._find_downstream_line(line_group)
         self.upstream_line.add_voltage_regulator(self)
-        self.downstream_line.add_voltage_regulator(self)
+        # self.downstream_line.add_voltage_regulator(self)
 
     def _find_downstream_line(self, line_group):
         for line in line_group.get_elements():
             if line.tx == self.regControl_bus:
                 return line
+        return None

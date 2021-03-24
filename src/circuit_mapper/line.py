@@ -45,12 +45,6 @@ class Line(CircuitElement):
         # pad the Z matrix
         self.FZpu = pad_phases(ZM, (3, 3), parse_phases(self.phases))
 
-    def add_voltage_regulator(self, vreg):
-        try:
-            self.voltage_regulators.append(vreg)
-        except AttributeError:
-            self.voltage_regulators = [vreg]
-
     def _set_x_r_matrices(self, dss):
         """ retrieve impedance and reactance matrices of a line
             pad by phase to 3x3 matrix, and flatten
@@ -96,3 +90,13 @@ class SyntheticLine(Line):
         self.related_bus = ele.related_bus
         self.length = 0
         self.phases = ele.phases
+
+    def add_voltage_regulator(self, vreg):
+        try:
+            self.voltage_regulators.append(vreg)
+        except AttributeError:
+            self.voltage_regulators = [vreg]
+            self.phases = [p for p in vreg.phases]
+            self.phase_matrix = parse_phase_matrix(self.phases)
+        self.phases = list(set(self.phases + vreg.phases))
+        self.phase_matrix += vreg.phase_matrix

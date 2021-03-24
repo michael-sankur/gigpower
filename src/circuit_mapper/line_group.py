@@ -102,18 +102,18 @@ class LineGroup(CircuitElementGroup):
             return self.reverse_adj[bus_name]
         return []
 
-    def add_topology(self, group):
+    def add_line_group(self, group):
         """ 
         Param group: a Transformer group or VoltageRegulator group
         Adds groups topology info and updates name, key, and idx lookups
         """
         if not isinstance(group, LineGroup):
             raise ValueError(f"Cannot add element {ele.__class__} to LineGroup")
-        # self._name_to_object_dict.update(group._name_to_object_dict)
-        # self._key_to_element_dict.update(group._key_to_element_dict)
-        # self.adj.update(group.adj)
-        # self.reverse_adj.update(group.reverse_adj)
-        for ele in group.get_elements(): 
-            self.add_element(ele)
+        if group.__class__.__name__ == 'VoltageRegulatorGroup':
+            self.adj.update(group.adj)
+            self.reverse_adj.update(group.reverse_adj)
+        else:
+            for ele in group.get_elements(): 
+                self.add_element(ele)
 
   
