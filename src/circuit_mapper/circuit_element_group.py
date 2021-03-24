@@ -7,9 +7,9 @@ from . circuit_element import CircuitElement
 
 class CircuitElementGroup():
     def __init__(self, dss, **kwargs):
-        self.num_elements = 0
         self._name_to_object_dict = {}
         self._collect_names(dss, **kwargs)
+        self.num_elements = len(self._names)  # this does not change from init
         self._collect_elements(dss, **kwargs)
 
     def _collect_elements(self, dss, **kwargs):
@@ -83,17 +83,15 @@ class CircuitElementGroup():
     def add_element(self, ele):
         """
         adds a CircuitElement to this group
-        with index = current value of self.num_elements, making
-        this element the highest_index element in the group
         """
         if not isinstance(ele, self.__class__.ele_class):
             print(f"Warning: adding a {ele.__class__} to group {self.__class__}")
         if ele.__name__ not in self._names:
+            next_idx = len(self._names)
             self._names.append(ele.__name__)
-            self._name_to_idx_dict[ele.__name__] = self.num_elements
-            self._idx_to_name_dict[self.num_elements] = ele.__name__
+            self._name_to_idx_dict[ele.__name__] = next_idx
+            self._idx_to_name_dict[next_idx] = ele.__name__
         self._name_to_object_dict[ele.__name__] = ele
-        self.num_elements = len(self._names)
 
     def _get_attr_by_idx(self, attr: str, orient='row') -> np.ndarray:
         """
@@ -117,8 +115,8 @@ class CircuitElementGroup():
 
         return_matrix = np.zeros((self.num_elements, attr_size))
 
-        for ele, idx in self._name_to_idx_dict.items():
-            obj = self.get_element(ele)
+        for idx in range(self.num_elements):
+            obj = self.get_element(idx)
             return_matrix[idx] = getattr(obj, attr)
 
         if orient == 'col':
