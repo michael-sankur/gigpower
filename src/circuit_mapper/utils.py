@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Dict
 import numpy as np
 
 
@@ -131,3 +131,43 @@ def calculate_sV(V, spu, aPQ, aI, aZ, cappu, wpu):
     input params are ndarrays, with non-existent phases zeroed out
     """
     return spu * (aPQ + aI * abs(V) + aZ * (abs(V)**2)) - 1j * cappu + wpu
+
+
+def topo_sort(bus_names: List[str], adj_matrix: Dict) -> List:
+    """
+    Returns a list of Busesin a topological order.
+    Raises error if it finds a cycle
+    Adapted from 'Algorithms' by Jeff Erickson, 1st ed 2019, Ch. 6.3, Figure 6.9,
+    'Explicit topological sort': http://jeffe.cs.illinois.edu/teaching/algorithms/book/06-dfs.pdf
+    """
+    # store each node's status. 'New' means it has not been traversed,
+    # 'Active' means it is being explored.
+    clock = len(bus_names)  # countdown from total number of nodes.
+    # clock will be used as an index to topo_order. the strategy is to insert
+    # buses in the topo_order array in reverse order of dfs finishing times.
+    topo_order = [None] * clock  # array to store topo order
+    # initialize all nodes' statuses to 'New'
+    buses = {bus_name: 'new' for bus_name in bus_names}
+
+    # top level call to _topo_sort_dfs for each node
+    # TODO: also return a list of connected commponents, in case we need to know
+    # about isolated nodes or the network is a forest of trees
+    for bus_name, status in buses.items():
+        if status == 'new':
+            clock = topo_sort_dfs(
+                bus_name, buses, adj_matrix, clock, topo_order)
+    return topo_order
+
+def topo_sort_dfs(start_node: str, node_status: Dict[str, str],
+                    adj_matrix: Dict[str, List[str]], clock: int, topo_order: List) -> int:
+    node_status[start_node] = 'active'
+    if start_node in adj_matrix: 
+        for child in adj_matrix[start_node]:
+            if node_status[child] == 'new':
+                clock = topo_sort_dfs(child, node_status,
+                                            adj_matrix, clock, topo_order)
+            elif node_status[child] == 'active':
+                raise ValueError('Not radial. Contains a cycle.')
+    node_status[start_node] = 'finished'
+    topo_order[clock-1] = start_node
+    return clock - 1

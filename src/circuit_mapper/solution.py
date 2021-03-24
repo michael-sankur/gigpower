@@ -33,12 +33,12 @@ class Solution():
     # datatypes across the class
     # see self._init_solution_matrices
     SOLUTION_PARAMS = {
-        'V': ['buses', 3, complex],
-        'I': ['lines', 3, complex],
-        'Inode': ['buses', 3, complex],
-        'Stx': ['lines', 3, complex],
-        'Srx': ['lines', 3,  complex],
-        'sV': ['buses ', 3, complex]}
+        'V': ['buses', ['A', 'B', 'C'], complex],
+        'I': ['lines', ['A', 'B', 'C'], complex],
+        'Inode': ['buses', ['A', 'B', 'C'], complex],
+        'Stx': ['lines', ['A', 'B', 'C'], complex],
+        'Srx': ['lines', ['A', 'B', 'C'],  complex],
+        'sV': ['buses', ['A', 'B', 'C'], complex]}
 
     def __init__(self, dss_fp: str):
         """
@@ -80,10 +80,23 @@ class Solution():
         sV: num_buses x 3, total powers at each bus, by bus index
         """
         for param in self.__class__.SOLUTION_PARAMS:
-            element_group, num_cols, datatype = SOLUTION_PARAMS[param]
+            element_group, cols, datatype = self.__class__.SOLUTION_PARAMS[param]
             num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
-            setattr(self, param, np.zeros((num_rows, num_cols), dtype=datatype)
+            setattr(self, param, np.zeros((num_rows, len(cols)), dtype=datatype))
 
+    def get_data_frame(self, param: str) -> pd.DataFrame:
+        """
+        Returns a DataFrame for the specified solution paramater.
+        param: must be in SOLUTION_PARAMS
+        """
+        try:
+            element_group, cols, data_type = self.__class__.SOLUTION_PARAMS.get(param)
+            index = getattr(self.circuit, element_group).all_names()
+            data = getattr(self, param)
+            return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
+        except KeyError:
+            print(f"Not a valid solution parameter. Valid parameters: \
+                  {self.__class__.SOLUTION_PARAMS.keys()}")
 
     def parse_vvc_objects(self, fn: str):
         """ From 20180601/PYTHON/lib/dss_vvc.py by @kathleenchang"""
