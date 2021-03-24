@@ -8,7 +8,7 @@ from . solution import Solution
 import numpy as np  # type: ignore
 
 
-def fbs(network: Network) -> Solution:
+def fbs(network: Network, maxiter = 100) -> Solution:
     """
     Input: a Network object, the result of running utils.init_from_dss()
     on a dss file
@@ -22,7 +22,7 @@ def fbs(network: Network) -> Solution:
     # TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
     solution.tolerance = abs((solution.Vref[1]) * 10**-9)  # set tolerance with phase B reference voltage
     converged = max(abs(solution.Vtest - solution.Vref)) <= solution.tolerance
-    while not converged:
+    while not converged and solution.iterations < maxiter:
         # set V.root to Vref
         solution.V[solution.root.name] = np.copy(solution.Vref)  # type: ignore
 
@@ -38,7 +38,7 @@ def fbs(network: Network) -> Solution:
         for node in network.get_nodes():
             solution.update_voltage_dependent_load(node)  # type: ignore
 
-        # BACKWARD SWEEP: for node in reverse topo_order:
+        # # BACKWARD SWEEP: for node in reverse topo_order:
         for node_name in reversed(topo_order):
             node = network.nodes.get(node_name)
             # if this is a terminal node or junction node (not the root)
