@@ -32,6 +32,10 @@ class Circuit():
         self.voltage_regulators = VoltageRegulatorGroup(dss, line_group=self.lines)
         self.transformers = TransformerGroup(dss, bus_group=self.buses)
 
+        # Lines need to know topology for VoltageRegulators and Transformers
+        self.lines.add_topology(self.voltage_regulators)
+        self.lines.add_topology(self.transformers)
+
         self._assign_to_buses(self.loads)
         self._assign_to_buses(self.capacitors)
         self._assign_to_buses(self.voltage_regulators)

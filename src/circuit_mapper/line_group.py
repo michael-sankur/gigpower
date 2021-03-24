@@ -78,7 +78,11 @@ class LineGroup(CircuitElementGroup):
         """
         if isinstance(obj, tuple):
             return super().get_idx(self.get_line_from_key(obj))
-        return super().get_idx(obj)
+        
+        try: 
+            return super().get_idx(obj)
+        except KeyError:
+            return super().get_idx(self.get_line_from_key(obj.key))
 
     def get_num_lines_x_ph(self):
         """ returns sum of active phases across all lines """
@@ -94,7 +98,22 @@ class LineGroup(CircuitElementGroup):
 
     def get_parents(self, bus_name: str) -> List[str]:
         """ returns a list of buses upstream of bus_name """
-        return self.reverse_adj[bus_name]
+        if bus_name in self.reverse_adj:
+            return self.reverse_adj[bus_name]
+        return []
 
+    def add_topology(self, group):
+        """ 
+        Param group: a Transformer group or VoltageRegulator group
+        Adds groups topology info and updates name, key, and idx lookups
+        """
+        if not isinstance(group, LineGroup):
+            raise ValueError(f"Cannot add element {ele.__class__} to LineGroup")
+        # self._name_to_object_dict.update(group._name_to_object_dict)
+        # self._key_to_element_dict.update(group._key_to_element_dict)
+        # self.adj.update(group.adj)
+        # self.reverse_adj.update(group.reverse_adj)
+        for ele in group.get_elements(): 
+            self.add_element(ele)
 
   
