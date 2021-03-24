@@ -72,7 +72,7 @@ class CircuitElementGroup():
             try:
                 return self._key_to_element_dict[key]
             except KeyError:
-                print(key_error_msg)
+                raise KeyError(key_error_msg)
         else:
             raise KeyError(key_error_msg)
 
