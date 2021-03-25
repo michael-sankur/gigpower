@@ -24,8 +24,8 @@ class Solution():
 
     # # TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
     # set tolerance with phase B reference voltage
-    # tolerance = abs((solution.Vref[1]) * 10**-9)
-    tolerance = 1e-9
+    tolerance = abs((VSLACK[1]) * 10**-9)
+    # tolerance = 1e-9
     maxiter = 100
     ZIP_V = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
 
