@@ -8,16 +8,12 @@ from typing import List, Dict, Iterable
 from . solution import Solution
 from . utils import mask_phases, calculate_sV, topo_sort
 
-
 class SolutionFBS(Solution):
 
     def __init__(self, dss_fp: str):
         super().__init__(dss_fp)  # sets self.circuit
-        # adjacency list is the union of Lines, VRs, and Transformers
-        self.adj = {k:v for k,v in self.circuit.lines.adj.items()}
-        self.adj.update(self.circuit.voltage_regulators.adj) 
-        self.adj.update(self.circuit.transformers.adj)
-        self.topo_order = topo_sort(self.circuit.buses.all_names(), self.adj)
+        self.topo_order = topo_sort(self.circuit.buses.all_names(), 
+                                    self.circuit.lines.adj)
         # save a pointer to the root bus
         self.root = self.circuit.buses.get_element(self.topo_order[0])
         # set tolerance with phase B reference voltage
@@ -50,8 +46,8 @@ class SolutionFBS(Solution):
             # FORWARD SWEEP: for bus in topo_order:
             for bus_name in topo_order:
                 bus = self.circuit.buses.get_element(bus_name)
-                if bus_name in self.adj: 
-                    children = self.adj[bus_name]
+                if bus_name in self.circuit.lines.adj: 
+                    children = self.circuit.lines.adj[bus_name]
                     for child_name in children:
                         child = self.circuit.buses.get_element(child_name)
                         self.update_voltage_forward(bus, child)
@@ -126,7 +122,7 @@ class SolutionFBS(Solution):
             new_child_V = parent_V - np.matmul(FZpu, I_forward)
             # update V at child
             # zero out voltages for non-existant phases at child node
-            self.V[child_idx] = child.phase_matrix * new_child_V
+            self.V[child_idx] = new_child_V * child.phase_matrix
 
     def update_voltage_backward(self, parent, child):
         """
@@ -161,10 +157,10 @@ class SolutionFBS(Solution):
             I_backwards = self.I[line_in_idx]
             # update voltages at parent only for phases existing on child
             phases = child.get_ph_idx_matrix()
-            # parent_V[phases] = child_V[phases] + np.matmul(FZpu[phases], I_backwards)
-            for phase_idx in range(3):
-                if child.phase_matrix[phase_idx] == 1:  # if this phase is present on child
-                    parent_V[phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I_backwards)
+            parent_V[phases] = child_V[phases] + np.matmul(FZpu[phases], I_backwards)
+            # for phase_idx in range(3):
+            #     if child.phase_matrix[phase_idx] == 1:  # if this phase is present on child
+            #         parent_V[phase_idx] = child_V[phase_idx] + np.matmul(FZpu[phase_idx], I_backwards)
             # zero out non-existant phases at parent, save parent V
             self.V[parent_idx] = parent_V * parent.phase_matrix
 
@@ -179,9 +175,9 @@ class SolutionFBS(Solution):
 
         new_line_I = np.conj(np.divide(self.sV[rx_bus_idx], self.V[rx_bus_idx]))
         line_in_idx = self.circuit.lines.get_idx(line_in)
-        # # sum currents over all node's child segments
-        if rx_bus_name in self.adj:
-            for child_name in self.adj[rx_bus_name]:
+        # sum currents over all node's child segments
+        if rx_bus_name in self.circuit.lines.adj:
+            for child_name in self.circuit.lines.adj[rx_bus_name]:
                 line_out = self.circuit.lines.get_element((rx_bus_name, child_name))
                 line_out_idx = self.circuit.lines.get_idx(line_out)
                 try:
