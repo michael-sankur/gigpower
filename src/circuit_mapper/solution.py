@@ -5,12 +5,11 @@
 
 from . circuit import Circuit
 from . volt_var_controller import VoltVARController
-from . utils import set_zip_values
+from . utils import set_zip_values, calc_total_node_power, calc_cap_power, calc_load_power
 import opendssdirect as dss
 
 import re
 import numpy as np
-from typing import Dict
 import pandas as pd
 
 
@@ -29,7 +28,7 @@ class Solution():
     maxiter = 100
     ZIP_V = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
 
-    # standardize solution parameter name, index values, columns, and 
+    # standardize solution parameter name, index values, columns, and
     # datatypes across the class
     # see self._init_solution_matrices
     SOLUTION_PARAMS = {
@@ -57,7 +56,7 @@ class Solution():
         # stores the tolerance at most recent completed iteration
         self.solution_tolerance = -1
         # stores the final value of Vtest - Vref at convergence
-        self.convergence_diff = -1  
+        self.convergence_diff = -1
         self._init_solution_matrices()
 
         # Voltage parameters. TODO: are these only for fbs?
@@ -78,7 +77,7 @@ class Solution():
         """
         for param in self.__class__.SOLUTION_PARAMS:
             element_group, cols, datatype = self.__class__.SOLUTION_PARAMS[param]
-            if element_group == 'lines': # include transformers and vrs
+            if element_group == 'lines':  # include transformers and vrs
                 num_rows = self.circuit.get_total_lines()
             else:
                 num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
@@ -108,7 +107,7 @@ class Solution():
             if re.findall('(?i)New VVC', l):
                 bp = []
 
-                #array of VVC breakpoints
+                # array of VVC breakpoints
                 breakpoints = str.split(re.findall(r"(?i)BP=\s*([^\n\r]*)", l)[0], ',')
 
                 for elem in breakpoints:
@@ -144,27 +143,17 @@ class Solution():
     def get_bus_powers(self):
         """
         Total complex powers by bus (load powers and capacitor powers)
-        indexed by bus 
+        indexed by bus
         """
         return self.get_load_powers() + self.get_capacitor_powers()
 
     def calc_Stx(self):
         tx_bus_matrix = self.circuit.get_tx_idx_matrix()
-        num_lines = self.circuit.lines.num_elements
-        self.Stx = self.V[tx_bus_matrix] * np.conj(self.I)
-    
-    def calc_Srx(self):
-        rx_bus_matrix = self.circuit.get_rx_idx_matrix()
-        num_lines = self.circuit.lines.num_elements
         self.Stx = self.V[tx_bus_matrix] * np.conj(self.I)
 
-    def calc_Inode(self) -> None:
-        """ Calculate self.Inode (currents consumed at each node) """
-        for node in self.network.get_nodes():
-            node_V = self.V[node.name]
-            node_sV = self.sV[node.name]
-            node_I = np.conj(np.divide(node_sV, node_V))
-            self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
+    def calc_Srx(self):
+        rx_bus_matrix = self.circuit.get_rx_idx_matrix()
+        self.Srx = self.V[rx_bus_matrix] * np.conj(self.I)
 
     def VMag_df(self):
         """
