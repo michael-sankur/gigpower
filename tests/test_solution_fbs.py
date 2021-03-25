@@ -26,14 +26,12 @@ STRICT = 1e-1
 
 @pytest.fixture
 def old_fbs_solution(dss_file):
-    # dss_file = request.param
     fp = str(Path(DSS_FILE_DIR, dss_file))
     network = init_from_dss(fp)
     return get_fbs_solution(fbs(network))
 
 @pytest.fixture
 def new_fbs_solution(dss_file):
-    # dss_file = request.param
     fp = str(Path(DSS_FILE_DIR, dss_file))
     solution = SolutionFBS(fp)
     solution.solve()
@@ -60,7 +58,7 @@ def setup_module():
        ('V', 'V_df'),
        ('I', 'I_df'),
        ('sV', 'sV_df'),
-    ],
+    ]
 )
 
 def test_fbs_v_fbs(new_fbs_solution, old_fbs_solution, dss_file, tolerance, new_fbs_param,
