@@ -29,8 +29,9 @@ DSS_FILES = [
                 'IEEE_37_Bus_allwye_noxfm_noreg.dss'
 ]
 
-GENEROUS = 1e-1
-STRICT = 1e-2
+GENEROUS = 10e-1
+STRICT = 10e-2
+
 
 @pytest.fixture
 def dss_solution(dss_file):
@@ -58,7 +59,7 @@ def setup_module():
         ('IEEE_34_Bus_allwye.dss', GENEROUS),
         ('IEEE_34_Bus_allwye_noxfm_noreg.dss', STRICT),
         ('IEEE_37_Bus_allwye.dss', GENEROUS),
-        ('IEEE_37_Bus_allwye_noxfm_noreg.dss', GENEROUS)
+        ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)
     ]
 
 )
@@ -79,8 +80,9 @@ def test_dss_v_new_fbs(new_fbs_solution, dss_solution, solution_param,
     dss_vals  = dss_solution.get_data_frame(solution_param)
     test = ((fbs_vals - dss_vals).abs().max() <= tolerance).all()
     if test:
-        print("TEST PASSED")
+
+        print(f"TEST PASSED. FBS CONVERGED = {new_fbs_solution.converged}")
     else:
-        print("TEST FAILED")
+        print(f"TEST FAILED. FBS CONVERGED = {new_fbs_solution.converged}")
     compare_data_frames(fbs_vals, dss_vals, 'fbs', 'dss', solution_param)
     assert test
