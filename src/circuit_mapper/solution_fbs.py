@@ -16,9 +16,10 @@ class SolutionFBS(Solution):
                                     self.circuit.lines.adj)
         # save a pointer to the root bus
         self.root = self.circuit.buses.get_element(self.topo_order[0])
-        # set tolerance with phase B reference voltage
-        # self.tolerance = abs((self.Vref[1]) * 10**-9)
-        self.tolerance = abs((self.Vref[1]) * 10**-9)
+        self.Vref = np.array(
+            [1, np.exp(1j*240*np.pi/180), np.exp(1j*120*np.pi/180)], dtype=complex)
+        # TODO: move into class
+        self.tolerance = abs((self.Vref[1]) * 10**-6)
 
     def solve(self):
         """
@@ -84,6 +85,7 @@ class SolutionFBS(Solution):
         
         # after convergence, update sV with V values at convergence
         self.update_sV()
+        self.converged = converged
 
     def update_voltage_forward(self, parent, child):
         """
@@ -172,23 +174,7 @@ class SolutionFBS(Solution):
         """
         rx_bus_name = line_in.key[1]  # type: ignore
         rx_bus_idx = self.circuit.buses.get_idx(rx_bus_name)
-
-        new_line_I = np.conj(np.divide(self.sV[rx_bus_idx], self.V[rx_bus_idx]))
         line_in_idx = self.circuit.lines.get_idx(line_in)
-        # sum currents over all node's child segments
-        if rx_bus_name in self.circuit.lines.adj:
-            for child_name in self.circuit.lines.adj[rx_bus_name]:
-                line_out = self.circuit.lines.get_element((rx_bus_name, child_name))
-                line_out_idx = self.circuit.lines.get_idx(line_out)
-                try:
-                    for vr in line_out.voltage_regulators:
-                        new_line_I += vr.Itx
-                except AttributeError:
-                    new_line_I = new_line_I + self.I[line_out_idx]
-        # zero out non-existant phases
-        # TODO: should SyntheticLines have phases? the old FBS would zero out I for
-        # all SyntheticLines
-        self.I[line_in_idx] = np.nan_to_num(new_line_I * line_in.phase_matrix)
 
         try:
             for vr in line_in.voltage_regulators:
@@ -206,7 +192,22 @@ class SolutionFBS(Solution):
                 # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
                 Itx[phases] = gamma * Ireg[phases]
         except AttributeError:
-            pass
+            new_line_I = np.conj(np.divide(self.sV[rx_bus_idx], self.V[rx_bus_idx]))
+            
+            # sum currents over all node's child segments
+            if rx_bus_name in self.circuit.lines.adj:
+                for child_name in self.circuit.lines.adj[rx_bus_name]:
+                    line_out = self.circuit.lines.get_element((rx_bus_name, child_name))
+                    line_out_idx = self.circuit.lines.get_idx(line_out)
+                    try:
+                        for vr in line_out.voltage_regulators:
+                            new_line_I += vr.Itx
+                    except AttributeError:
+                        new_line_I = new_line_I + self.I[line_out_idx]
+            # zero out non-existant phases
+            # TODO: should SyntheticLines have phases? the old FBS would zero out I for
+            # all SyntheticLines
+            self.I[line_in_idx] = np.nan_to_num(new_line_I * line_in.phase_matrix)
 
     def update_sV(self, bus=None):
         """
