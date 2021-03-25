@@ -219,16 +219,21 @@ class SolutionNR3(Solution):
                         load_val = load_kw[ph, idxbs]
                         cap_val = 0
                     else:
+<<<<<<< Updated upstream:circuit_mapper/solution_nr3.py
                         load_val = load_kvar[ph, idxbs] 
                         cap_val = caparr[ph][idxbs]
+=======
+                        load_val = load_kvar[ph, idxbs]
+                        cap_val = caparr[ph, idxbs]
+>>>>>>> Stashed changes:src/circuit_mapper/solution_nr3.py
                     # gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) # some derivatives
                     hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
                                             [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
                     available_phases = bus.phase_matrix  # phase array at specific bus
                     if available_phases[ph] == 1:                 # quadratic terms
                         H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = \
-                                                -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[0][0])) + \
-                                                cap_val * (gamma_Z + (0.5 * gamma_I * hessian_mag[0][0]))  # TE replace assignment w/ -load_val * beta_Z; #a**2
+                            -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[0][0])) + \
+                            cap_val * (gamma_Z + (0.5 * gamma_I * hessian_mag[0][0]))  # TE replace assignment w/ -load_val * beta_Z; #a**2
                         H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = \
                             -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[1][1])) + \
                             cap_val * (gamma_Z + (0.5 * gamma_I * hessian_mag[1][1]))  # TE replace assignment w/ -load_val * beta_Z; #b**2
@@ -486,7 +491,6 @@ class SolutionNR3(Solution):
     def compute_NR3FT(self):
         """ From 20180601/PYTHON/lib/compute_NR3FT.py, written by @kathleenchang """
         nnode = self.circuit.buses.num_elements
-        nline = self.circuit.lines.num_elements
         vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph
         X = self.XNR
         g_SB, b_SB = self.g_SB, self.b_SB
