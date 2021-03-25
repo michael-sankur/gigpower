@@ -8,6 +8,7 @@ import numpy as np
 
 
 class SolutionNR3(Solution):
+    # TODO: set a class-level NR3 tolerance value
 
     def __init__(self, dss_fp: str):
         super().__init__(dss_fp)  # sets self.circuit
