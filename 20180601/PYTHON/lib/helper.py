@@ -178,7 +178,7 @@ def transformer_regulator_parameters():
             for n in range(1,4): 
                 vr_lines += 1
                 vr_bus[n+1, vr] = 1#n   
-        print(dss.RegControls.TapNumber())
+        #print(dss.RegControls.TapNumber())
         
     tf_bus_temp = np.zeros((2, 1))
     for tf in range(len(dss.Transformers.AllNames())):

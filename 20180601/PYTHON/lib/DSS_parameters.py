@@ -72,6 +72,7 @@ def relevant_openDSS_parameters(t, vvc_objects):
         TXnum[lineoutidx] = vr_bus[1, line]
         RXnum[lineoutidx] = vr_bus[0, line]
 
+
     #spu, apq, ai, az
     spu = np.zeros((3,nnode))
     ppu = np.zeros((3,nnode))
