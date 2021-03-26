@@ -171,3 +171,17 @@ def topo_sort_dfs(start_node: str, node_status: Dict[str, str],
     node_status[start_node] = 'finished'
     topo_order[clock-1] = start_node
     return clock - 1
+
+
+def get_reverse_adj(adj: Dict[str, List]):
+    """ Returns the reverse adjacency matrix"""
+    reverse = {}
+    for node, neighbors in adj.items():
+        if node not in reverse:
+            reverse[node] = []
+        for v in neighbors:
+            try:
+                reverse[v].append(node)
+            except KeyError:
+                reverse[v] = [node]
+    return reverse

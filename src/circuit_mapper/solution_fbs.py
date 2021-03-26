@@ -6,14 +6,19 @@
 import numpy as np  # type: ignore
 from typing import List, Dict, Iterable
 from . solution import Solution
-from . utils import mask_phases, calculate_sV, topo_sort
+from . utils import mask_phases, calculate_sV, topo_sort, get_reverse_adj
+import copy
 
 class SolutionFBS(Solution):
 
     def __init__(self, dss_fp: str):
         super().__init__(dss_fp)  # sets self.circuit
-        self.topo_order = topo_sort(self.circuit.buses.all_names(), 
-                                    self.circuit.lines.adj)
+        # clean up voltage regulator topology
+        self.adj = self._clean_adj(self.circuit.lines.adj, self.circuit.voltage_regulators)
+        self.reverse_adj = get_reverse_adj(self.adj)
+
+        self.topo_order = topo_sort(self.circuit.buses.all_names(),
+                                    self.adj)
         # save a pointer to the root bus
         self.root = self.circuit.buses.get_element(self.topo_order[0])
         self.Vref = np.array(
@@ -47,8 +52,8 @@ class SolutionFBS(Solution):
             # FORWARD SWEEP: for bus in topo_order:
             for bus_name in topo_order:
                 bus = self.circuit.buses.get_element(bus_name)
-                if bus_name in self.circuit.lines.adj: 
-                    children = self.circuit.lines.adj[bus_name]
+                if bus_name in self.adj:
+                    children = self.adj[bus_name]
                     for child_name in children:
                         child = self.circuit.buses.get_element(child_name)
                         self.update_voltage_forward(bus, child)
@@ -60,9 +65,9 @@ class SolutionFBS(Solution):
             for bus_name in reversed(topo_order):
                 bus = self.circuit.buses.get_element(bus_name)
                 # if this is a terminal node or junction node (not the root)
-                parents = self.circuit.lines.get_parents(bus_name)
+                parents = self.reverse_adj[bus_name]
                 if len(parents) > 1:
-                    raise ValueError("Network not radial. Bus {bus_name} has \
+                    raise ValueError(f"Network not radial. Bus {bus_name} has \
                         parents {parents}")
                 elif len(parents) == 1:
                     parent = self.circuit.buses.get_element(parents[0])
@@ -95,25 +100,26 @@ class SolutionFBS(Solution):
         line_key = (parent.__name__, child.__name__)
         line_out = self.circuit.lines.get_element(line_key)
 
-        try:
-            for vr in line_out.voltage_regulators:
-                tx, reg = vr.key
-                tx_idx = self.circuit.buses.get_idx(tx)
-                reg_idx = self.circuit.buses.get_idx(reg)
-                phases = vr.get_ph_idx_matrix()
-                gamma = vr.gamma
-                tx_V = self.V[tx_idx]
-                reg_V = self.V[reg_idx]
-                Itx = vr.Itx  # current at/leaving the tx node
-                Ireg = vr.Ireg  # current entering reg_node
-                # Enforce voltage regulator equations by phase.
-                # Voltage ratio equation: tx_node.V = gamma @ reg_node.V
-                # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
-                # [current @ reg_node]* = tx_node.V @ [current entering tx_node]* / reg_node.V
-                reg_V[phases] = gamma * tx_V[phases]
-                Ireg[phases] = 1/gamma * Itx[phases]
+        if isinstance(line_out, List):  # list of Synthetic Lines indicates VRs
+            for vr_line in line_out:
+                for vr in vr_line.voltage_regulators:
+                    tx, reg = vr.key
+                    tx_idx = self.circuit.buses.get_idx(tx)
+                    reg_idx = self.circuit.buses.get_idx(reg)
+                    phases = vr.get_ph_idx_matrix()
+                    gamma = vr.gamma
+                    tx_V = self.V[tx_idx]
+                    reg_V = self.V[reg_idx]
+                    Itx = vr.Itx  # current at/leaving the tx node
+                    Ireg = vr.Ireg  # current entering reg_node
+                    # Enforce voltage regulator equations by phase.
+                    # Voltage ratio equation: tx_node.V = gamma @ reg_node.V
+                    # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
+                    # [current @ reg_node]* = tx_node.V @ [current entering tx_node]* / reg_node.V
+                    reg_V[phases] = gamma * tx_V[phases]
+                    Ireg[phases] = 1/gamma * Itx[phases]
 
-        except AttributeError:
+        else:
             parent_idx = self.circuit.buses.get_idx(parent)
             child_idx = self.circuit.buses.get_idx(child)
             line_out_idx = self.circuit.lines.get_idx(line_key)
@@ -135,25 +141,27 @@ class SolutionFBS(Solution):
         child_V = self.V[child_idx]
         line_key = (parent.__name__, child.__name__)  # type: ignore
         line_in = self.circuit.lines.get_element(line_key)
-        line_in_idx = self.circuit.lines.get_idx(line_in)
+        
+        if isinstance(line_in, list):  # implies voltage regulators
+            for vr_line in line_in:
+                line_in_idx = self.circuit.lines.get_idx(vr_line)
+                for vr in vr_line.voltage_regulators:
+                    tx, reg = vr.key
+                    tx_idx = self.circuit.buses.get_idx(tx)
+                    reg_idx = self.circuit.buses.get_idx(reg)
+                    phases = vr.get_ph_idx_matrix()
+                    gamma = vr.gamma
+                    tx_V = self.V[tx_idx]
+                    reg_V = self.V[reg_idx]
+                    # Enforce voltage regulator equations by phase.
+                    # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
+                    # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
+                    # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
+                    #  update tx voltage per phase
+                    tx_V[phases] = 1/gamma * reg_V[phases]
 
-        try:
-            for vr in line_in.voltage_regulators:
-                tx, reg = vr.key
-                tx_idx = self.circuit.buses.get_idx(tx)
-                reg_idx = self.circuit.buses.get_idx(reg)
-                phases = vr.get_ph_idx_matrix()
-                gamma = vr.gamma
-                tx_V = self.V[tx_idx]
-                reg_V = self.V[reg_idx]
-                # Enforce voltage regulator equations by phase.
-                # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
-                # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
-                # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
-                #  update tx voltage per phase
-                tx_V[phases] = 1/gamma * reg_V[phases]
-
-        except AttributeError:
+        else:
+            line_in_idx = self.circuit.lines.get_idx(line_in)
             parent_V = self.V[parent_idx]
             FZpu = line_in.FZpu
             I_backwards = self.I[line_in_idx]
@@ -172,37 +180,41 @@ class SolutionFBS(Solution):
         tx_bus -[line_in]-> rx_bus =[0 or many lines out]=> 0 or many chidl buses
         Used during backward sweep.
         """
-        rx_bus_name = line_in.key[1]  # type: ignore
-        rx_bus_idx = self.circuit.buses.get_idx(rx_bus_name)
-        line_in_idx = self.circuit.lines.get_idx(line_in)
 
-        try:
-            for vr in line_in.voltage_regulators:
-                tx, reg = vr.key
-                phases = vr.get_ph_idx_matrix()
-                vr.Ireg = self.I[line_in_idx]
+        if isinstance(line_in, list):
+            for vr_line in line_in:
+                line_in_idx = self.circuit.lines.get_idx(vr_line)
+                for vr in vr_line.voltage_regulators:
+                    tx, reg = vr.key
+                    phases = vr.get_ph_idx_matrix()
+                    vr.Ireg = self.I[line_in_idx]
 
-                Itx = vr.Itx  # current entering/leaving the tx node
-                Ireg = vr.Ireg  # current entering/leaving the reg_node
-                # gamma = 1
-                gamma = vr.gamma
-                # Enforce voltage regulator equations by phase.
-                # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
-                # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
-                # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
-                Itx[phases] = gamma * Ireg[phases]
-        except AttributeError:
+                    Itx = vr.Itx  # current entering/leaving the tx node
+                    Ireg = vr.Ireg  # current entering/leaving the reg_node
+                    # gamma = 1
+                    gamma = vr.gamma
+                    # Enforce voltage regulator equations by phase.
+                    # Voltage ratio equation: reg_node.V = 1/gamma @ tx_node.V
+                    # Conservation of power: reg_node.V @ [current entering reg_node]* == tx_node.V @ [current entering tx_node]*
+                    # [current @ tx_node]* = reg_node.V @ [current entering reg_node]* / tx_node.V
+                    Itx[phases] = gamma * Ireg[phases]
+        else:
+            rx_bus_name = line_in.key[1]  # type: ignore
+            rx_bus_idx = self.circuit.buses.get_idx(rx_bus_name)
+            line_in_idx = self.circuit.lines.get_idx(line_in)
             new_line_I = np.conj(np.divide(self.sV[rx_bus_idx], self.V[rx_bus_idx]))
             
             # sum currents over all node's child segments
-            if rx_bus_name in self.circuit.lines.adj:
-                for child_name in self.circuit.lines.adj[rx_bus_name]:
+            if rx_bus_name in self.adj:
+                for child_name in self.adj[rx_bus_name]:
                     line_out = self.circuit.lines.get_element((rx_bus_name, child_name))
-                    line_out_idx = self.circuit.lines.get_idx(line_out)
-                    try:
-                        for vr in line_out.voltage_regulators:
-                            new_line_I += vr.Itx
-                    except AttributeError:
+                    if isinstance(line_out, list):
+                        for vr_line in line_out:
+                            line_out_idx = self.circuit.lines.get_idx(vr_line)
+                            for vr in vr_line.voltage_regulators:
+                                new_line_I += vr.Itx
+                    else:
+                        line_out_idx = self.circuit.lines.get_idx(line_out)
                         new_line_I = new_line_I + self.I[line_out_idx]
             # zero out non-existant phases
             # TODO: should SyntheticLines have phases? the old FBS would zero out I for
@@ -229,3 +241,24 @@ class SolutionFBS(Solution):
             aPQ, aI, aZ = self.aPQ[bus_idx], self.aI[bus_idx], self.aZ[bus_idx]
             V, cappu, wpu = self.V[bus_idx], self.cappu[bus_idx], self.wpu[bus_idx]
             self.sV[bus_idx] = calculate_sV(V, spu, aPQ, aI, aZ, cappu, wpu)
+
+    def _clean_adj(self, old_adj, vr_group):
+        """
+        cleans voltage regulators in an adjacency list,
+        by representing all voltage regulators on the same line as one edge
+        going downstream only
+        (otherwise, the circuit has cycles and is non-radial)
+        """
+        new_adj = copy.deepcopy(old_adj)
+        # remove all voltage regulator edges
+        for vr in vr_group.get_elements():
+            tx, reg = vr.key
+            new_adj[tx].remove(reg)
+            new_adj[reg].remove(tx)
+        # add back edges going upstream only, condensed
+        for vr in vr_group.get_elements():
+            tx, reg = vr.key
+            if reg not in new_adj[tx]:
+                new_adj[tx].append(reg)
+
+        return new_adj
