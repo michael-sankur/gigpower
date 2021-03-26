@@ -16,7 +16,7 @@ class Transformer (SyntheticLine):
         self.kVA = dss.Transformers.kVA()
         # call SyntheticLine to set line attrs and
         # add self to the linegroup
-        super().__init__(line_group=line_group)
+        super().__init__(line_group=line_group, unique_key=True, inc_num_elements=True)
 
     def _set_related_bus(self, dss):
         """

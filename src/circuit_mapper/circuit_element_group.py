@@ -84,8 +84,10 @@ class CircuitElementGroup():
     def add_element(self, ele, inc_num_elements=True):
         """
         adds a CircuitElement to this group
-        note that adding a SyntheticLine will NOT increment 
-        circuit.lines.num_elements
+        param inc_num_elements: Increment self.num_elements with this addition
+        param unique_key: overwrite existing self._key_to_element dict so that 
+        there is only one object per key
+
         """
         if not isinstance(ele, self.__class__.ele_class):
             print(f"Warning: adding a {ele.__class__} to group {self.__class__}")

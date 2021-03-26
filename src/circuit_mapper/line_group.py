@@ -23,7 +23,6 @@ class LineGroup(CircuitElementGroup):
         self._key_to_element_dict = {}
         super().__init__(dss, **kwargs)
         
-
     def get_line_from_key(self, key: Tuple[str, str]):
         """ return the Line with the key (tx_bus, rx_bus)"""
         return self._key_to_element_dict[key]
@@ -35,28 +34,34 @@ class LineGroup(CircuitElementGroup):
         """
         return [getattr(line, which) for line in self.get_elements()]
 
-    def add_element(self, line, **kwargs):
+    def add_element(self, line, unique_key=True, inc_num_elements=True):
         """
         Call super(), and add the new line's topology.
         add line to self._key_to_element_dict
-        note that adding a SyntheticLine will NOT increment self.num_elements
+
+        note that adding a SyntheticLine will NOT increment self.num_elements,
+        and will allow multiple SyntheticLines for one key 
         """
-        super().add_element(line, **kwargs)
-        self._key_to_element_dict[line.key] = line
+        super().add_element(line, inc_num_elements=inc_num_elements)
+        if unique_key:
+            self._key_to_element_dict[line.key] = line
+        else:
+            if line.key in self._key_to_element_dict:
+                self._key_to_element_dict[line.key].append(line)
+            else:
+                self._key_to_element_dict[line.key] = [line]
         self._add_edge(line)
 
     def _add_edge(self, line):
         """ Adds line's topology to self.adj and self.reverse_adj"""
         tx_bus, rx_bus = line.key
         try:
-            if rx_bus not in self.adj[tx_bus]:
-                self.adj[tx_bus].append(rx_bus)
+            self.adj[tx_bus].append(rx_bus)
         except KeyError:
             self.adj[tx_bus] = [rx_bus]
 
         try: 
-            if tx_bus not in self.reverse_adj[rx_bus]:
-                self.reverse_adj[rx_bus].append(tx_bus)
+            self.reverse_adj[rx_bus].append(tx_bus)
         except KeyError:
             self.reverse_adj[rx_bus] = [tx_bus]
 
@@ -81,9 +86,8 @@ class LineGroup(CircuitElementGroup):
         override super to check for tuples first
         """
         if isinstance(obj, tuple):
-            return super().get_idx(self.get_line_from_key(obj))
-        
-        try: 
+            return super().get_idx(self.get_line_from_key(obj))       
+        try:
             return super().get_idx(obj)
         except KeyError:
             return super().get_idx(self.get_line_from_key(obj.key))

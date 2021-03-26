@@ -84,7 +84,7 @@ class SyntheticLine(Line):
     They are added to index information and topology of circuit.lines, 
     but they do not increment circuit.lines.num_elements
     """
-    def __init__(self, line_group, name=None, key=None):
+    def __init__(self, line_group, unique_key, inc_num_elements, name=None, key=None):
         """ for Transformers and Voltage Regulator"""
         if name:
             self.__name__ = name
@@ -94,7 +94,10 @@ class SyntheticLine(Line):
         self.length = 0
         self.xmat, self.rmat = np.zeros(9), np.zeros(9)
         self.FZpu = np.zeros((3, 3), dtype='complex')
-        line_group.add_element(self,inc_num_elements=False)
+        # add SyntheticLine to line_group
+        # do not increment line_group's elements
+        # allow the same key to have multiple Synthetic Lines
+        line_group.add_element(self, unique_key=unique_key, inc_num_elements=inc_num_elements)
 
     def add_voltage_regulator(self, vreg):
         try:

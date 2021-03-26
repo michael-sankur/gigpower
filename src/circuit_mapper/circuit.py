@@ -70,13 +70,12 @@ class Circuit():
         [len(Transformers), len(VoltageRegulators)- 1]: VoltageRegulators
 
         """
-        nlines = self.lines.num_elements
-        tx_buses = self.lines.get_bus_ids('tx')[0: nlines]
-        try:
-            tx_buses += self.transformers.get_bus_ids('tx')
-            tx_buses += self.voltage_regulators.get_bus_ids('tx')
-        except AttributeError:
-            pass
+        # nlines = self.lines.num_elements
+        tx_buses = self.lines.get_bus_ids('tx')
+        #     tx_buses += self.transformers.get_bus_ids('tx')
+        #     tx_buses += self.voltage_regulators.get_bus_ids('tx')
+        # except AttributeError:
+        #     pass
         return np.asarray([self.buses.get_idx(bus) for bus in tx_buses])
 
     def get_rx_idx_matrix(self):
@@ -84,13 +83,13 @@ class Circuit():
         n x 1 matrix of rx bus indices. Indexed by line index,
         which is the same value as in opendss
         """
-        nlines = self.lines.num_elements
-        rx_buses = self.lines.get_bus_ids('rx')[0: nlines]
-        try:
-            rx_buses += self.transformers.get_bus_ids('rx')
-            rx_buses += self.voltage_regulators.get_bus_ids('rx')
-        except AttributeError:
-            pass
+        # nlines = self.lines.num_elements
+        rx_buses = self.lines.get_bus_ids('rx')# [0: nlines]
+        # try:
+        #     rx_buses += self.transformers.get_bus_ids('rx')
+        #     rx_buses += self.voltage_regulators.get_bus_ids('rx')
+        # except AttributeError:
+        #     pass
         return np.asarray([self.buses.get_idx(bus) for bus in rx_buses])
 
     def get_spu_matrix(self) -> np.ndarray:
