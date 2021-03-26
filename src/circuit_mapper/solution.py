@@ -5,7 +5,7 @@
 
 from . circuit import Circuit
 from . volt_var_controller import VoltVARController
-from . utils import set_zip_values
+from typing import Iterable
 import opendssdirect as dss
 
 import re
@@ -24,10 +24,7 @@ class Solution():
     # TODO: check if we need V0 and I0 on the class. 
     # They seem like internal variables for nr3
     V0, I0 = None, None
-
-
     maxiter = 100
-    ZIP_V = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
 
     # standardize solution parameter name, index values, columns, and 
     # datatypes across the class
@@ -38,17 +35,18 @@ class Solution():
         'sV': ['buses', ['A', 'B', 'C'], complex]}
 
     # TODO: Make a 'solution.set_tolerance()' method
-
+    
     def __init__(self, dss_fp: str):
         """
         sets up a Solution object with a pointer to a Circuit mapped from opendss
         Solutions keep a pointer to the dss object used to map the Circuit
         """
         #  setup calls to opendss----------------------------------------------
-        self.dss = dss.run_command('Redirect ' + dss_fp)
+        self.dss = dss  # save dss instance to object
+        dss.run_command('Redirect ' + dss_fp)
         dss.Solution.Solve()  # solve first for base values
-        set_zip_values(dss, self.__class__.ZIP_V)
-        dss.Solution.Solve()  # solve again to set zip values
+        # set zip values for all Solutions and all Circuits
+        dss.Solution.Solve()  # solve again to set zip values on dss
 
         #  map Circuit and vvc objects-----------------------------------------
         self.circuit = Circuit(dss)

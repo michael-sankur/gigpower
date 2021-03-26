@@ -60,8 +60,8 @@ def get_phase_idx(ph: Union[str, int]) -> int:
         raise ValueError(f'Invalid argument for get_phase_idx {ph}')
 
 
-def set_zip_values(dss, zipv: List):
-    """sets custom zip values in dss by setting the dss.Loads.zipv() array."""
+def set_zip_values_dss(dss, zipv: List):
+    """sets zip values on a dss object by setting the dss.Loads.ZipV"""
     # array mapping: [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min votlage pu]
     for load_name in dss.Loads.AllNames():
         dss.Loads.Name(load_name)

@@ -7,16 +7,23 @@
 import numpy as np
 
 from . bus_group import BusGroup
-from . capacitor_group import CapacitorGroup
 from . line_group import LineGroup
 from . load_group import LoadGroup
+from . capacitor_group import CapacitorGroup
 from . transformer_group import TransformerGroup
 from . voltage_regulator_group import VoltageRegulatorGroup
 
-from . utils import parse_phase_matrix
+from . utils import parse_phase_matrix, set_zip_values_dss
 
 
 class Circuit():
+
+    # zip values are set at the Circuit class level so that 
+    # all Circuit instances use the same zip values
+    ZIP_V = np.asarray([0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80])
+    aPQ_p, aI_p, aZ_p = ZIP_V[0:3]
+    aPQ_q, aI_q, aZ_q = ZIP_V[3:6]
+    min_voltage_pu = ZIP_V[6]
 
     def __init__(self, dss, Sbase=10**6):
         """
@@ -24,6 +31,7 @@ class Circuit():
         Note that the Solution class runs 'redirect' on the dss file
         The Circuit does not call opendss functions directly
         """
+        set_zip_values_dss(dss, Circuit.ZIP_V)
         self.Sbase = Sbase
         self.buses = BusGroup(dss)
         self.lines = LineGroup(dss, bus_group=self.buses)
@@ -32,10 +40,28 @@ class Circuit():
         self.transformers = TransformerGroup(dss, bus_group=self.buses, line_group=self.lines)
         self.voltage_regulators = VoltageRegulatorGroup(dss, line_group=self.lines)
 
+        # # set zip values according to class vairables Circuit.ZIP_V 
+        # self.loads._set_zip_values(Circuit.ZIP_V)
+        # self.capacitors._set_zip_values(Circuit.ZIP_V)
+        self.dss = dss
+
         # self._assign_to_buses(self.loads)
         # self._assign_to_buses(self.capacitors)
         # self._assign_to_buses(self.voltage_regulators)
         # self._assign_to_buses(self.transformers)
+
+    @classmethod
+    def set_zip_values(cls, zip_V):
+        """
+        sets zip values for the Circuit class
+        param zip_V: List or nd.array with 7 values
+        [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min voltage pu]
+        Note that zip values are set only on the Circuit class.
+        """
+        cls.ZIP_V = np.asarray(zip_V)
+        cls.aZ_p, cls.aI_p, cls.aPQ_p = cls.ZIP_V[0:3]
+        cls.aZ_q, cls.aI_q, cls.aPQ_q = cls.ZIP_V[3:6]
+        cls.min_voltage_pu = cls.ZIP_V[6]
 
     def set_kW(self, load_name: str, kW: float):
         """
@@ -165,7 +191,7 @@ class Circuit():
             load_bus = load.related_bus
             load_ph_matrix = parse_phase_matrix(load.phases)
             bus_idx = self.buses.get_idx(load_bus)
-            param_matrix[bus_idx] += load_ph_matrix * getattr(load, zip_param)
+            param_matrix[bus_idx] += load_ph_matrix * getattr(Circuit, zip_param)
         return param_matrix.transpose()
 
     def _assign_to_buses(self, ckt_element_group):

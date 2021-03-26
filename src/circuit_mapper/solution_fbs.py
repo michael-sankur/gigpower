@@ -11,8 +11,8 @@ import copy
 
 class SolutionFBS(Solution):
 
-    def __init__(self, dss_fp: str):
-        super().__init__(dss_fp)  # sets self.circuit
+    def __init__(self, dss_fp: str, **kwargs):
+        super().__init__(dss_fp, **kwargs)  # sets self.circuit
         # clean up voltage regulator topology
         self.adj = self._clean_adj(self.circuit.lines.adj, self.circuit.voltage_regulators)
         self.reverse_adj = get_reverse_adj(self.adj)

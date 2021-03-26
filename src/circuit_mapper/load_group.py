@@ -5,51 +5,33 @@ import numpy as np
 
 class LoadGroup(CircuitElementGroup):
     dss_module_name, ele_class = 'Loads', Load
-    # ZIP_V = np.asarray([0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80])
-    # ZIP_V = np.asarray([0, 0, 1, 0, 0, 1, 0.75])  # constant power
-    ZIP_V = np.asarray([1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.75])  # constance impedance
 
     def __init__(self, dss, bus_group):
         self.buses = bus_group
-        # set aPQ, aI, aZ
-
-        # if dss.Loads.ZipV(): # TODO: uncomment after finished testing
-        #     self.set_zip_values(dss.Loads.ZipV())
-
-        # else:  # default to value on LoadGroup class
-        self.set_zip_values(self.__class__.ZIP_V)
         super().__init__(dss)
 
-    def load_powers(self, solution=None, zip_V: np.ndarray = None) -> np.ndarray:
+    def get_powers(self, solution=None) -> np.ndarray:
         """
-            returns load powers summed by Bus
-            if solution and zip_V are not given, will default to nominal values
+            returns load powers summed by Bus, given an optional voltage solution
+            if solution is not given, will default to nominal values
 
             param solution: optional Solution argument
-            param zip_V: optional 6x1 zip values array
 
             returns: ndarray of shape (num_buses, 3), indexed by bus index
         """
         if not solution:
             bus_V_matrix = np.ones((self.buses.num_elements, 3), dtype=complex)
         else:
-            pass
+            bus_V_matrix = solution.V
         load_powers = np.zeros((self.buses.num_elements, 3))
 
         for load in self.get_elements():
             bus_idx = self.buses.get_idx(load.related_bus)
             bus_V = bus_V_matrix[bus_idx]
             spu_real, spu_imag = load.ppu, load.qpu
-            if not zip_V:
-                aPQ_p, aI_p, aZ_p = load.aPQ_p, load.aI_p, load.aZ_p
-                aPQ_q, aI_q, aZ_q = load.aPQ_q, load.aI_q, load.aZ_q
-            else:
-                aZ_p = zip_V[0]
-                aI_p = zip_V[1]
-                aPQ_p = zip_V[2]
-                aZ_q = zip_V[3]
-                aI_q = zip_V[4]
-                aPQ_q = zip_V[5]
+
+            aPQ_p, aI_p, aZ_p = self.aPQ_p, self.aI_p, self.aZ_p
+            aPQ_q, aI_q, aZ_q = self.aPQ_q, self.aI_q, self.aZ_q
 
             for idx, ph in enumerate(load.phase_matrix):
                 if ph == 1:
@@ -61,6 +43,9 @@ class LoadGroup(CircuitElementGroup):
 
                     load_powers[idx] += real + (1j * imag)
         return load_powers
+
+    def get_nominal_powers(self):
+        return self.get_powers()
 
     def get_ppu_matrix(self):
         """
@@ -76,8 +61,15 @@ class LoadGroup(CircuitElementGroup):
         """
         return self._get_attr_by_bus('qpu', orient='col')
 
-    def set_zip_values(self, zipV: np.ndarray):
-        self.zipV = zipV
-        # array mapping: [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min votlage pu]
-        self.aZ_p, self.aI_p, self.aPQ_p = self.zipV[0:3]
-        self.aZ_q, self.aI_q, self.aPQ_q = self.zipV[3:6]
+    # def _set_zip_values(self, ZIP_V):
+    #     """
+    #     Private helper method called by Circuit to set zip values
+    #     as attributes on all LoadGroups
+    #     according to what is set on the Circuit class.
+    #     For the public, user-facing way to change zip values, use
+    #     Solution.set_zip_values()
+    #     """
+    #     self.zipV = ZIP_V
+    #     self.aZ_p, self.aI_p, self.aPQ_p = ZIP_V[0:3]
+    #     self.aZ_q, self.aI_q, self.aPQ_q = ZIP_V[3:6]
+    #     self.min_voltage_pu = ZIP_V[6]
