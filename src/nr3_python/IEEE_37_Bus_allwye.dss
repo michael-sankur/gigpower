@@ -69,13 +69,13 @@ New Line.line_799r_701 Phases=3 Bus1=799r.1.2.3 Bus2=701.1.2.3 LineCode=721 Leng
 ! New Line.line_799_799r Phases=1 Bus1=799.2 Bus2=799r.2 r0=1e-3 r1=1e-3 x0=0 x1=0 c0=0 c1=0
 
 new transformer.reg1a phases=1 windings=2 buses=(799.1 799r.1) conns='wye wye' kvs="2.77128 2.77128" kvas="2000 2000" XHL=1
-new regcontrol.creg1a transformer=reg1a winding=2 vreg=138 band=2 ptratio=20 ctprim=350 R=-0.201 X=3.348
+new regcontrol.reg1a transformer=reg1a winding=2 vreg=138 band=2 ptratio=20 ctprim=350 R=-0.201 X=3.348
 
 new transformer.reg1b phases=1 windings=2 buses=(799.2 799r.2) conns='wye wye' kvs="2.77128 2.77128" kvas="2000 2000" XHL=1
-new regcontrol.creg1b transformer=reg1b winding=2 vreg=138 band=2 ptratio=20 ctprim=350 R=-0.201 X=3.348
+new regcontrol.reg1b transformer=reg1b winding=2 vreg=138 band=2 ptratio=20 ctprim=350 R=-0.201 X=3.348
 
 new transformer.reg1c phases=1 windings=2 buses=(799.3 799r.3) conns='wye wye' kvs="2.77128 2.77128" kvas="2000 2000" XHL=1
-new regcontrol.creg1c transformer=reg1c winding=2 vreg=138 band=2 ptratio=20 ctprim=350 R=-0.201 X=3.348
+new regcontrol.reg1c transformer=reg1c winding=2 vreg=138 band=2 ptratio=20 ctprim=350 R=-0.201 X=3.348
 
 ! New Line.line_799_799r Phases=1 Bus1=799.2 Bus2=799r.2 r0=1e-3 r1=1e-3 x0=0 x1=0 c0=0 c1=0
 
