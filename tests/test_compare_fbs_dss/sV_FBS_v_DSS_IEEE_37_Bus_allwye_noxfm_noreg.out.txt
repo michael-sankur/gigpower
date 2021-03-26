@@ -1,4 +1,4 @@
-TEST FAILED
+TEST FAILED. FBS CONVERGED = True
 sV - SUMMARY STATS
                     A    B    C
 MAX |fbs - dss|  0.27 0.16 0.27

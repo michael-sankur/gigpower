@@ -1,4 +1,4 @@
-TEST PASSED
+TEST FAILED
 I - SUMMARY STATS
                             A    B    C
 MAX |new_fbs - old_fbs|  0.28 0.23 0.38

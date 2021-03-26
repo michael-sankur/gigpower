@@ -1,4 +1,4 @@
-TEST PASSED
+TEST FAILED
 sV - SUMMARY STATS
                             A    B    C
 MAX |new_fbs - old_fbs|  0.27 0.16 0.27

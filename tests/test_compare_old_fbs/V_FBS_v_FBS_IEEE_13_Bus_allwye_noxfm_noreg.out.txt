@@ -7,7 +7,7 @@ MEAN |new_fbs - old_fbs| 0.00 0.00 0.01
 
 V - ERROR, |new_fbs - old_fbs|:
            A.new_fbs - old_fbs  B.new_fbs - old_fbs  C.new_fbs - old_fbs
-sourcebus          -0.00+0.00j          -0.00+0.00j          -0.00+0.00j
+sourcebus           0.00+0.00j          -0.00+0.00j          -0.00+0.00j
 671                 0.00+0.00j           0.00+0.00j          -0.00+0.01j
 634                 0.00+0.00j           0.00+0.00j          -0.00+0.00j
 645                 0.00+0.00j           0.00+0.00j          -0.00+0.00j

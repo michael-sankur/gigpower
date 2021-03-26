@@ -1,4 +1,4 @@
-TEST FAILED
+TEST PASSED. FBS CONVERGED = True
 I - SUMMARY STATS
                     A    B    C
 MAX |fbs - dss|  0.23 0.20 0.33
@@ -42,9 +42,12 @@ line_738_711   -0.00+0.01j  -0.00+0.00j  -0.01-0.00j
 line_744_728   -0.00+0.01j   0.00-0.00j  -0.00-0.00j
 line_744_729   -0.00+0.00j   0.00-0.00j   0.00+0.00j
 line_799r_701   0.23-0.01j  -0.14-0.15j  -0.10+0.31j
-reg1a                  NaN          NaN          NaN
-reg1b                  NaN          NaN          NaN
-reg1c                  NaN          NaN          NaN
+reg1a_to_reg           NaN          NaN          NaN
+reg1a_to_tx            NaN          NaN          NaN
+reg1b_to_reg           NaN          NaN          NaN
+reg1b_to_tx            NaN          NaN          NaN
+reg1c_to_reg           NaN          NaN          NaN
+reg1c_to_tx            NaN          NaN          NaN
 subxf                  NaN          NaN          NaN
 xfm1                   NaN          NaN          NaN 
 
@@ -85,11 +88,14 @@ line_738_711  0.07-0.03j -0.00+0.00j -0.00+0.07j
 line_744_728  0.04-0.02j -0.04-0.03j -0.00+0.05j
 line_744_729  0.02-0.01j -0.02-0.01j  0.00+0.00j
 line_799r_701 1.18-0.59j -0.84-0.55j -0.08+1.36j
-subxf         2.37+0.00j -0.84+0.00j -0.08+0.00j
+subxf         0.00+0.00j  0.00+0.00j  0.00+0.00j
 xfm1          0.00+0.00j -0.00+0.00j  0.00+0.00j
-reg1a         0.00+0.00j  0.00+0.00j  0.00+0.00j
-reg1b         0.00+0.00j  0.00+0.00j  0.00+0.00j
-reg1c         2.37-1.18j -0.84-0.55j -0.08+1.36j 
+reg1a_to_reg  0.00+0.00j  0.00+0.00j  0.00+0.00j
+reg1a_to_tx   0.00+0.00j  0.00+0.00j  0.00+0.00j
+reg1b_to_reg  0.00+0.00j  0.00+0.00j  0.00+0.00j
+reg1b_to_tx   0.00+0.00j  0.00+0.00j  0.00+0.00j
+reg1c_to_reg  0.00+0.00j  0.00+0.00j  0.00+0.00j
+reg1c_to_tx   0.00+0.00j  0.00+0.00j  0.00+0.00j 
 
 I - dss RESULTS
                        A           B           C

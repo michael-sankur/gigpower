@@ -1,9 +1,9 @@
-TEST FAILED
+TEST PASSED
 I - SUMMARY STATS
                             A    B    C
-MAX |new_fbs - old_fbs|  2.73 0.98 1.41
-SUM |new_fbs - old_fbs|  5.36 1.93 1.67
-MEAN |new_fbs - old_fbs| 0.36 0.13 0.11 
+MAX |new_fbs - old_fbs|  0.01 0.02 0.03
+SUM |new_fbs - old_fbs|  0.05 0.10 0.13
+MEAN |new_fbs - old_fbs| 0.00 0.01 0.01 
 
 I - ERROR, |new_fbs - old_fbs|:
               A.new_fbs - old_fbs  B.new_fbs - old_fbs  C.new_fbs - old_fbs
@@ -19,8 +19,14 @@ line_671_692           0.00+0.01j          -0.02+0.01j          -0.01-0.01j
 line_684_611           0.00+0.00j           0.00+0.00j          -0.01-0.00j
 line_684_652           0.00+0.00j           0.00+0.00j           0.00+0.00j
 line_692_675           0.00+0.01j          -0.02+0.01j          -0.01-0.01j
-reg1                   2.44-1.22j          -0.81-0.56j          -0.12+1.41j
-sub                    2.58+0.00j          -0.84+0.00j          -0.13+0.00j
+reg1                          NaN                  NaN                  NaN
+reg1_to_reg                   NaN                  NaN                  NaN
+reg1_to_tx                    NaN                  NaN                  NaN
+reg2_to_reg                   NaN                  NaN                  NaN
+reg2_to_tx                    NaN                  NaN                  NaN
+reg3_to_reg                   NaN                  NaN                  NaN
+reg3_to_tx                    NaN                  NaN                  NaN
+sub                    0.00+0.00j           0.00+0.00j           0.00+0.00j
 xfm1                   0.00+0.00j          -0.00-0.00j           0.00-0.00j 
 
 I - new_fbs Results
@@ -37,9 +43,14 @@ line_671_684 0.12-0.10j  0.00+0.00j -0.10+0.15j
 line_684_611 0.00+0.00j  0.00+0.00j -0.10+0.15j
 line_684_652 0.12-0.10j  0.00+0.00j  0.00+0.00j
 line_671_692 0.57-0.12j  0.08-0.13j -0.09+0.39j
-sub          2.58+0.00j -0.84+0.00j -0.13+0.00j
+sub          0.00+0.00j  0.00+0.00j  0.00+0.00j
 xfm1         0.15-0.12j -0.14-0.05j  0.02+0.15j
-reg1         2.44-1.22j -0.81-0.56j -0.12+1.41j 
+reg1_to_reg  0.00+0.00j  0.00+0.00j  0.00+0.00j
+reg1_to_tx   0.00+0.00j  0.00+0.00j  0.00+0.00j
+reg2_to_reg  0.00+0.00j  0.00+0.00j  0.00+0.00j
+reg2_to_tx   0.00+0.00j  0.00+0.00j  0.00+0.00j
+reg3_to_reg  0.00+0.00j  0.00+0.00j  0.00+0.00j
+reg3_to_tx   0.00+0.00j  0.00+0.00j  0.00+0.00j 
 
 I - old_fbs RESULTS
                       A           B           C
