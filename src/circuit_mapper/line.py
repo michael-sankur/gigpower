@@ -81,16 +81,23 @@ class SyntheticLine(Line):
     Special class to handle voltage regulators and transformers
     Synthetic Lines are used to handle topology information about voltage regulators
     and transformers.
+    They are added to index information and topology of circuit.lines, 
+    but they do not increment circuit.lines.num_elements
     """
-    def __init__(self, ele):
-        """ ele: a Transformer or Voltage Regulator"""
-        self.__name__ = ele.__name__
-        self.key = ele.key
-        self.tx, self.rx = self.key
-        self.related_bus = ele.related_bus
+    def __init__(self, line_group, unique_key, inc_num_elements, name=None, key=None):
+        """ for Transformers and Voltage Regulator"""
+        if name:
+            self.__name__ = name
+        if key:
+            self.key = key
+            self.tx, self.rx = self.key
         self.length = 0
-        self.phases = ele.phases
         self.xmat, self.rmat = np.zeros(9), np.zeros(9)
+        self.FZpu = np.zeros((3, 3), dtype='complex')
+        # add SyntheticLine to line_group
+        # do not increment line_group's elements
+        # allow the same key to have multiple Synthetic Lines
+        line_group.add_element(self, unique_key=unique_key, inc_num_elements=inc_num_elements)
 
     def add_voltage_regulator(self, vreg):
         try:

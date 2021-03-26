@@ -58,28 +58,24 @@ def nr3_basematrices():
 def test_nr3_DSS_parameters_TXnum(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    print_compare("TX", TXnum, circuit.get_tx_idx_matrix())
     assert (TXnum == circuit.get_tx_idx_matrix()).all()
 
 
 def test_nr3_DSS_parameters_RXnum(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    print_compare("RX", RXnum, circuit.get_rx_idx_matrix())
     assert (RXnum == circuit.get_rx_idx_matrix()).all()
 
 
 def test_nr3_DSS_parameters_PH(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    print_compare("PH", PH, circuit.buses.get_phase_matrix())
     assert (PH == circuit.buses.get_phase_matrix()).all()
 
 
 def test_nr3_DSS_parameters_spu(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    print_compare("spu", spu, circuit.get_spu_matrix())
     assert (spu == circuit.get_spu_matrix()).all()
 
 
@@ -137,7 +133,7 @@ def test_nr3_transformer_regulator_params_gain(circuit, xfm_vr_parameters):
 def test_nr3_basematrices_XNR(nr3_solution, nr3_basematrices):
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
     print_compare("XNR", XNR, nr3_solution.XNR)
-    assert (XNR == nr3_solution.XNR).all()
+    np.testing.assert_equal(XNR, nr3_solution.XNR)
 
 
 def test_nr3_basematrices_SB(nr3_solution, nr3_basematrices):
@@ -154,7 +150,6 @@ def test_nr3_basematrices_KVL(nr3_solution, nr3_basematrices):
 
 
 def test_nr3_basematrices_KVL_regs(nr3_solution, nr3_basematrices):
-    tolerance = 1e-6
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
     assert (H_reg == nr3_solution.H_reg).all()
     assert (G_reg == nr3_solution.G_reg).all()
@@ -170,18 +165,17 @@ def test_nr3_helpers(circuit):
 
 def test_nr3_basematrices_H_g_b(nr3_solution, nr3_basematrices):
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
-    conflicts = np.where(H != nr3_solution.H)
-    print(conflicts)
-    print(H[conflicts])
-    print(nr3_solution.H[conflicts])
-    assert (H == nr3_solution.H).all()
+    print_compare('H', H, nr3_solution.H)
+    np.testing.assert_equal(H, nr3_solution.H)
     assert (g == nr3_solution.g).all()
     assert (b == nr3_solution.b).all()
 
 
 def print_compare(title, old, new):
     print(title, '-'*70)
-    print("old:")
-    print(old)
-    print("new:")
-    print(new)
+    conflicts = np.where(old != new)
+    print("conflicting indices:\n", conflicts)
+    print("old @conflicts:")
+    print(old[conflicts])
+    print("new @conflicts:")
+    print(new[conflicts])

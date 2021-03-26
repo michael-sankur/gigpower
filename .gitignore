@@ -7,7 +7,6 @@
 .DS_Store
 .vscode
 *.zip
-test_compare_results/
 
 # Distribution / packaging
 bin/

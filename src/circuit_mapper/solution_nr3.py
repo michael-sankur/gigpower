@@ -8,6 +8,7 @@ import numpy as np
 
 
 class SolutionNR3(Solution):
+    # TODO: set a class-level NR3 tolerance value
 
     def __init__(self, dss_fp: str):
         super().__init__(dss_fp)  # sets self.circuit
@@ -235,8 +236,7 @@ class SolutionNR3(Solution):
                             # H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1] = -load_val * beta_I * hessian_mag[0][1] / 2 #remove for TE
                             # H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] =  -load_val * beta_I * hessian_mag[1][0] / 2 #remove for TE
 
-                    for i in range(len(in_lines)):  # in lines
-                        line_idx = self.circuit.lines.get_idx((in_lines[i], bus.__name__))
+                    for line_idx, i in enumerate(range(len(in_lines))):  # in lines
                         if available_phases[ph] == 1:
                             if cplx == 0:  # real residual
                                 # A_m and C_lm
@@ -253,8 +253,7 @@ class SolutionNR3(Solution):
                                 H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
                                 H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
 
-                    for j in range(len(out_lines)):  # out lines
-                        line_idx = self.circuit.lines.get_idx((bus.__name__, out_lines[j]))
+                    for line_idx, i in enumerate(range(len(out_lines))):  # out lines
                         if available_phases[ph] == 1:
                             if cplx == 0: #real residual
                                 #A_m and C_mn

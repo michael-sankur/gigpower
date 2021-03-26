@@ -29,14 +29,8 @@ class Circuit():
         self.lines = LineGroup(dss, bus_group=self.buses)
         self.loads = LoadGroup(dss, bus_group=self.buses)
         self.capacitors = CapacitorGroup(dss, bus_group=self.buses)
-        self.transformers = TransformerGroup(dss, bus_group=self.buses)
-        self.lines.add_line_group(self.transformers)
+        self.transformers = TransformerGroup(dss, bus_group=self.buses, line_group=self.lines)
         self.voltage_regulators = VoltageRegulatorGroup(dss, line_group=self.lines)
-
-        # Lines need to know topology and index info 
-        # for VoltageRegulators and Transformers
-        
-        self.lines.add_line_group(self.voltage_regulators)
 
         # self._assign_to_buses(self.loads)
         # self._assign_to_buses(self.capacitors)
@@ -76,13 +70,12 @@ class Circuit():
         [len(Transformers), len(VoltageRegulators)- 1]: VoltageRegulators
 
         """
-        nlines = self.lines.num_elements
-        tx_buses = self.lines.get_bus_ids('tx')[0: nlines]
-        try:
-            tx_buses += self.transformers.get_bus_ids('tx')
-            tx_buses += self.voltage_regulators.get_bus_ids('tx')
-        except AttributeError:
-            pass
+        # nlines = self.lines.num_elements
+        tx_buses = self.lines.get_bus_ids('tx')
+        #     tx_buses += self.transformers.get_bus_ids('tx')
+        #     tx_buses += self.voltage_regulators.get_bus_ids('tx')
+        # except AttributeError:
+        #     pass
         return np.asarray([self.buses.get_idx(bus) for bus in tx_buses])
 
     def get_rx_idx_matrix(self):
@@ -90,13 +83,13 @@ class Circuit():
         n x 1 matrix of rx bus indices. Indexed by line index,
         which is the same value as in opendss
         """
-        nlines = self.lines.num_elements
-        rx_buses = self.lines.get_bus_ids('rx')[0: nlines]
-        try:
-            rx_buses += self.transformers.get_bus_ids('rx')
-            rx_buses += self.voltage_regulators.get_bus_ids('rx')
-        except AttributeError:
-            pass
+        # nlines = self.lines.num_elements
+        rx_buses = self.lines.get_bus_ids('rx')# [0: nlines]
+        # try:
+        #     rx_buses += self.transformers.get_bus_ids('rx')
+        #     rx_buses += self.voltage_regulators.get_bus_ids('rx')
+        # except AttributeError:
+        #     pass
         return np.asarray([self.buses.get_idx(bus) for bus in rx_buses])
 
     def get_spu_matrix(self) -> np.ndarray:
@@ -155,6 +148,10 @@ class Circuit():
         TODO: Implement logic to set this as needed.
         """
         return np.zeros((3, self.buses.num_elements))
+    
+    def get_total_lines(self):
+        """ returns number of Lines and Synthetic Lines"""
+        return len(self.lines.all_names())
 
     def _get_zip_val_matrix(self, zip_param=str) -> np.ndarray:
         """

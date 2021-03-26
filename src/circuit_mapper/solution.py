@@ -10,7 +10,6 @@ import opendssdirect as dss
 
 import re
 import numpy as np
-from typing import Dict
 import pandas as pd
 
 
@@ -19,13 +18,14 @@ class Solution():
     # class variables set for all SolutionNR3 instances
     # TODO: If any of these need to be set by instance, move into self.__init__
     SLACKIDX = 0  # assume slack bus is at index 0
+
+    # TODO: VSLACK the same for all objects. Write a SETVSLACK method on the class.
     VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
+    # TODO: check if we need V0 and I0 on the class. 
+    # They seem like internal variables for nr3
     V0, I0 = None, None
 
-    # # TODO: Make a better 'solution.set_tolerance(ref_node, error)' method
-    # set tolerance with phase B reference voltage
-    # tolerance = abs((solution.Vref[1]) * 10**-9)
-    tolerance = 1e-9
+
     maxiter = 100
     ZIP_V = [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]
 
@@ -36,6 +36,8 @@ class Solution():
         'V': ['buses', ['A', 'B', 'C'], complex],
         'I': ['lines', ['A', 'B', 'C'], complex],
         'sV': ['buses', ['A', 'B', 'C'], complex]}
+
+    # TODO: Make a 'solution.set_tolerance()' method
 
     def __init__(self, dss_fp: str):
         """
@@ -63,8 +65,6 @@ class Solution():
         # Voltage parameters. TODO: are these only for fbs?
         # If so, move to solution_fbs.py
         self.Vtest = np.zeros(3, dtype='complex')
-        self.Vref = np.array(
-            [1, np.exp(1j*240*np.pi/180), np.exp(1j*120*np.pi/180)], dtype=complex)
 
     def _init_solution_matrices(self):
         """
@@ -78,7 +78,10 @@ class Solution():
         """
         for param in self.__class__.SOLUTION_PARAMS:
             element_group, cols, datatype = self.__class__.SOLUTION_PARAMS[param]
-            num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
+            if element_group == 'lines':  # include transformers and vrs
+                num_rows = self.circuit.get_total_lines()
+            else:
+                num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
             setattr(self, param, np.zeros((num_rows, len(cols)), dtype=datatype))
 
     def get_data_frame(self, param: str) -> pd.DataFrame:
@@ -105,7 +108,7 @@ class Solution():
             if re.findall('(?i)New VVC', l):
                 bp = []
 
-                #array of VVC breakpoints
+                # array of VVC breakpoints
                 breakpoints = str.split(re.findall(r"(?i)BP=\s*([^\n\r]*)", l)[0], ',')
 
                 for elem in breakpoints:
@@ -147,21 +150,20 @@ class Solution():
 
     def calc_Stx(self):
         tx_bus_matrix = self.circuit.get_tx_idx_matrix()
-        num_lines = self.circuit.lines.num_elements
         self.Stx = self.V[tx_bus_matrix] * np.conj(self.I)
     
     def calc_Srx(self):
         rx_bus_matrix = self.circuit.get_rx_idx_matrix()
-        num_lines = self.circuit.lines.num_elements
-        self.Stx = self.V[tx_bus_matrix] * np.conj(self.I)
+        self.Stx = self.V[rx_bus_matrix] * np.conj(self.I)
 
     def calc_Inode(self) -> None:
         """ Calculate self.Inode (currents consumed at each node) """
-        for node in self.network.get_nodes():
-            node_V = self.V[node.name]
-            node_sV = self.sV[node.name]
-            node_I = np.conj(np.divide(node_sV, node_V))
-            self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
+        # for node in self.network.get_nodes():
+        #     node_V = self.V[node.name]
+        #     node_sV = self.sV[node.name]
+        #     node_I = np.conj(np.divide(node_sV, node_V))
+        #     self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
+        pass
 
     def VMag_df(self):
         """

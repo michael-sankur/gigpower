@@ -9,59 +9,71 @@ import pandas as pd
 
 from circuit_mapper.circuit import Circuit
 from circuit_mapper.solution_fbs import SolutionFBS
+from circuit_mapper.pretty_print import compare_data_frames
 
 from fbs.fbs.utils import init_from_dss
 from fbs.fbs.fbs import fbs, get_solution as get_fbs_solution
+import sys
+import os
+from pathlib import Path
 
-DSS_FILE_DIR = 'src/nr3_python/'
-DSS_FILE = DSS_FILE_DIR + 'IEEE_13_Bus_allwye.dss'
+DSS_FILE_DIR = Path('./src/nr3_python/')
+OUT_DIR = Path('./tests/test_compare_old_fbs')
+OUT_PREFIX = 'FBS_v_FBS_'
 
-SLACKIDX = 0
-VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
-
-TOLERANCE = 10e-2
-
-@pytest.fixture
-def circuit():
-    """ map Circuit object once for use in all tests """
-    return Circuit(DSS_FILE)
-
+GENEROUS = 5e-1
+STRICT = 1e-1
 
 @pytest.fixture
-def old_fbs_solution():
-    network = init_from_dss(DSS_FILE)
-    return get_fbs_solution(fbs(network, 100))
-
+def old_fbs_solution(dss_file):
+    fp = str(Path(DSS_FILE_DIR, dss_file))
+    network = init_from_dss(fp)
+    return get_fbs_solution(fbs(network))
 
 @pytest.fixture
-def new_fbs_solution():
-    fbs = SolutionFBS(DSS_FILE)
-    fbs.maxiter = 100
-    fbs.solve()
-    return fbs
+def new_fbs_solution(dss_file):
+    fp = str(Path(DSS_FILE_DIR, dss_file))
+    solution = SolutionFBS(fp)
+    solution.solve()
+    return solution
 
+def setup_module():
+    if not OUT_DIR.exists():
+        os.makedirs(OUT_DIR)
 
-def test_fbs_V(old_fbs_solution, new_fbs_solution):
-    new = new_fbs_solution.get_data_frame('V')
-    old = old_fbs_solution.V_df()
-    print(new)
-    print(old)
-    assert ((new - old).abs().max() <= TOLERANCE).all()
-    # assert new.equals(old)
-    
-def test_fbs_I(old_fbs_solution, new_fbs_solution):
-    new = new_fbs_solution.get_data_frame('I')
-    old = old_fbs_solution.I_df()
-    print(new)
-    print(old)
-    assert ((new - old).abs().max() <= TOLERANCE).all()
-    # assert new.equals(old)
+@pytest.mark.parametrize(
+    "dss_file,tolerance",
+    [
+        ('IEEE_13_Bus_allwye.dss', GENEROUS),
+        ('IEEE_13_Bus_allwye_noxfm_noreg.dss', STRICT),
+        ('IEEE_34_Bus_allwye.dss', GENEROUS),
+        ('IEEE_34_Bus_allwye_noxfm_noreg.dss', STRICT),
+        ('IEEE_37_Bus_allwye.dss', GENEROUS),
+        ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)
+    ],
+)
+@pytest.mark.parametrize(
+    "new_fbs_param, old_fbs_method",
+    [
+       ('V', 'V_df'),
+       ('I', 'I_df'),
+       ('sV', 'sV_df'),
+    ]
+)
 
+def test_fbs_v_fbs(new_fbs_solution, old_fbs_solution, dss_file, tolerance, new_fbs_param,
+    old_fbs_method):
+    """ Test all Files X (V, I, sV). Save log files to OUT_DIR"""
+    fp = Path(DSS_FILE_DIR, dss_file)
+    new = new_fbs_solution.get_data_frame(new_fbs_param)
+    old = getattr(old_fbs_solution, old_fbs_method)()
+    out_file = Path(OUT_DIR, new_fbs_param + '_' + OUT_PREFIX + str(fp.stem)).with_suffix('.out.txt')
+    sys.stdout = open(out_file, 'w')
+    test = ((new - old).abs().max() <= tolerance).all()
+    if test:
+        print("TEST PASSED")
+    else:
+        print("TEST FAILED")
+    compare_data_frames(new, old, 'new_fbs', 'old_fbs', new_fbs_param)
+    assert test
 
-def test_fbs_sV(old_fbs_solution, new_fbs_solution):
-    new = new_fbs_solution.get_data_frame('sV')
-    old = old_fbs_solution.sV_df()
-    print(new)
-    print(old)
-    assert ((new - old).abs().max() <= TOLERANCE).all()
-    # assert new.equals(old)

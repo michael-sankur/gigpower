@@ -3,13 +3,14 @@ import pandas as pd
 import numpy as np
 from typing import Tuple, Union
 from . circuit_element import CircuitElement
+from .line import SyntheticLine
 
 
 class CircuitElementGroup():
     def __init__(self, dss, **kwargs):
         self._name_to_object_dict = {}
         self._collect_names(dss, **kwargs)
-        self.num_elements = len(self._names)  # this does not change from init
+        self.num_elements = 0
         self._collect_elements(dss, **kwargs)
 
     def _collect_elements(self, dss, **kwargs):
@@ -36,8 +37,8 @@ class CircuitElementGroup():
         self._idx_to_name_dict = {idx: name for idx, name in enumerate(self._names)}
 
     def all_names(self):
-        """ returns a View over all names in Group"""
-        return self._name_to_idx_dict.keys()
+        """ returns all names in Group"""
+        return self._names
 
     def get_idx(self, obj: Union[str, CircuitElement]) -> int:
         """
@@ -80,18 +81,24 @@ class CircuitElementGroup():
         """ returns an iterable View over all elements in the Group"""
         return self._name_to_object_dict.values()
 
-    def add_element(self, ele):
+    def add_element(self, ele, inc_num_elements=True):
         """
         adds a CircuitElement to this group
+        param inc_num_elements: Increment self.num_elements with this addition
+        param unique_key: overwrite existing self._key_to_element dict so that 
+        there is only one object per key
+
         """
         if not isinstance(ele, self.__class__.ele_class):
             print(f"Warning: adding a {ele.__class__} to group {self.__class__}")
         if ele.__name__ not in self._names:
-            next_idx = len(self._names)
+            next_idx = len(self.all_names())
             self._names.append(ele.__name__)
             self._name_to_idx_dict[ele.__name__] = next_idx
             self._idx_to_name_dict[next_idx] = ele.__name__
         self._name_to_object_dict[ele.__name__] = ele
+        if inc_num_elements: 
+            self.num_elements += 1
 
     def _get_attr_by_idx(self, attr: str, orient='row') -> np.ndarray:
         """
