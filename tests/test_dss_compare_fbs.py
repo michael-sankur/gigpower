@@ -20,15 +20,6 @@ DSS_FILE_DIR = Path('./src/nr3_python/')
 OUT_DIR = Path('./tests/test_compare_fbs_dss')
 OUT_PREFIX = 'FBS_v_DSS_'
 
-DSS_FILES = [
-                'IEEE_13_Bus_allwye.dss',
-                'IEEE_13_Bus_allwye_noxfm_noreg.dss',
-                'IEEE_34_Bus_allwye.dss',
-                'IEEE_34_Bus_allwye_noxfm_noreg.dss',
-                'IEEE_37_Bus_allwye.dss',
-                'IEEE_37_Bus_allwye_noxfm_noreg.dss'
-]
-
 GENEROUS = 10e-1
 STRICT = 10e-2
 
@@ -55,11 +46,11 @@ def setup_module():
     "dss_file,tolerance",
     [
         ('IEEE_13_Bus_allwye.dss', GENEROUS),
-        ('IEEE_13_Bus_allwye_noxfm_noreg.dss', STRICT),
+        ('IEEE_13_Bus_allwye_noxfm_noreg.dss', STRICT),  # I fails
         ('IEEE_34_Bus_allwye.dss', GENEROUS),
-        ('IEEE_34_Bus_allwye_noxfm_noreg.dss', STRICT),
+        ('IEEE_34_Bus_allwye_noxfm_noreg.dss', STRICT),  # not converging
         ('IEEE_37_Bus_allwye.dss', GENEROUS),
-        ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)
+        ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)  # I and sV fail
     ]
 
 )
@@ -77,10 +68,9 @@ def test_dss_v_new_fbs(new_fbs_solution, dss_solution, solution_param,
     out_file = Path(OUT_DIR, solution_param + '_' + OUT_PREFIX + str(fp.stem)).with_suffix('.out.txt')
     sys.stdout = open(out_file, 'w')
     fbs_vals = new_fbs_solution.get_data_frame(solution_param)
-    dss_vals  = dss_solution.get_data_frame(solution_param)
+    dss_vals = dss_solution.get_data_frame(solution_param)
     test = ((fbs_vals - dss_vals).abs().max() <= tolerance).all()
     if test:
-
         print(f"TEST PASSED. FBS CONVERGED = {new_fbs_solution.converged}")
     else:
         print(f"TEST FAILED. FBS CONVERGED = {new_fbs_solution.converged}")

@@ -45,11 +45,11 @@ def setup_module():
     "dss_file,tolerance",
     [
         ('IEEE_13_Bus_allwye.dss', GENEROUS),
-        ('IEEE_13_Bus_allwye_noxfm_noreg.dss', GENEROUS),
+        ('IEEE_13_Bus_allwye_noxfm_noreg.dss', STRICT),
         ('IEEE_34_Bus_allwye.dss', GENEROUS),
-        ('IEEE_34_Bus_allwye_noxfm_noreg.dss', GENEROUS),
+        ('IEEE_34_Bus_allwye_noxfm_noreg.dss', STRICT),
         ('IEEE_37_Bus_allwye.dss', GENEROUS),
-        ('IEEE_37_Bus_allwye_noxfm_noreg.dss', GENEROUS)
+        ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)
     ],
 )
 @pytest.mark.parametrize(
