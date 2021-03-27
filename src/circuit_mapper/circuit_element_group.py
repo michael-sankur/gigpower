@@ -79,7 +79,7 @@ class CircuitElementGroup():
             return self._name_to_object_dict[self._idx_to_name_dict[key]]
         elif isinstance(key, tuple):
             try:
-                return self._key_to_element_dict[key]
+                return self.get_line_from_key(key)
             except KeyError:
                 raise KeyError(key_error_msg)
         else:

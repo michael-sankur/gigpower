@@ -2,7 +2,7 @@ from . line import Line, SyntheticLine
 from . circuit_element import CircuitElement
 import numpy as np
 from . utils import parse_dss_bus_name, parse_dss_phases, parse_phase_matrix
-
+from typing import Tuple
 
 class VoltageRegulator(CircuitElement):
     dss_module_name = 'RegControls'

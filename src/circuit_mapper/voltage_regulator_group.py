@@ -1,9 +1,9 @@
 from . line_group import LineGroup
 from . circuit_element_group import CircuitElementGroup
-from . voltage_regulator import VoltageRegulator
+from . voltage_regulator import VoltageRegulator, Tuple
 import numpy as np
 import copy
-
+from typing import List
 
 class VoltageRegulatorGroup(LineGroup):
     dss_module_name = 'RegControls'
@@ -28,6 +28,10 @@ class VoltageRegulatorGroup(LineGroup):
         in the VRGroup's adjacency matrices
         """
         CircuitElementGroup.add_element(self, vr, inc_num_elements=True)
+        try:
+            self._key_to_element_dict[vr.key].append(vr)
+        except KeyError:
+            self._key_to_element_dict[vr.key] = [vr]
         super()._add_edge(vr.line_tx_to_reg)
         super()._add_edge(vr.line_reg_to_tx)
 
