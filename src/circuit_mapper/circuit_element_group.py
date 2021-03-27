@@ -1,7 +1,7 @@
 from . utils import parse_phase_matrix
 import pandas as pd
 import numpy as np
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 from . circuit_element import CircuitElement
 from .line import SyntheticLine
 
@@ -61,6 +61,14 @@ class CircuitElementGroup():
         columns indexed by element index, which is the same as in opendss
         """
         return self._get_attr_by_idx('phase_matrix', 'col')
+    
+    def get_phase_matrix_dict(self) -> Dict[str, np.ndarray]:
+        """ 
+        Return a dictionary of element phase matrices, indexed by element name 
+        Phase matrix is 3 x 1, with 1's where phase is present, zeros otherwise
+        ex: [1, 0, 0] for element with only phase A
+        """
+        return {ele.__name__: ele.phase_matrix for ele in self.get_elements()}
 
     def get_element(self, key: Union[str, int, Tuple[str, str]]):
         """ Returns an element given a name, index, or tuple of (tx_name, rx_name)"""
