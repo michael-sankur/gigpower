@@ -59,13 +59,13 @@ def nr3_basematrices():
 def test_nr3_DSS_parameters_TXnum(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    assert (TXnum == circuit.get_tx_idx_matrix()).all()
+    np.testing.assert_equal(TXnum, circuit.get_tx_idx_matrix())
 
 
 def test_nr3_DSS_parameters_RXnum(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    assert (RXnum == circuit.get_rx_idx_matrix()).all()
+    np.testing.assert_equal(RXnum, circuit.get_rx_idx_matrix())
 
 
 def test_nr3_DSS_parameters_PH(circuit, nr3_DSS_parameters):

@@ -1,16 +1,16 @@
 from . line_group import LineGroup
 from . circuit_element_group import CircuitElementGroup
 from . voltage_regulator import VoltageRegulator
-from typing import List
 import numpy as np
+import copy
 
 
 class VoltageRegulatorGroup(LineGroup):
     dss_module_name = 'RegControls'
     ele_class = VoltageRegulator
 
-    def __init__(self, dss, line_group):
-        super().__init__(dss, bus_group=line_group.buses, line_group=line_group)
+    def __init__(self, dss, bus_group):
+        super().__init__(dss, bus_group=bus_group)
         related_vr = {}
         for n in range(len(dss.RegControls.AllNames())):
             dss.RegControls.Name(dss.RegControls.AllNames()[n])
@@ -31,20 +31,20 @@ class VoltageRegulatorGroup(LineGroup):
         super()._add_edge(vr.line_tx_to_reg)
         super()._add_edge(vr.line_reg_to_tx)
 
-    # def get_bus_ids(self, which: str) -> List:
-    #     """
-    #     overwrite super to get tx buses of upstream, downstream lines
-    #     in vr index order
-    #     param which = 'tx' or 'rx'
-    #     resulting list length is 2 * self.num_elements
-    #     even number indices are upstream_line tx bus indices
-    #     odd number indices are downstream_line tx bus indices
-    #     """
-    #     buses = []
-    #     for vr in self.get_elements():
-    #         buses.append(getattr(vr.upstream_line, which))
-    #         buses.append(getattr(vr.downstream_line, which))
-    #     return buses
+    def get_bus_ids(self, which: str):
+        """
+        overwrite super to get tx buses of upstream, downstream lines
+        in vr index order
+        param which = 'tx' or 'rx'
+        resulting list length is 2 * self.num_elements
+        even number indices are upstream_line tx bus indices
+        odd number indices are downstream_line tx bus indices
+        """
+        buses = []
+        for vr in self.get_elements():
+            buses.append(getattr(vr.line_tx_to_reg, which))
+            buses.append(getattr(vr.line_reg_to_tx, which))
+        return buses
 
     def get_gain_matrix(self) -> np.ndarray:
         """
@@ -53,4 +53,16 @@ class VoltageRegulatorGroup(LineGroup):
         """
         return [-1 * vr.gamma for vr in self.get_elements()]
 
-        
+    def get_adj_set(self, reversed=False):
+        """
+        Return self.adj, with all voltage regulators between the same two buses
+        into the same edge.
+        ex: {'650':['rg60', 'rg60', 'rg60]} -> {'650': ['rg60']}
+        """
+        if reversed:
+            new_adj = copy.deepcopy(self.reverse_adj)
+        else:
+            new_adj = copy.deepcopy(self.adj)
+        for node, neighbors in new_adj.items():
+            new_adj[node] = list(set(neighbors))
+        return new_adj

@@ -34,15 +34,12 @@ class LineGroup(CircuitElementGroup):
         """
         return [getattr(line, which) for line in self.get_elements()]
 
-    def add_element(self, line, unique_key=True, inc_num_elements=True):
+    def add_element(self, line, unique_key=True):
         """
         Call super(), and add the new line's topology.
         add line to self._key_to_element_dict
-
-        note that adding a SyntheticLine will NOT increment self.num_elements,
-        and will allow multiple SyntheticLines for one key 
         """
-        super().add_element(line, inc_num_elements=inc_num_elements)
+        super().add_element(line)
         if unique_key:
             self._key_to_element_dict[line.key] = line
         else:
@@ -59,8 +56,7 @@ class LineGroup(CircuitElementGroup):
             self.adj[tx_bus].append(rx_bus)
         except KeyError:
             self.adj[tx_bus] = [rx_bus]
-
-        try: 
+        try:
             self.reverse_adj[rx_bus].append(tx_bus)
         except KeyError:
             self.reverse_adj[rx_bus] = [tx_bus]
@@ -104,16 +100,14 @@ class LineGroup(CircuitElementGroup):
         """ n x 9 matrix, indexed by Line index"""
         return self._get_attr_by_idx('rmat')
 
-    def get_parents(self, bus_name: str) -> List[str]:
+    def get_parents(self, bus_name: str, inc_voltage_regs=False) -> List[str]:
         """ returns a list of buses upstream of bus_name """
         if bus_name in self.reverse_adj:
             return self.reverse_adj[bus_name]
         return []
 
-    def get_children(self, bus_name: str) -> List[str]:
+    def get_children(self, bus_name: str, inc_voltage_regs=False) -> List[str]:
         """ returns a list of buses downstream of bus_name """
         if bus_name in self.adj:
             return self.adj[bus_name]
         return []
-
-  
