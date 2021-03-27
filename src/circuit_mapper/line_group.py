@@ -22,10 +22,20 @@ class LineGroup(CircuitElementGroup):
         self.reverse_adj = {}
         self._key_to_element_dict = {}
         super().__init__(dss, **kwargs)
-        
+  
     def get_line_from_key(self, key: Tuple[str, str]):
-        """ return the Line with the key (tx_bus, rx_bus)"""
-        return self._key_to_element_dict[key]
+        """
+        return the Line with the key (tx_bus, rx_bus)
+        first searches self, then searches transformers, finally 
+        voltage regulators
+        """
+        try:
+            return self._key_to_element_dict[key]
+        except KeyError:
+            try:
+                return self.transformers.get_line_from_key(key)
+            except AttributeError:
+                return self.voltage_regulators.get_line_from_key(key)
 
     def get_bus_ids(self, which: str) -> List:
         """
@@ -77,16 +87,24 @@ class LineGroup(CircuitElementGroup):
             bp_matrix[bp_idx][2:] = line.phase_matrix
         return bp_matrix.transpose()
 
-    def get_idx(self, obj: Union[str, CircuitElement, Tuple]) -> int:
+    def get_idx(self, obj: Union[str, CircuitElement]) -> int:
         """
-        override super to check for tuples first
-        """
-        if isinstance(obj, tuple):
-            return super().get_idx(self.get_line_from_key(obj))       
+        override super to include transformers and voltage regulators
+        if this LineGroup has transformers and voltage regulators, will
+        include them in indexing in the following order:
+        [0, self.num_elements]: Lines
+        [self.num_elements, transformers.num_elements -1 ]: Transformers
+        [transformers.num_elements, voltage_regulators.num_elemenrs-1]:
+                                                VoltageRegulators
+        """  
         try:
             return super().get_idx(obj)
         except KeyError:
-            return super().get_idx(self.get_line_from_key(obj.key))
+            try:
+                return self.num_elements + self.transformers.get_idx(obj)
+            except AttributeError:
+                return self.num_elements + self.num_transformers + \
+                        self.voltage_regulators.get_idx(obj)
 
     def get_num_lines_x_ph(self):
         """ returns sum of active phases across all lines """
