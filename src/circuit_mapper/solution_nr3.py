@@ -566,14 +566,14 @@ class SolutionNR3(Solution):
         # ----------Residuals for KCL at a bus (m) ----------
 
         #Zip Parameters
-        beta_S = self.circuit.loads.aPQ_p
-        beta_I = self.circuit.loads.aI_p
-        beta_Z = self.circuit.loads.aZ_p
+        beta_S = Circuit.aPQ_p
+        beta_I = Circuit.aI_p
+        beta_Z = Circuit.aZ_p
 
         # Capacitors
-        gamma_S = self.circuit.capacitors.aPQ_p
-        gamma_I = self.circuit.capacitors.aI_p
-        gamma_Z = self.circuit.capacitors.aZ_p
+        gamma_S = Circuit.aPQ_p
+        gamma_I = Circuit.aI_p
+        gamma_Z = Circuit.aZ_p
 
         # Quadratic Terms
 

@@ -15,7 +15,8 @@ from circuit_mapper.solution import Solution
 from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters
 from nr3_python.lib.basematrices import basematrices
 from nr3_python.lib.change_KCL_matrices import change_KCL_matrices
-from nr3_python.lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
+from nr3_python.lib.helper import transformer_regulator_parameters, \
+        nominal_load_values, cap_arr, linelist
 
 LOCAL_DIR = 'src/nr3_python/'
 DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye.dss'
@@ -193,9 +194,11 @@ def print_compare(title, old, new):
 
 
 # NR3 CHANGE KCL TESTS---------------------------------------------------------
-def test_change_KCL(circuit, H, g, b, t, der, capacitance, wpu):
-    ckt_H, ckt_b = circuit.change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
+def test_change_KCL(nr3_solution):
+    H, g, b = nr3_solution.H, nr3_solution.g, nr3_solution.b
+    t, der, capacitance = 1, -1, 0
+    wpu = nr3_solution.circuit.get_wpu_matrix()
+    ckt_H, ckt_b = nr3_solution.change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
     nr3_H, nr3_b = change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
-
-    assert(ckt_H == nr3_H)
-    assert(ckt_b == nr3_b)
+    np.testing.assert_equal(ckt_H, nr3_H)
+    np.testing.assert_equal(ckt_b, nr3_b)

@@ -6,8 +6,8 @@
 import numpy as np  # type: ignore
 from typing import List, Dict, Iterable
 from . solution import Solution
-from . utils import set_zip_values, parse_phases, pad_phases
-import opendssdirect as dss # type: ignore
+from . utils import set_zip_values_dss, parse_phases, pad_phases
+import opendssdirect as dss  # type: ignore
 import numpy as np
 import pandas as pd
 from typing import Tuple
