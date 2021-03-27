@@ -23,5 +23,9 @@ var/
 .installed.cfg
 *.egg
 
-# virtual eng
+# virtual env
 pyvenv.cfg
+
+# testing 
+/tests/test_compare_fbs_dss/
+/tests/test_compare_old_fbs/
