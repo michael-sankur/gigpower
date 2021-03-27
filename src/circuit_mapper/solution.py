@@ -90,6 +90,9 @@ class Solution():
         try:
             element_group, cols, data_type = self.__class__.SOLUTION_PARAMS.get(param)
             index = getattr(self.circuit, element_group).all_names()
+            if element_group == 'lines':  # include transformers and vrs
+                index += self.circuit.transformers.all_names()
+                index += self.circuit.voltage_regulators.all_names()
             data = getattr(self, param)
             return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
         except KeyError:
