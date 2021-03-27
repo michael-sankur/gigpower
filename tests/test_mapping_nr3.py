@@ -14,7 +14,8 @@ from circuit_mapper.solution import Solution
 # current nr3 dependencies
 from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters
 from nr3_python.lib.basematrices import basematrices
-from nr3_python.lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
+from nr3_python.lib.helper import transformer_regulator_parameters, \
+    nominal_load_values, cap_arr, linelist
 
 LOCAL_DIR = 'src/nr3_python/'
 DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye.dss'
@@ -25,15 +26,15 @@ VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
 
 
 @pytest.fixture
-def circuit():
-    """ map Circuit object once for use in all tests """
-    dss.run_command('Redirect ' + DSS_FILE)
-    return Circuit(dss)
+def nr3_solution():
+    nr3 = SolutionNR3(DSS_FILE)
+    nr3.circuit.set_zip_values([1, 0, 0, 1, 0, 0, .8])
+    return nr3
 
 
 @pytest.fixture
-def nr3_solution():
-    return SolutionNR3(DSS_FILE)
+def circuit(nr3_solution):
+    return nr3_solution.circuit
 
 
 @pytest.fixture
@@ -82,9 +83,9 @@ def test_nr3_DSS_parameters_spu(circuit, nr3_DSS_parameters):
 def test_nr3_DSS_parameters_Z(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    assert (aPQ == circuit.get_aPQ_matrix()).all()
-    assert (aI == circuit.get_aI_matrix()).all()
-    assert (aZ == circuit.get_aZ_matrix()).all()
+    np.testing.assert_equal(aPQ, circuit.get_aPQ_matrix())
+    np.testing.assert_equal(aI, circuit.get_aI_matrix())
+    np.testing.assert_equal(aZ, circuit.get_aZ_matrix())
 
 
 def test_nr3_DSS_parameters_cappu(circuit, nr3_DSS_parameters):
@@ -122,6 +123,14 @@ def test_nr3_transformer_regulator_params_counts(circuit, xfm_vr_parameters):
     assert vr_lines == circuit.voltage_regulators.get_num_lines_x_ph()
     assert tf_count == circuit.transformers.num_elements
     assert vr_no == circuit.voltage_regulators.num_elements
+
+
+def test_nr3_linelist(circuit):
+    for bus_name in circuit.buses.all_names():
+        parent_names = circuit.lines.get_parents(bus_name)
+        parent_idx = np.asarray([circuit.buses.get_idx(p) for p in parent_names])
+        in_lines = linelist(bus_name)
+        np.testing.assert_equal(parent_idx, in_lines)
 
 
 def test_nr3_transformer_regulator_params_gain(circuit, xfm_vr_parameters):
