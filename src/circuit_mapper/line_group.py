@@ -170,8 +170,11 @@ class LineGroup(CircuitElementGroup):
         """
         if which == 'out':
             buses = self.get_downstream_buses(bus_name, inc_xfm, inc_regs)
-            return np.asarray([self.get_line_from_key((bus_name, rx)).__name__ for rx in buses])
+            if not buses:
+                return []
+            return [self.get_line_from_key((bus_name, rx)).__name__ for rx in buses]
         if which == 'in':
             buses = self.get_upstream_buses(bus_name, inc_xfm, inc_regs)
-            return np.asarray([self.get_line_from_key((tx, bus_name)).__name__ for tx in buses])
-
+            if not buses:
+                return []
+            return [self.get_line_from_key((tx, bus_name)).__name__ for tx in buses]
