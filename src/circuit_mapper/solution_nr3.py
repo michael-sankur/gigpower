@@ -215,8 +215,6 @@ class SolutionNR3(Solution):
             for k2 in range(1, len(dss.Circuit.AllBusNames())): #skip slack bus
                 dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k2]) #set the bus
                 bus_name = dss.Circuit.AllBusNames()[k2]
-                if bus_name == '650':
-                    print('here')
                 in_lines = self.circuit.lines.get_line_list(bus_name, 'in')  # upstream buses
                 out_lines = self.circuit.lines.get_line_list(bus_name, 'out')  # downstream buses
                 for cplx in range(0,2):
@@ -723,4 +721,3 @@ class SolutionNR3(Solution):
                 flag = 0
 
         self.XNR = XNR_final
-
