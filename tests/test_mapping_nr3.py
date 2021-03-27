@@ -13,7 +13,8 @@ from circuit_mapper.solution import Solution
 
 # current nr3 dependencies
 from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters
-from nr3_python.lib.basematrices import basematrices, change_KCL_matrices
+from nr3_python.lib.basematrices import basematrices
+from nr3_python.lib.change_KCL_matrices import change_KCL_matrices
 from nr3_python.lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
 
 LOCAL_DIR = 'src/nr3_python/'
