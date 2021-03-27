@@ -14,8 +14,8 @@ from circuit_mapper.solution import Solution
 # current nr3 dependencies
 from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters
 from nr3_python.lib.basematrices import basematrices
-from nr3_python.lib.helper import transformer_regulator_parameters, \
-    nominal_load_values, cap_arr, linelist
+from nr3_python.lib.change_KCL_matrices import change_KCL_matrices
+from nr3_python.lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
 
 LOCAL_DIR = 'src/nr3_python/'
 DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye.dss'
@@ -186,9 +186,16 @@ def test_nr3_basematrices_H_g_b(nr3_solution, nr3_basematrices):
 
 def print_compare(title, old, new):
     print(title, '-'*70)
-    conflicts = np.where(old != new)
-    print("conflicting indices:\n", conflicts)
-    print("old @conflicts:")
-    print(old[conflicts])
-    print("new @conflicts:")
-    print(new[conflicts])
+    print("old:")
+    print(old)
+    print("new:")
+    print(new)
+
+
+# NR3 CHANGE KCL TESTS---------------------------------------------------------
+def test_change_KCL(circuit, H, g, b, t, der, capacitance, wpu):
+    ckt_H, ckt_b = circuit.change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
+    nr3_H, nr3_b = change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
+
+    assert(ckt_H == nr3_H)
+    assert(ckt_b == nr3_b)
