@@ -7,22 +7,18 @@ import numpy as np
 import opendssdirect as dss
 import pytest
 
-from circuit import Circuit
-from solution_nr3 import SolutionNR3
-from solution import Solution
+from circuit_mapper.circuit import Circuit
+from circuit_mapper.solution_nr3 import SolutionNR3
+from circuit_mapper.solution import Solution
 
 # current nr3 dependencies
-import sys
-#sys.path.append('/Users/elainelaguerta/Dropbox/LBNL/LinDist3Flow/20180601/PYTHON')
-sys.path.append("C:\\Users\\kathl\\Desktop\\GitHub\\LinDist3Flow\\20180601\\PYTHON")
+from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters
+from nr3_python.lib.basematrices import basematrices, change_KCL_matrices
+from nr3_python.lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
 
-from lib.DSS_parameters import relevant_openDSS_parameters
-from lib.basematrices import basematrices
-from lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
-
-LOCAL_DIR = '/Users/elainelaguerta/Dropbox/LBNL/python-powerflow/'
-LOCAL_DIR = "C:\\Users\\kathl\\Desktop\\GitHub\\LinDist3Flow\\20180601\\PYTHON"
-DSS_FILE = LOCAL_DIR + '\\IEEE_13_Bus_allwye.dss'
+LOCAL_DIR = 'src/nr3_python/'
+DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye.dss'
+# DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye_noxfm_noreg.dss'
 
 SLACKIDX = 0
 VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
@@ -62,28 +58,24 @@ def nr3_basematrices():
 def test_nr3_DSS_parameters_TXnum(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    print_compare("TX", TXnum, circuit.get_tx_idx_matrix())
     assert (TXnum == circuit.get_tx_idx_matrix()).all()
 
 
 def test_nr3_DSS_parameters_RXnum(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    print_compare("RX", RXnum, circuit.get_rx_idx_matrix())
     assert (RXnum == circuit.get_rx_idx_matrix()).all()
 
 
 def test_nr3_DSS_parameters_PH(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    print_compare("PH", PH, circuit.buses.get_phase_matrix())
     assert (PH == circuit.buses.get_phase_matrix()).all()
 
 
 def test_nr3_DSS_parameters_spu(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    print_compare("spu", spu, circuit.get_spu_matrix())
     assert (spu == circuit.get_spu_matrix()).all()
 
 
@@ -141,7 +133,7 @@ def test_nr3_transformer_regulator_params_gain(circuit, xfm_vr_parameters):
 def test_nr3_basematrices_XNR(nr3_solution, nr3_basematrices):
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
     print_compare("XNR", XNR, nr3_solution.XNR)
-    assert (XNR == nr3_solution.XNR).all()
+    np.testing.assert_equal(XNR, nr3_solution.XNR)
 
 
 def test_nr3_basematrices_SB(nr3_solution, nr3_basematrices):
@@ -158,7 +150,6 @@ def test_nr3_basematrices_KVL(nr3_solution, nr3_basematrices):
 
 
 def test_nr3_basematrices_KVL_regs(nr3_solution, nr3_basematrices):
-    tolerance = 1e-6
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
     assert (H_reg == nr3_solution.H_reg).all()
     assert (G_reg == nr3_solution.G_reg).all()
@@ -174,7 +165,8 @@ def test_nr3_helpers(circuit):
 
 def test_nr3_basematrices_H_g_b(nr3_solution, nr3_basematrices):
     XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, H_reg, G_reg = nr3_basematrices
-    assert (H == nr3_solution.H).all()
+    print_compare('H', H, nr3_solution.H)
+    np.testing.assert_equal(H, nr3_solution.H)
     assert (g == nr3_solution.g).all()
     assert (b == nr3_solution.b).all()
 
@@ -186,11 +178,11 @@ def print_compare(title, old, new):
     print("new:")
     print(new)
 
-# NR3 CHANGE KCL TESTS---------------------------------------------------------------------
 
+# NR3 CHANGE KCL TESTS---------------------------------------------------------
 def test_change_KCL(circuit, H, g, b, t, der, capacitance, wpu):
-    ckt_H, ckt_b = circuit.change_KCL_matrices( H, g, b, t, der, capacitance, wpu)
+    ckt_H, ckt_b = circuit.change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
     nr3_H, nr3_b = change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
-    
+
     assert(ckt_H == nr3_H)
     assert(ckt_b == nr3_b)
