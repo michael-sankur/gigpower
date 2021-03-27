@@ -69,3 +69,6 @@ def test_vvc_parameters(circuit, circuit_object, nr3_object):
     ckt_phase = circuit.get_vvc_phase(circuit_object)
     assert(nr_busName == ckt_busName)
     assert(nr_phase == ckt_phase)
+
+
+
