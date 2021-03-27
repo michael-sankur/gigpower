@@ -33,9 +33,9 @@ class LineGroup(CircuitElementGroup):
             return self._key_to_element_dict[key]
         except KeyError:
             try:
-                return self.transformers.get_line_from_key(key)
+                return self.transformers._key_to_element_dict[key]
             except AttributeError:
-                return self.voltage_regulators.get_line_from_key(key)
+                return self.voltage_regulators._key_to_element_dict[key]
 
     def get_bus_ids(self, which: str) -> List:
         """
@@ -96,7 +96,11 @@ class LineGroup(CircuitElementGroup):
         [self.num_elements, transformers.num_elements -1 ]: Transformers
         [transformers.num_elements, voltage_regulators.num_elemenrs-1]:
                                                 VoltageRegulators
-        """  
+        """
+
+        if isinstance(obj, tuple):
+            return self.get_idx(self.get_line_from_key(obj))
+
         try:
             return super().get_idx(obj)
         except KeyError:
@@ -118,14 +122,56 @@ class LineGroup(CircuitElementGroup):
         """ n x 9 matrix, indexed by Line index"""
         return self._get_attr_by_idx('rmat')
 
-    def get_parents(self, bus_name: str, inc_voltage_regs=False) -> List[str]:
+    def get_upstream_buses(self, bus_name: str, inc_xfm=False,
+                           inc_regs=False) -> List[str]:
         """ returns a list of buses upstream of bus_name """
-        if bus_name in self.reverse_adj:
-            return self.reverse_adj[bus_name]
+        return self._get_adj(bus_name, 'upstream', inc_xfm=inc_xfm, inc_regs=inc_regs)
+
+    def get_downstream_buses(self, bus_name: str, inc_xfm=False,
+                             inc_regs=False) -> List[str]:
+        """ returns a list of buses downstream of bus_name """
+        return self._get_adj(bus_name, 'downstream', inc_xfm=inc_xfm, inc_regs = inc_regs)
+
+    def _get_adj(self, bus_name: str, which, inc_xfm, inc_regs) -> List[str]:
+        """ for get_children() and get_parents"""
+        if which == 'upstream':
+            target = 'reverse_adj'
+        elif which == 'downstream':
+            target = 'adj'
+
+        self_adj = getattr(self, target)
+        if bus_name in self_adj:
+            return self_adj[bus_name]
+
+        if inc_xfm:
+            try:
+                xfm_adj = getattr(self.transformers, target)
+                if bus_name in self.transformers.reverse_adj:
+                    return xfm_adj[bus_name]
+            except AttributeError:
+                pass
+
+        if inc_regs:
+            try:
+                vr_adj = getattr(self.voltage_regulators, target)
+                if bus_name in vr_adj:
+                    return vr_adj[bus_name]
+            except AttributeError:
+                pass
+
         return []
 
-    def get_children(self, bus_name: str, inc_voltage_regs=False) -> List[str]:
-        """ returns a list of buses downstream of bus_name """
-        if bus_name in self.adj:
-            return self.adj[bus_name]
-        return []
+    def get_line_list(self, bus_name: str, which, inc_xfm=False,
+                      inc_regs=False) -> np.asarray:
+        """
+        list of line indices for lines going out or coming into bus_name
+        param which: 'out' , returns lines starting with bus_name, 
+        or 'in', returns lines terminating at bus_name
+        """
+        if which == 'out':
+            buses = self.get_downstream_buses(bus_name, inc_xfm, inc_regs)
+            return np.asarray([self.get_line_from_key((bus_name, rx)).__name__ for rx in buses])
+        if which == 'in':
+            buses = self.get_upstream_buses(bus_name, inc_xfm, inc_regs)
+            return np.asarray([self.get_line_from_key((tx, bus_name)).__name__ for tx in buses])
+

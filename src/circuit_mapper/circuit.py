@@ -39,6 +39,12 @@ class Circuit():
         self.capacitors = CapacitorGroup(dss, bus_group=self.buses)
         self.transformers = TransformerGroup(dss, bus_group=self.buses)
         self.voltage_regulators = VoltageRegulatorGroup(dss, bus_group=self.buses)
+        
+        # the main line group needs to be aware of transformers and voltage 
+        # regulators. It can be queried for transformer and voltage regulator
+        # indices and topology
+        self.lines.transformers = self.transformers
+        self.lines.voltage_regulators = self.voltage_regulators
 
         # # set zip values according to class vairables Circuit.ZIP_V 
         # self.loads._set_zip_values(Circuit.ZIP_V)
@@ -173,10 +179,19 @@ class Circuit():
         TODO: Implement logic to set this as needed.
         """
         return np.zeros((3, self.buses.num_elements))
-    
+
     def get_total_lines(self):
-        """ returns number of Lines and Synthetic Lines"""
-        return len(self.lines.all_names())
+        """ returns number of Lines transformers, and voltage regulators * 2"""
+        total = self.lines.num_elements
+        try:
+            total += self.transformers.num_elements
+        except AttributeError:
+            pass
+        try:
+            total += self.voltage_regulators.num_elements
+        except AttributeError:
+            pass
+        return total
 
     def _get_zip_val_matrix(self, zip_param=str) -> np.ndarray:
         """

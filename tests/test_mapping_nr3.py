@@ -127,10 +127,14 @@ def test_nr3_transformer_regulator_params_counts(circuit, xfm_vr_parameters):
 
 def test_nr3_linelist(circuit):
     for bus_name in circuit.buses.all_names():
-        parent_names = circuit.lines.get_parents(bus_name)
-        parent_idx = np.asarray([circuit.buses.get_idx(p) for p in parent_names])
-        in_lines = linelist(bus_name)
-        np.testing.assert_equal(parent_idx, in_lines)
+        in_idx = circuit.lines.get_line_list(bus_name, 'in')
+        in_lines = linelist(bus_name)[0]
+        np.testing.assert_equal(in_idx, in_lines)
+
+    for bus_name in circuit.buses.all_names():
+        out_idx = circuit.lines.get_line_list(bus_name, 'out')
+        out_lines = linelist(bus_name)[1]
+        np.testing.assert_equal(out_idx, out_lines)
 
 
 def test_nr3_transformer_regulator_params_gain(circuit, xfm_vr_parameters):
