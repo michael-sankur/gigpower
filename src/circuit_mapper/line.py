@@ -52,10 +52,10 @@ class Line(CircuitElement):
         """
         try:
             dss.Lines.Name(self.__name__)
-            xmat = np.asarray(dss.Lines.XMatrix())
-            rmat = np.asarray(dss.Lines.RMatrix())
+            xmat = np.asarray(dss.Lines.XMatrix(), dtype=complex)
+            rmat = np.asarray(dss.Lines.RMatrix(), dtype=complex)
         except Exception:  # for transformers, voltage regs
-            xmat, rmat = np.zeros(9), np.zeros(9)
+            xmat, rmat = np.zeros(9, dtype=complex), np.zeros(9, dtype=complex)
         if len(xmat) == 1:  # set the diagonals to the value
             self.xmat = (np.identity(3) * xmat).flatten()
             self.rmat = (np.identity(3) * rmat).flatten()
