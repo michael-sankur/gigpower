@@ -209,9 +209,9 @@ class Circuit():
         param_matrix = np.zeros((self.buses.num_elements, 3))
         for load in self.loads.get_elements():
             load_bus = load.related_bus
-            load_ph_matrix = parse_phase_matrix(load.phases)
+            load_ph_idx = load.get_ph_idx_matrix()
             bus_idx = self.buses.get_idx(load_bus)
-            param_matrix[bus_idx] += load_ph_matrix * getattr(Circuit, zip_param)
+            param_matrix[bus_idx, load_ph_idx] = getattr(Circuit, zip_param)
         return self._orient_switch(param_matrix)
 
     def _assign_to_buses(self, ckt_element_group):

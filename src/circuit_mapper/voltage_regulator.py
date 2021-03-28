@@ -16,9 +16,9 @@ class VoltageRegulator(CircuitElement):
         dss.Transformers.Name(self.transformer_name)
         self.tap = dss.RegControls.TapNumber()
         self.set_gamma(self.tap)
-        self.Itx = np.zeros((3,), dtype='float')
+        self.Itx = np.zeros((3,), dtype=complex)
         # complex current entering/leaving the regControl node
-        self.Ireg = np.zeros((3,), dtype='float')
+        self.Ireg = np.zeros((3,), dtype=complex)
 
     def set_gamma(self, tapNumber: int) -> None:
         """
