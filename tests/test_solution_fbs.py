@@ -5,12 +5,9 @@
 
 import numpy as np
 import pytest
-import pandas as pd
 
-from circuit_mapper.circuit import Circuit
 from circuit_mapper.solution_fbs import SolutionFBS
 from circuit_mapper.pretty_print import compare_data_frames
-from circuit_mapper.utils import parse_phases
 
 from fbs.fbs.utils import init_from_dss
 from fbs.fbs.fbs import fbs, get_solution as get_fbs_solution
@@ -29,6 +26,7 @@ STRICT = 1e-2
 def setup_module():
     if not OUT_DIR.exists():
         os.makedirs(OUT_DIR)
+
 
 @pytest.mark.parametrize(
     "dss_file,tolerance",
@@ -51,6 +49,8 @@ class TestParamtrized:
     def new_fbs_solution(self, dss_file):
         fp = str(Path(DSS_FILE_DIR, dss_file))
         solution = SolutionFBS(fp)
+        solution.circuit.set_zip_values(np.asarray(
+            [0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]))
         # solution.maxiter = 1
         solution.solve()
         return solution
