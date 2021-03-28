@@ -309,6 +309,10 @@ class Solution():
         # temp = aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2
         # temp1 = spu * (aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2)
         # temp2 = 1j * cappu.real + 1j * wpu + 1j * vvcpu.real
+
+        # TODO: confirm if cappu.real needs to be multiplied by abs(V)**2
+        # nr3 map_solution does not do that, but fbs requires it for
+        # results to be consistent with opendss
         update = spu * (aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2) - \
             1j * cappu.real * np.abs(V)**2 + 1j * wpu + 1j * vvcpu.real
 

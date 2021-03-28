@@ -125,13 +125,6 @@ def mask_phases(matrix: np.ndarray, shape: tuple, phases: np.ndarray) -> np.ndar
     return np.nan_to_num(masked)
 
 
-def calculate_sV(V, spu, aPQ, aI, aZ, cappu, wpu):
-    """
-    Used to calculate voltage dependent load, and total node powers
-    input params are ndarrays, with non-existent phases zeroed out
-    """
-    return spu * (aPQ + aI * abs(V) + aZ * (abs(V)**2)) - 1j * cappu + wpu
-
 
 def topo_sort(bus_names: List[str], adj_matrix: Dict) -> List:
     """

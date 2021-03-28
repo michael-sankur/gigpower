@@ -7,7 +7,7 @@ import numpy as np  # type: ignore
 from . voltage_regulator import VoltageRegulator
 from typing import List, Dict, Iterable
 from . solution import Solution
-from . utils import mask_phases, calculate_sV, topo_sort, get_reverse_adj
+from . utils import mask_phases, topo_sort, get_reverse_adj
 import copy
 
 
@@ -72,14 +72,6 @@ class SolutionFBS(Solution):
         topo_order = self.topo_order
         root_idx = self.circuit.buses.get_idx(self.root)
         converged = max(abs(self.Vtest - self.Vref)) <= self.tolerance
-
-        # ask self.circuit to calculate these once
-        self.spu = self.circuit.get_spu_matrix().transpose()
-        self.aPQ = self.circuit.get_aPQ_matrix().transpose()
-        self.aI = self.circuit.get_aI_matrix().transpose()
-        self.aZ = self.circuit.get_aZ_matrix().transpose()
-        self.wpu = self.circuit.get_wpu_matrix().transpose()
-        self.cappu = self.circuit.get_cappu_matrix().transpose()
  
         while not converged and self.iterations < self.maxiter:
             # set V.root to Vref
@@ -95,7 +87,7 @@ class SolutionFBS(Solution):
                         self.update_voltage_forward(bus, child)
 
             # update s at all buses
-            self.update_sV()
+            self.calculate_sV()
 
             # BACKWARD SWEEP: for node in reverse topo_order:
             for bus_name in reversed(topo_order):
@@ -108,8 +100,8 @@ class SolutionFBS(Solution):
                 elif len(parents) == 1:
                     parent = self.circuit.buses.get_element(parents[0])
                     # update sV at this bus, and at parent
-                    self.update_sV(bus)
-                    self.update_sV(parent)
+                    self.calculate_sV(bus)
+                    self.calculate_sV(parent)
                     line_in = self.circuit.lines.get_element(
                         (parent.__name__, bus.__name__))
                     # update line_in segment
@@ -123,9 +115,9 @@ class SolutionFBS(Solution):
             self.convergence_diff = max(abs(self.Vtest - self.Vref))
             # check convergence
             converged = self.convergence_diff <= self.tolerance
-        
+
         # after convergence, update sV with V values at convergence
-        self.update_sV()
+        self.calculate_sV()
         self.converged = converged
 
     def vr_forward(self, vr_list):
@@ -268,32 +260,10 @@ class SolutionFBS(Solution):
                         # update I using all vrs on the same outgoing edge
                         for vr in line_out:
                             new_line_I += vr.Itx
-                    else: # update I summing over all outgoing lines
+                    else:  # update I summing over all outgoing lines
                         line_out_idx = self.circuit.lines.get_idx(line_out)
                         new_line_I = new_line_I + self.I[line_out_idx]
             # zero out non-existant phases
             # TODO: should SyntheticLines have phases? the old FBS would zero out I for
             # all SyntheticLines
             self.I[line_in_idx] = np.nan_to_num(new_line_I * line_in.phase_matrix)
-
-    def update_sV(self, bus=None):
-        """
-        TODO: this may need to move up to Solution
-        updates self.sV (voltage dependent loads, or powers at each bus) 
-        based on self.V's present values
-        param bus: if Bus is given, will update self.sV only at the bus
-        otherwise, updates all buses
-        """
-        # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
-        if not bus:  # all buses
-            spu = self.spu
-            aPQ, aI, aZ = self.aPQ, self.aI, self.aZ
-            V, cappu, wpu = self.V, self.cappu, self.wpu
-            self.sV = calculate_sV(V, spu, aPQ, aI, aZ, cappu, wpu)
-        else:  # update at the given bus only
-            bus_idx = self.circuit.buses.get_idx(bus)
-            spu = self.spu[bus_idx]
-            aPQ, aI, aZ = self.aPQ[bus_idx], self.aI[bus_idx], self.aZ[bus_idx]
-            V, cappu, wpu = self.V[bus_idx], self.cappu[bus_idx], self.wpu[bus_idx]
-            self.sV[bus_idx] = calculate_sV(V, spu, aPQ, aI, aZ, cappu, wpu)
-
