@@ -124,11 +124,11 @@ class LineGroup(CircuitElementGroup):
 
     def get_X_matrix(self):
         """ n x 9 matrix, indexed by Line index"""
-        return self._get_attr_by_idx('xmat')
+        return self._get_attr_by_idx('xmat', 'rows')
 
     def get_R_matrix(self):
         """ n x 9 matrix, indexed by Line index"""
-        return self._get_attr_by_idx('rmat')
+        return self._get_attr_by_idx('rmat', 'rows')
 
     def get_upstream_buses(self, bus_name: str, inc_xfm=False,
                            inc_regs=False) -> List[str]:

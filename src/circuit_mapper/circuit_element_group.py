@@ -135,7 +135,7 @@ class CircuitElementGroup():
             obj = self.get_element(idx)
             return_matrix[idx] = getattr(obj, attr)
 
-        if orient == 'col':
+        if orient == 'cols':
             return return_matrix.transpose()
 
         return return_matrix

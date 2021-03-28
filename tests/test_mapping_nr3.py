@@ -72,7 +72,7 @@ def test_nr3_DSS_parameters_RXnum(circuit, nr3_DSS_parameters):
 def test_nr3_DSS_parameters_PH(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    assert (PH == circuit.buses.get_phase_matrix()).all()
+    assert (PH == circuit.buses.get_phase_matrix('cols')).all()
 
 
 def test_nr3_DSS_parameters_spu(circuit, nr3_DSS_parameters):
