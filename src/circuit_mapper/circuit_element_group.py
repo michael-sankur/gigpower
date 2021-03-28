@@ -118,9 +118,9 @@ class CircuitElementGroup():
         param orient: 'rows' for n x ? matrix indexed by ele index, 'cols' for its
         transpose
         """
-
         val = getattr(self.get_element(0), attr)
-
+        data_type = val.dtype
+        
         try:
             attr_size = val.size  # np.ndarray.size
         except AttributeError:
@@ -129,7 +129,7 @@ class CircuitElementGroup():
             except TypeError:
                 attr_size = 1  # a scalar
 
-        return_matrix = np.zeros((self.num_elements, attr_size))
+        return_matrix = np.zeros((self.num_elements, attr_size), data_type)
 
         for idx in range(self.num_elements):
             obj = self.get_element(idx)
