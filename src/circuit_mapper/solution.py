@@ -41,6 +41,7 @@ class Solution():
         sets up a Solution object with a pointer to a Circuit mapped from opendss
         Solutions keep a pointer to the dss object used to map the Circuit
         """
+        
         #  setup calls to opendss----------------------------------------------
         self.dss = dss  # save dss instance to object
         dss.run_command('Redirect ' + dss_fp)
@@ -51,6 +52,11 @@ class Solution():
         #  map Circuit and vvc objects-----------------------------------------
         self.circuit = Circuit(dss)
         self.volt_var_controllers = self.parse_vvc_objects(dss_fp)
+
+        # default orientation, n x 3 or 3 x n
+        # consider making this a class variable
+        self._orient = 'rows'
+        self.circuit._orient = self._orient
 
         #  initialize solution parameters---------------------------------------
         self.iterations = 0
@@ -63,6 +69,18 @@ class Solution():
         # Voltage parameters. TODO: are these only for fbs?
         # If so, move to solution_fbs.py
         self.Vtest = np.zeros(3, dtype='complex')
+        # cache sV params for load calcualtions
+        self._set_sV_params()
+
+    def _set_sV_params(self):
+        self.phase_matrix = self.circuit.buses.get_phase_matrix(self._orient)
+        self.spu = self.circuit.get_spu_matrix()
+        self.aPQ = self.circuit.get_aPQ_matrix()
+        self.aI = self.circuit.get_aI_matrix()
+        self.aZ = self.circuit.get_aZ_matrix()
+        self.cappu = self.circuit.get_cappu_matrix()
+        self.wpu = self.circuit.get_wpu_matrix()
+        self.vvcpu = self.circuit.get_vvcpu_matrix()
 
     def _init_solution_matrices(self):
         """
@@ -266,6 +284,51 @@ class Solution():
         """
         return self.get_load_powers() + self.get_capacitor_powers()
 
+    def calculate_sV(self, bus=None):
+        """
+        Used to calculate total node powers, accounting for loads
+        and capacitors, oriented according to self._orient
+        self._orient = 'rows' -> returns n x 3
+        self._orient = 'cols' -> returns 3 x n
+        param bus: if a Bus is given, updates self.sV only at the index of the Bus
+        """
+        V = self.V
+        spu = self.spu
+        aPQ, aI, aZ = self.aPQ, self.aI, self.aZ
+        cappu, wpu, vvcpu = self.cappu, self.wpu, self.vvcpu
+        phase_matrix = self.phase_matrix
+
+        if bus:
+            bus_idx = self.circuit.buses.get_idx(bus)
+            V = self.V[bus_idx]
+            spu = self.spu[bus_idx]
+            aPQ, aI, aZ = self.aPQ[bus_idx], self.aI[bus_idx], self.aZ[bus_idx]
+            cappu, wpu, vvcpu = self.cappu[bus_idx], self.wpu[bus_idx], self.vvcpu[bus_idx]
+            phase_matrix = self.phase_matrix[bus_idx]
+
+        # temp = aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2
+        # temp1 = spu * (aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2)
+        # temp2 = 1j * cappu.real + 1j * wpu + 1j * vvcpu.real
+        update = spu * (aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2) - \
+            1j * cappu.real * np.abs(V)**2 + 1j * wpu + 1j * vvcpu.real
+
+        update[phase_matrix == 0] = 0
+
+        if bus:
+            self.sV[bus_idx] = update
+        else:
+            if self._orient == 'rows':
+                outer, inner = self.circuit.buses.num_elements, 3
+            elif self._orient == 'cols':
+                outer, inner = 3, self.circuit.buses.num_elements
+            # for i in range(outer):
+            #     for j in range(inner):
+            #         if np.abs(update[i, j].real) <= 1e-12:
+            #             update[i, j] = 0 + update[i, j].imag
+            #         if np.abs(self.sV[i, j].imag) <= 1e-12:
+            #             update[i, j] = update[i, j].real + 0
+            self.sV = update
+
     def calc_Stx(self):
         tx_bus_matrix = self.circuit.get_tx_idx_matrix()
         self.Stx = self.V[tx_bus_matrix] * np.conj(self.I)
@@ -341,6 +404,18 @@ class Solution():
             data[node_idx] += calc_total_node_power(
                 node, nodeV, [0, 0, 1, 0, 0, 1])
         return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+
+    def _set_orient(self, orient: str):
+        """
+        Sets matrix orientation on self and self.circuit, indicating whether 
+        shapes are n x 3 (rows) or 3 x n (columns)
+        param orient: 'rows' or 'cols'
+        TODO: implement this to change all matrices currently set on solution 
+        to the correct orientation
+        """
+        self._orient = orient
+        self.circuit._orient = orient
+        pass
 
     def print_solution(self):
         """
