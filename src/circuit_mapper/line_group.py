@@ -97,25 +97,26 @@ class LineGroup(CircuitElementGroup):
         [transformers.num_elements, voltage_regulators.num_elements-1]:
                                                 VoltageRegulators
         """
-        offset = 0
         if isinstance(obj, tuple):
-            try:
+            if obj in self._key_to_element_dict:
                 line = self._key_to_element_dict[obj]
-                idx = self._name_to_idx_dict[line.__name__]
-            except KeyError:  # check transformers
-                offset += self.transformers.num_elements
-                idx = self.transformers.get_idx(obj)
+                return self._name_to_idx_dict[line.__name__]
+            # check transformers
+            elif obj in self.transformers._key_to_element_dict:  
+                return self.num_elements + self.transformers.get_idx(obj)
+            # check vrs, will return a list of vrs
+            elif obj in self.voltage_regulators._key_to_element_dict:  
+                return self.voltage_regulators._key_to_element[obj]
         else:
             try:
                 return super().get_idx(obj)  # search self
             except KeyError:  # check transforemrs
                 try:
-                    offset += self.transformers.num_elements
-                    idx = self.transformers.get_idx(obj)
-                except AttributeError:  # check vrs
-                    offset += self.voltage_regulators.num_elements
-                    idx = self.voltage_regulators.get_idx(obj)
-        return offset + idx
+                    return self.num_elements + self.transformers.get_idx(obj)
+                except KeyError:  # check vrs
+                    return self.num_elements + self.transformers.num_elements \
+                        + self.voltage_regulators.get_idx(obj)
+
 
     def get_num_lines_x_ph(self):
         """ returns sum of active phases across all lines """

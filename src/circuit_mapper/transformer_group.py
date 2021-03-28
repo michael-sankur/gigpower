@@ -1,5 +1,6 @@
 from . line_group import LineGroup
 from . transformer import Transformer
+from . circuit_element_group import CircuitElementGroup
 import numpy as np
 
 
@@ -17,3 +18,8 @@ class TransformerGroup(LineGroup):
         vregs = dss.RegControls.AllNames()
         self._names = [n for n in transformers if n not in vregs]
         super()._populate_name_idx_dicts()
+
+    def get_idx(self, obj):
+        if isinstance(obj, tuple):
+            return CircuitElementGroup.get_idx(self, self._key_to_element_dict[obj])
+        return CircuitElementGroup.get_idx(self, obj)

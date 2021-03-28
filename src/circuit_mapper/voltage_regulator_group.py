@@ -70,3 +70,10 @@ class VoltageRegulatorGroup(LineGroup):
         for node, neighbors in new_adj.items():
             new_adj[node] = list(set(neighbors))
         return new_adj
+
+    def get_idx(self, obj):
+        # returns a list of VRs, not an index
+        if isinstance(obj, tuple):
+            return self._key_to_element_dict[obj]  
+        else:
+            return CircuitElementGroup.get_idx(self, obj)
