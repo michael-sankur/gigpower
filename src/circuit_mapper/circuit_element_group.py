@@ -55,12 +55,13 @@ class CircuitElementGroup():
         """ return the name of the object given its Group idx"""
         return self._idx_to_name_dict[idx]
 
-    def get_phase_matrix(self) -> np.ndarray:
+    def get_phase_matrix(self, orient: str) -> np.ndarray:
         """
-        3 x n phase matrix of 1's where phases are present, 0's otherwise
-        columns indexed by element index, which is the same as in opendss
+        phase matrix of 1's where phases are present, 0's otherwise
+        indexed by element index, which is the same as in opendss
+        param orient: 'rows' or 'cols'
         """
-        return self._get_attr_by_idx('phase_matrix', 'col')
+        return self._get_attr_by_idx('phase_matrix', orient)
     
     def get_phase_matrix_dict(self) -> Dict[str, np.ndarray]:
         """ 
@@ -108,13 +109,13 @@ class CircuitElementGroup():
         if inc_num_elements: 
             self.num_elements += 1
 
-    def _get_attr_by_idx(self, attr: str, orient='row') -> np.ndarray:
+    def _get_attr_by_idx(self, attr: str, orient : str) -> np.ndarray:
         """
         helper method to get an n x ? matrix of ele.attr values, indexed by
         the element index (same as self._names order, and the index order in
         opendss)
         param attr: name of the element param
-        param orient: 'row' for n x ? matrix indexed by ele index, 'col' for its
+        param orient: 'rows' for n x ? matrix indexed by ele index, 'cols' for its
         transpose
         """
 

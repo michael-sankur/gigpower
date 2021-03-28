@@ -21,8 +21,8 @@ class Circuit():
     # zip values are set at the Circuit class level so that 
     # all Circuit instances use the same zip values
     ZIP_V = np.asarray([0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80])
-    aPQ_p, aI_p, aZ_p = ZIP_V[0:3]
-    aPQ_q, aI_q, aZ_q = ZIP_V[3:6]
+    aZ_p, aI_p, aPQ_p = ZIP_V[0:3]
+    aZ_q, aI_q, aPQ_q = ZIP_V[3:6]
     min_voltage_pu = ZIP_V[6]
 
     def __init__(self, dss, Sbase=10**6):
@@ -50,7 +50,7 @@ class Circuit():
         # self.loads._set_zip_values(Circuit.ZIP_V)
         # self.capacitors._set_zip_values(Circuit.ZIP_V)
         self.dss = dss
-
+        self._orient = 'rows'  # may be overwritten by Solution
         # self._assign_to_buses(self.loads)
         # self._assign_to_buses(self.capacitors)
         # self._assign_to_buses(self.voltage_regulators)
@@ -123,16 +123,22 @@ class Circuit():
             pass
         return np.asarray([self.buses.get_idx(bus) for bus in rx_buses])
 
+    def _orient_switch(self, matrix):
+        if self._orient == 'rows':
+            return matrix
+        elif self._orient == 'cols':
+            return matrix.transpose()
+
     def get_spu_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of complex spu, columns indexed by bus index
+        3 x n or n x 3 matrix of complex spu indexed by bus index
         """
         spu_matrix = np.zeros((self.buses.num_elements, 3), dtype=complex)
         for load in self.loads.get_elements():
             bus_idx = self.buses.get_idx(load.related_bus)
             spu_matrix[bus_idx] += load.spu
-        return spu_matrix.transpose()
-
+        return self._orient_switch(spu_matrix)
+    
     def get_cappu_matrix(self) -> np.ndarray:
         """
         3 x n matrix of complex spu, columns indexed by bus index
@@ -141,7 +147,7 @@ class Circuit():
         for cap in self.capacitors.get_elements():
             bus_idx = self.buses.get_idx(cap.related_bus)
             cappu_matrix[bus_idx] += cap.cappu
-        return cappu_matrix.transpose()
+        return self._orient_switch(cappu_matrix)
 
     def get_aPQ_matrix(self) -> np.ndarray:
         """
@@ -170,7 +176,7 @@ class Circuit():
         Currently set to all zeros.
         TODO: Implement logic to set this as needed.
         """
-        return np.zeros((3, self.buses.num_elements))
+        return self._orient_switch(np.zeros((self.buses.num_elements, 3)))
 
     def get_vvcpu_matrix(self) -> np.ndarray:
         """
@@ -178,7 +184,7 @@ class Circuit():
         Currently set to all zeros.
         TODO: Implement logic to set this as needed.
         """
-        return np.zeros((3, self.buses.num_elements))
+        return self._orient_switch(np.zeros((self.buses.num_elements, 3)))
 
     def get_total_lines(self):
         """ returns number of Lines transformers, and voltage regulators * 2"""
@@ -206,7 +212,7 @@ class Circuit():
             load_ph_matrix = parse_phase_matrix(load.phases)
             bus_idx = self.buses.get_idx(load_bus)
             param_matrix[bus_idx] += load_ph_matrix * getattr(Circuit, zip_param)
-        return param_matrix.transpose()
+        return self._orient_switch(param_matrix)
 
     def _assign_to_buses(self, ckt_element_group):
         """

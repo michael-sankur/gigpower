@@ -13,6 +13,7 @@ class SolutionNR3(Solution):
 
     def __init__(self, dss_fp: str, **kwargs):
         super().__init__(dss_fp, **kwargs)  # sets self.circuit
+        self._set_orient('cols')
         self._init_XNR()
         self._init_slack_bus_matrices()
         self._init_KVL_matrices()
