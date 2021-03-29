@@ -18,8 +18,6 @@ class Bus(CircuitElement):
         self.downstream_buses = []
         self.loads: List[Load] = []
         self.capacitors: List[Capacitor] = []
-        self.sum_spu = np.zeros(3)  # 3x1 complex array that holds the sum of all load.spu on this node
-        self.sum_cappu = np.zeros(3)  # 3x1 array that holds the sum of all capacitor.cappu on this node
 
     def _set_related_bus(self, dss):
         self.related_bus = self.__name__
