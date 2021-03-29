@@ -82,7 +82,7 @@ def pad_phases(matrix: np.ndarray, shape: tuple, phases: np.ndarray) -> np.ndarr
         with 0's for all row/column indices corresponding to non-existent phases
     """
     # make the return matrix matrix
-    ret_mat = np.zeros(shape, dtype=complex)
+    ret_mat = np.zeros(shape, dtype=matrix.dtype)
     vals = iter(matrix.flatten())
     for out_idx in range(shape[0]):
         if len(shape) == 2:
@@ -111,7 +111,7 @@ def mask_phases(matrix: np.ndarray, shape: tuple, phases: np.ndarray) -> np.ndar
         input matrix with 0's for all row/column indices corresponding 
         to phases that are 0 in the phase matrix
     """
-    out_matrix = np.zeros(shape, dtype=complex)
+    out_matrix = np.zeros(shape, dtype=matrix.dtype)
     for out_idx in range(shape[0]):
         if len(shape) == 2:
             for col_idx in range(shape[1]):
