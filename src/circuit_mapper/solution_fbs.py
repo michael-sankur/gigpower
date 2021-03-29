@@ -250,8 +250,12 @@ class SolutionFBS(Solution):
             rx_bus_name = line_in.key[1]  # type: ignore
             rx_bus_idx = self.circuit.buses.get_idx(rx_bus_name)
             line_in_idx = self.circuit.lines.get_idx(line_in)
-            new_line_I = np.conj(np.divide(self.sV[rx_bus_idx], self.V[rx_bus_idx]))
- 
+            # divide sV by V only where V is non-zero
+            new_line_I = np.zeros(3, dtype=complex)
+            non_zero_idx = np.where(self.V[rx_bus_idx] != 0)
+            new_line_I[non_zero_idx] = np.conj(
+                np.divide(self.sV[rx_bus_idx, non_zero_idx],
+                          self.V[rx_bus_idx, non_zero_idx]))
             # sum currents over all node's child segments
             if rx_bus_name in self.adj:
                 for child_name in self.adj[rx_bus_name]:
