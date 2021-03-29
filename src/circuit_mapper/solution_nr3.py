@@ -111,7 +111,8 @@ class SolutionNR3(Solution):
         self.b_KVL = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines, 1))
 
         G_KVL = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines,
-                         2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
+                         2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines), 
+                         dtype=complex)
 
         for ph in range(3):
             for line in range(nline):  # line = line index
