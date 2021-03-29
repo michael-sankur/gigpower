@@ -253,8 +253,8 @@ class VoltageRegulator:
         self.phases = [False, False, False]  # in the 13 node test case, there is only one phase on each VR
         self.key = (tx, node_name)
         self.add_to_network(network, tx)
-        self.Itx = np.zeros((3,), dtype='float')  # complex current entering/leaving tx node
-        self.Ireg = np.zeros((3,), dtype='float')  # complex current entering/leaving the regControl node
+        self.Itx = np.zeros((3,), dtype='complex')  # complex current entering/leaving tx node
+        self.Ireg = np.zeros((3,), dtype='complex')  # complex current entering/leaving the regControl node
 
     def add_to_network(self, network: Network, tx: str) -> None:
 
