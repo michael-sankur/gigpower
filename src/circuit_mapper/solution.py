@@ -307,15 +307,11 @@ class Solution():
             cappu, wpu, vvcpu = self.cappu[bus_idx], self.wpu[bus_idx], self.vvcpu[bus_idx]
             phase_matrix = self.phase_matrix[bus_idx]
 
-        # temp = aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2
-        # temp1 = spu * (aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2)
-        # temp2 = 1j * cappu.real + 1j * wpu + 1j * vvcpu.real
-
         # TODO: confirm if cappu.real needs to be multiplied by abs(V)**2
         # nr3 map_solution does not do that, but fbs requires it for
         # results to be consistent with opendss
         update = spu * (aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2) - \
-            1j * cappu.real * np.abs(V)**2 + 1j * wpu + 1j * vvcpu.real
+            1j * cappu * np.abs(V)**2 + 1j * wpu + 1j * vvcpu
 
         update[phase_matrix == 0] = 0
 

@@ -141,9 +141,9 @@ class Circuit():
     
     def get_cappu_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of complex spu, columns indexed by bus index
+        3 x n matrix of real cappu, columns indexed by bus index
         """
-        cappu_matrix = np.zeros((self.buses.num_elements, 3), dtype=complex)
+        cappu_matrix = np.zeros((self.buses.num_elements, 3), dtype=float)
         for cap in self.capacitors.get_elements():
             bus_idx = self.buses.get_idx(cap.related_bus)
             cappu_matrix[bus_idx] += cap.cappu
@@ -172,19 +172,22 @@ class Circuit():
 
     def get_wpu_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of all wpu, columns indexed by bus
+        3 x n matrix of all real wpu, columns indexed by bus
         Currently set to all zeros.
         TODO: Implement logic to set this as needed.
         """
-        return self._orient_switch(np.zeros((self.buses.num_elements, 3)))
+        return self._orient_switch(np.zeros((self.buses.num_elements, 3),
+                                   dtype=float))
 
     def get_vvcpu_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of all wpu, columns indexed by bus
+        3 x n matrix of all real vvcpu, columns indexed by bus
         Currently set to all zeros.
         TODO: Implement logic to set this as needed.
         """
-        return self._orient_switch(np.zeros((self.buses.num_elements, 3)))
+        # TODO: confirm vvpcu dtype
+        return self._orient_switch(np.zeros((self.buses.num_elements, 3),
+                                            dtype=float))
 
     def get_total_lines(self):
         """ returns number of Lines transformers, and voltage regulators * 2"""
