@@ -371,26 +371,14 @@ class Solution():
         Return total load powers by bus, calculated from solved V value
         per node.
         """
-        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
-
-        for bus_name, bus_idx in self.network.bus_idx_dict.items():
-            node = self.network.nodes[bus_name]
-            data[bus_idx] = calc_load_power(node, self.V[bus_name])
-
-        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+        pass
 
     def getCapPowers(self):
         """
         Return total cap powers by bus, calculated from solved V value
         per node.
         """
-        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
-
-        for bus_name, bus_idx in self.network.bus_idx_dict.items():
-            node = self.network.nodes[bus_name]
-            data[bus_idx] = calc_cap_power(node, self.V[bus_name])
-
-        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+        pass
 
     def nomNodePwrs_df(self):
         """
