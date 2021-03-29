@@ -22,10 +22,20 @@ class LineGroup(CircuitElementGroup):
         self.reverse_adj = {}
         self._key_to_element_dict = {}
         super().__init__(dss, **kwargs)
-        
+  
     def get_line_from_key(self, key: Tuple[str, str]):
-        """ return the Line with the key (tx_bus, rx_bus)"""
-        return self._key_to_element_dict[key]
+        """
+        return the Line with the key (tx_bus, rx_bus)
+        first searches self, then searches transformers, finally 
+        voltage regulators
+        """
+        try:
+            return self._key_to_element_dict[key]
+        except KeyError:
+            try:
+                return self.transformers._key_to_element_dict[key]
+            except KeyError:
+                return self.voltage_regulators._key_to_element_dict[key]
 
     def get_bus_ids(self, which: str) -> List:
         """
@@ -34,15 +44,12 @@ class LineGroup(CircuitElementGroup):
         """
         return [getattr(line, which) for line in self.get_elements()]
 
-    def add_element(self, line, unique_key=True, inc_num_elements=True):
+    def add_element(self, line, unique_key=True):
         """
         Call super(), and add the new line's topology.
         add line to self._key_to_element_dict
-
-        note that adding a SyntheticLine will NOT increment self.num_elements,
-        and will allow multiple SyntheticLines for one key 
         """
-        super().add_element(line, inc_num_elements=inc_num_elements)
+        super().add_element(line)
         if unique_key:
             self._key_to_element_dict[line.key] = line
         else:
@@ -59,8 +66,7 @@ class LineGroup(CircuitElementGroup):
             self.adj[tx_bus].append(rx_bus)
         except KeyError:
             self.adj[tx_bus] = [rx_bus]
-
-        try: 
+        try:
             self.reverse_adj[rx_bus].append(tx_bus)
         except KeyError:
             self.reverse_adj[rx_bus] = [tx_bus]
@@ -81,16 +87,36 @@ class LineGroup(CircuitElementGroup):
             bp_matrix[bp_idx][2:] = line.phase_matrix
         return bp_matrix.transpose()
 
-    def get_idx(self, obj: Union[str, CircuitElement, Tuple]) -> int:
+    def get_idx(self, obj: Union[str, CircuitElement, tuple]) -> int:
         """
-        override super to check for tuples first
+        override super to include transformers and voltage regulators
+        if this LineGroup has transformers and voltage regulators, will
+        include them in indexing in the following order:
+        [0, self.num_elements]: Lines
+        [self.num_elements, transformers.num_elements -1 ]: Transformers
+        [transformers.num_elements, voltage_regulators.num_elements-1]:
+                                                VoltageRegulators
         """
         if isinstance(obj, tuple):
-            return super().get_idx(self.get_line_from_key(obj))       
-        try:
-            return super().get_idx(obj)
-        except KeyError:
-            return super().get_idx(self.get_line_from_key(obj.key))
+            if obj in self._key_to_element_dict:
+                line = self._key_to_element_dict[obj]
+                return self._name_to_idx_dict[line.__name__]
+            # check transformers
+            elif obj in self.transformers._key_to_element_dict:  
+                return self.num_elements + self.transformers.get_idx(obj)
+            # check vrs, will return a list of vrs
+            elif obj in self.voltage_regulators._key_to_element_dict:  
+                return self.voltage_regulators._key_to_element[obj]
+        else:
+            try:
+                return super().get_idx(obj)  # search self
+            except KeyError:  # check transforemrs
+                try:
+                    return self.num_elements + self.transformers.get_idx(obj)
+                except KeyError:  # check vrs
+                    return self.num_elements + self.transformers.num_elements \
+                        + self.voltage_regulators.get_idx(obj)
+
 
     def get_num_lines_x_ph(self):
         """ returns sum of active phases across all lines """
@@ -98,22 +124,65 @@ class LineGroup(CircuitElementGroup):
 
     def get_X_matrix(self):
         """ n x 9 matrix, indexed by Line index"""
-        return self._get_attr_by_idx('xmat')
+        return self._get_attr_by_idx('xmat', 'rows')
 
     def get_R_matrix(self):
         """ n x 9 matrix, indexed by Line index"""
-        return self._get_attr_by_idx('rmat')
+        return self._get_attr_by_idx('rmat', 'rows')
 
-    def get_parents(self, bus_name: str) -> List[str]:
+    def get_upstream_buses(self, bus_name: str, inc_xfm=False,
+                           inc_regs=False) -> List[str]:
         """ returns a list of buses upstream of bus_name """
-        if bus_name in self.reverse_adj:
-            return self.reverse_adj[bus_name]
-        return []
+        return self._get_adj(bus_name, 'upstream', inc_xfm=inc_xfm, inc_regs=inc_regs)
 
-    def get_children(self, bus_name: str) -> List[str]:
+    def get_downstream_buses(self, bus_name: str, inc_xfm=False,
+                             inc_regs=False) -> List[str]:
         """ returns a list of buses downstream of bus_name """
-        if bus_name in self.adj:
-            return self.adj[bus_name]
+        return self._get_adj(bus_name, 'downstream', inc_xfm=inc_xfm, inc_regs = inc_regs)
+
+    def _get_adj(self, bus_name: str, which, inc_xfm, inc_regs) -> List[str]:
+        """ for get_children() and get_parents"""
+        if which == 'upstream':
+            target = 'reverse_adj'
+        elif which == 'downstream':
+            target = 'adj'
+
+        self_adj = getattr(self, target)
+        if bus_name in self_adj:
+            return self_adj[bus_name]
+
+        if inc_xfm:
+            try:
+                xfm_adj = getattr(self.transformers, target)
+                if bus_name in self.transformers.reverse_adj:
+                    return xfm_adj[bus_name]
+            except AttributeError:
+                pass
+
+        if inc_regs:
+            try:
+                vr_adj = getattr(self.voltage_regulators, target)
+                if bus_name in vr_adj:
+                    return vr_adj[bus_name]
+            except AttributeError:
+                pass
+
         return []
 
-  
+    def get_line_list(self, bus_name: str, which, inc_xfm=False,
+                      inc_regs=False) -> np.asarray:
+        """
+        list of line indices for lines going out or coming into bus_name
+        param which: 'out' , returns lines starting with bus_name, 
+        or 'in', returns lines terminating at bus_name
+        """
+        if which == 'out':
+            buses = self.get_downstream_buses(bus_name, inc_xfm, inc_regs)
+            if not buses:
+                return []
+            return [self.get_line_from_key((bus_name, rx)).__name__ for rx in buses]
+        if which == 'in':
+            buses = self.get_upstream_buses(bus_name, inc_xfm, inc_regs)
+            if not buses:
+                return []
+            return [self.get_line_from_key((tx, bus_name)).__name__ for tx in buses]

@@ -65,7 +65,7 @@ def test_dss_v_new_fbs(new_fbs_solution, dss_solution, solution_param,
     Writes output to OUTPUT FOLDER.
     """
     fp = Path(DSS_FILE_DIR, dss_file)
-    out_file = Path(OUT_DIR, solution_param + '_' + OUT_PREFIX + str(fp.stem)).with_suffix('.out.txt')
+    out_file = Path(OUT_DIR, OUT_PREFIX + str(fp.stem) + '_' + solution_param).with_suffix('.out.txt')
     sys.stdout = open(out_file, 'w')
     fbs_vals = new_fbs_solution.get_data_frame(solution_param)
     dss_vals = dss_solution.get_data_frame(solution_param)

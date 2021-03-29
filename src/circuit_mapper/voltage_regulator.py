@@ -2,23 +2,23 @@ from . line import Line, SyntheticLine
 from . circuit_element import CircuitElement
 import numpy as np
 from . utils import parse_dss_bus_name, parse_dss_phases, parse_phase_matrix
-
+from typing import Tuple
 
 class VoltageRegulator(CircuitElement):
     dss_module_name = 'RegControls'
 
-    def __init__(self, name: str, dss, line_group):
+    def __init__(self, name: str, dss):
         super().__init__(name, dss)
-        self._set_lines(line_group)
+        self._set_lines()
         # set this regcontrol and its transformer as active,
         # in order to get the tap number
         dss.RegControls.Name(self.__name__)
         dss.Transformers.Name(self.transformer_name)
         self.tap = dss.RegControls.TapNumber()
         self.set_gamma(self.tap)
-        self.Itx = np.zeros((3,), dtype='float')
+        self.Itx = np.zeros((3,), dtype=complex)
         # complex current entering/leaving the regControl node
-        self.Ireg = np.zeros((3,), dtype='float')
+        self.Ireg = np.zeros((3,), dtype=complex)
 
     def set_gamma(self, tapNumber: int) -> None:
         """
@@ -61,7 +61,7 @@ class VoltageRegulator(CircuitElement):
         self.phases = parse_dss_phases(dss.CktElement.BusNames()[0])
         self.phase_matrix = parse_phase_matrix(self.phases)
 
-    def _set_lines(self, line_group):
+    def _set_lines(self):
         """
         Each voltage regulator is modeled with two lines:
         1. txBus --> regControlBus
@@ -71,12 +71,12 @@ class VoltageRegulator(CircuitElement):
         Add the upstream line to the topology for the main line_group
         and to the key_to_element_dict
         """
-        self.line_tx_to_reg = SyntheticLine(
-            line_group=line_group, unique_key=False, inc_num_elements=False,
-            name=self.__name__ + '_to_reg', key=self.key)
-        self.line_reg_to_tx = SyntheticLine(
-            line_group=line_group, unique_key=False, inc_num_elements=False,
-            name=self.__name__ + '_to_tx', key=self.key[-1::-1])
+        self.line_tx_to_reg = SyntheticLine(unique_key=False,
+                                            name=self.__name__ + '_to_reg',
+                                            key=self.key)
+        self.line_reg_to_tx = SyntheticLine(unique_key=False,
+                                            name=self.__name__ + '_to_tx', 
+                                            key=self.key[-1::-1])
         # self.downstream_line = self._find_downstream_line(line_group)
         self.line_tx_to_reg.add_voltage_regulator(self)
         self.line_reg_to_tx.add_voltage_regulator(self)

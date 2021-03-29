@@ -4,18 +4,16 @@
 # Test refactor of nr3 and fbs modules
 
 import numpy as np
-import opendssdirect as dss
 import pytest
 
-from circuit_mapper.circuit import Circuit
 from circuit_mapper.solution_nr3 import SolutionNR3
-from circuit_mapper.solution import Solution
 
 # current nr3 dependencies
 from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters
 from nr3_python.lib.basematrices import basematrices
 from nr3_python.lib.change_KCL_matrices import change_KCL_matrices
-from nr3_python.lib.helper import transformer_regulator_parameters, nominal_load_values, cap_arr
+from nr3_python.lib.helper import transformer_regulator_parameters, \
+        nominal_load_values, cap_arr, linelist
 
 LOCAL_DIR = 'src/nr3_python/'
 DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye.dss'
@@ -26,15 +24,15 @@ VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
 
 
 @pytest.fixture
-def circuit():
-    """ map Circuit object once for use in all tests """
-    dss.run_command('Redirect ' + DSS_FILE)
-    return Circuit(dss)
+def nr3_solution():
+    nr3 = SolutionNR3(DSS_FILE)
+    nr3.circuit.set_zip_values([1, 0, 0, 1, 0, 0, .8])
+    return nr3
 
 
 @pytest.fixture
-def nr3_solution():
-    return SolutionNR3(DSS_FILE)
+def circuit(nr3_solution):
+    return nr3_solution.circuit
 
 
 @pytest.fixture
@@ -59,19 +57,19 @@ def nr3_basematrices():
 def test_nr3_DSS_parameters_TXnum(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    assert (TXnum == circuit.get_tx_idx_matrix()).all()
+    np.testing.assert_equal(TXnum, circuit.get_tx_idx_matrix())
 
 
 def test_nr3_DSS_parameters_RXnum(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    assert (RXnum == circuit.get_rx_idx_matrix()).all()
+    np.testing.assert_equal(RXnum, circuit.get_rx_idx_matrix())
 
 
 def test_nr3_DSS_parameters_PH(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    assert (PH == circuit.buses.get_phase_matrix()).all()
+    assert (PH == circuit.buses.get_phase_matrix('cols')).all()
 
 
 def test_nr3_DSS_parameters_spu(circuit, nr3_DSS_parameters):
@@ -83,9 +81,9 @@ def test_nr3_DSS_parameters_spu(circuit, nr3_DSS_parameters):
 def test_nr3_DSS_parameters_Z(circuit, nr3_DSS_parameters):
     TXnum, RXnum, PH, spu, aPQ, aZ, aI, cappu, wpu, vvcpu = \
         nr3_DSS_parameters
-    assert (aPQ == circuit.get_aPQ_matrix()).all()
-    assert (aI == circuit.get_aI_matrix()).all()
-    assert (aZ == circuit.get_aZ_matrix()).all()
+    np.testing.assert_equal(aPQ, circuit.get_aPQ_matrix())
+    np.testing.assert_equal(aI, circuit.get_aI_matrix())
+    np.testing.assert_equal(aZ, circuit.get_aZ_matrix())
 
 
 def test_nr3_DSS_parameters_cappu(circuit, nr3_DSS_parameters):
@@ -123,6 +121,18 @@ def test_nr3_transformer_regulator_params_counts(circuit, xfm_vr_parameters):
     assert vr_lines == circuit.voltage_regulators.get_num_lines_x_ph()
     assert tf_count == circuit.transformers.num_elements
     assert vr_no == circuit.voltage_regulators.num_elements
+
+
+def test_nr3_linelist(circuit):
+    for bus_name in circuit.buses.all_names():
+        in_idx = circuit.lines.get_line_list(bus_name, 'in')
+        in_lines = linelist(bus_name)[0]
+        np.testing.assert_equal(in_idx, in_lines)
+
+    for bus_name in circuit.buses.all_names():
+        out_idx = circuit.lines.get_line_list(bus_name, 'out')
+        out_lines = linelist(bus_name)[1]
+        np.testing.assert_equal(out_idx, out_lines)
 
 
 def test_nr3_transformer_regulator_params_gain(circuit, xfm_vr_parameters):
@@ -181,9 +191,11 @@ def print_compare(title, old, new):
 
 
 # NR3 CHANGE KCL TESTS---------------------------------------------------------
-def test_change_KCL(circuit, H, g, b, t, der, capacitance, wpu):
-    ckt_H, ckt_b = circuit.change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
+def test_change_KCL(nr3_solution):
+    H, g, b = nr3_solution.H, nr3_solution.g, nr3_solution.b
+    t, der, capacitance = 1, -1, 0
+    wpu = nr3_solution.circuit.get_wpu_matrix()
+    ckt_H, ckt_b = nr3_solution.change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
     nr3_H, nr3_b = change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
-
-    assert(ckt_H == nr3_H)
-    assert(ckt_b == nr3_b)
+    np.testing.assert_equal(ckt_H, nr3_H)
+    np.testing.assert_equal(ckt_b, nr3_b)

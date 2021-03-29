@@ -4,14 +4,16 @@
 # Create NR3 Solution class, a namespace for calculations used by nr3
 
 from . solution import Solution
+from . circuit import Circuit
 import numpy as np
 
 
 class SolutionNR3(Solution):
     # TODO: set a class-level NR3 tolerance value
 
-    def __init__(self, dss_fp: str):
-        super().__init__(dss_fp)  # sets self.circuit
+    def __init__(self, dss_fp: str, **kwargs):
+        super().__init__(dss_fp, **kwargs)  # sets self.circuit
+        self._set_orient('cols')
         self._init_XNR()
         self._init_slack_bus_matrices()
         self._init_KVL_matrices()
@@ -171,7 +173,7 @@ class SolutionNR3(Solution):
         nnode = self.circuit.buses.num_elements
         nline = self.circuit.lines.num_elements
 
-        # Line Indices Associated with Voltage Regulators and Transformers
+        # Line Indices Associated with Voltage Regulators and Transformers 
         line_in_idx_vr = range(0, 2*vr_lines, 2)
         line_out_idx_vr = range(1, 2*vr_lines, 2)
 
@@ -182,26 +184,27 @@ class SolutionNR3(Solution):
         caparr = self.circuit.capacitors.get_cappu_matrix()
 
         # ----------Residuals for KCL at a bus (m) ----------
+        bp = self.circuit.buses.get_phase_matrix_dict()
+        dss = self.dss
 
         # Zip Parameters
         # Load
-        beta_S = self.circuit.loads.aPQ_p
-        beta_I = self.circuit.loads.aI_p
-        beta_Z = self.circuit.loads.aZ_p
+        beta_S = Circuit.aPQ_p
+        beta_I = Circuit.aI_p
+        beta_Z = Circuit.aZ_p
 
         # Capacitors
-        gamma_S = self.circuit.capacitors.aPQ_p
-        gamma_I = self.circuit.capacitors.aI_p
-        gamma_Z = self.circuit.capacitors.aZ_p
+        gamma_S = Circuit.aPQ_p
+        gamma_I = Circuit.aI_p
+        gamma_Z = Circuit.aZ_p
 
-        H = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline) + 2*tf_lines + \
-                      2*2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
+        H = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
         g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
         b = np.zeros((2*3*(nnode-1), 1, 1))
 
         # --------------- Quadratic Terms -----------------
-        for ph in range(3):
-            if ph == 0:  # set nominal voltage based on phase
+        for ph in range(0,3):
+            if ph == 0: #set nominal voltage based on phase
                 A0 = 1
                 B0 = 0
             elif ph == 1:
@@ -210,50 +213,53 @@ class SolutionNR3(Solution):
             elif ph == 2:
                 A0 = -1/2
                 B0 = np.sqrt(3)/2
-            for k2 in range(1, nnode):  # skip slack bus
-                bus = self.circuit.buses.get_element(k2)
-                in_lines = self.circuit.lines.get_parents(bus.__name__)  # upstream buses
-                out_lines = self.circuit.lines.get_children(bus.__name__)  # downstream buses
-                for cplx in range(2):
-                    idxbs = k2
-                    if cplx == 0:
-                        load_val = load_kw[ph, idxbs]
+            for k2 in range(1, len(dss.Circuit.AllBusNames())): #skip slack bus
+                dss.Circuit.SetActiveBus(dss.Circuit.AllBusNames()[k2]) #set the bus
+                bus_name = dss.Circuit.AllBusNames()[k2]
+                in_lines = self.circuit.lines.get_line_list(bus_name, 'in')  # upstream buses
+                out_lines = self.circuit.lines.get_line_list(bus_name, 'out')  # downstream buses
+                for cplx in range(0,2):
+                    idxbs = dss.Circuit.AllBusNames().index(dss.Circuit.AllBusNames()[k2])      
+                    if cplx == 0:               
+                        load_val = load_kw[ph,idxbs]
                         cap_val = 0
-                    else:
-                        load_val = load_kvar[ph, idxbs]  # WPU HERE !!
-                        cap_val = caparr[ph][idxbs]
-                    # gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) # some derivatives
+                    else:  
+                        load_val = load_kvar[ph,idxbs] 
+                        cap_val = caparr[ph][idxbs]  
+                    #gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
                     hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
-                                            [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
-                    available_phases = bus.phase_matrix  # phase array at specific bus
-                    if available_phases[ph] == 1:                 # quadratic terms
+                                        [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
+                    available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
+                    if available_phases[ph] == 1:                 #quadratic terms
                         H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = \
-                                                -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[0][0])) + \
-                                                cap_val * (gamma_Z + (0.5 * gamma_I * hessian_mag[0][0]))  # TE replace assignment w/ -load_val * beta_Z; #a**2
+                                                                                                        -load_val * (beta_Z + (0.5 * beta_I* hessian_mag[0][0])) + \
+                                                                                                        cap_val * (gamma_Z + (0.5 * gamma_I * hessian_mag[0][0]))# TE replace assignment w/ -load_val * beta_Z; #a**2               
                         H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2 + 1] = \
-                            -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[1][1])) + \
-                            cap_val * (gamma_Z + (0.5 * gamma_I * hessian_mag[1][1]))  # TE replace assignment w/ -load_val * beta_Z; #b**2
-                            # H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1] = -load_val * beta_I * hessian_mag[0][1] / 2 #remove for TE
-                            # H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] =  -load_val * beta_I * hessian_mag[1][0] / 2 #remove for TE
+                                                                                                        -load_val * (beta_Z + (0.5 * beta_I * hessian_mag[1][1])) + \
+                                                                                                        cap_val * (gamma_Z + (0.5 * gamma_I * hessian_mag[1][1]))# TE replace assignment w/ -load_val * beta_Z; #b**2
+                            #H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2 + 1] = -load_val * beta_I * hessian_mag[0][1] / 2 #remove for TE
+                            #H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2 + 1][2*(nnode)*ph + 2*k2] =  -load_val * beta_I * hessian_mag[1][0] / 2 #remove for TE
 
-                    for line_idx, i in enumerate(range(len(in_lines))):  # in lines
+                    for i in range(len(in_lines)): # in lines            
+                        line_idx = self.circuit.lines.get_idx(in_lines[i])
                         if available_phases[ph] == 1:
-                            if cplx == 0:  # real residual
-                                # A_m and C_lm
+                            if cplx == 0: #real residual
+                                #A_m and C_lm
                                 H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
                                 H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2] = 1/2
-                                # B_m and D_lm
+                                #B_m and D_lm
                                 H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = 1/2
                                 H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 1/2
-                            if cplx == 1:  # imaginary residual
+                            if cplx == 1: #imaginary residual
                                 # #A_m, D_lm
                                 H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1] = -1/2
                                 H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = -1/2
                                 #B_m and C_lm
                                 H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode) + 2*ph*nline + 2*line_idx] = 1/2
                                 H[2*ph*(nnode-1) + (k2-1)*2+ cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
-
-                    for line_idx, i in enumerate(range(len(out_lines))):  # out lines
+                
+                    for j in range(len(out_lines)): # out lines    
+                        line_idx = self.circuit.lines.get_idx(out_lines[j])
                         if available_phases[ph] == 1:
                             if cplx == 0: #real residual
                                 #A_m and C_mn
@@ -271,22 +277,23 @@ class SolutionNR3(Solution):
                                 H[2*ph*(nnode-1) + (k2-1)*2+cplx][2*3*(nnode) + 2*ph*nline + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
 
         # ----------------------- Transformer KCL -----------------------
+        tf_no = len(dss.Transformers.AllNames()) - len(dss.RegControls.AllNames())
         count_tf = 0
         count_tf2 = 0
         for i in range(tf_no):
-            for ph in range(0,3):
+            for ph in range(0,3):     
                 k2 = int(tf_bus[1, i]) #in bus index of transformer [out bus: a0] --line-a0-a1-- [in bus: a1]
                 if k2 == 0: #if source bus, need to skip line
                     count_tf += 1
-                if k2 != 0 and tf_bus[ph + 2, i] != 0: #if not source bus, perform KCL
-                    line_idx = line_idx_tf[count_tf]
+                if k2 != 0 and tf_bus[ph + 2, i] != 0: #if not source bus, perform KCL             
+                    line_idx = line_idx_tf[count_tf]                  
                     #A_m and C_lm
                     H[2*ph*(nnode-1) + (k2-1)*2 ][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*line_idx] = 1/2
                     H[2*ph*(nnode-1) + (k2-1)*2 ][2*3*(nnode+nline) + 2*line_idx][2*(nnode)*ph + 2*k2] = 1/2
                     #B_m and D_lm
                     H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*line_idx + 1] = 1/2
                     H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode+nline) + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 1/2
-
+                            
                     #A_m, D_lm
                     H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*line_idx + 1] = -1/2
                     H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*3*(nnode+nline) + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = -1/2
@@ -294,23 +301,23 @@ class SolutionNR3(Solution):
                     H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*line_idx] = 1/2
                     H[2*ph*(nnode-1) + (k2-1)*2+ 1][2*3*(nnode+nline) + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
                     count_tf += 1 #go to next line
-
-        for j in range(tf_no): #fill in H for the outlines
-            for ph in range(0,3):
+            
+        for j in range(tf_no): #fill in H for the outlines  
+            for ph in range(0,3):                 
                 k2 = int(tf_bus[0, j]) #out bus index of transformer
-                if k2 == 0:
+                if k2 == 0: 
                     count_tf2 += 1
                 if k2 != 0 and tf_bus[ph + 2, j] != 0:
-                    line_idx = line_idx_tf[count_tf2]
+                    line_idx = line_idx_tf[count_tf2]                    
                     #real residual
-                    #A_m and C_mn
+                    #A_m and C_mn        
                     H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*line_idx] = -1/2
                     H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode+nline) + 2*line_idx][2*(nnode)*ph + 2*k2] = -1/2
                     #B_m and D_mn
                     H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*line_idx + 1] = -1/2
-                    H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode+nline) + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = -1/2
-
-                    #imaginary residual
+                    H[2*ph*(nnode-1) + (k2-1)*2][2*3*(nnode+nline) + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = -1/2                       
+                    
+                    #imaginary residual               
                     #A_m and D_mn
                     H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*line_idx + 1]= 1/2
                     H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*3*(nnode+nline) + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = 1/2
@@ -320,16 +327,17 @@ class SolutionNR3(Solution):
                     count_tf2+=1
 
         # ----------------------- Voltage Regulator KCL -----------------------
+        vr_count = len(dss.RegControls.AllNames())
         count_vr = 0
-        count_vr2 = 0
+        count_vr2 = 0   
         if vr_count > 0:
-            for i in range(vr_count): #in lines
-                for ph in range(0,3):
+            for i in range(vr_count): #in lines 
+                for ph in range(0,3):                    
                     k2 = int(vr_bus[1, i])
-                    if k2 == 0:
+                    if k2 == 0: 
                         count_vr += 1
-                    if k2 != 0 and vr_bus[ph + 2, i] != 0:
-                        line_idx = line_in_idx_vr[count_vr]
+                    if k2 != 0 and vr_bus[ph + 2, i] != 0:    
+                        line_idx = line_in_idx_vr[count_vr]   
                         #real residual
                         #A_m and C_lm
                         H[2*ph*(nnode-1) + (k2-1)*2 + 0][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx] = 1/2
@@ -337,7 +345,7 @@ class SolutionNR3(Solution):
                         #B_m and D_lm
                         H[2*ph*(nnode-1) + (k2-1)*2 + 0][2*(nnode)*ph + 2*k2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1] = 1/2
                         H[2*ph*(nnode-1) + (k2-1)*2 + 0][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1][2*(nnode)*ph + 2*k2 + 1] = 1/2
-                        #imaginary residual
+                        #imaginary residual                        
                         # #A_m, D_lm
                         H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1] = -1/2
                         H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx + 1][2*(nnode)*ph + 2*k2] = -1/2
@@ -346,13 +354,13 @@ class SolutionNR3(Solution):
                         H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = 1/2
                         count_vr += 1
 
-            for j in range(vr_count): #out lines
-                for ph in range(0,3):
+            for j in range(vr_count): #out lines       
+                for ph in range(0,3):                 
                     k2 = int(vr_bus[0, j])
-                    if k2 == 0:
+                    if k2 == 0: 
                         count_vr2 += 1
                     if k2 != 0 and vr_bus[ph + 2, j] != 0:
-                        line_idx = line_out_idx_vr[count_vr2]
+                        line_idx = line_out_idx_vr[count_vr2]     
                         #real residual
                         #A_m and C_mn
                         H[2*ph*(nnode-1) + (k2-1)*2][2*(nnode)*ph + 2*k2][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx] = -1/2
@@ -369,21 +377,20 @@ class SolutionNR3(Solution):
                         H[2*ph*(nnode-1) + (k2-1)*2 + 1][2*3*(nnode+nline) + 2*tf_lines + 2*line_idx][2*(nnode)*ph + 2*k2 + 1] = -1/2
                         count_vr2 += 1
 
-
+        
         # ----------------------- Linear Term & Constant Term -----------------------
         for ph in range(0,3):
-            for k2 in range(1, nnode):
+            for k2 in range(1, len(dss.Circuit.AllBusNames())):
                 for cplx in range(0,2):
-                    bus = self.circuit.buses.get_element(k2)
-                    available_phases = bus.phase_matrix #phase array at specific bus
-                    idxbs = k2
+                    available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
+                    idxbs = dss.Circuit.AllBusNames().index(dss.Circuit.AllBusNames()[k2])
                     if cplx == 0:
                         load_val = load_kw[ph][idxbs]
                     else:
                         load_val = load_kvar[ph][idxbs]
 
                     # Linear terms
-                    g_temp = np.zeros(2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines)
+                    g_temp = np.zeros(2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines) 
                     if available_phases[ph] == 0: #if phase does not exist
                         g_temp[2*(ph)*nnode + 2*k2 + cplx] = 1
                     g[2*(nnode-1)*ph + 2*(k2-1) + cplx, 0,:] = g_temp
@@ -395,14 +402,13 @@ class SolutionNR3(Solution):
                             b_factor = 0
                         else:
                             b_factor = 0
-                    elif cplx == 1:
+                    else:
                         if capacitance != 0 or der.imag != 0:
                             b_factor = capacitance - der.imag
                             b_factor = 0
-                        else:
-                            b_factor = caparr[ph][k2] # WPU HERE !!
-                    else:
-                        b_factor = 0
+                        else:                    
+                            b_factor = caparr[ph][k2]                    
+                    
 
                     if available_phases[ph] == 0: #if phase does not exist
                         b_temp = 0
@@ -410,7 +416,7 @@ class SolutionNR3(Solution):
                         b_temp = (-load_val * beta_S) + (b_factor * gamma_S)
                     b[2*(nnode-1)*ph + 2*(k2-1) + cplx][0][0] = b_temp
 
-        self.H, self.g, self.b = H, g, b
+            self.H, self.g, self.b = H, g, b
 
     def _init_KVL_matrices_vregs(self):
         """
@@ -561,14 +567,14 @@ class SolutionNR3(Solution):
         # ----------Residuals for KCL at a bus (m) ----------
 
         #Zip Parameters
-        beta_S = self.circuit.loads.aPQ_p
-        beta_I = self.circuit.loads.aI_p
-        beta_Z = self.circuit.loads.aZ_p
+        beta_S = Circuit.aPQ_p
+        beta_I = Circuit.aI_p
+        beta_Z = Circuit.aZ_p
 
         # Capacitors
-        gamma_S = self.circuit.capacitors.aPQ_p
-        gamma_I = self.circuit.capacitors.aI_p
-        gamma_Z = self.circuit.capacitors.aZ_p
+        gamma_S = Circuit.aPQ_p
+        gamma_I = Circuit.aI_p
+        gamma_Z = Circuit.aZ_p
 
         # Quadratic Terms
 
@@ -789,4 +795,3 @@ class SolutionNR3(Solution):
                 flag = 0
 
         self.XNR = XNR_final
-

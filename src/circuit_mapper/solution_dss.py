@@ -6,8 +6,9 @@
 import numpy as np  # type: ignore
 from typing import List, Dict, Iterable
 from . solution import Solution
-from . utils import set_zip_values, parse_phases, pad_phases
-import opendssdirect as dss # type: ignore
+from . circuit import Circuit
+from . utils import set_zip_values_dss, parse_phases, pad_phases
+import opendssdirect as dss  # type: ignore
 import numpy as np
 import pandas as pd
 from typing import Tuple
@@ -68,7 +69,7 @@ class SolutionDSS(Solution):
             SlackBusVoltage = 1.00
             dss.Vsources.PU(SlackBusVoltage)
 
-            set_zip_values(dss, self.__class__.ZIP_V)
+            set_zip_values_dss(dss, Circuit.ZIP_V)
             # run solve for this timestep
             dss.Solution.SolveSnap()
             dss.Solution.FinishTimeStep()

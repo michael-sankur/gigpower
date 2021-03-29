@@ -1,7 +1,7 @@
 from . utils import parse_phase_matrix
 import pandas as pd
 import numpy as np
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 from . circuit_element import CircuitElement
 from .line import SyntheticLine
 
@@ -55,12 +55,21 @@ class CircuitElementGroup():
         """ return the name of the object given its Group idx"""
         return self._idx_to_name_dict[idx]
 
-    def get_phase_matrix(self) -> np.ndarray:
+    def get_phase_matrix(self, orient: str) -> np.ndarray:
         """
-        3 x n phase matrix of 1's where phases are present, 0's otherwise
-        columns indexed by element index, which is the same as in opendss
+        phase matrix of 1's where phases are present, 0's otherwise
+        indexed by element index, which is the same as in opendss
+        param orient: 'rows' or 'cols'
         """
-        return self._get_attr_by_idx('phase_matrix', 'col')
+        return self._get_attr_by_idx('phase_matrix', orient)
+    
+    def get_phase_matrix_dict(self) -> Dict[str, np.ndarray]:
+        """ 
+        Return a dictionary of element phase matrices, indexed by element name 
+        Phase matrix is 3 x 1, with 1's where phase is present, zeros otherwise
+        ex: [1, 0, 0] for element with only phase A
+        """
+        return {ele.__name__: ele.phase_matrix for ele in self.get_elements()}
 
     def get_element(self, key: Union[str, int, Tuple[str, str]]):
         """ Returns an element given a name, index, or tuple of (tx_name, rx_name)"""
@@ -71,7 +80,7 @@ class CircuitElementGroup():
             return self._name_to_object_dict[self._idx_to_name_dict[key]]
         elif isinstance(key, tuple):
             try:
-                return self._key_to_element_dict[key]
+                return self.get_line_from_key(key)
             except KeyError:
                 raise KeyError(key_error_msg)
         else:
@@ -100,18 +109,18 @@ class CircuitElementGroup():
         if inc_num_elements: 
             self.num_elements += 1
 
-    def _get_attr_by_idx(self, attr: str, orient='row') -> np.ndarray:
+    def _get_attr_by_idx(self, attr: str, orient : str) -> np.ndarray:
         """
         helper method to get an n x ? matrix of ele.attr values, indexed by
         the element index (same as self._names order, and the index order in
         opendss)
         param attr: name of the element param
-        param orient: 'row' for n x ? matrix indexed by ele index, 'col' for its
+        param orient: 'rows' for n x ? matrix indexed by ele index, 'cols' for its
         transpose
         """
-
         val = getattr(self.get_element(0), attr)
-
+        data_type = val.dtype
+        
         try:
             attr_size = val.size  # np.ndarray.size
         except AttributeError:
@@ -120,13 +129,13 @@ class CircuitElementGroup():
             except TypeError:
                 attr_size = 1  # a scalar
 
-        return_matrix = np.zeros((self.num_elements, attr_size))
+        return_matrix = np.zeros((self.num_elements, attr_size), data_type)
 
         for idx in range(self.num_elements):
             obj = self.get_element(idx)
             return_matrix[idx] = getattr(obj, attr)
 
-        if orient == 'col':
+        if orient == 'cols':
             return return_matrix.transpose()
 
         return return_matrix

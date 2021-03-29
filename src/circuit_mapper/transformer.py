@@ -1,12 +1,11 @@
 from . line import SyntheticLine
 from . circuit_element import CircuitElement
-import numpy as np
 from . utils import parse_dss_bus_name, parse_dss_phases, parse_phase_matrix
 
 
 class Transformer (SyntheticLine):
 
-    def __init__(self, name: str, dss, line_group):
+    def __init__(self, name: str, dss):
         # call CircuitElement to set name, related bus, phases
         CircuitElement.__init__(self, name, dss)
         # get kV, kVA
@@ -16,7 +15,7 @@ class Transformer (SyntheticLine):
         self.kVA = dss.Transformers.kVA()
         # call SyntheticLine to set line attrs and
         # add self to the linegroup
-        super().__init__(line_group=line_group, unique_key=True, inc_num_elements=False)
+        super().__init__(unique_key=True)
 
     def _set_related_bus(self, dss):
         """
