@@ -36,7 +36,8 @@ class SolutionNR3(Solution):
 
         # XNR order is bus voltages, line currents, transformer line currents,
         # voltage regulator line currents * 2
-        XNR = np.zeros((2*3*(nnode + nline) + 2*tf_lines + 2*2*vr_lines, 1))
+        XNR = np.zeros((2*3*(nnode + nline) + 2*tf_lines + 2*2*vr_lines, 1),
+                        dtype=float)
 
         # intialize node voltage portion of XNR
         if V0 is None or len(V0) == 0:
@@ -53,6 +54,7 @@ class SolutionNR3(Solution):
                     XNR[2*ph*nnode + 2*k1+1] = V0[ph, k1].imag
 
         # intialize line current portion of XNR
+        # TODO: set datatype for np.ones
         if I0 is None or len(I0) == 0:
             XNR[(2*3*nnode):] = 0.0*np.ones((6*nline + 2*tf_lines + 2*2* vr_lines, 1))
 
@@ -82,12 +84,13 @@ class SolutionNR3(Solution):
         Vslack = self.__class__.VSLACK
 
         # ------------ Slack Bus ------------------
-        self.g_SB = np.zeros((6, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
+        self.g_SB = np.zeros((6, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines),
+                              dtype=float)
         sb_idx = [0, 1, 2*nnode, (2*nnode)+1, 4*nnode, (4*nnode)+1]
         for i in range(len(sb_idx)):
             self.g_SB[i, sb_idx[i]] = 1
 
-        self.b_SB = np.zeros((6, 1))
+        self.b_SB = np.zeros((6, 1), dtype=float)
         for i in range(3):
             self.b_SB[2*i, 0] = Vslack[i].real
             self.b_SB[(2*i) + 1] = Vslack[i].imag
@@ -108,7 +111,8 @@ class SolutionNR3(Solution):
         R_matrix = self.circuit.lines.get_R_matrix()
 
         # ------- Residuals for KVL across line (m,n) ----------
-        self.b_KVL = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines, 1))
+        self.b_KVL = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines, 1),
+                               dtype=float)
 
         G_KVL = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines,
                          2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines), 
@@ -199,9 +203,12 @@ class SolutionNR3(Solution):
         gamma_I = Circuit.aI_p
         gamma_Z = Circuit.aZ_p
 
-        H = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
-        g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
-        b = np.zeros((2*3*(nnode-1), 1, 1))
+        H = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline) + 2*tf_lines +
+                      2*2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines +
+                      2*2*vr_lines), dtype=float)
+        g = np.zeros((2*3*(nnode-1), 1, 2*3*(nnode+nline) + 2*tf_lines + 
+                      2*2*vr_lines), dtype=float)
+        b = np.zeros((2*3*(nnode-1), 1, 1), dtype=float)
 
         # --------------- Quadratic Terms -----------------
         for ph in range(0,3):
@@ -228,6 +235,7 @@ class SolutionNR3(Solution):
                         load_val = load_kvar[ph,idxbs] 
                         cap_val = caparr[ph][idxbs]  
                     #gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
+                    # TODO: specify datatype of np.array
                     hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
                                         [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
                     available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
@@ -391,7 +399,8 @@ class SolutionNR3(Solution):
                         load_val = load_kvar[ph][idxbs]
 
                     # Linear terms
-                    g_temp = np.zeros(2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines) 
+                    g_temp = np.zeros(2*3*(nnode+nline) + 2*tf_lines + 
+                                      2*2*vr_lines, dtype=float) 
                     if available_phases[ph] == 0: #if phase does not exist
                         g_temp[2*(ph)*nnode + 2*k2 + cplx] = 1
                     g[2*(nnode-1)*ph + 2*(k2-1) + cplx, 0,:] = g_temp
@@ -436,8 +445,11 @@ class SolutionNR3(Solution):
         nline = self.circuit.lines.num_elements
         gain = self.circuit.voltage_regulators.get_gain_matrix()
 
-        H_reg = np.zeros((2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
-        G_reg = np.zeros((2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
+        H_reg = np.zeros((2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 
+                          2*2*vr_lines, 2*3*(nnode+nline) + 
+                          2*tf_lines + 2*2*vr_lines), dtype=float)
+        G_reg = np.zeros((2*vr_lines, 2*3*(nnode+nline) + 2*tf_lines + 
+                          2*2*vr_lines), dtype=float)
 
         #  voltage ratio: V_bus2 - gamma V_bus1 = 0
         line_in_idx = range(0, 2*vr_lines, 2)
@@ -503,14 +515,14 @@ class SolutionNR3(Solution):
         FTSUBV = (g_SB @ X) - b_SB
         FTKVL = (G_KVL @ X) - b_KVL
 
-        FTKCL = np.zeros((2*3*(nnode-1), 1))
+        FTKCL = np.zeros((2*3*(nnode-1), 1), dtype=float)
         for i in range(2*3*(nnode-1)):
             r = (X.T @ (H[i, :, :] @ X)) \
             + (g[i, 0,:] @ X) \
             + b[i, 0,0]
             FTKCL[i, :] = r
 
-        FTVR = np.zeros((2*vr_lines, 1)) #need to fix
+        FTVR = np.zeros((2*vr_lines, 1), dtype=float) #need to fix
         for i in range(2*vr_lines):
             r = X.T @ (H_reg[i, :, :] @ X)
             FTVR[i, :] = r
@@ -537,13 +549,15 @@ class SolutionNR3(Solution):
         JSUBV = g_SB
         JKVL = G_KVL
 
-        JKCL = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines))
+        JKCL = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline) + 2*tf_lines + 
+                         2*2*vr_lines), dtype=float)
         for i in range(2*3*(nnode-1)):
             r = (2 * (X.T @ H[i, :, :])) \
             + (g[i, 0, :])
             JKCL[i,:] = r
 
-        JVR = np.zeros((2*vr_lines, 2*3*(nnode+nline)+ 2*tf_lines + 2*2*vr_lines))
+        JVR = np.zeros((2*vr_lines, 2*3*(nnode+nline)+ 2*tf_lines + 
+                        2*2*vr_lines), dtype=float)
         for i in range(2*vr_lines):
             r = (2 * (X.T @ H_reg[i, :, :]))
             JVR[i, :] = r
@@ -622,6 +636,7 @@ class SolutionNR3(Solution):
                             b_temp = (-load_val * beta_S) + \
                                 (b_factor * gamma_S)
 
+                            # TODO: resolve numpy warning here
                             b[2*(nnode-1)*ph + 2*(k2-1) +
                               cplx][0][0] = b_temp - wpu[ph][k2]
 
@@ -671,11 +686,12 @@ class SolutionNR3(Solution):
             itercount += 1
         XNR_final = XNR
 
-        XNR_compare = np.zeros(XNR_final.shape)
+        XNR_compare = np.zeros(XNR_final.shape, dtype=float)
         ################ What a mess ....
         while np.linalg.norm(XNR_final - XNR_compare) > 1e-6:
             print('WPU')
-            wpu = np.zeros((3, nnode))
+
+            wpu = np.zeros((3, nnode), dtype=float)
             for vvo in vvc_objects:
                 busName = vvo.get_busName()
                 idxbus = dss.Circuit.AllBusNames().index(busName)
