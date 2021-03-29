@@ -23,7 +23,7 @@ class LoadGroup(CircuitElementGroup):
             bus_V_matrix = np.ones((self.buses.num_elements, 3), dtype=complex)
         else:
             bus_V_matrix = solution.V
-        load_powers = np.zeros((self.buses.num_elements, 3))
+        load_powers = np.zeros((self.buses.num_elements, 3), dtype=complex)
 
         for load in self.get_elements():
             bus_idx = self.buses.get_idx(load.related_bus)
