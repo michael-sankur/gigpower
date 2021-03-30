@@ -54,9 +54,8 @@ class SolutionNR3(Solution):
                     XNR[2*ph*nnode + 2*k1+1] = V0[ph, k1].imag
 
         # intialize line current portion of XNR
-        # TODO: set datatype for np.ones
         if I0 is None or len(I0) == 0:
-            XNR[(2*3*nnode):] = 0.0*np.ones((6*nline + 2*tf_lines + 2*2* vr_lines, 1))
+            XNR[(2*3*nnode):] = 0.0*np.ones((6*nline + 2*tf_lines + 2*2* vr_lines, 1), dtype = float)
 
         # If initial I is given
         elif len(I0) != 0:
