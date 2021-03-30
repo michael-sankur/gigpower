@@ -38,8 +38,8 @@ class Line(CircuitElement):
     def _set_FZpu(self, dss):
         fz_mult = 1 / self.Zbase * self.length  # use tx node's Z base
         num_phases = len(self.phases)
-        RM = np.asarray(dss.Lines.RMatrix())
-        XM = np.asarray(dss.Lines.XMatrix())
+        RM = np.asarray(dss.Lines.RMatrix(), dtype=float)
+        XM = np.asarray(dss.Lines.XMatrix(), dtype=float)
         ZM = fz_mult * (RM + 1j*XM)
         ZM = np.reshape(ZM, (ZM.shape[0]//num_phases, num_phases))  # reshape
         # pad the Z matrix
@@ -52,10 +52,10 @@ class Line(CircuitElement):
         """
         try:
             dss.Lines.Name(self.__name__)
-            xmat = np.asarray(dss.Lines.XMatrix(), dtype=complex)
-            rmat = np.asarray(dss.Lines.RMatrix(), dtype=complex)
+            xmat = np.asarray(dss.Lines.XMatrix(), dtype=float)
+            rmat = np.asarray(dss.Lines.RMatrix(), dtype=float)
         except Exception:  # for transformers, voltage regs
-            xmat, rmat = np.zeros(9, dtype=complex), np.zeros(9, dtype=complex)
+            xmat, rmat = np.zeros(9, dtype=float), np.zeros(9, dtype=float)
         if len(xmat) == 1:  # set the diagonals to the value
             self.xmat = (np.identity(3) * xmat).flatten()
             self.rmat = (np.identity(3) * rmat).flatten()
@@ -92,8 +92,9 @@ class SyntheticLine(Line):
             self.key = key
             self.tx, self.rx = self.key
         self.length = 0
-        self.xmat, self.rmat = np.zeros(9), np.zeros(9)
-        self.FZpu = np.zeros((3, 3), dtype='complex')
+        # TODO: confirm xmat, rmat datatypes
+        # self.xmat, self.rmat = np.zeros(9, dtype=complex), np.zeros(9, dtype=complex)
+        self.FZpu = np.zeros((3, 3), dtype=complex)
 
     def add_voltage_regulator(self, vreg):
         try:

@@ -181,8 +181,10 @@ class Solution:
         node_V = self.V[node_name]
         # np.divide produces a NaN for positions at which node_V is 0
         # because the phases are not existant on node
-        # TODO: consider dividing manually only by phases on the node
-        new_line_I = np.conj(np.divide(node_s, node_V))
+        non_zero_idx = np.where(node_V != 0)
+        new_line_I = np.zeros(3, dtype=complex)
+        new_line_I[non_zero_idx] = np.conj(np.divide(node_s[non_zero_idx],
+                                                     node_V[non_zero_idx]))
 
         # sum currents over all node's child segments
         for child_name in network.adj[node_name]:
@@ -244,7 +246,10 @@ class Solution:
         for node in self.network.get_nodes():
             node_V = self.V[node.name]
             node_sV = self.sV[node.name]
-            node_I = np.conj(np.divide(node_sV, node_V))
+            non_zero_idx = np.where(node_V != 0)
+            node_I = np.zeros(3, dtype=complex)
+            node_I[non_zero_idx] = np.conj(np.divide(node_sV[non_zero_idx], 
+                                                     node_V[non_zero_idx]))
             self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
 
     def V_df(self) -> Iterable:

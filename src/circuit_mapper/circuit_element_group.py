@@ -149,6 +149,7 @@ class CircuitElementGroup():
         for its transpose
         """
         val = getattr(self.get_element(0), attr)
+        dtype = val.dtype
 
         try:
             attr_size = val.size  # np.ndarray.size
@@ -158,7 +159,7 @@ class CircuitElementGroup():
             except TypeError:
                 attr_size = 1  # a scalar
 
-        return_matrix = np.zeros((self.buses.num_elements, attr_size))
+        return_matrix = np.zeros((self.buses.num_elements, attr_size), dtype=dtype)
 
         for ele, idx in self._name_to_idx_dict.items():
             obj = self.get_element(ele)

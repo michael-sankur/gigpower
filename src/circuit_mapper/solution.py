@@ -20,13 +20,14 @@ class Solution():
     SLACKIDX = 0  # assume slack bus is at index 0
 
     # TODO: VSLACK the same for all objects. Write a SETVSLACK method on the class.
-    VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
-    # TODO: check if we need V0 and I0 on the class. 
+    VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)],
+                      dtype=complex)
+    # TODO: check if we need V0 and I0 on the class.
     # They seem like internal variables for nr3
     V0, I0 = None, None
     maxiter = 100
 
-    # standardize solution parameter name, index values, columns, and 
+    # standardize solution parameter name, index values, columns, and
     # datatypes across the class
     # see self._init_solution_matrices
     SOLUTION_PARAMS = {
@@ -306,15 +307,11 @@ class Solution():
             cappu, wpu, vvcpu = self.cappu[bus_idx], self.wpu[bus_idx], self.vvcpu[bus_idx]
             phase_matrix = self.phase_matrix[bus_idx]
 
-        # temp = aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2
-        # temp1 = spu * (aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2)
-        # temp2 = 1j * cappu.real + 1j * wpu + 1j * vvcpu.real
-
         # TODO: confirm if cappu.real needs to be multiplied by abs(V)**2
         # nr3 map_solution does not do that, but fbs requires it for
         # results to be consistent with opendss
         update = spu * (aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2) - \
-            1j * cappu.real * np.abs(V)**2 + 1j * wpu + 1j * vvcpu.real
+            1j * cappu * np.abs(V)**2 + 1j * wpu + 1j * vvcpu
 
         update[phase_matrix == 0] = 0
 
@@ -371,26 +368,14 @@ class Solution():
         Return total load powers by bus, calculated from solved V value
         per node.
         """
-        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
-
-        for bus_name, bus_idx in self.network.bus_idx_dict.items():
-            node = self.network.nodes[bus_name]
-            data[bus_idx] = calc_load_power(node, self.V[bus_name])
-
-        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+        pass
 
     def getCapPowers(self):
         """
         Return total cap powers by bus, calculated from solved V value
         per node.
         """
-        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
-
-        for bus_name, bus_idx in self.network.bus_idx_dict.items():
-            node = self.network.nodes[bus_name]
-            data[bus_idx] = calc_cap_power(node, self.V[bus_name])
-
-        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+        pass
 
     def nomNodePwrs_df(self):
         """
