@@ -234,9 +234,9 @@ class SolutionNR3(Solution):
                         load_val = load_kvar[ph,idxbs] 
                         cap_val = caparr[ph][idxbs]  
                     #gradient_mag = np.array([A0 * ((A0**2+B0**2) ** (-1/2)), B0 * ((A0**2+B0**2) ** (-1/2))]) #some derivatives
-                    # TODO: specify datatype of np.array
+                    
                     hessian_mag = np.array([[-((A0**2)*(A0**2+B0**2)**(-3/2))+(A0**2+B0**2)**(-1/2), -A0*B0*(A0**2+B0**2)**(-3/2)],
-                                        [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]])
+                                        [-A0*B0*(A0**2+B0**2)**(-3/2), -((B0**2)*(A0**2+B0**2)**(-3/2))+((A0**2+B0**2)**(-1/2))]], dtype=float)
                     available_phases = bp[dss.Circuit.AllBusNames()[k2]] #phase array at specific bus
                     if available_phases[ph] == 1:                 #quadratic terms
                         H[2*ph*(nnode-1) + (k2-1)*2 + cplx][2*(nnode)*ph + 2*k2][2*(nnode)*ph + 2*k2] = \
