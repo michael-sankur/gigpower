@@ -22,9 +22,7 @@ class Solution():
     # TODO: VSLACK the same for all objects. Write a SETVSLACK method on the class.
     VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)],
                       dtype=complex)
-    # TODO: check if we need V0 and I0 on the class.
-    # They seem like internal variables for nr3
-    V0, I0 = None, None
+
     maxiter = 100
 
     # standardize solution parameter name, index values, columns, and
@@ -113,6 +111,10 @@ class Solution():
                 index += self.circuit.transformers.all_names()
                 index += self.circuit.voltage_regulators.all_names()
             data = getattr(self, param)
+            # TODO: give an option to get dataframes by cols
+            # for now, get everything by rows
+            if self._orient == 'cols': 
+                data = data.transpose()
             return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
         except KeyError:
             print(f"Not a valid solution parameter. Valid parameters: \
