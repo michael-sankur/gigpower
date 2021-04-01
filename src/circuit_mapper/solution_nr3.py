@@ -6,10 +6,13 @@
 from . solution import Solution
 from . circuit import Circuit
 import numpy as np
-
+from . nr3_lib.compute_NR3FT import compute_NR3FT
+from . nr3_lib.compute_NR3JT import compute_NR3JT
+from . nr3_lib.map_output import map_output
 
 class SolutionNR3(Solution):
     # TODO: set a class-level NR3 tolerance value
+    CONVERGENCE_TOLERANCE = 10**-6
 
     def __init__(self, dss_fp: str, **kwargs):
         super().__init__(dss_fp, **kwargs)  # sets self.circuit
@@ -26,7 +29,7 @@ class SolutionNR3(Solution):
         https://github.com/msankur/LinDist3Flow/blob/vectorized/20180601/PYTHON/lib/basematrices.py
         written by @kathleenchang
         """
-        V0, I0 = self.__class__.V0, self.__class__.I0
+        V0, I0 = None, None
         Vslack = self.__class__.VSLACK
 
         nline = self.circuit.lines.num_elements
@@ -115,7 +118,7 @@ class SolutionNR3(Solution):
 
         G_KVL = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines,
                          2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines), 
-                         dtype=complex)
+                         dtype=float)
 
         for ph in range(3):
             for line in range(nline):  # line = line index
@@ -185,7 +188,7 @@ class SolutionNR3(Solution):
 
         load_kw = self.circuit.loads.get_ppu_matrix()
         load_kvar = self.circuit.loads.get_qpu_matrix()
-        caparr = self.circuit.capacitors.get_cappu_matrix()
+        caparr = self.circuit.get_cappu_matrix()
 
         # ----------Residuals for KCL at a bus (m) ----------
         bp = self.circuit.buses.get_phase_matrix_dict()
@@ -500,75 +503,9 @@ class SolutionNR3(Solution):
                     vr_counter += 1
         self.H_reg, self.G_reg = H_reg, G_reg
 
-    def compute_NR3FT(self):
-        """ From 20180601/PYTHON/lib/compute_NR3FT.py, written by @kathleenchang """
-        nnode = self.circuit.buses.num_elements
-        nline = self.circuit.lines.num_elements
-        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph
-        X = self.XNR
-        g_SB, b_SB = self.g_SB, self.b_SB
-        G_KVL, b_KVL = self.G_KVL, self.b_KVL
+    def change_KCL_matrices(self, der=0, capacitance=0, t=-1):
         H, g, b = self.H, self.g, self.b
-        H_reg, G_reg = self.H_reg, self.G_reg
-
-        FTSUBV = (g_SB @ X) - b_SB
-        FTKVL = (G_KVL @ X) - b_KVL
-
-        FTKCL = np.zeros((2*3*(nnode-1), 1), dtype=float)
-        for i in range(2*3*(nnode-1)):
-            r = (X.T @ (H[i, :, :] @ X)) \
-            + (g[i, 0,:] @ X) \
-            + b[i, 0,0]
-            FTKCL[i, :] = r
-
-        FTVR = np.zeros((2*vr_lines, 1), dtype=float) #need to fix
-        for i in range(2*vr_lines):
-            r = X.T @ (H_reg[i, :, :] @ X)
-            FTVR[i, :] = r
-
-        FTVR2 = G_reg @ X
-
-        FT = np.r_[FTSUBV, FTKVL, FTKCL, FTVR, FTVR2]
-
-        return FT
-
-    def compute_NR3JT(self):
-        """ From 20180601/PYTHON/lib/compute_NR3JT.py, written by @kathleenchang """
-        nnode = self.circuit.buses.num_elements
-        nline = self.circuit.lines.num_elements
-        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
-        tf_lines = self.circuit.transformers.get_num_lines_x_ph()
-
-        X = self.XNR
-        g_SB, b_SB = self.g_SB, self.b_SB
-        G_KVL, b_KVL = self.G_KVL, self.b_KVL
-        H, g, b = self.H, self.g, self.b
-        H_reg, G_reg = self.H_reg, self.G_reg
-
-        JSUBV = g_SB
-        JKVL = G_KVL
-
-        JKCL = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline) + 2*tf_lines + 
-                         2*2*vr_lines), dtype=float)
-        for i in range(2*3*(nnode-1)):
-            r = (2 * (X.T @ H[i, :, :])) \
-            + (g[i, 0, :])
-            JKCL[i,:] = r
-
-        JVR = np.zeros((2*vr_lines, 2*3*(nnode+nline)+ 2*tf_lines + 
-                        2*2*vr_lines), dtype=float)
-        for i in range(2*vr_lines):
-            r = (2 * (X.T @ H_reg[i, :, :]))
-            JVR[i, :] = r
-
-        JVR2 = G_reg
-
-        JT = np.r_[JSUBV, JKVL, JKCL, JVR, JVR2]
-
-        return JT
-
-    def change_KCL_matrices(self, H, g, b, t, der, capacitance, wpu):
-
+        wpu = self.circuit.get_wpu_matrix()
         nnode = self.circuit.buses.num_elements
 
         # load_kw, load_kvar = nominal_load_values(t)
@@ -576,7 +513,7 @@ class SolutionNR3(Solution):
 
         load_kw = self.circuit.loads.get_ppu_matrix()
         load_kvar = self.circuit.loads.get_qpu_matrix()
-        caparr = self.circuit.capacitors.get_cappu_matrix()
+        caparr = self.circuit.get_cappu_matrix()
 
         # ----------Residuals for KCL at a bus (m) ----------
 
@@ -641,173 +578,74 @@ class SolutionNR3(Solution):
 
         return H, b
 
-    def solve(self, time_delta, der=0, capacitance=0):
-        """ From 20180601/PYTHON/lib/NR3.py, written by @Kathleen Chang"""
-        dss, vvc_objects = self.dss, self.volt_var_controllers
-
-        nnode = self.circuit.buses.num_elements
-        nline = self.circuit.lines.num_elements
-        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph
-        tf_lines = self.circuit.transformers.get_num_lines_x_ph
-
-        XNR = self.XNR
-        g_SB, b_SB = self.g_SB, self.b_SB
-        G_KVL, b_KVL = self.G_KVL, self.b_KVL
+    def solve(self):
+        """
+        Solves powerflow once, updates self.XNR with solved XNR
+        From src/nr3_python/lib/NR3.py
+        Written by @kathleenchang
+        """
+        # get pointers to basematrices
+        XNR, g_SB, b_SB = self.XNR, self.g_SB, self.b_SB
+        G_KVL, b_KVL, = self.G_KVL, self.b_KVL
         H, g, b = self.H, self.g, self.b
         H_reg, G_reg = self.H_reg, self.G_reg
 
-        V0, I0 = self.__class__.V0, self.__class__.I0
-        Vslack = self.__class__.VSLACK
-        tol = self.__class__.tolerance
-        maxiter = self.__class__.maxiter
-        slacknode = self.__class__.SLACKIDX
+        # get index and Sbase info from self.circuit
+        nline = self.circuit.lines.num_elements
+        nnode = self.circuit.buses.num_elements
+        Sbase = self.circuit.Sbase
+        tf_lines = self.circuit.transformers.get_num_lines_x_ph()
+        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
 
-        if maxiter == None:
-            maxiter = 100
+        tol = self.__class__.CONVERGENCE_TOLERANCE
+        maxiter = self.__class__.maxiter
 
         FT = 1e99
         itercount = 0
 
-
-        # adjust KCL based on capacitance, DER, and time-varying load
-        # if der != 0 or capacitance != 0 or time_delta != -1:
-        #     H, b = change_KCL_matrices(fn, H, g, b, time_delta, der, capacitance)
-
-        # solve power-flow
-
+        # solve power-flow.
         while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
-            print("Iteration number %f" % (itercount))
-            FT = self.compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines)
-            JT = self.compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
+            print("Iteration number for Original NR3 %f" % (itercount))
+            FT = compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H,
+                            g, b, nnode, nline, H_reg, G_reg, vr_lines)
+            JT = compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode,
+                            nline, H_reg, G_reg, tf_lines, vr_lines)
 
             if JT.shape[0] >= JT.shape[1]:
                 XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
             itercount += 1
         XNR_final = XNR
+        
+        self.XNR = XNR
+        self.map_XNR()
 
-        XNR_compare = np.zeros(XNR_final.shape, dtype=float)
-        ################ What a mess ....
-        while np.linalg.norm(XNR_final - XNR_compare) > 1e-6:
-            print('WPU')
+    def map_XNR(self):
+        """
+        Set self,V, self.I, self.Stx, self.Srx, self.i, self.s
+        based on the current value of self.XNR
+        Written by @kathleenchang
+        """
+        TXnum = self.circuit.get_tx_idx_matrix()
+        RXnum = self.circuit.get_rx_idx_matrix()
+        nnode = self.circuit.buses.num_elements
+        nline = self.circuit.lines.num_elements
 
-            wpu = np.zeros((3, nnode), dtype=float)
-            for vvo in vvc_objects:
-                busName = vvo.get_busName()
-                idxbus = dss.Circuit.AllBusNames().index(busName)
-                phase = vvo.get_phase()
-                qpu = vvo.get_Q(np.abs(XNR[2*nnode*phase + 2 * idxbus] + (1j*XNR[2*nnode*phase + 2 * idxbus+1])))
-                print(qpu)
-                wpu[phase, idxbus] = qpu
+        PH = self.circuit.buses.get_phase_matrix(self._orient)
+        spu = self.circuit.get_spu_matrix()
+        APQ = self.circuit.get_aPQ_matrix()
+        AZ = self.circuit.get_aZ_matrix()
+        AI = self.circuit.get_aI_matrix() 
+        cappu = self.circuit.get_cappu_matrix()
+        wpu = self.circuit.get_wpu_matrix()
+        vvcpu = self.circuit.get_vvcpu_matrix()
 
-            H, b = self.change_KCL_matrices(H, g, b, time_delta, der, capacitance, wpu)
-
-            while np.amax(np.abs(FT)) >= 1e-6 and itercount < maxiter:
-                print("Iteration number %f" % (itercount))
-                FT = self.compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H, g, b, nnode, nline, H_reg, G_reg, vr_lines)
-                JT = self.compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode, nline, H_reg, G_reg, tf_lines, vr_lines)
-
-                if JT.shape[0] >= JT.shape[1]:
-                    XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
-                itercount += 1
-            XNR_compare = XNR
-        XNR_final = XNR_compare
-        ##############
-
-        # returns associated indices (values as list) of a bus's voltage regulators (keys)
-        vr_idx_dict = self.circuit.voltage_regulators.voltage_regulator_index_dict
-        vr_line_idx = range(0, vr_lines)
-
-        # flag if need to rerun NR3
-        flag = 0
-        vr_line_counter = 0
-
-        for k in vr_idx_dict.keys():
-            for vridx in vr_idx_dict[k]: #{bus: [indices in dss.RegControls.AllNames(), ...]}
-
-                dss.RegControls.Name(dss.RegControls.AllNames()[vridx])
-                dss.Circuit.SetActiveBus(dss.CktElement.BusNames()[0].split(".")[0])
-                winding = dss.RegControls.Winding()
-
-                Vbase = dss.Bus.kVBase() *1000
-                Sbase = 10**6
-                Ibase = Sbase / Vbase
-                band = dss.RegControls.ForwardBand()
-                target_voltage = dss.RegControls.ForwardVreg()
-
-                idxbs = dss.Circuit.AllBusNames().index((dss.CktElement.BusNames()[0].split('.')[0]))
-
-                ph = dss.CktElement.BusNames()[0].split('.')[1:]
-                ph_arr = [0, 0, 0]
-                for i in ph:
-                    ph_arr[int(i) - 1] = 1
-                if len(ph) == 0:
-                    ph_arr = [1, 1, 1]
-                for ph in range(len(ph_arr)):
-                    if ph_arr[ph] == 1: #loop over existing phases of voltage regulator
-
-                        NR_voltage = np.abs((XNR[2*nnode*ph + 2*idxbs]  + (1j * XNR[2*nnode*ph + 2*idxbs + 1])) * Vbase / dss.RegControls.PTRatio())
-                        print(NR_voltage)
-                        if dss.RegControls.ForwardR() and dss.RegControls.ForwardX() and dss.RegControls.CTPrimary():
-                            # if LDC exists
-
-                            #vr_line_counter - counts the number of lines passed; two lines for every phase
-                            #vridx - index of current voltage regulator in dss.RegControls.AllNames()
-                            #tf_lines - number of transformers
-
-                            line_idx =  2*vr_line_idx[vr_line_counter] + 2*(winding - 1)
-
-                            I_reg = XNR[2*3*(nnode+nline) + 2*tf_lines + line_idx] + \
-                                1j * XNR[2*3*(nnode+nline) + 2*tf_lines +  line_idx + 1]
-
-                            V_drop = (dss.RegControls.ForwardR() + 1j*dss.RegControls.ForwardX()) / 0.2 * (I_reg * Ibase / dss.RegControls.CTPrimary())
-                            #print(V_drop)
-                            V_drop = (dss.RegControls.ForwardR() + 1j*dss.RegControls.ForwardX()) / 0.2 * (I_reg * Ibase / (dss.RegControls.CTPrimary()/0.2))
-                            V_R = np.abs(NR_voltage - V_drop)
-
-                            abs_diff = np.abs(V_R - target_voltage)
-                            V_compare = V_R
-
-                            print('V_R', V_R)
-                            print('vdrop', V_drop)
-
-                        else:
-                            # if LDC term does not exist
-                            print('**** LDC missing term ***** ')
-                            abs_diff = np.abs(NR_voltage - target_voltage)
-                            V_compare = NR_voltage
-
-                        print('absolute difference: ', abs_diff, "\n")
-                        vr_line_counter += 1
-
-                        # compare NR3 voltage to forward Vreg voltage +- band
-                        if abs_diff <= band: #converges
-                            XNR_final = XNR
-                            continue
-
-                        elif abs_diff > band:
-                            if V_compare > (target_voltage + band): #NR3 voltage above forward-Vreg
-                                if dss.RegControls.TapNumber() <= -16 :
-                                    print('Tap Number Out of Bounds' )
-                                    XNR_final = XNR
-
-                                else:
-                                    print('Decrease Tap Number')
-                                    dss.RegControls.TapNumber(dss.RegControls.TapNumber() - 1)
-                                    print('New tap number ', dss.RegControls.TapNumber())
-                                    flag = 1 #run NR3 again
-                            else: #NR3 voltage below forward-Vreg
-                                if dss.RegControls.TapNumber() >= 16:
-                                    print('Tap Number Out of Bounds' )
-                                    print('New tap number ', dss.RegControls.TapNumber())
-                                    XNR_final = XNR
-
-                                else:
-                                    print('Increase tap number')
-                                    dss.RegControls.TapNumber(dss.RegControls.TapNumber() + 1)
-                                    flag = 1 #run NR3 again
-            if flag == 1:
-                print('\n Next iteration: ')
-                XNR_final = self.solve(time_delta, der=0, capacitance=0)
-                flag = 0
-
-        self.XNR = XNR_final
+        XNR = self.XNR
+        # TODO: can/should we include transformers and voltage regulators in 
+        # in INR?
+        VNR, INR, STXNR, SRXNR, iNR, sNR = map_output(self.circuit, XNR)
+        self.V = VNR
+        self.I = INR
+        self.Stx = STXNR
+        self.Srx = SRXNR
+        self.i_Node = iNR
+        self.sV = sNR

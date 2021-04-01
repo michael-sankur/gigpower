@@ -171,7 +171,7 @@ def test_nr3_helpers(circuit):
     cappu = cap_arr()
     assert (circuit.loads.get_ppu_matrix == dsskw).all
     assert (circuit.loads.get_qpu_matrix == dsskvar).all
-    assert (circuit.capacitors.get_cappu_matrix == cappu).all
+    assert (circuit.get_cappu_matrix() == cappu).all
 
 
 def test_nr3_basematrices_H_g_b(nr3_solution, nr3_basematrices):
@@ -195,7 +195,7 @@ def test_change_KCL(nr3_solution):
     H, g, b = nr3_solution.H, nr3_solution.g, nr3_solution.b
     t, der, capacitance = 1, -1, 0
     wpu = nr3_solution.circuit.get_wpu_matrix()
-    ckt_H, ckt_b = nr3_solution.change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
+    ckt_H, ckt_b = nr3_solution.change_KCL_matrices(t, der, capacitance)
     nr3_H, nr3_b = change_KCL_matrices(H, g, b, t, der, capacitance, wpu)
     np.testing.assert_equal(ckt_H, nr3_H)
     np.testing.assert_equal(ckt_b, nr3_b)

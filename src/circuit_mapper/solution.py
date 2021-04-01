@@ -22,9 +22,7 @@ class Solution():
     # TODO: VSLACK the same for all objects. Write a SETVSLACK method on the class.
     VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)],
                       dtype=complex)
-    # TODO: check if we need V0 and I0 on the class.
-    # They seem like internal variables for nr3
-    V0, I0 = None, None
+
     maxiter = 100
 
     # standardize solution parameter name, index values, columns, and
@@ -95,7 +93,8 @@ class Solution():
         """
         for param in self.__class__.SOLUTION_PARAMS:
             element_group, cols, datatype = self.__class__.SOLUTION_PARAMS[param]
-            if element_group == 'lines':  # include transformers and vrs
+            # include transformers and vrs, for fbs
+            if element_group == 'lines':
                 num_rows = self.circuit.get_total_lines()
             else:
                 num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
@@ -109,10 +108,22 @@ class Solution():
         try:
             element_group, cols, data_type = self.__class__.SOLUTION_PARAMS.get(param)
             index = getattr(self.circuit, element_group).all_names()
-            if element_group == 'lines':  # include transformers and vrs
-                index += self.circuit.transformers.all_names()
-                index += self.circuit.voltage_regulators.all_names()
             data = getattr(self, param)
+            # include transformers and regulators all Solutions except SolutionNR3
+            # TODO: modify NR3's mapping to include transformers and regulators
+            # in self.I
+            if element_group == 'lines':
+                if self.__class__.__name__ == 'SolutionNR3':
+                    num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
+                    data = data[0:num_rows]
+                else:  # SolutionNR3, data = self.I              
+                    num_rows = self.circuit.get_total_lines()
+                    index += self.circuit.transformers.all_names()
+                    index += self.circuit.voltage_regulators.all_names()
+            # TODO: give an option to get dataframes by cols
+            # for now, get everything by rows
+            if self._orient == 'cols':
+                data = data.transpose()
             return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
         except KeyError:
             print(f"Not a valid solution parameter. Valid parameters: \
