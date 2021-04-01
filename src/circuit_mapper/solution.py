@@ -182,7 +182,7 @@ class Solution():
         tf_lines = self.circuit.transformers.get_num_lines_x_ph
         XNR = self.XNR
 
-        vr_idx_dict = voltage_regulator_index_dict()
+        vr_idx_dict = self.circuit.voltage_regulators.voltage_regulator_index_dict()
         vr_line_idx = range(0, vr_lines)
 
         # flag if need to rerun NR3
@@ -393,17 +393,17 @@ class Solution():
         One time calculation of total nominal node power based on solved V
         equivalent to aP = 1, aI = aQ = 0
         """
-
+        pass
         # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
 
-        data = np.zeros((len(self.network.nodes), 3), dtype=complex)
+        # data = np.zeros((len(self.network.nodes), 3), dtype=complex)
 
-        for node in self.network.get_nodes():
-            node_idx = self.network.bus_idx_dict[node.name]
-            nodeV = np.ones((3,), dtype=complex)
-            data[node_idx] += calc_total_node_power(
-                node, nodeV, [0, 0, 1, 0, 0, 1])
-        return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+        # for node in self.network.get_nodes():
+        #     node_idx = self.network.bus_idx_dict[node.name]
+        #     nodeV = np.ones((3,), dtype=complex)
+        #     data[node_idx] += calc_total_node_power(
+        #         node, nodeV, [0, 0, 1, 0, 0, 1])
+        # return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
 
     def _set_orient(self, orient: str):
         """
