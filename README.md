@@ -2,6 +2,11 @@
 
 LinDist3Flow is a python package used to solve power flow for radial and meshed networks. The package relies on OpenDSSPy to parse text files in *.dss format into custom package objects. The package uses Newton-Raphson and Forward/Backward Sweep algorithms to solve power flow. Calculations rely on the CPython standard library and on the Numpy package. The package allows users to solve iteratively over time-varying models, with volt-var control and regulator controls. The package provides methods for users to access and calculate common solution parameters through Pandas Data
 
+## Usage
+
+TODO:
+`$ pip install [NAME]`  
+
 ## Getting started
 From the project root (the parent of `src/`): 
 
@@ -27,10 +32,6 @@ Note: this step is temporary, for developers working on the package.
 
 3. To capturing all prints to stdout, run with `-s`:  
 `$ pytest tests -s`
-
-## Usage
-
-TODO:
 
 
 ## Contributing
