@@ -6,7 +6,9 @@
 from . solution import Solution
 from . circuit import Circuit
 import numpy as np
-
+from nr3_python.lib.compute_NR3FT import compute_NR3FT
+from nr3_python.lib.compute_NR3JT import compute_NR3JT
+from nr3_python.lib.map_output import map_output
 
 class SolutionNR3(Solution):
     # TODO: set a class-level NR3 tolerance value
@@ -117,7 +119,7 @@ class SolutionNR3(Solution):
 
         G_KVL = np.zeros((2*3*(nline) + 2*tf_lines + 2*2*vr_lines,
                          2*3*(nnode+nline) + 2*tf_lines + 2*2*vr_lines), 
-                         dtype=complex)
+                         dtype=float)
 
         for ph in range(3):
             for line in range(nline):  # line = line index
@@ -187,7 +189,7 @@ class SolutionNR3(Solution):
 
         load_kw = self.circuit.loads.get_ppu_matrix()
         load_kvar = self.circuit.loads.get_qpu_matrix()
-        caparr = self.circuit.capacitors.get_cappu_matrix()
+        caparr = self.circuit.get_cappu_matrix()
 
         # ----------Residuals for KCL at a bus (m) ----------
         bp = self.circuit.buses.get_phase_matrix_dict()
@@ -502,73 +504,6 @@ class SolutionNR3(Solution):
                     vr_counter += 1
         self.H_reg, self.G_reg = H_reg, G_reg
 
-    def compute_NR3FT(self):
-        """ From 20180601/PYTHON/lib/compute_NR3FT.py, written by @kathleenchang """
-        nnode = self.circuit.buses.num_elements
-        nline = self.circuit.lines.num_elements
-        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
-        X = self.XNR
-        g_SB, b_SB = self.g_SB, self.b_SB
-        G_KVL, b_KVL = self.G_KVL, self.b_KVL
-        H, g, b = self.H, self.g, self.b
-        H_reg, G_reg = self.H_reg, self.G_reg
-
-        FTSUBV = (g_SB @ X) - b_SB
-        FTKVL = (G_KVL @ X) - b_KVL
-
-        FTKCL = np.zeros((2*3*(nnode-1), 1), dtype=float)
-        for i in range(2*3*(nnode-1)):
-            r = (X.T @ (H[i, :, :] @ X)) \
-            + (g[i, 0,:] @ X) \
-            + b[i, 0,0]
-            FTKCL[i, :] = r
-
-        FTVR = np.zeros((2*vr_lines, 1), dtype=float) #need to fix
-        for i in range(2*vr_lines):
-            r = X.T @ (H_reg[i, :, :] @ X)
-            FTVR[i, :] = r
-
-        FTVR2 = G_reg @ X
-
-        FT = np.r_[FTSUBV, FTKVL, FTKCL, FTVR, FTVR2]
-
-        return FT
-
-    def compute_NR3JT(self):
-        """ From 20180601/PYTHON/lib/compute_NR3JT.py, written by @kathleenchang """
-        nnode = self.circuit.buses.num_elements
-        nline = self.circuit.lines.num_elements
-        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph()
-        tf_lines = self.circuit.transformers.get_num_lines_x_ph()
-
-        X = self.XNR
-        g_SB, b_SB = self.g_SB, self.b_SB
-        G_KVL, b_KVL = self.G_KVL, self.b_KVL
-        H, g, b = self.H, self.g, self.b
-        H_reg, G_reg = self.H_reg, self.G_reg
-
-        JSUBV = g_SB
-        JKVL = G_KVL
-
-        JKCL = np.zeros((2*3*(nnode-1), 2*3*(nnode+nline) + 2*tf_lines + 
-                         2*2*vr_lines), dtype=float)
-        for i in range(2*3*(nnode-1)):
-            r = (2 * (X.T @ H[i, :, :])) \
-            + (g[i, 0, :])
-            JKCL[i,:] = r
-
-        JVR = np.zeros((2*vr_lines, 2*3*(nnode+nline)+ 2*tf_lines + 
-                        2*2*vr_lines), dtype=float)
-        for i in range(2*vr_lines):
-            r = (2 * (X.T @ H_reg[i, :, :]))
-            JVR[i, :] = r
-
-        JVR2 = G_reg
-
-        JT = np.r_[JSUBV, JKVL, JKCL, JVR, JVR2]
-
-        return JT
-
     def change_KCL_matrices(self, der=0, capacitance=0, t=-1):
         H, g, b = self.H, self.g, self.b
         wpu = self.circuit.get_wpu_matrix()
@@ -672,14 +607,17 @@ class SolutionNR3(Solution):
         # solve power-flow.
         while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
             print("Iteration number for Original NR3 %f" % (itercount))
-            FT = self.compute_NR3FT()
-            JT = self.compute_NR3JT()
+            FT = compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H,
+                            g, b, nnode, nline, H_reg, G_reg, vr_lines)
+            JT = compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode,
+                            nline, H_reg, G_reg, tf_lines, vr_lines)
 
             if JT.shape[0] >= JT.shape[1]:
                 XNR = XNR - np.linalg.inv(JT.T@JT)@JT.T@FT
             itercount += 1
+        XNR_final = XNR
         
-        # self.XNR = XNR
+        self.XNR = XNR
         self.map_XNR()
 
     def map_XNR(self):
@@ -703,72 +641,12 @@ class SolutionNR3(Solution):
         vvcpu = self.circuit.get_vvcpu_matrix()
 
         XNR = self.XNR
-
-        #remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
-        VNR = np.zeros((3, nnode), dtype='complex')
-        for ph in range(0, 3):
-            for k1 in range(0, nnode):
-                VNR[ph, k1] = XNR[2*ph*nnode + 2*k1] + 1j*XNR[2*ph*nnode + 2*k1+1]
-                if np.abs(VNR[ph, k1].real) <= 1e-12:
-                    VNR[ph, k1] = 0 + VNR[ph, k1].imag
-                if np.abs(VNR[ph, k1].imag) <= 1e-12:
-                    VNR[ph, k1] = VNR[ph, k1].real + 0
-        VNR[PH == 0] = 0
+        # TODO: can/should we include transformers and voltage regulators in 
+        # in INR?
+        VNR, INR, STXNR, SRXNR, iNR, sNR = map_output(nline, nnode, XNR, None, [])
         self.V = VNR
-
-        XNR = XNR[2*3*nnode:]
-        INR = np.zeros((3, nline), dtype='complex')
-        for ph in range(0, 3):
-            for k1 in range(0, nline):
-                INR[ph, k1] = XNR[2*ph*nline + 2*k1] + 1j*XNR[2*ph*nline + 2*k1+1]
-                if np.abs(INR[ph, k1].real) <= 1e-12:
-                    INR[ph, k1] = 0 + INR[ph, k1].imag
-                if np.abs(INR[ph, k1].imag) <= 1e-12:
-                    INR[ph, k1] = INR[ph, k1].real + 0
         self.I = INR
-
-        # STXNR_n^phi = V_m^phi (I_mn^phi)^*
-        # SRXNR_n^phi = V_n^phi (I_mn^phi)^*
-        STXNR = np.zeros((3, nline), dtype='complex')
-        SRXNR = np.zeros((3, nline), dtype='complex')
-        for ph in range(0, 3):
-            for k1 in range(0, nline):
-                STXNR[ph, k1] = VNR[ph, TXnum[k1]]*np.conj(INR[ph, k1])
-                if np.abs(STXNR[ph, k1].real) <= 1e-12:
-                    STXNR[ph, k1] = 0 + STXNR[ph, k1].imag
-                if np.abs(STXNR[ph, k1].imag) <= 1e-12:
-                    STXNR[ph, k1] = STXNR[ph, k1].real + 0
-                SRXNR[ph, k1] = VNR[ph, RXnum[k1]]*np.conj(INR[ph, k1])
-                if np.abs(SRXNR[ph, k1].real) <= 1e-12:
-                    SRXNR[ph, k1] = 0 + SRXNR[ph, k1].imag
-                if np.abs(SRXNR[ph, k1].imag) <= 1e-12:
-                    SRXNR[ph, k1] = SRXNR[ph, k1].real + 0
-
         self.Stx = STXNR
         self.Srx = SRXNR
-
-        sNR = np.zeros((3, nnode), dtype='complex')
-        iNR = np.zeros((3, nnode), dtype='complex')
-        # Totdal node loads
-        sNR = spu*(APQ + AI*np.abs(VNR) + AZ*np.abs(VNR)**2) - \
-            1j*cappu.real + 1j*wpu + 1j*vvcpu.real
-        sNR[PH == 0] = 0
-        for ph in range(0, 3):
-            for k1 in range(0, nnode):
-                if np.abs(sNR[ph, k1].real) <= 1e-12:
-                    sNR[ph, k1] = 0 + sNR[ph, k1].imag
-                if np.abs(sNR[ph, k1].imag) <= 1e-12:
-                    sNR[ph, k1] = sNR[ph, k1].real + 0
+        self.i_Node = iNR
         self.sV = sNR
-
-        # Total node current
-        iNR[PH != 0] = np.conj(sNR[PH != 0]/VNR[PH != 0])
-        iNR[PH == 0] = 0
-        for ph in range(0, 3):
-            for k1 in range(0, nnode):
-                if np.abs(iNR[ph, k1].real) <= 1e-12:
-                    iNR[ph, k1] = 0 + iNR[ph, k1].imag
-                if np.abs(iNR[ph, k1].imag) <= 1e-12:
-                    iNR[ph, k1] = iNR[ph, k1].real + 0
-
-        self.iNode = iNR # TODO: add to solution parameters
