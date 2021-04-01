@@ -21,12 +21,13 @@ OUT_PREFIX = 'NR3_v_DSS_'
 GENEROUS = 10e-1
 STRICT = 10e-2
 
+Circuit.set_zip_values([1, 0, 0, 1, 0, 0, 0.80])
+
 
 @pytest.fixture
 def dss_solution(dss_file):
     fp = str(Path(DSS_FILE_DIR, dss_file))
     dss_solution = SolutionDSS(str(fp))
-    dss_solution.circuit.set_zip_values([1, 0, 0, 1, 0, 0, 0.80])
     dss_solution.solve()
     return dss_solution
 
@@ -35,7 +36,7 @@ def dss_solution(dss_file):
 def new_nr3_solution(dss_file):
     fp = str(Path(DSS_FILE_DIR, dss_file))
     solution = SolutionNR3(fp)
-    solution.circuit.set_zip_values([1, 0, 0, 1, 0, 0, 0.80])
+    # solution.maxiter = 1
     solution.solve()
     return solution
 
@@ -48,12 +49,12 @@ def setup_module():
 @pytest.mark.parametrize(
     "dss_file,tolerance",
     [
-        # ('IEEE_13_Bus_allwye.dss', GENEROUS),
+        ('IEEE_13_Bus_allwye.dss', GENEROUS),
         ('IEEE_13_Bus_allwye_noxfm_noreg.dss', STRICT),
-        # ('IEEE_34_Bus_allwye.dss', GENEROUS),
-        # ('IEEE_34_Bus_allwye_noxfm_noreg.dss', STRICT),
-        # ('IEEE_37_Bus_allwye.dss', GENEROUS),
-        # ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)
+        ('IEEE_34_Bus_allwye.dss', GENEROUS),
+        ('IEEE_34_Bus_allwye_noxfm_noreg.dss', STRICT),
+        ('IEEE_37_Bus_allwye.dss', GENEROUS),
+        ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)
     ]
 
 )
