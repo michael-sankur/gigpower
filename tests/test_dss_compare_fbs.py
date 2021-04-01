@@ -9,7 +9,6 @@ from circuit_mapper.solution_fbs import SolutionFBS
 from circuit_mapper.pretty_print import compare_data_frames
 from circuit_mapper.circuit import Circuit
 
-import pandas as pd
 import numpy as np
 
 import sys
@@ -24,13 +23,14 @@ OUT_PREFIX = 'FBS_v_DSS_'
 GENEROUS = 10e-1
 STRICT = 10e-2
 
-Circuit.set_zip_values([0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80])
+
 @pytest.fixture
 def dss_solution(dss_file):
     fp = str(Path(DSS_FILE_DIR, dss_file))
     dss_solution = SolutionDSS(str(fp))
     dss_solution.solve()
     return dss_solution
+
 
 @pytest.fixture
 def new_fbs_solution(dss_file):
@@ -39,19 +39,30 @@ def new_fbs_solution(dss_file):
     solution.solve()
     return solution
 
+
 def setup_module():
     if not OUT_DIR.exists():
         os.makedirs(OUT_DIR)
 
+
+@pytest.mark.parametrize(
+    "zip_values,zip_name",
+    [
+        (np.asarray([1, 0, 0, 1, 0, 0, .8]),  'constant_impedance'),
+        (np.asarray([0, 0, 1, 0, 0, 1, .8]),  'constant_power'),
+        (np.asarray([0.10, 0.05, 0.85, 0.10, 0.05,
+                     0.85, 0.80]), 'test_zip')
+    ]
+)
 @pytest.mark.parametrize(
     "dss_file,tolerance",
     [
         ('IEEE_13_Bus_allwye.dss', GENEROUS),
-        ('IEEE_13_Bus_allwye_noxfm_noreg.dss', STRICT),  # I fails
+        ('IEEE_13_Bus_allwye_noxfm_noreg.dss', STRICT),
         ('IEEE_34_Bus_allwye.dss', GENEROUS),
-        ('IEEE_34_Bus_allwye_noxfm_noreg.dss', STRICT),  # not converging
+        ('IEEE_34_Bus_allwye_noxfm_noreg.dss', STRICT),
         ('IEEE_37_Bus_allwye.dss', GENEROUS),
-        ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)  # I and sV fail
+        ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)
     ]
 
 )
@@ -59,14 +70,17 @@ def setup_module():
     "solution_param",
     [(param) for param in SolutionFBS.SOLUTION_PARAMS]
 )
-def test_dss_v_new_fbs(new_fbs_solution, dss_solution, solution_param, 
-    dss_file, tolerance):
+def test_dss_v_new_fbs(new_fbs_solution, dss_solution, zip_values,
+                       zip_name, solution_param, dss_file, tolerance):
     """
     Compare the python FBS solution to the opendss solution.
     Writes output to OUTPUT FOLDER.
     """
+    Circuit.set_zip_values(zip_values)
     fp = Path(DSS_FILE_DIR, dss_file)
-    out_file = Path(OUT_DIR, OUT_PREFIX + str(fp.stem) + '_' + solution_param).with_suffix('.out.txt')
+    out_file = Path(OUT_DIR, OUT_PREFIX + str(fp.stem) + '_' +
+                    zip_name + '-' +
+                    solution_param).with_suffix('.out.txt')
     sys.stdout = open(out_file, 'w')
     fbs_vals = new_fbs_solution.get_data_frame(solution_param)
     dss_vals = dss_solution.get_data_frame(solution_param)
@@ -75,5 +89,6 @@ def test_dss_v_new_fbs(new_fbs_solution, dss_solution, solution_param,
         print(f"TEST PASSED. FBS CONVERGED = {new_fbs_solution.converged}")
     else:
         print(f"TEST FAILED. FBS CONVERGED = {new_fbs_solution.converged}")
+    print(f"Zip values = {zip_values}")
     compare_data_frames(fbs_vals, dss_vals, 'fbs', 'dss', solution_param)
     assert test
