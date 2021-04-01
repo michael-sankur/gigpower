@@ -6,9 +6,9 @@
 from . solution import Solution
 from . circuit import Circuit
 import numpy as np
-from nr3_python.lib.compute_NR3FT import compute_NR3FT
-from nr3_python.lib.compute_NR3JT import compute_NR3JT
-from nr3_python.lib.map_output import map_output
+from . nr3_lib.compute_NR3FT import compute_NR3FT
+from . nr3_lib.compute_NR3JT import compute_NR3JT
+from . nr3_lib.map_output import map_output
 
 class SolutionNR3(Solution):
     # TODO: set a class-level NR3 tolerance value
@@ -643,7 +643,7 @@ class SolutionNR3(Solution):
         XNR = self.XNR
         # TODO: can/should we include transformers and voltage regulators in 
         # in INR?
-        VNR, INR, STXNR, SRXNR, iNR, sNR = map_output(nline, nnode, XNR, None, [])
+        VNR, INR, STXNR, SRXNR, iNR, sNR = map_output(self.circuit, XNR)
         self.V = VNR
         self.I = INR
         self.Stx = STXNR
