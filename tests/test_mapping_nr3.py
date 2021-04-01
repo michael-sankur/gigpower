@@ -171,7 +171,7 @@ def test_nr3_helpers(circuit):
     cappu = cap_arr()
     assert (circuit.loads.get_ppu_matrix == dsskw).all
     assert (circuit.loads.get_qpu_matrix == dsskvar).all
-    assert (circuit.capacitors.get_cappu_matrix == cappu).all
+    assert (circuit.get_cappu_matrix() == cappu).all
 
 
 def test_nr3_basematrices_H_g_b(nr3_solution, nr3_basematrices):

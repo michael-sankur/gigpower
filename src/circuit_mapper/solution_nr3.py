@@ -514,7 +514,7 @@ class SolutionNR3(Solution):
 
         load_kw = self.circuit.loads.get_ppu_matrix()
         load_kvar = self.circuit.loads.get_qpu_matrix()
-        caparr = self.circuit.capacitors.get_cappu_matrix()
+        caparr = self.circuit.get_cappu_matrix()
 
         # ----------Residuals for KCL at a bus (m) ----------
 
