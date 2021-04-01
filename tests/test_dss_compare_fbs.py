@@ -7,6 +7,7 @@
 from circuit_mapper.solution_dss import SolutionDSS
 from circuit_mapper.solution_fbs import SolutionFBS
 from circuit_mapper.pretty_print import compare_data_frames
+from circuit_mapper.circuit import Circuit
 
 import pandas as pd
 import numpy as np
@@ -23,7 +24,7 @@ OUT_PREFIX = 'FBS_v_DSS_'
 GENEROUS = 10e-1
 STRICT = 10e-2
 
-
+Circuit.set_zip_values([0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80])
 @pytest.fixture
 def dss_solution(dss_file):
     fp = str(Path(DSS_FILE_DIR, dss_file))

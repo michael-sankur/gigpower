@@ -21,8 +21,6 @@ OUT_PREFIX = 'NR3_v_DSS_'
 GENEROUS = 10e-1
 STRICT = 10e-2
 
-Circuit.set_zip_values([1, 0, 0, 1, 0, 0, 0.80])
-
 
 @pytest.fixture
 def dss_solution(dss_file):
@@ -68,6 +66,7 @@ def test_dss_v_new_nr3(new_nr3_solution, dss_solution, solution_param,
     Compare the python FBS solution to the opendss solution.
     Writes output to OUTPUT FOLDER.
     """
+    Circuit.set_zip_values([1, 0, 0, 1, 0, 0, 0.80])
     fp = Path(DSS_FILE_DIR, dss_file)
     out_file = Path(OUT_DIR, OUT_PREFIX + str(fp.stem) + '_' + solution_param).with_suffix('.out.txt')
     sys.stdout = open(out_file, 'w')
