@@ -24,12 +24,6 @@ VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
 
 
 @pytest.fixture
-def circuit_object():
-    """ map Circuit object once for use in all tests """
-    return Circuit(DSS_FILE)
-
-
-@pytest.fixture
 def new_nr3_object():
     return SolutionNR3(DSS_FILE)
 
