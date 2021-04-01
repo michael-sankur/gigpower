@@ -13,6 +13,7 @@ import sys
 import os
 from pathlib import Path
 import pytest
+import numpy as np
 
 DSS_FILE_DIR = Path('./src/nr3_python/')
 OUT_DIR = Path('./tests/test_compare_nr3_dss')
@@ -45,6 +46,15 @@ def setup_module():
 
 
 @pytest.mark.parametrize(
+    "zip_values,zip_name",
+    [
+        (np.asarray([1, 0, 0, 1, 0, 0, .8]),  'constant_impedance'),
+        (np.asarray([0, 0, 1, 0, 0, 1, .8]),  'constant_power'),
+        (np.asarray([0.10, 0.05, 0.85, 0.10, 0.05,
+                     0.85, 0.80]), 'test_zip')
+    ]
+)
+@pytest.mark.parametrize(
     "dss_file,tolerance",
     [
         ('IEEE_13_Bus_allwye.dss', GENEROUS),
@@ -61,14 +71,16 @@ def setup_module():
     [(param) for param in SolutionNR3.SOLUTION_PARAMS]
 )
 def test_dss_v_new_nr3(new_nr3_solution, dss_solution, solution_param,
-                       dss_file, tolerance):
+                       dss_file, tolerance, zip_values, zip_name):
     """
     Compare the python FBS solution to the opendss solution.
     Writes output to OUTPUT FOLDER.
     """
-    Circuit.set_zip_values([1, 0, 0, 1, 0, 0, 0.80])
+    Circuit.set_zip_values(zip_values)
     fp = Path(DSS_FILE_DIR, dss_file)
-    out_file = Path(OUT_DIR, OUT_PREFIX + str(fp.stem) + '_' + solution_param).with_suffix('.out.txt')
+    out_file = Path(OUT_DIR, OUT_PREFIX + str(fp.stem) + '_' +
+                    zip_name + '-' +
+                    solution_param).with_suffix('.out.txt')
     sys.stdout = open(out_file, 'w')
     nr3_vals = new_nr3_solution.get_data_frame(solution_param)
     dss_vals = dss_solution.get_data_frame(solution_param)
@@ -77,5 +89,6 @@ def test_dss_v_new_nr3(new_nr3_solution, dss_solution, solution_param,
         print("TEST PASSED.")
     else:
         print("TEST FAILED.")
+    print(f"Zip values = {zip_values}")
     compare_data_frames(nr3_vals, dss_vals, 'nr3', 'dss', solution_param)
     assert test
