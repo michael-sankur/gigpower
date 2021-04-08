@@ -32,10 +32,11 @@ class Solution():
     SOLUTION_PARAMS = {
         'V': ['buses', ['A', 'B', 'C'], complex],
         'I': ['lines', ['A', 'B', 'C'], complex],
-        'sV': ['buses', ['A', 'B', 'C'], complex]}
+        'sV': ['buses', ['A', 'B', 'C'], complex],
+        'Vmag': ['buses', ['A', 'B', 'C'], float]
+    }
 
-    # TODO: Make a 'solution.set_tolerance()' method
-    
+    # TODO: Make a 'solution.set_tolerance()' method 
     def __init__(self, dss_fp: str):
         """
         sets up a Solution object with a pointer to a Circuit mapped from opendss
