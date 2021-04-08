@@ -5,6 +5,7 @@
 
 from . circuit import Circuit
 from . volt_var_controller import VoltVARController
+from utils import get_magnitude
 from typing import Iterable
 import opendssdirect as dss
 
@@ -358,12 +359,11 @@ class Solution():
         #     self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
         pass
 
-    def VMag_df(self):
+    def calc_Vmag(self) -> np.ndarray:
         """
-        returns VMag as a dataframe indexed by node name
+        returns VMag as an n x numpy array, indexed by Bus index.
         """
-        V = self.V_df()
-        return V.applymap(lambda cmplx_v: (np.real(cmplx_v)**2 + np.imag(cmplx_v)**2) ** .5)
+        return get_magnitude(self.V)
 
     def params_df(self):
         """
