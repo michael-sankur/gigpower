@@ -20,8 +20,9 @@ DSS_FILE_DIR = Path('./src/nr3_python/')
 OUT_DIR = Path('./tests/test_compare_fbs_dss')
 OUT_PREFIX = 'FBS_v_DSS_'
 
-GENEROUS = 10e-1
-STRICT = 10e-2
+# thresholds for passing tests
+GENEROUS = 10e-2
+STRICT = 10e-3
 
 
 @pytest.fixture
@@ -84,7 +85,14 @@ def test_dss_v_new_fbs(new_fbs_solution, dss_solution, zip_values,
     sys.stdout = open(out_file, 'w')
     fbs_vals = new_fbs_solution.get_data_frame(solution_param)
     dss_vals = dss_solution.get_data_frame(solution_param)
-    test = ((fbs_vals - dss_vals).abs().max() <= tolerance).all()
+    if solution_param == 'sV':
+        dss_thresholds = dss_vals.abs() * .05
+        diffs = (fbs_vals.abs() - dss_vals.abs()).abs()
+        test = ((diffs <= dss_thresholds).max()).all()
+    else:
+        if solution_param == 'Vmag':
+            tolerance = STRICT
+        test = ((fbs_vals - dss_vals).abs().max() <= tolerance).all()
     if test:
         print(f"TEST PASSED. FBS CONVERGED = {new_fbs_solution.converged}")
     else:
