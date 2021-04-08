@@ -5,7 +5,6 @@
 
 from . circuit import Circuit
 from . volt_var_controller import VoltVARController
-from utils import get_magnitude
 from typing import Iterable
 import opendssdirect as dss
 
@@ -364,7 +363,7 @@ class Solution():
         """
         returns VMag as an n x numpy array, indexed by Bus index.
         """
-        return get_magnitude(self.V)
+        return self.V.abs()
 
     def params_df(self):
         """

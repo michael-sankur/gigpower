@@ -178,7 +178,3 @@ def get_reverse_adj(adj: Dict[str, List]):
             except KeyError:
                 reverse[v] = [node]
     return reverse
-
-
-def get_magnitude(cmplx_v: complex):
-    np.real(cmplx_v)**2 + np.imag(cmplx_v)**2) ** .5)
