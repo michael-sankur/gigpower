@@ -101,6 +101,7 @@ class SolutionDSS(Solution):
             Vtemp = Vtemp[0:5:2] + 1j*Vtemp[1:6:2]
             VDSS[k1, ph] = Vtemp
         self.V = VDSS
+        self.Vmag = np.abs(VDSS)
 
         IDSS = np.zeros((len(dss.Lines.AllNames()), 3), dtype='complex')
         for k1 in range(len(dss.Lines.AllNames())):

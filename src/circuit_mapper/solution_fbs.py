@@ -87,7 +87,9 @@ class SolutionFBS(Solution):
                         self.update_voltage_forward(bus, child)
 
             # update s at all buses
+            # calculate Vmag
             self.calculate_sV()
+            self.Vmag = np.abs(self.V)
 
             # BACKWARD SWEEP: for node in reverse topo_order:
             for bus_name in reversed(topo_order):
