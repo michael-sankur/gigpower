@@ -56,11 +56,8 @@ def setup_module():
 
 
 @pytest.mark.parametrize(
-    "algorithm,out_dir",
-    [
-        ("NR3", OUT_DIR_NR3),
-        ("FBS", OUT_DIR_FBS),
-    ]
+    "solution_param",
+    [(param) for param in SolutionFBS.SOLUTION_PARAMS]
 )
 @pytest.mark.parametrize(
     "zip_values,zip_name",
@@ -81,14 +78,16 @@ def setup_module():
         ('IEEE_37_Bus_allwye.dss', GENEROUS),
         ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)
     ]
-
 )
 @pytest.mark.parametrize(
-    "solution_param",
-    [(param) for param in SolutionFBS.SOLUTION_PARAMS]
+    "algorithm,out_dir",
+    [
+        ("NR3", OUT_DIR_NR3),
+        ("FBS", OUT_DIR_FBS),
+    ]
 )
-def test_dss_v_new_fbs(algorithm, out_dir, dss_solution, zip_values,
-                       zip_name, solution_param, dss_file, tolerance):
+def test_dss_compare(algorithm, out_dir, dss_solution, zip_values,
+                     zip_name, solution_param, dss_file, tolerance):
     """
     Compare the python FBS solution to the opendss solution.
     Writes output to OUTPUT FOLDER.
