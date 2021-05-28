@@ -617,6 +617,7 @@ class SolutionNR3(Solution):
         XNR_final = XNR
         
         self.XNR = XNR
+        self.converged = True
         self.map_XNR()
 
     def map_XNR(self):
@@ -644,6 +645,7 @@ class SolutionNR3(Solution):
         # in INR?
         VNR, INR, STXNR, SRXNR, iNR, sNR = map_output(self.circuit, XNR)
         self.V = VNR
+        self.Vmag = np.abs(VNR)
         self.I = INR
         self.Stx = STXNR
         self.Srx = SRXNR

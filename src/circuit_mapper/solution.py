@@ -31,10 +31,11 @@ class Solution():
     SOLUTION_PARAMS = {
         'V': ['buses', ['A', 'B', 'C'], complex],
         'I': ['lines', ['A', 'B', 'C'], complex],
-        'sV': ['buses', ['A', 'B', 'C'], complex]}
+        'sV': ['buses', ['A', 'B', 'C'], complex],
+        'Vmag': ['buses', ['A', 'B', 'C'], float]
+    }
 
-    # TODO: Make a 'solution.set_tolerance()' method
-    
+    # TODO: Make a 'solution.set_tolerance()' method 
     def __init__(self, dss_fp: str):
         """
         sets up a Solution object with a pointer to a Circuit mapped from opendss
@@ -358,12 +359,11 @@ class Solution():
         #     self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
         pass
 
-    def VMag_df(self):
+    def calc_Vmag(self) -> np.ndarray:
         """
-        returns VMag as a dataframe indexed by node name
+        returns VMag as an n x numpy array, indexed by Bus index.
         """
-        V = self.V_df()
-        return V.applymap(lambda cmplx_v: (np.real(cmplx_v)**2 + np.imag(cmplx_v)**2) ** .5)
+        return self.V.abs()
 
     def params_df(self):
         """
