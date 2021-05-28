@@ -1,6 +1,6 @@
 # Elaine Laguerta (github: @elaguerta)
 # LBNL GIG
-# File created: 23 March 2020
+# File created: 23 March 2021
 # Compare solutions between opendss and SolutiionFBS
 # based on tests/test_dss_compare_fbs.py
 
