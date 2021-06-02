@@ -101,30 +101,38 @@ class Solution():
                 num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
             setattr(self, param, np.zeros((num_rows, len(cols)), dtype=datatype))
 
-    def get_data_frame(self, param: str) -> pd.DataFrame:
+    def get_data_frame(self, param: str, orient: str = '') -> pd.DataFrame:
         """
         Returns a DataFrame for the specified solution paramater.
         param: must be in SOLUTION_PARAMS
+        orient: optional, 'rows' or 'cols', defaults to self._orient
         """
+        if not orient:
+            orient = self._orient
         try:
             element_group, cols, data_type = self.__class__.SOLUTION_PARAMS.get(param)
-            index = getattr(self.circuit, element_group).all_names()
+            # force a deep copy to avoid pointer issues
+            index = [ _ for _ in getattr(self.circuit, element_group).all_names()]
             data = getattr(self, param)
             # include transformers and regulators all Solutions except SolutionNR3
-            # TODO: modify NR3's mapping to include transformers and regulators
-            # in self.I
+            # TODO: modify NR3's I mapping to include transformers and regulators
             if element_group == 'lines':
                 if self.__class__.__name__ == 'SolutionNR3':
                     num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
                     data = data[0:num_rows]
-                else:  # SolutionNR3, data = self.I              
+                else:            
                     num_rows = self.circuit.get_total_lines()
                     index += self.circuit.transformers.all_names()
                     index += self.circuit.voltage_regulators.all_names()
-            # TODO: give an option to get dataframes by cols
-            # for now, get everything by rows
-            if self._orient == 'cols':
+            # TODO: rewrite NR3 so that the default orientation is rows
+            if self.__class__.__name__ == 'SolutionNR3':
+                data = data.transpose()              
+            if orient == 'cols':
                 data = data.transpose()
+                # force a deep copy swap to avoid pointer issues
+                temp = [ _ for _ in cols]
+                cols = [ _ for _ in index]
+                index = temp
             return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
         except KeyError:
             print(f"Not a valid solution parameter. Valid parameters: \

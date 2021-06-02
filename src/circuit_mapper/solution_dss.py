@@ -243,17 +243,26 @@ class SolutionDSS(Solution):
 
         return pd.DataFrame.from_dict(cap_powers_by_bus, orient='index', dtype=complex, columns=cols)
 
-    def get_data_frame(self, param: str) -> pd.DataFrame:
+    def get_data_frame(self, param: str, orient: str = '') -> pd.DataFrame:
         """
         overrides super() to handle Lines 
         """
+        if not orient:
+            orient = self._orient
         try:
             element_group, cols, data_type = self.__class__.SOLUTION_PARAMS.get(param)
             if element_group == 'lines':
                 index = self.dss.Lines.AllNames()
             else:
-                index = getattr(self.circuit, element_group).all_names()
+                # force a deep copy to avoid pointer issues
+                index = [ _ for _ in getattr(self.circuit, element_group).all_names()] 
             data = getattr(self, param)
+            if orient == 'cols':
+                data = data.transpose()
+                # force a deep copy swap to avoid pointer issues
+                temp = [ _ for _ in cols]
+                cols = [ _ for _ in index]
+                index = temp
             return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
         except KeyError:
             print(f"Not a valid solution parameter. Valid parameters: \
