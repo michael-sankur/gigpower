@@ -33,14 +33,42 @@ DSS_FILE_DIR = Path('./src/nr3_python/')
         (SolutionDSS)
     ]
 )
-def test_dfs(dss_file, algorithm):
-    """
-    Run calls to get Solution.V, Solution.I, Solution.sV, Solution.VMag
-    as data frames
-    """
-    fp = str(Path(DSS_FILE_DIR, dss_file))
-    solution = algorithm(str(fp))
-    solution.solve()
-    for param in Solution.SOLUTION_PARAMS:
-        df = solution.get_data_frame(param)
-        pytest.assume(not(df.empty))  # make sure df is not empty
+class TestSolutionDFs:
+
+    def get_solution(self, dss_file, algorithm):
+        fp = str(Path(DSS_FILE_DIR, dss_file))
+        solution = algorithm(str(fp))
+        solution.solve()
+        return solution
+
+    def test_dfs(self, dss_file, algorithm):
+        """
+        Run calls to get Solution.V, Solution.I, Solution.sV, Solution.VMag
+        as data frames
+        """
+        solution = self.get_solution(dss_file, algorithm)
+        for param in Solution.SOLUTION_PARAMS:
+            df = solution.get_data_frame(param)
+            pytest.assume(not(df.empty))  # make sure df is not empty
+
+    def test_dfs_orient(self, dss_file, algorithm):
+        """
+        Run calls to get Solution.V, Solution.I, Solution.sV, Solution.VMag
+        as data frames with both orientations (rows, columns) and make sure
+        that they have transposed shapes
+        """
+        solution = self.get_solution(dss_file, algorithm)
+        for param in Solution.SOLUTION_PARAMS:
+            df_rows = solution.get_data_frame(param, orient='rows')
+            df_cols = solution.get_data_frame(param, orient='cols')
+            pytest.assume(df_rows.shape[-1::-1] == df_cols.shape)
+            # check that 3 phases are oriented correctly
+            pytest.assume(df_rows.shape[1] == 3)
+            pytest.assume(df_cols.shape[0] == 3)
+
+
+
+# def test_nominals(dss_file, algorithm):
+#     """
+#     Make sure that nominal powers match up with 
+#     """
