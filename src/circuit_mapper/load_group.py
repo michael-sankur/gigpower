@@ -6,9 +6,13 @@ import numpy as np
 class LoadGroup(CircuitElementGroup):
     dss_module_name, ele_class = 'Loads', Load
 
-    def __init__(self, dss, bus_group):
+    def __init__(self, dss, bus_group, zip_V):
         self.buses = bus_group
         super().__init__(dss)
+        self.ZIP_V = zip_V
+        self.aZ_p, self.aI_p, self.aPQ_p = self.ZIP_V[0:3]
+        self.aZ_q, self.aI_q, self.aPQ_q = self.ZIP_V[3:6]
+        self.min_voltage_pu = self.ZIP_V[6]
 
     def get_powers(self, solution=None) -> np.ndarray:
         """
@@ -60,16 +64,3 @@ class LoadGroup(CircuitElementGroup):
         columns indexed by Bus index, padded by phase
         """
         return self._get_attr_by_bus('qpu', orient='col')
-
-    # def _set_zip_values(self, ZIP_V):
-    #     """
-    #     Private helper method called by Circuit to set zip values
-    #     as attributes on all LoadGroups
-    #     according to what is set on the Circuit class.
-    #     For the public, user-facing way to change zip values, use
-    #     Solution.set_zip_values()
-    #     """
-    #     self.zipV = ZIP_V
-    #     self.aZ_p, self.aI_p, self.aPQ_p = ZIP_V[0:3]
-    #     self.aZ_q, self.aI_q, self.aPQ_q = ZIP_V[3:6]
-    #     self.min_voltage_pu = ZIP_V[6]

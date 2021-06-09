@@ -35,18 +35,41 @@ class Solution():
         'Vmag': ['buses', ['A', 'B', 'C'], float]
     }
 
-    # TODO: Make a 'solution.set_tolerance()' method 
-    def __init__(self, dss_fp: str):
+    @classmethod
+    def set_zip_values(cls, zip_V):
+        """
+        sets zip values for the Solution class
+        param zip_V: List or nd.array with 7 values
+        [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min voltage pu]
+        Note that zip values are set both on the Solution class and Circuit
+        class
+        """
+        cls.ZIP_V = np.asarray(zip_V)
+        cls.aZ_p, cls.aI_p, cls.aPQ_p = cls.ZIP_V[0:3]
+        cls.aZ_q, cls.aI_q, cls.aPQ_q = cls.ZIP_V[3:6]
+        cls.min_voltage_pu = cls.ZIP_V[6]
+        Circuit._set_zip_values(zip_V)
+
+    # TODO: Make a 'solution.set_tolerance()' method
+    def __init__(self, dss_fp: str, zip_V: np.ndarray = np.asarray([
+                                                                    0.10, 0.05,
+                                                                    0.85, 0.10,
+                                                                    0.05, 0.85,
+                                                                    0.80])):
         """
         sets up a Solution object with a pointer to a Circuit mapped from opendss
         Solutions keep a pointer to the dss object used to map the Circuit
+        param dss_fp: path to the dss file
+        param zip_V: optional Zip Values to set for all Solutions and Circuits
+        defaults to [.1, .05, .85, .1, .05. ,.85, .8]
         """
-        
+        self.set_zip_values(zip_V)
         #  setup calls to opendss----------------------------------------------
         self.dss = dss  # save dss instance to object
         dss.run_command('Redirect ' + dss_fp)
         dss.Solution.Solve()  # solve first for base values
         # set zip values for all Solutions and all Circuits
+
         dss.Solution.Solve()  # solve again to set zip values on dss
 
         #  map Circuit and vvc objects-----------------------------------------
@@ -137,6 +160,26 @@ class Solution():
         except KeyError:
             print(f"Not a valid solution parameter. Valid parameters: \
                   {self.__class__.SOLUTION_PARAMS.keys()}")
+
+    def get_nominal_bus_powers(self, orient=None):
+        """
+        Returns a DataFrame for self.Circuit's powers by bus
+        param: must be in SOLUTION_PARAMS
+        orient: optional, 'rows' or 'cols', defaults to self._orient
+        """
+        data = self.circuit.get_nominal_bus_powers() * 1000
+        index = self.circuit.buses.all_names()
+        cols = (['A', 'B', 'C'])
+        data_type = complex
+        if self.__class__.__name__ == 'SolutionNR3':
+            data = data.transpose()
+        if orient == 'cols':
+            data = data.transpose()
+            # force a deep copy swap to avoid pointer issues
+            temp = [ _ for _ in cols]
+            cols = [ _ for _ in index]
+            index = temp
+        return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
 
     def parse_vvc_objects(self, fn: str):
         """ From 20180601/PYTHON/lib/dss_vvc.py by @kathleenchang"""
