@@ -87,9 +87,7 @@ class SolutionFBS(Solution):
                         self.update_voltage_forward(bus, child)
 
             # update s at all buses
-            # calculate Vmag
-            self.calculate_sV()
-            self.Vmag = np.abs(self.V)
+            self.calc_sV()
 
             # BACKWARD SWEEP: for node in reverse topo_order:
             for bus_name in reversed(topo_order):
@@ -102,8 +100,8 @@ class SolutionFBS(Solution):
                 elif len(parents) == 1:
                     parent = self.circuit.buses.get_element(parents[0])
                     # update sV at this bus, and at parent
-                    self.calculate_sV(bus)
-                    self.calculate_sV(parent)
+                    self.calc_sV(bus)
+                    self.calc_sV(parent)
                     line_in = self.circuit.lines.get_element(
                         (parent.__name__, bus.__name__))
                     # update line_in segment
@@ -118,8 +116,12 @@ class SolutionFBS(Solution):
             # check convergence
             converged = self.convergence_diff <= self.tolerance
 
-        # after convergence, update sV with V values at convergence
-        self.calculate_sV()
+        # after convergence, update sV with V values at convergence 
+        # and final calculations
+        self.calc_sV()
+        self.calc_Vmag()
+        self.calc_Srx()
+        self.calc_Stx()
         self.converged = converged
 
     def vr_forward(self, vr_list):
@@ -145,7 +147,7 @@ class SolutionFBS(Solution):
             Ireg = vr.Ireg  # current entering reg_node
             reg_V[phases] = gamma * tx_V[phases]
             Ireg[phases] = 1/gamma * Itx[phases]
-    
+   
     def update_voltage_forward(self, parent, child):
         """
         updates voltage at child based on parent according to:
