@@ -7,7 +7,6 @@ from circuit_mapper.solution import Solution
 from circuit_mapper.solution_dss import SolutionDSS
 from circuit_mapper.solution_fbs import SolutionFBS
 from circuit_mapper.solution_nr3 import SolutionNR3
-from circuit_mapper.pretty_print import compare_data_frames
 
 from circuit_mapper.utils import get_nominal_bus_powers
 
@@ -57,7 +56,8 @@ class TestSolutionDFs:
 
     def test_dfs_orient(self, dss_file, algorithm):
         """
-        Run calls to get Solution.V, Solution.I, Solution.sV, Solution.VMag
+        Run calls to get solution params (Solution.V, Solution.I, Solution.sV, 
+        Solution.VMag, Solution.Stx, Solution.Srx)
         as data frames with both orientations (rows, columns) and make sure
         that they have transposed shapes
         """
