@@ -32,7 +32,9 @@ class Solution():
         'V': ['buses', ['A', 'B', 'C'], complex],
         'I': ['lines', ['A', 'B', 'C'], complex],
         'sV': ['buses', ['A', 'B', 'C'], complex],
-        'Vmag': ['buses', ['A', 'B', 'C'], float]
+        'Vmag': ['buses', ['A', 'B', 'C'], float],
+        'Stx': ['lines', ['A', 'B', 'C'], complex],
+        'Srx': ['lines', ['A', 'B', 'C'], complex]
     }
 
     @classmethod
@@ -135,26 +137,19 @@ class Solution():
         try:
             element_group, cols, data_type = self.__class__.SOLUTION_PARAMS.get(param)
             # force a deep copy to avoid pointer issues
-            index = [ _ for _ in getattr(self.circuit, element_group).all_names()]
+            index = [_ for _ in getattr(self.circuit, element_group).all_names()]
             data = getattr(self, param)
-            # include transformers and regulators all Solutions except SolutionNR3
-            # TODO: modify NR3's I mapping to include transformers and regulators
-            if element_group == 'lines':
-                if self.__class__.__name__ == 'SolutionNR3':
-                    num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
-                    data = data[0:num_rows]
-                else:            
-                    num_rows = self.circuit.get_total_lines()
-                    index += self.circuit.transformers.all_names()
-                    index += self.circuit.voltage_regulators.all_names()
-            # TODO: rewrite NR3 so that the default orientation is rows
+            # FBS saves transformers and voltage regulators in self.I
+            # ignore transformers and voltage regulators for solution values
+            if element_group == 'lines' and self.__class__.__name__ == 'SolutionFBS':
+                data = data[0:self.circuit.lines.num_elements]
             if self.__class__.__name__ == 'SolutionNR3':
-                data = data.transpose()              
+                data = data.transpose()            
             if orient == 'cols':
                 data = data.transpose()
                 # force a deep copy swap to avoid pointer issues
-                temp = [ _ for _ in cols]
-                cols = [ _ for _ in index]
+                temp = [_ for _ in cols]
+                cols = [_ for _ in index]
                 index = temp
             return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
         except KeyError:
@@ -176,8 +171,8 @@ class Solution():
         if orient == 'cols':
             data = data.transpose()
             # force a deep copy swap to avoid pointer issues
-            temp = [ _ for _ in cols]
-            cols = [ _ for _ in index]
+            temp = [_ for _ in cols]
+            cols = [_ for _ in index]
             index = temp
         return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
 
@@ -348,7 +343,7 @@ class Solution():
         """
         return self.get_load_powers() + self.get_capacitor_powers()
 
-    def calculate_sV(self, bus=None):
+    def calc_sV(self, bus=None):
         """
         Used to calculate total node powers, accounting for loads
         and capacitors, oriented according to self._orient
@@ -394,27 +389,15 @@ class Solution():
             self.sV = update
 
     def calc_Stx(self):
-        tx_bus_matrix = self.circuit.get_tx_idx_matrix()
-        self.Stx = self.V[tx_bus_matrix] * np.conj(self.I)
-    
-    def calc_Srx(self):
-        rx_bus_matrix = self.circuit.get_rx_idx_matrix()
-        self.Stx = self.V[rx_bus_matrix] * np.conj(self.I)
+        num_lines = self.circuit.lines.num_elements
+        self.Stx = self.V[0:num_lines] * np.conj(self.I[0:num_lines])
 
-    def calc_Inode(self) -> None:
-        """ Calculate self.Inode (currents consumed at each node) """
-        # for node in self.network.get_nodes():
-        #     node_V = self.V[node.name]
-        #     node_sV = self.sV[node.name]
-        #     node_I = np.conj(np.divide(node_sV, node_V))
-        #     self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
-        pass
+    def calc_Srx(self):
+        num_lines = self.circuit.lines.num_elements
+        self.Stx = self.V[0:num_lines] * np.conj(self.I[0:num_lines])
 
     def calc_Vmag(self) -> np.ndarray:
-        """
-        returns VMag as an n x numpy array, indexed by Bus index.
-        """
-        return self.V.abs()
+        self.Vmag = abs(self.V)
 
     def params_df(self):
         """
@@ -424,37 +407,6 @@ class Solution():
         data = [self.iterations, self.Vtest,
                 self.Vref, self.tolerance, self.diff]
         return pd.DataFrame(data, index).transpose()
-
-    def getLoadPowers(self):
-        """
-        Return total load powers by bus, calculated from solved V value
-        per node.
-        """
-        pass
-
-    def getCapPowers(self):
-        """
-        Return total cap powers by bus, calculated from solved V value
-        per node.
-        """
-        pass
-
-    def nomNodePwrs_df(self):
-        """
-        One time calculation of total nominal node power based on solved V
-        equivalent to aP = 1, aI = aQ = 0
-        """
-        pass
-        # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
-
-        # data = np.zeros((len(self.network.nodes), 3), dtype=complex)
-
-        # for node in self.network.get_nodes():
-        #     node_idx = self.network.bus_idx_dict[node.name]
-        #     nodeV = np.ones((3,), dtype=complex)
-        #     data[node_idx] += calc_total_node_power(
-        #         node, nodeV, [0, 0, 1, 0, 0, 1])
-        # return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
 
     def _set_orient(self, orient: str):
         """
@@ -478,11 +430,11 @@ class Solution():
         print("\n V solution")
         print(self.V_df())
 
+        print("\n Vmag solution")
+        print(self.calc_Vmag())
+
         print("\n I solution")
         print(self.I_df())
-
-        print("\n Inode solution")
-        print(self.Inode_df())
 
         print("\n Stx solution")
         print(self.Stx_df())
