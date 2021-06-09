@@ -1,5 +1,6 @@
 from typing import List, Union, Dict
 import numpy as np
+import pandas as pd
 
 
 def parse_dss_bus_name(dss_bus_name: str, sep='.') -> str:
@@ -178,3 +179,40 @@ def get_reverse_adj(adj: Dict[str, List]):
             except KeyError:
                 reverse[v] = [node]
     return reverse
+
+
+def get_nominal_bus_powers(dss) -> pd.DataFrame:
+    """
+    Interface directly with dss object to get nominal bus powers of current
+    circuit. Used for testing.
+    """
+    bus_names = dss.Circuit.AllBusNames()
+    bus_idx_dict = {b: i for i, b in enumerate(bus_names)}
+    data = np.zeros((len(bus_names), 3), dtype=complex)
+
+    # add all load powers to load data, based on bus index
+    for load in dss.Loads.AllNames():
+        dss.Loads.Name(load)
+        bus_name = dss.CktElement.BusNames()[0]
+        bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
+        if len(bus_phase) == 0:
+            bus_phase.extend(['1', '2', '3'])
+        bus_idx = bus_idx_dict[bus_name]
+        phases = parse_phases(list(bus_phase))
+        dist_real = dss.Loads.kW() / len(bus_phase)
+        dist_imag = dss.Loads.kvar() / len(bus_phase)
+        data[bus_idx, phases] += (dist_real + 1j * dist_imag)
+
+    # add all capacitor powers to load data, based on bus index
+    for cap in dss.Capacitors.AllNames():
+        dss.Capacitors.Name(cap)
+        bus_name = dss.CktElement.BusNames()[0]
+        bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
+        if len(bus_phase) == 0:
+            bus_phase.extend(['1', '2', '3'])
+        bus_idx = bus_idx_dict[bus_name]
+        phases = parse_phases(list(bus_phase))
+        real, imag = 0, dss.Capacitors.kvar() / (phases == True).sum()
+        data[bus_idx, phases] += (real - 1j * imag)
+
+    return pd.DataFrame(data, bus_names, ['A', 'B', 'C'])
