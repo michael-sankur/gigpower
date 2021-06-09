@@ -5,6 +5,7 @@
 
 import numpy as np
 import pytest
+from circuit_mapper.solution import Solution
 
 from circuit_mapper.solution_nr3 import SolutionNR3
 
@@ -21,12 +22,11 @@ DSS_FILE = LOCAL_DIR + 'IEEE_13_Bus_allwye.dss'
 
 SLACKIDX = 0
 VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
-
+ZIP_V = np.asarray([1, 0, 0, 1, 0, 0, .8])
 
 @pytest.fixture
 def nr3_solution():
-    nr3 = SolutionNR3(DSS_FILE)
-    nr3.circuit.set_zip_values([1, 0, 0, 1, 0, 0, .8])
+    nr3 = SolutionNR3(DSS_FILE, zip_V=ZIP_V)
     return nr3
 
 
