@@ -605,7 +605,7 @@ class SolutionNR3(Solution):
 
         # solve power-flow.
         while np.amax(np.abs(FT)) >= 1e-9 and itercount < maxiter:
-            print("Iteration number for Original NR3 %f" % (itercount))
+            # print("Iteration number for Original NR3 %f" % (itercount))
             FT = compute_NR3FT(XNR, g_SB, b_SB, G_KVL, b_KVL, H,
                             g, b, nnode, nline, H_reg, G_reg, vr_lines)
             JT = compute_NR3JT(XNR, g_SB, G_KVL, H, g, nnode,
