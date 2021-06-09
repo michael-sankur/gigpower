@@ -9,8 +9,12 @@ from circuit_mapper.solution_fbs import SolutionFBS
 from circuit_mapper.solution_nr3 import SolutionNR3
 from circuit_mapper.pretty_print import compare_data_frames
 
+from circuit_mapper.utils import get_nominal_bus_powers
+
 import pytest
 from pathlib import Path
+import opendssdirect as dss
+import pandas as pd
 
 DSS_FILE_DIR = Path('./src/nr3_python/')
 
@@ -66,9 +70,18 @@ class TestSolutionDFs:
             pytest.assume(df_rows.shape[1] == 3)
             pytest.assume(df_cols.shape[0] == 3)
 
+    def test_nominals(self, dss_file, algorithm):
+        """
+        Make sure that Circuit class's nominal powers match those from 
+        opendss' api
+        """
+        solution = self.get_solution(dss_file, algorithm)
+        solution_nominals = solution.get_nominal_bus_powers(orient='rows')
 
+        # get a fresh dss object for each new dss file
+        fp = str(Path(DSS_FILE_DIR, dss_file))
+        dss.run_command('Redirect ' + fp)
+        dss.Solution.Solve()
+        dss_nominals = get_nominal_bus_powers(dss)
 
-# def test_nominals(dss_file, algorithm):
-#     """
-#     Make sure that nominal powers match up with 
-#     """
+        pd.testing.assert_frame_equal(solution_nominals, dss_nominals)
