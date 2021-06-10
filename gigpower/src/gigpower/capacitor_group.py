@@ -1,4 +1,4 @@
-from circuit_mapper.circuit_element_group import CircuitElementGroup
+from gigpower.circuit_element_group import CircuitElementGroup
 from . capacitor import Capacitor
 import numpy as np
 import pandas as pd

@@ -4,11 +4,11 @@
 # Compare solutions between opendss and SolutiionFBS
 # based on tests/test_dss_compare_fbs.py
 
-from circuit_mapper.solution_dss import SolutionDSS
-from circuit_mapper.solution_fbs import SolutionFBS
-from circuit_mapper.solution_nr3 import SolutionNR3
-from circuit_mapper.pretty_print import compare_data_frames
-from circuit_mapper.solution import Solution
+from gigpower.solution_dss import SolutionDSS
+from gigpower.solution_fbs import SolutionFBS
+from gigpower.solution_nr3 import SolutionNR3
+from gigpower.pretty_print import compare_data_frames
+from gigpower.solution import Solution
 
 import numpy as np
 

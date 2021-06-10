@@ -6,9 +6,9 @@
 import numpy as np
 import pytest
 
-from circuit_mapper.solution_fbs import SolutionFBS
-from circuit_mapper.pretty_print import compare_data_frames
-from circuit_mapper.circuit import Circuit
+from gigpower.solution_fbs import SolutionFBS
+from gigpower.pretty_print import compare_data_frames
+from gigpower.circuit import Circuit
 
 from fbs.fbs.utils import init_from_dss
 from fbs.fbs.fbs import fbs, get_solution as get_fbs_solution

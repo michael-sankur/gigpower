@@ -3,12 +3,12 @@
 # File created: 28 May 2021
 # Smell tests to verify Solution API functions
 
-from circuit_mapper.solution import Solution
-from circuit_mapper.solution_dss import SolutionDSS
-from circuit_mapper.solution_fbs import SolutionFBS
-from circuit_mapper.solution_nr3 import SolutionNR3
+from gigpower.solution import Solution
+from gigpower.solution_dss import SolutionDSS
+from gigpower.solution_fbs import SolutionFBS
+from gigpower.solution_nr3 import SolutionNR3
 
-from circuit_mapper.utils import get_nominal_bus_powers
+from gigpower.utils import get_nominal_bus_powers
 
 import pytest
 from pathlib import Path

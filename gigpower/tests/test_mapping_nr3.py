@@ -5,9 +5,9 @@
 
 import numpy as np
 import pytest
-from circuit_mapper.solution import Solution
+from gigpower.solution import Solution
 
-from circuit_mapper.solution_nr3 import SolutionNR3
+from gigpower.solution_nr3 import SolutionNR3
 
 # current nr3 dependencies
 from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters

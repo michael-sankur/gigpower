@@ -7,8 +7,8 @@ import numpy as np
 import opendssdirect as dss
 import pytest
 
-from circuit_mapper.circuit import Circuit
-from circuit_mapper.solution_nr3 import SolutionNR3
+from gigpower.circuit import Circuit
+from gigpower.solution_nr3 import SolutionNR3
 
 # current nr3 dependencies
 from nr3_python.lib.DSS_parameters import relevant_openDSS_parameters
