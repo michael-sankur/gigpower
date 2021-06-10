@@ -5,6 +5,7 @@
 # used by Solution objects to solve powerflow
 
 import numpy as np
+import pandas as pd
 
 from . bus_group import BusGroup
 from . line_group import LineGroup
@@ -17,13 +18,20 @@ from . utils import parse_phase_matrix, set_zip_values_dss
 
 
 class Circuit():
-
-    # zip values are set at the Circuit class level so that 
-    # all Circuit instances use the same zip values
-    ZIP_V = np.asarray([0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80])
-    aZ_p, aI_p, aPQ_p = ZIP_V[0:3]
-    aZ_q, aI_q, aPQ_q = ZIP_V[3:6]
-    min_voltage_pu = ZIP_V[6]
+    @classmethod
+    def _set_zip_values(cls, zip_V):
+        """
+        sets zip values for the Circuit class
+        same method as Solution.set_zip_values, just private
+        param zip_V: List or nd.array with 7 values
+        [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min voltage pu]
+        Note that zip values are set both on the Solution class and Circuit
+        class. Users should set zip values via the Solution class. 
+        """
+        cls.ZIP_V = np.asarray(zip_V)
+        cls.aZ_p, cls.aI_p, cls.aPQ_p = cls.ZIP_V[0:3]
+        cls.aZ_q, cls.aI_q, cls.aPQ_q = cls.ZIP_V[3:6]
+        cls.min_voltage_pu = cls.ZIP_V[6]
 
     def __init__(self, dss, Sbase=10**6):
         """
@@ -35,7 +43,7 @@ class Circuit():
         self.Sbase = Sbase
         self.buses = BusGroup(dss)
         self.lines = LineGroup(dss, bus_group=self.buses)
-        self.loads = LoadGroup(dss, bus_group=self.buses)
+        self.loads = LoadGroup(dss, bus_group=self.buses, zip_v=Circuit.ZIP_V)
         self.capacitors = CapacitorGroup(dss, bus_group=self.buses)
         self.transformers = TransformerGroup(dss, bus_group=self.buses)
         self.voltage_regulators = VoltageRegulatorGroup(dss, bus_group=self.buses)
@@ -45,29 +53,8 @@ class Circuit():
         # indices and topology
         self.lines.transformers = self.transformers
         self.lines.voltage_regulators = self.voltage_regulators
-
-        # # set zip values according to class vairables Circuit.ZIP_V 
-        # self.loads._set_zip_values(Circuit.ZIP_V)
-        # self.capacitors._set_zip_values(Circuit.ZIP_V)
         self.dss = dss
         self._orient = 'rows'  # may be overwritten by Solution
-        # self._assign_to_buses(self.loads)
-        # self._assign_to_buses(self.capacitors)
-        # self._assign_to_buses(self.voltage_regulators)
-        # self._assign_to_buses(self.transformers)
-
-    @classmethod
-    def set_zip_values(cls, zip_V):
-        """
-        sets zip values for the Circuit class
-        param zip_V: List or nd.array with 7 values
-        [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min voltage pu]
-        Note that zip values are set only on the Circuit class.
-        """
-        cls.ZIP_V = np.asarray(zip_V)
-        cls.aZ_p, cls.aI_p, cls.aPQ_p = cls.ZIP_V[0:3]
-        cls.aZ_q, cls.aI_q, cls.aPQ_q = cls.ZIP_V[3:6]
-        cls.min_voltage_pu = cls.ZIP_V[6]
 
     def set_kW(self, load_name: str, kW: float):
         """
@@ -133,46 +120,43 @@ class Circuit():
         """
         3 x n or n x 3 matrix of complex spu indexed by bus index
         """
-        spu_matrix = np.zeros((self.buses.num_elements, 3), dtype=complex)
-        for load in self.loads.get_elements():
-            bus_idx = self.buses.get_idx(load.related_bus)
-            spu_matrix[bus_idx] += load.spu
+        spu_matrix = self.loads.get_spu_matrix()
         return self._orient_switch(spu_matrix)
     
     def get_cappu_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of real cappu, columns indexed by bus index
+        3 x n or n x 3 matrix of real cappu, columns indexed by bus index
         """
-        cappu_matrix = np.zeros((self.buses.num_elements, 3), dtype=float)
-        for cap in self.capacitors.get_elements():
-            bus_idx = self.buses.get_idx(cap.related_bus)
-            cappu_matrix[bus_idx] += cap.cappu
+        cappu_matrix = self.capacitors.get_cappu_matrix()
         return self._orient_switch(cappu_matrix)
 
     def get_aPQ_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of all load.aPQ_p, aggregated by phase on bus,
+        3 x n or n x 3 matrix of all load.aPQ_p, aggregated by phase on bus,
         columns indexed by bus
         """
-        return self._get_zip_val_matrix('aPQ_p')
+        matrix = self.loads._get_zip_val_matrix('aPQ_p')
+        return self._orient_switch(matrix)
 
     def get_aI_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of all load.aPQ_p, aggregated by phase on bus,
+        3 x n or n x 3matrix of all load.aPQ_p, aggregated by phase on bus,
         columns indexed by bus
         """
-        return self._get_zip_val_matrix('aI_p')
+        matrix = self.loads._get_zip_val_matrix('aI_p')
+        return self._orient_switch(matrix)
 
     def get_aZ_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of all load.aPQ_p, aggregated by phase on bus,
+        3 x n or n x 3matrix of all load.aPQ_p, aggregated by phase on bus,
         columns indexed by bus
         """
-        return self._get_zip_val_matrix('aZ_p')
+        matrix = self.loads._get_zip_val_matrix('aZ_p')
+        return self._orient_switch(matrix)
 
     def get_wpu_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of all real wpu, columns indexed by bus
+        3 x n or n x 3matrix of all real wpu, columns indexed by bus
         Currently set to all zeros.
         TODO: Implement logic to set this as needed.
         """
@@ -181,7 +165,7 @@ class Circuit():
 
     def get_vvcpu_matrix(self) -> np.ndarray:
         """
-        3 x n matrix of all real vvcpu, columns indexed by bus
+        3 x n or n x 3matrix of all real vvcpu, columns indexed by bus
         Currently set to all zeros.
         TODO: Implement logic to set this as needed.
         """
@@ -202,20 +186,18 @@ class Circuit():
             pass
         return total
 
-    def _get_zip_val_matrix(self, zip_param=str) -> np.ndarray:
-        """
-        3 x n matrix of all load.zip_param, aggregated by phase on bus,
-        columns indexed by bus
-        Zip_params can take any values in
-        {'aPQ_p', 'aI_p', 'aZ_p','aPQ_q', 'aI_q', 'aZ_q'}
-        """
-        param_matrix = np.zeros((self.buses.num_elements, 3))
-        for load in self.loads.get_elements():
-            load_bus = load.related_bus
-            load_ph_idx = load.get_ph_idx_matrix()
-            bus_idx = self.buses.get_idx(load_bus)
-            param_matrix[bus_idx, load_ph_idx] = getattr(Circuit, zip_param)
-        return self._orient_switch(param_matrix)
+    def get_nominal_bus_powers(self) -> pd.DataFrame:
+        """ 3 x n or n x 3 matrix of total nominal powers by bus"""
+        data = self.get_spu_matrix() - 1j * self.get_cappu_matrix()
+        data_type = complex
+        index = self.buses.all_names()
+        cols = ['A', 'B', 'C']
+        if self._orient == 'cols':
+            # force a deep copy swap to avoid pointer issues
+            temp = [_ for _ in cols]
+            cols = [_ for _ in index]
+            index = temp
+        return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
 
     def _assign_to_buses(self, ckt_element_group):
         """

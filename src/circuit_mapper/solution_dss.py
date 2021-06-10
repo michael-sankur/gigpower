@@ -17,8 +17,8 @@ from collections import defaultdict
 
 class SolutionDSS(Solution):
 
-    def __init__(self, dss_fp: str):
-        super().__init__(dss_fp) # saves a Circuit object
+    def __init__(self, dss_fp: str, **kwargs):
+        super().__init__(dss_fp, **kwargs) # saves a Circuit object
         self.dss_fp = dss_fp
 
     def solve(self):
@@ -69,7 +69,7 @@ class SolutionDSS(Solution):
             SlackBusVoltage = 1.00
             dss.Vsources.PU(SlackBusVoltage)
 
-            set_zip_values_dss(dss, Circuit.ZIP_V)
+            set_zip_values_dss(dss, self.ZIP_V)
             # run solve for this timestep
             dss.Solution.SolveSnap()
             dss.Solution.FinishTimeStep()
@@ -154,45 +154,6 @@ class SolutionDSS(Solution):
         return pd.DataFrame(data, buses, ['A', 'B', 'C'])
 
 
-    def get_nominal_bus_powers(self) -> pd.DataFrame:
-        """
-        Return total nominal power for loads and capacitors, summed by bus
-        Capacitors' signs must be reversed from dss.Capacitors.kvar(); we must
-        SUBTRACT capacitors
-        """
-        dss = self.dss
-        bus_names = dss.Circuit.AllBusNames()
-        bus_idx_dict = { b: i for i, b in enumerate(bus_names)}
-        data = np.zeros((len(bus_names), 3), dtype=complex)
-        
-        # add all load powers to load data, based on bus index
-        for load in dss.Loads.AllNames():
-            dss.Loads.Name(load)
-            bus_name = dss.CktElement.BusNames()[0]
-            bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
-            if len(bus_phase) == 0:
-                bus_phase.extend(['1', '2', '3'])
-            bus_idx = bus_idx_dict[bus_name]
-            phases = parse_phases(list(bus_phase))
-            dist_real = dss.Loads.kW() / len(bus_phase)
-            dist_imag = dss.Loads.kvar() / len(bus_phase)
-            data[bus_idx, phases] += (dist_real + 1j * dist_imag)
-
-        # add all capacitor powers to load data, based on bus index
-        for cap in dss.Capacitors.AllNames():
-            dss.Capacitors.Name(cap)
-            bus_name = dss.CktElement.BusNames()[0]
-            bus_name, bus_phase = bus_name.split('.')[0], bus_name.split('.')[1:]
-            if len(bus_phase) == 0:
-                bus_phase.extend(['1', '2', '3'])
-            bus_idx = bus_idx_dict[bus_name]
-            phases = parse_phases(list(bus_phase))
-            real, imag = 0, dss.Capacitors.kvar() / phases.count(True)
-            data[bus_idx, phases] += (real - 1j * imag)
-
-        return pd.DataFrame(data, bus_names, ['A', 'B', 'C'])
-
-
     def get_load_powers(self) -> pd.DataFrame:
         """
         """
@@ -243,17 +204,26 @@ class SolutionDSS(Solution):
 
         return pd.DataFrame.from_dict(cap_powers_by_bus, orient='index', dtype=complex, columns=cols)
 
-    def get_data_frame(self, param: str) -> pd.DataFrame:
+    def get_data_frame(self, param: str, orient: str = '') -> pd.DataFrame:
         """
         overrides super() to handle Lines 
         """
+        if not orient:
+            orient = self._orient
         try:
             element_group, cols, data_type = self.__class__.SOLUTION_PARAMS.get(param)
             if element_group == 'lines':
                 index = self.dss.Lines.AllNames()
             else:
-                index = getattr(self.circuit, element_group).all_names()
+                # force a deep copy to avoid pointer issues
+                index = [ _ for _ in getattr(self.circuit, element_group).all_names()] 
             data = getattr(self, param)
+            if orient == 'cols':
+                data = data.transpose()
+                # force a deep copy swap to avoid pointer issues
+                temp = [ _ for _ in cols]
+                cols = [ _ for _ in index]
+                index = temp
             return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
         except KeyError:
             print(f"Not a valid solution parameter. Valid parameters: \

@@ -5,7 +5,7 @@
 
 from . circuit import Circuit
 from . volt_var_controller import VoltVARController
-from typing import Iterable
+from typing import Iterable, Dict, Any
 import opendssdirect as dss
 
 import re
@@ -32,21 +32,46 @@ class Solution():
         'V': ['buses', ['A', 'B', 'C'], complex],
         'I': ['lines', ['A', 'B', 'C'], complex],
         'sV': ['buses', ['A', 'B', 'C'], complex],
-        'Vmag': ['buses', ['A', 'B', 'C'], float]
+        'Vmag': ['buses', ['A', 'B', 'C'], float],
+        'Stx': ['lines', ['A', 'B', 'C'], complex],
+        'Srx': ['lines', ['A', 'B', 'C'], complex]
     }
 
-    # TODO: Make a 'solution.set_tolerance()' method 
-    def __init__(self, dss_fp: str):
+    @classmethod
+    def set_zip_values(cls, zip_v):
+        """
+        sets zip values for the Solution class
+        param zip_V: List or nd.array with 7 values
+        [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min voltage pu]
+        Note that zip values are set both on the Solution class and Circuit
+        class
+        """
+        cls.ZIP_V = np.asarray(zip_v)
+        cls.aZ_p, cls.aI_p, cls.aPQ_p = cls.ZIP_V[0:3]
+        cls.aZ_q, cls.aI_q, cls.aPQ_q = cls.ZIP_V[3:6]
+        cls.min_voltage_pu = cls.ZIP_V[6]
+        Circuit._set_zip_values(zip_v)
+
+    # TODO: Make a 'solution.set_tolerance()' method
+    def __init__(self, dss_fp: str, zip_v: np.ndarray = np.asarray([
+                                                                    0.10, 0.05,
+                                                                    0.85, 0.10,
+                                                                    0.05, 0.85,
+                                                                    0.80])):
         """
         sets up a Solution object with a pointer to a Circuit mapped from opendss
         Solutions keep a pointer to the dss object used to map the Circuit
+        param dss_fp: path to the dss file
+        param zip_V: optional Zip Values to set for all Solutions and Circuits
+        defaults to [.1, .05, .85, .1, .05. ,.85, .8]
         """
-        
+        self.set_zip_values(zip_v)
         #  setup calls to opendss----------------------------------------------
         self.dss = dss  # save dss instance to object
         dss.run_command('Redirect ' + dss_fp)
         dss.Solution.Solve()  # solve first for base values
         # set zip values for all Solutions and all Circuits
+
         dss.Solution.Solve()  # solve again to set zip values on dss
 
         #  map Circuit and vvc objects-----------------------------------------
@@ -101,34 +126,55 @@ class Solution():
                 num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
             setattr(self, param, np.zeros((num_rows, len(cols)), dtype=datatype))
 
-    def get_data_frame(self, param: str) -> pd.DataFrame:
+    def get_data_frame(self, param: str, orient: str = '') -> pd.DataFrame:
         """
         Returns a DataFrame for the specified solution paramater.
         param: must be in SOLUTION_PARAMS
+        orient: optional, 'rows' or 'cols', defaults to self._orient
         """
+        if not orient:
+            orient = self._orient
         try:
             element_group, cols, data_type = self.__class__.SOLUTION_PARAMS.get(param)
-            index = getattr(self.circuit, element_group).all_names()
+            # force a deep copy to avoid pointer issues
+            index = [_ for _ in getattr(self.circuit, element_group).all_names()]
             data = getattr(self, param)
-            # include transformers and regulators all Solutions except SolutionNR3
-            # TODO: modify NR3's mapping to include transformers and regulators
-            # in self.I
-            if element_group == 'lines':
-                if self.__class__.__name__ == 'SolutionNR3':
-                    num_rows = getattr(getattr(self.circuit, element_group), 'num_elements')
-                    data = data[0:num_rows]
-                else:  # SolutionNR3, data = self.I              
-                    num_rows = self.circuit.get_total_lines()
-                    index += self.circuit.transformers.all_names()
-                    index += self.circuit.voltage_regulators.all_names()
-            # TODO: give an option to get dataframes by cols
-            # for now, get everything by rows
-            if self._orient == 'cols':
+            # FBS saves transformers and voltage regulators in self.I
+            # ignore transformers and voltage regulators for solution values
+            if element_group == 'lines' and self.__class__.__name__ == 'SolutionFBS':
+                data = data[0:self.circuit.lines.num_elements]
+            if self.__class__.__name__ == 'SolutionNR3':
+                data = data.transpose()            
+            if orient == 'cols':
                 data = data.transpose()
+                # force a deep copy swap to avoid pointer issues
+                temp = [_ for _ in cols]
+                cols = [_ for _ in index]
+                index = temp
             return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
         except KeyError:
             print(f"Not a valid solution parameter. Valid parameters: \
                   {self.__class__.SOLUTION_PARAMS.keys()}")
+
+    def get_nominal_bus_powers(self, orient=None):
+        """
+        Returns a DataFrame for self.Circuit's powers by bus
+        param: must be in SOLUTION_PARAMS
+        orient: optional, 'rows' or 'cols', defaults to self._orient
+        """
+        data = self.circuit.get_nominal_bus_powers() * 1000
+        index = self.circuit.buses.all_names()
+        cols = (['A', 'B', 'C'])
+        data_type = complex
+        if self.__class__.__name__ == 'SolutionNR3':
+            data = data.transpose()
+        if orient == 'cols':
+            data = data.transpose()
+            # force a deep copy swap to avoid pointer issues
+            temp = [_ for _ in cols]
+            cols = [_ for _ in index]
+            index = temp
+        return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
 
     def parse_vvc_objects(self, fn: str):
         """ From 20180601/PYTHON/lib/dss_vvc.py by @kathleenchang"""
@@ -297,7 +343,7 @@ class Solution():
         """
         return self.get_load_powers() + self.get_capacitor_powers()
 
-    def calculate_sV(self, bus=None):
+    def calc_sV(self, bus=None):
         """
         Used to calculate total node powers, accounting for loads
         and capacitors, oriented according to self._orient
@@ -343,67 +389,30 @@ class Solution():
             self.sV = update
 
     def calc_Stx(self):
-        tx_bus_matrix = self.circuit.get_tx_idx_matrix()
-        self.Stx = self.V[tx_bus_matrix] * np.conj(self.I)
-    
-    def calc_Srx(self):
-        rx_bus_matrix = self.circuit.get_rx_idx_matrix()
-        self.Stx = self.V[rx_bus_matrix] * np.conj(self.I)
+        num_lines = self.circuit.lines.num_elements
+        buses = self.circuit.get_tx_idx_matrix()[0:num_lines]
+        self.Stx = self.V[buses] * np.conj(self.I[0:num_lines])
 
-    def calc_Inode(self) -> None:
-        """ Calculate self.Inode (currents consumed at each node) """
-        # for node in self.network.get_nodes():
-        #     node_V = self.V[node.name]
-        #     node_sV = self.sV[node.name]
-        #     node_I = np.conj(np.divide(node_sV, node_V))
-        #     self.Inode[node.name] = mask_phases(node_I, (3,), node.phases)
-        pass
+    def calc_Srx(self):
+        num_lines = self.circuit.lines.num_elements
+        buses = self.circuit.get_rx_idx_matrix()[0:num_lines]
+        self.Srx = self.V[buses] * np.conj(self.I[0:num_lines])
 
     def calc_Vmag(self) -> np.ndarray:
-        """
-        returns VMag as an n x numpy array, indexed by Bus index.
-        """
-        return self.V.abs()
+        self.Vmag = abs(self.V)
 
-    def params_df(self):
+    @classmethod
+    def get_params(cls) -> Dict:
         """
-        returns solution paramaters as a dataframe
+        returns solution paramaters as a dictionary
         """
-        index = ['iterations', 'Vtest', 'Vref', 'tolerance', 'diff']
-        data = [self.iterations, self.Vtest,
-                self.Vref, self.tolerance, self.diff]
-        return pd.DataFrame(data, index).transpose()
-
-    def getLoadPowers(self):
-        """
-        Return total load powers by bus, calculated from solved V value
-        per node.
-        """
-        pass
-
-    def getCapPowers(self):
-        """
-        Return total cap powers by bus, calculated from solved V value
-        per node.
-        """
-        pass
-
-    def nomNodePwrs_df(self):
-        """
-        One time calculation of total nominal node power based on solved V
-        equivalent to aP = 1, aI = aQ = 0
-        """
-        pass
-        # s = spu.*(aPQ + aI.*(abs(V)) + aZ.*(abs(V)).^2) - 1j * cappu + wpu
-
-        # data = np.zeros((len(self.network.nodes), 3), dtype=complex)
-
-        # for node in self.network.get_nodes():
-        #     node_idx = self.network.bus_idx_dict[node.name]
-        #     nodeV = np.ones((3,), dtype=complex)
-        #     data[node_idx] += calc_total_node_power(
-        #         node, nodeV, [0, 0, 1, 0, 0, 1])
-        # return pd.DataFrame(data, self.network.bus_idx_dict.keys(), ['A', 'B', 'C'])
+        params = {
+            'slack_idx': cls.SLACKIDX,
+            'v_slack': cls.VSLACK,
+            'max_iter': cls.maxiter,
+            'zip_v': cls.ZIP_V
+        }
+        return params
 
     def _set_orient(self, orient: str):
         """
@@ -427,11 +436,11 @@ class Solution():
         print("\n V solution")
         print(self.V_df())
 
+        print("\n Vmag solution")
+        print(self.calc_Vmag())
+
         print("\n I solution")
         print(self.I_df())
-
-        print("\n Inode solution")
-        print(self.Inode_df())
 
         print("\n Stx solution")
         print(self.Stx_df())
