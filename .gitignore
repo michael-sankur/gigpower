@@ -25,6 +25,7 @@ var/
 
 # virtual env
 pyvenv.cfg
+venv/
 
 # testing 
 /tests/test_compare_fbs_dss/
