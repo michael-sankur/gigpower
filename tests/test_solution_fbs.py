@@ -22,6 +22,8 @@ OUT_PREFIX = 'FBS_v_FBS_'
 
 GENEROUS = 1e-1
 STRICT = 1e-2
+ZIP_V = np.asarray([0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80])
+
 
 def setup_module():
     if not OUT_DIR.exists():
@@ -30,11 +32,11 @@ def setup_module():
 @pytest.mark.parametrize(
     "dss_file,tolerance",
     [
-        ('IEEE_13_Bus_allwye.dss', GENEROUS),
+        ('IEEE_13_Bus_allwye.dss', STRICT),
         ('IEEE_13_Bus_allwye_noxfm_noreg.dss', STRICT),
-        ('IEEE_34_Bus_allwye.dss', GENEROUS), # fails
+        ('IEEE_34_Bus_allwye.dss', STRICT), # fails
         ('IEEE_34_Bus_allwye_noxfm_noreg.dss', STRICT), # all fail
-        ('IEEE_37_Bus_allwye.dss', GENEROUS), # I, sV off
+        ('IEEE_37_Bus_allwye.dss', STRICT), # I, sV off
         ('IEEE_37_Bus_allwye_noxfm_noreg.dss', STRICT)
     ],
 )
@@ -47,7 +49,7 @@ class TestParamtrized:
 
     def new_fbs_solution(self, dss_file):
         fp = str(Path(DSS_FILE_DIR, dss_file))
-        solution = SolutionFBS(fp)
+        solution = SolutionFBS(fp, zip_v=ZIP_V)
         # solution.maxiter = 1
         solution.solve()
         return solution
@@ -64,7 +66,6 @@ class TestParamtrized:
                     old_fbs_method):
         """ Test all Files X (V, I, sV). Save log files to OUT_DIR"""
         fp = Path(DSS_FILE_DIR, dss_file)
-        Circuit.set_zip_values(np.asarray([0.10, 0.05, 0.85, 0.10, 0.05, 0.85, 0.80]))
         new_fbs_solution = self.new_fbs_solution(dss_file)
         old_fbs_solution = self.old_fbs_solution(dss_file)
         new = new_fbs_solution.get_data_frame(new_fbs_param)

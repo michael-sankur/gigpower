@@ -24,9 +24,10 @@ SLACKIDX = 0
 VSLACK = np.array([1, np.exp(1j*-120*np.pi/180), np.exp(1j*120*np.pi/180)])
 ZIP_V = np.asarray([1, 0, 0, 1, 0, 0, .8])
 
+
 @pytest.fixture
 def nr3_solution():
-    nr3 = SolutionNR3(DSS_FILE, zip_V=ZIP_V)
+    nr3 = SolutionNR3(DSS_FILE, zip_v=ZIP_V)
     return nr3
 
 
