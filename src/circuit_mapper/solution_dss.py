@@ -17,8 +17,8 @@ from collections import defaultdict
 
 class SolutionDSS(Solution):
 
-    def __init__(self, dss_fp: str):
-        super().__init__(dss_fp) # saves a Circuit object
+    def __init__(self, dss_fp: str, **kwargs):
+        super().__init__(dss_fp, **kwargs) # saves a Circuit object
         self.dss_fp = dss_fp
 
     def solve(self):
@@ -69,7 +69,7 @@ class SolutionDSS(Solution):
             SlackBusVoltage = 1.00
             dss.Vsources.PU(SlackBusVoltage)
 
-            set_zip_values_dss(dss, Circuit.ZIP_V)
+            set_zip_values_dss(dss, self.ZIP_V)
             # run solve for this timestep
             dss.Solution.SolveSnap()
             dss.Solution.FinishTimeStep()

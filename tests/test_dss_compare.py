@@ -8,7 +8,7 @@ from circuit_mapper.solution_dss import SolutionDSS
 from circuit_mapper.solution_fbs import SolutionFBS
 from circuit_mapper.solution_nr3 import SolutionNR3
 from circuit_mapper.pretty_print import compare_data_frames
-from circuit_mapper.circuit import Circuit
+from circuit_mapper.solution import Solution
 
 import numpy as np
 
@@ -75,21 +75,21 @@ class TestDssCompare:
             writer = csv.writer(f)
             writer.writerows(cls.summary_rows)
 
-    def dss_solution(self, dss_file):
+    def dss_solution(self, dss_file, zip):
         fp = str(Path(DSS_FILE_DIR, dss_file))
-        dss_solution = SolutionDSS(str(fp))
+        dss_solution = SolutionDSS(fp, zip_v=zip)
         dss_solution.solve()
         return dss_solution
 
-    def new_fbs_solution(self, dss_file):
+    def new_fbs_solution(self, dss_file, zip):
         fp = str(Path(DSS_FILE_DIR, dss_file))
-        solution = SolutionFBS(fp)
+        solution = SolutionFBS(fp, zip_v=zip)
         solution.solve()
         return solution
 
-    def new_nr3_solution(self, dss_file):
+    def new_nr3_solution(self, dss_file, zip):
         fp = str(Path(DSS_FILE_DIR, dss_file))
-        solution = SolutionNR3(fp)
+        solution = SolutionNR3(fp, zip_v=zip)
         solution.solve()
         return solution
 
@@ -99,19 +99,18 @@ class TestDssCompare:
         Compare the python FBS solution to the opendss solution.
         Writes output to OUTPUT FOLDER.
         """
-        dss_solution = self.dss_solution(dss_file)
+        dss_solution = self.dss_solution(dss_file, zip_values)
         if algorithm == 'NR3':
-            new_solution = self.new_nr3_solution(dss_file)
+            new_solution = self.new_nr3_solution(dss_file, zip_values)
         elif algorithm == 'FBS':
-            new_solution = self.new_fbs_solution(dss_file)
-        Circuit.set_zip_values(zip_values)
+            new_solution = self.new_fbs_solution(dss_file, zip_values)
         fp = Path(DSS_FILE_DIR, dss_file)
         out_prefix = f"{algorithm}_v_DSS_"
         out_file = Path(out_dir, out_prefix + str(fp.stem) + '_' +
                         zip_name + '-' +
                         solution_param).with_suffix('.out.txt')
         sys.stdout = open(out_file, 'w')
-        new_vals = new_solution.get_data_frame(solution_param)
+        new_vals = new_solution.get_data_frame(solution_param, orient='rows')
         dss_vals = dss_solution.get_data_frame(solution_param)
 
         # set sV pass threshold to 5% of opendss sV magnitude
@@ -120,6 +119,11 @@ class TestDssCompare:
             diffs = (new_vals.abs() - dss_vals.abs()).abs()
             err = diffs.max()
             test = (err <= tolerance).all()
+            # new_vals *= 1000
+            # dss_vals *= 1000
+            # dss_thresholds = dss_vals.abs() * .05
+            # err = (new_vals - dss_vals).abs()
+            # test = (err <= dss_thresholds).all(axis=None)
         else:
             if solution_param == 'Vmag':  # set Vmag tolerance to strict in all cases
                 tolerance = STRICT

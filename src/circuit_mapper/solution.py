@@ -33,12 +33,12 @@ class Solution():
         'I': ['lines', ['A', 'B', 'C'], complex],
         'sV': ['buses', ['A', 'B', 'C'], complex],
         'Vmag': ['buses', ['A', 'B', 'C'], float],
-        'Stx': ['lines', ['A', 'B', 'C'], complex],
-        'Srx': ['lines', ['A', 'B', 'C'], complex]
+        # 'Stx': ['lines', ['A', 'B', 'C'], complex],
+        # 'Srx': ['lines', ['A', 'B', 'C'], complex]
     }
 
     @classmethod
-    def set_zip_values(cls, zip_V):
+    def set_zip_values(cls, zip_v):
         """
         sets zip values for the Solution class
         param zip_V: List or nd.array with 7 values
@@ -46,14 +46,14 @@ class Solution():
         Note that zip values are set both on the Solution class and Circuit
         class
         """
-        cls.ZIP_V = np.asarray(zip_V)
+        cls.ZIP_V = np.asarray(zip_v)
         cls.aZ_p, cls.aI_p, cls.aPQ_p = cls.ZIP_V[0:3]
         cls.aZ_q, cls.aI_q, cls.aPQ_q = cls.ZIP_V[3:6]
         cls.min_voltage_pu = cls.ZIP_V[6]
-        Circuit._set_zip_values(zip_V)
+        Circuit._set_zip_values(zip_v)
 
     # TODO: Make a 'solution.set_tolerance()' method
-    def __init__(self, dss_fp: str, zip_V: np.ndarray = np.asarray([
+    def __init__(self, dss_fp: str, zip_v: np.ndarray = np.asarray([
                                                                     0.10, 0.05,
                                                                     0.85, 0.10,
                                                                     0.05, 0.85,
@@ -65,7 +65,7 @@ class Solution():
         param zip_V: optional Zip Values to set for all Solutions and Circuits
         defaults to [.1, .05, .85, .1, .05. ,.85, .8]
         """
-        self.set_zip_values(zip_V)
+        self.set_zip_values(zip_v)
         #  setup calls to opendss----------------------------------------------
         self.dss = dss  # save dss instance to object
         dss.run_command('Redirect ' + dss_fp)
@@ -390,11 +390,13 @@ class Solution():
 
     def calc_Stx(self):
         num_lines = self.circuit.lines.num_elements
-        self.Stx = self.V[0:num_lines] * np.conj(self.I[0:num_lines])
+        buses = self.circuit.get_tx_idx_matrix()[0:num_lines]
+        self.Stx = self.V[buses] * np.conj(self.I[0:num_lines])
 
     def calc_Srx(self):
         num_lines = self.circuit.lines.num_elements
-        self.Stx = self.V[0:num_lines] * np.conj(self.I[0:num_lines])
+        buses = self.circuit.get_rx_idx_matrix()[0:num_lines]
+        self.Srx = self.V[buses] * np.conj(self.I[0:num_lines])
 
     def calc_Vmag(self) -> np.ndarray:
         self.Vmag = abs(self.V)
