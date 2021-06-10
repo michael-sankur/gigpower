@@ -36,4 +36,5 @@ jobs:
         flake8 ./gigpower/src --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        python -m pytest ./gigpower/tests
+        cd gigpower
+        python -m pytest tests
