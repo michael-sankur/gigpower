@@ -24,8 +24,8 @@ OUT_DIR_NR3 = Path('./tests/test_compare_nr3_dss')
 REPORT_FILE = Path('./tests/test_report.csv')
 
 # thresholds for passing tests
-GENEROUS = .5
-STRICT = .01
+GENEROUS = 1e-1
+STRICT = 1e-2
 
 
 @pytest.mark.parametrize(
@@ -112,23 +112,8 @@ class TestDssCompare:
         sys.stdout = open(out_file, 'w')
         new_vals = new_solution.get_data_frame(solution_param, orient='rows')
         dss_vals = dss_solution.get_data_frame(solution_param)
-
-        # set sV pass threshold to 5% of opendss sV magnitude
-        if solution_param == 'sV':
-            dss_thresholds = dss_vals.abs() * .05
-            diffs = (new_vals.abs() - dss_vals.abs()).abs()
-            err = diffs.max()
-            test = (err <= tolerance).all()
-            # new_vals *= 1000
-            # dss_vals *= 1000
-            # dss_thresholds = dss_vals.abs() * .05
-            # err = (new_vals - dss_vals).abs()
-            # test = (err <= dss_thresholds).all(axis=None)
-        else:
-            if solution_param == 'Vmag':  # set Vmag tolerance to strict in all cases
-                tolerance = STRICT
-            err = (new_vals - dss_vals).abs().max()
-            test = (err <= tolerance).all()
+        err = (new_vals - dss_vals).abs().max()
+        test = (err <= tolerance).all()
         if test:
             test_val = "Pass"
             print(f"TEST PASSED. {algorithm} CONVERGED = {new_solution.converged}")
