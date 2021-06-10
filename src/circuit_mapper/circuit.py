@@ -5,6 +5,7 @@
 # used by Solution objects to solve powerflow
 
 import numpy as np
+import pandas as pd
 
 from . bus_group import BusGroup
 from . line_group import LineGroup
@@ -42,9 +43,8 @@ class Circuit():
         self.Sbase = Sbase
         self.buses = BusGroup(dss)
         self.lines = LineGroup(dss, bus_group=self.buses)
-        self.loads = LoadGroup(dss, bus_group=self.buses, zip_V=Circuit.ZIP_V)
-        self.capacitors = CapacitorGroup(dss, bus_group=self.buses,
-                                         zip_V=Circuit.ZIP_V)
+        self.loads = LoadGroup(dss, bus_group=self.buses, zip_v=Circuit.ZIP_V)
+        self.capacitors = CapacitorGroup(dss, bus_group=self.buses)
         self.transformers = TransformerGroup(dss, bus_group=self.buses)
         self.voltage_regulators = VoltageRegulatorGroup(dss, bus_group=self.buses)
         
@@ -120,20 +120,14 @@ class Circuit():
         """
         3 x n or n x 3 matrix of complex spu indexed by bus index
         """
-        spu_matrix = np.zeros((self.buses.num_elements, 3), dtype=complex)
-        for load in self.loads.get_elements():
-            bus_idx = self.buses.get_idx(load.related_bus)
-            spu_matrix[bus_idx] += load.spu
+        spu_matrix = self.loads.get_spu_matrix()
         return self._orient_switch(spu_matrix)
     
     def get_cappu_matrix(self) -> np.ndarray:
         """
         3 x n or n x 3 matrix of real cappu, columns indexed by bus index
         """
-        cappu_matrix = np.zeros((self.buses.num_elements, 3), dtype=float)
-        for cap in self.capacitors.get_elements():
-            bus_idx = self.buses.get_idx(cap.related_bus)
-            cappu_matrix[bus_idx] += cap.cappu
+        cappu_matrix = self.capacitors.get_cappu_matrix()
         return self._orient_switch(cappu_matrix)
 
     def get_aPQ_matrix(self) -> np.ndarray:
@@ -141,21 +135,24 @@ class Circuit():
         3 x n or n x 3 matrix of all load.aPQ_p, aggregated by phase on bus,
         columns indexed by bus
         """
-        return self._get_zip_val_matrix('aPQ_p')
+        matrix = self.loads._get_zip_val_matrix('aPQ_p')
+        return self._orient_switch(matrix)
 
     def get_aI_matrix(self) -> np.ndarray:
         """
         3 x n or n x 3matrix of all load.aPQ_p, aggregated by phase on bus,
         columns indexed by bus
         """
-        return self._get_zip_val_matrix('aI_p')
+        matrix = self.loads._get_zip_val_matrix('aI_p')
+        return self._orient_switch(matrix)
 
     def get_aZ_matrix(self) -> np.ndarray:
         """
         3 x n or n x 3matrix of all load.aPQ_p, aggregated by phase on bus,
         columns indexed by bus
         """
-        return self._get_zip_val_matrix('aZ_p')
+        matrix = self.loads._get_zip_val_matrix('aZ_p')
+        return self._orient_switch(matrix)
 
     def get_wpu_matrix(self) -> np.ndarray:
         """
@@ -189,24 +186,18 @@ class Circuit():
             pass
         return total
 
-    def get_nominal_bus_powers(self) -> np.ndarray:
+    def get_nominal_bus_powers(self) -> pd.DataFrame:
         """ 3 x n or n x 3 matrix of total nominal powers by bus"""
-        return self.get_spu_matrix() - 1J * self.get_cappu_matrix()
-
-    def _get_zip_val_matrix(self, zip_param=str) -> np.ndarray:
-        """
-        3 x n matrix of all load.zip_param, aggregated by phase on bus,
-        columns indexed by bus
-        Zip_params can take any values in
-        {'aPQ_p', 'aI_p', 'aZ_p','aPQ_q', 'aI_q', 'aZ_q'}
-        """
-        param_matrix = np.zeros((self.buses.num_elements, 3))
-        for load in self.loads.get_elements():
-            load_bus = load.related_bus
-            load_ph_idx = load.get_ph_idx_matrix()
-            bus_idx = self.buses.get_idx(load_bus)
-            param_matrix[bus_idx, load_ph_idx] = getattr(Circuit, zip_param)
-        return self._orient_switch(param_matrix)
+        data = self.get_spu_matrix() - 1j * self.get_cappu_matrix()
+        data_type = complex
+        index = self.buses.all_names()
+        cols = ['A', 'B', 'C']
+        if self._orient == 'cols':
+            # force a deep copy swap to avoid pointer issues
+            temp = [_ for _ in cols]
+            cols = [_ for _ in index]
+            index = temp
+        return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
 
     def _assign_to_buses(self, ckt_element_group):
         """
