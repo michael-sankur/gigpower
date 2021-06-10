@@ -33,8 +33,8 @@ class Solution():
         'I': ['lines', ['A', 'B', 'C'], complex],
         'sV': ['buses', ['A', 'B', 'C'], complex],
         'Vmag': ['buses', ['A', 'B', 'C'], float],
-        # 'Stx': ['lines', ['A', 'B', 'C'], complex],
-        # 'Srx': ['lines', ['A', 'B', 'C'], complex]
+        'Stx': ['lines', ['A', 'B', 'C'], complex],
+        'Srx': ['lines', ['A', 'B', 'C'], complex]
     }
 
     @classmethod
