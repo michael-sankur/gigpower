@@ -15,7 +15,7 @@ from pathlib import Path
 import opendssdirect as dss
 import pandas as pd
 
-DSS_FILE_DIR = Path('./src/nr3_python/')
+DSS_FILE_DIR = Path('./tests/test_feeders/')
 
 @pytest.mark.parametrize(
     "dss_file",

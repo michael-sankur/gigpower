@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 import csv
 
-DSS_FILE_DIR = Path('./src/nr3_python/')
+DSS_FILE_DIR = Path('./tests/test_feeders/')
 OUT_DIR_FBS = Path('./tests/test_compare_fbs_dss')
 OUT_DIR_NR3 = Path('./tests/test_compare_nr3_dss')
 REPORT_FILE = Path('./tests/test_report.csv')

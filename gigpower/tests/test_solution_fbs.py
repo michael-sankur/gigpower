@@ -16,7 +16,7 @@ import sys
 import os
 from pathlib import Path
 
-DSS_FILE_DIR = Path('./src/nr3_python/')
+DSS_FILE_DIR = Path('./tests/test_feeders/')
 OUT_DIR = Path('./tests/test_compare_old_fbs')
 OUT_PREFIX = 'FBS_v_FBS_'
 
