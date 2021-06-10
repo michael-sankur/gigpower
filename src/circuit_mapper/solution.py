@@ -5,7 +5,7 @@
 
 from . circuit import Circuit
 from . volt_var_controller import VoltVARController
-from typing import Iterable
+from typing import Iterable, Dict, Any
 import opendssdirect as dss
 
 import re
@@ -401,14 +401,18 @@ class Solution():
     def calc_Vmag(self) -> np.ndarray:
         self.Vmag = abs(self.V)
 
-    def params_df(self):
+    @classmethod
+    def get_params(cls) -> Dict:
         """
-        returns solution paramaters as a dataframe
+        returns solution paramaters as a dictionary
         """
-        index = ['iterations', 'Vtest', 'Vref', 'tolerance', 'diff']
-        data = [self.iterations, self.Vtest,
-                self.Vref, self.tolerance, self.diff]
-        return pd.DataFrame(data, index).transpose()
+        params = {
+            'slack_idx': cls.SLACKIDX,
+            'v_slack': cls.VSLACK,
+            'max_iter': cls.maxiter,
+            'zip_v': cls.ZIP_V
+        }
+        return params
 
     def _set_orient(self, orient: str):
         """

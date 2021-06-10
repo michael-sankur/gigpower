@@ -199,7 +199,6 @@ class Circuit():
             index = temp
         return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
 
-
     def _assign_to_buses(self, ckt_element_group):
         """
         For all elements in the ckt_element_group, gives the bus
