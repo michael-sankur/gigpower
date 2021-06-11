@@ -30,3 +30,4 @@ venv/
 /tests/test_compare_fbs_dss/
 /tests/test_compare_old_fbs/
 /tests/test_compare_nr3_dss/
+/tests/test_report.csv
