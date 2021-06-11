@@ -1,16 +1,15 @@
 .. gigpower documentation master file, created by
-   sphinx-quickstart on Fri Jun 11 10:07:12 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+   @elaguerta on Fri Jun 11 10:07:12 2021.
 
-Welcome to gigpower's documentation!
-====================================
+``gigpower`` docs
+=================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
+   /Getting Started
+   /Library Tour
 
 Indices and tables
 ==================
