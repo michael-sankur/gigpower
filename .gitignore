@@ -12,12 +12,12 @@ build/
 develop-eggs/
 dist/
 eggs/
-lib/
 lib64/
 parts/
 sdist/
 var/
 pip-wheel-metadata/
+*.dist-info
 *.egg-info/
 .installed.cfg
 *.egg
