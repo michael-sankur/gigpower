@@ -37,6 +37,6 @@ jobs:
     - name: Test with pytest
       run: |
         cd gigpower/src
-        pip install .
-        cd ../
+        pip install -e .
+        cd ..
         python -m pytest tests
