@@ -31,7 +31,7 @@ pip install -r requirements-dev.txt
 ```
 3. Navigate to `./gigpower/src`. Install modules locally in editable mode
 ```
-pip install . -e
+pip install -e .
 ```
 4. To run tests, run pytest as a module from `./gigpower`L
 ```
