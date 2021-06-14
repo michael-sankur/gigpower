@@ -1,5 +1,5 @@
-Getting Started
-================
+gigpower
+========
 
 ``gigpower`` solves power flow for radial and meshed networks. It supports
 solving power flow with both Newton-Raphson and Forward Backward Sweep algorithms,
@@ -63,10 +63,34 @@ Contribute
 - Issue Tracker: https://github.com/LBNL-ETA/gigpower/issues
 - Source Code: https://github.com/LBNL-ETA/gigpower
 
+Development
+-----------
+
+Follow the steps below to develop this project.
+
+1. Create a python virtual environment, and activate it.::
+
+    python3 -m venv venv
+    source bin/venv/activate
+
+2. Navigate to `./gigpower/src`. Install requirements.::
+
+    cd ./gigpower/src
+    pip install -r requirements.txt
+    pip install -r requirements-dev.txt
+
+3. Navigate to `./gigpower/src`. Install modules locally in editable mode::
+
+    pip install -e .
+
+4. To run tests, run pytest as a module from `./gigpower`::
+
+    python3 -m pytest tests
+
+
 Support
 -------
-This project is maintained by the Lawrence Berkeley National Lab
-Grid Integration Group. 
+This project is maintained by the `Lawrence Berkeley National Lab Grid Integration Group <https://gridintegration.lbl.gov/>`_. 
 For support, contact Daniel Arnold at: dbarnold@lbl.gov
 
 License
