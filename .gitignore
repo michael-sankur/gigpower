@@ -25,6 +25,7 @@ pip-wheel-metadata/
 # virtual env
 pyvenv.cfg
 venv/
+test-pip/
 
 # testing 
 /tests/test_compare_fbs_dss/
