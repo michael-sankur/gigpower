@@ -66,32 +66,31 @@ Contribute
 Development
 -----------
 
-Follow the steps below to get set-up to develop this project.
+Follow the steps below to develop this project.
 
-1. Create a python virtual environment, and activate it. 
-```
-python3 -m venv venv
-source bin/venv/activate
-```
-2. Navigate to `./gigpower/src`. Install requirements.
-```
-cd ./gigpower/src
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
-```
-3. Navigate to `./gigpower/src`. Install modules locally in editable mode
-```
-pip install -e .
-```
-4. To run tests, run pytest as a module from `./gigpower`L
-```
-python3 -m pytest tests
-```
+1. Create a python virtual environment, and activate it.::
+
+    python3 -m venv venv
+    source bin/venv/activate
+
+2. Navigate to `./gigpower/src`. Install requirements.::
+
+    cd ./gigpower/src
+    pip install -r requirements.txt
+    pip install -r requirements-dev.txt
+
+3. Navigate to `./gigpower/src`. Install modules locally in editable mode::
+
+    pip install -e .
+
+4. To run tests, run pytest as a module from `./gigpower`::
+
+    python3 -m pytest tests
+
 
 Support
 -------
-This project is maintained by the Lawrence Berkeley National Lab
-Grid Integration Group. 
+This project is maintained by the `Lawrence Berkeley National Lab Grid Integration Group <https://gridintegration.lbl.gov/>`_. 
 For support, contact Daniel Arnold at: dbarnold@lbl.gov
 
 License
