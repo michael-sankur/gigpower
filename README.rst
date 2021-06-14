@@ -8,9 +8,9 @@ written completely in Python.
 Features
 --------
 - Parse `*.dss` files into `Circuit` objects, which you can interact with directly in Python. 
-- Solve power flow for radial or meshed networks using Newton-Raphson method
-- Solve power flow radial networks using Forward Backward Sweep
-- Compare solutions to OpenDSSDirect.py_
+- Solve power flow for radial or meshed networks using Newton-Raphson method.
+- Solve power flow radial networks using Forward Backward Sweep.
+- Compare solutions to OpenDSSDirect.py_.
 
 .. _OpenDSSDirect.py: https://github.com/dss-extensions/OpenDSSDirect.py
 
