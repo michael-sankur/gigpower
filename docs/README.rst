@@ -67,7 +67,7 @@ Compare solutions::
 
     compare_data_frames(my_solution_fbs, my_solution_dss)
 
-See https://github.com/LBNL-ETA/gigpower/docs/examples for Jupyter notebooks with examples.
+See https://github.com/LBNL-ETA/gigpower/examples for Jupyter notebooks with examples.
 
 CAVEAT!!!!
 ----------
