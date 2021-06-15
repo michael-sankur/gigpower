@@ -74,9 +74,8 @@ class Solution():
 
         dss.Solution.Solve()  # solve again to set zip values on dss
 
-        #  map Circuit and vvc objects-----------------------------------------
+        #  map Circuit -----------------------------------------
         self.circuit = Circuit(dss)
-        self.volt_var_controllers = self.parse_vvc_objects(dss_fp)
 
         # default orientation, n x 3 or 3 x n
         # consider making this a class variable
@@ -176,166 +175,6 @@ class Solution():
             index = temp
         return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
 
-    def parse_vvc_objects(self, fn: str):
-        """ From 20180601/PYTHON/lib/dss_vvc.py by @kathleenchang"""
-        # Parse VVC lines in DSS file
-        vvarobjects = []
-        f = open(fn, "r")
-
-        for l in f:
-            if re.findall('(?i)New VVC', l):
-                bp = []
-
-                # array of VVC breakpoints
-                breakpoints = str.split(re.findall(r"(?i)BP=\s*([^\n\r]*)", l)[0], ',')
-
-                for elem in breakpoints:
-                    point = re.findall("[0-9.]*",  elem)
-                    for i in point:
-                        if i:
-                            bp.append(float(i))
-                print(bp)
-
-                # zero-indexed phase, is one-indexed in DSS file
-                phase = int(re.findall('(?i)phase=\s*([0-9]*)', l)[0]) - 1
-                print(phase)
-
-                minkvar = float(re.findall('(?i)min_kvar=([-0-9]*)', l)[0])
-                print(minkvar)
-
-                maxkvar = float(re.findall('(?i)max_kvar=([-0-9]*)', l)[0])
-                print(maxkvar)
-
-                bus = re.findall(r"(?i)bus=([\w.]*)\s", l)[0]
-                bus = re.findall(r"[\w]*", bus)[0]
-                print(bus)
-
-                # create volt var object
-                voltvarobject = VoltVARController(bp, minkvar, maxkvar, bus, phase)
-                vvarobjects.append(voltvarobject)
-                print("\n --------------")
-
-        for e in vvarobjects:
-            print(e)
-        return vvarobjects
-
-    def volt_var_control(self):
-        print('hi')
-
-    def regulator_ldc_control(self):
-        nnode = self.circuit.buses.num_elements
-        nline = self.circuit.lines.num_elements
-        vr_lines = self.circuit.voltage_regulators.get_num_lines_x_ph
-        tf_lines = self.circuit.transformers.get_num_lines_x_ph
-        XNR = self.XNR
-
-        vr_idx_dict = self.circuit.voltage_regulators.voltage_regulator_index_dict()
-        vr_line_idx = range(0, vr_lines)
-
-        # flag if need to rerun NR3
-        flag = 0
-        vr_line_counter = 0
-        XNR_final = XNR
-
-        for k in vr_idx_dict.keys():
-            # {bus: [indices in dss.RegControls.AllNames(), ...]}
-            for vridx in vr_idx_dict[k]:
-
-                dss.RegControls.Name(dss.RegControls.AllNames()[vridx])
-                dss.Circuit.SetActiveBus(
-                    dss.CktElement.BusNames()[0].split(".")[0])
-                winding = dss.RegControls.Winding()
-
-                Vbase = dss.Bus.kVBase() * 1000
-                Sbase = 10**6
-                Ibase = Sbase / Vbase
-                band = dss.RegControls.ForwardBand()
-                target_voltage = dss.RegControls.ForwardVreg()
-
-                idxbs = dss.Circuit.AllBusNames().index(
-                    (dss.CktElement.BusNames()[0].split('.')[0]))
-
-                ph = dss.CktElement.BusNames()[0].split('.')[1:]
-                ph_arr = [0, 0, 0]
-                for i in ph:
-                    ph_arr[int(i) - 1] = 1
-                if len(ph) == 0:
-                    ph_arr = [1, 1, 1]
-                for ph in range(len(ph_arr)):
-                    if ph_arr[ph] == 1:  # loop over existing phases of voltage regulator
-
-                        NR_voltage = np.abs((XNR[2*nnode*ph + 2*idxbs] + (
-                            1j * XNR[2*nnode*ph + 2*idxbs + 1])) * Vbase / dss.RegControls.PTRatio())
-
-                        if dss.RegControls.ForwardR() and dss.RegControls.ForwardX() and dss.RegControls.CTPrimary():
-                            # if LDC exists
-
-                            #vr_line_counter - counts the number of lines passed; two lines for every phase
-                            #vridx - index of current voltage regulator in dss.RegControls.AllNames()
-                            #tf_lines - number of transformers
-
-                            line_idx = 2 * \
-                                vr_line_idx[vr_line_counter] + 2*(winding - 1)
-
-                            I_reg = XNR[2*3*(nnode+nline) + 2*tf_lines + line_idx] + \
-                                1j * XNR[2*3*(nnode+nline) + 2 *
-                                         tf_lines + line_idx + 1]
-
-                            V_drop = (dss.RegControls.ForwardR(
-                            ) + 1j*dss.RegControls.ForwardX()) / 0.2 * (I_reg * Ibase / dss.RegControls.CTPrimary())
-
-                            V_drop = (dss.RegControls.ForwardR() + 1j*dss.RegControls.ForwardX()) / 0.2 * (
-                                I_reg * Ibase / (dss.RegControls.CTPrimary()/0.2))
-                            V_R = np.abs(NR_voltage - V_drop)
-
-                            abs_diff = np.abs(V_R - target_voltage)
-                            V_compare = V_R
-                            print('vcompare', dss.RegControls.Name(), V_compare)
-
-                        else:
-                            # if LDC term does not exist
-                            print('**** LDC missing term ***** ')
-                            abs_diff = np.abs(NR_voltage - target_voltage)
-                            V_compare = NR_voltage
-
-                        print('absolute difference: ', abs_diff, "\n")
-                        vr_line_counter += 1
-
-                        # compare NR3 voltage to forward Vreg voltage +- band
-                        if abs_diff <= band:  # converges
-                            XNR_final = XNR
-                            continue
-
-                        elif abs_diff > band:
-                            # NR3 voltage above forward-Vreg
-                            if V_compare > (target_voltage + band):
-                                if dss.RegControls.TapNumber() <= -16:
-                                    print('Tap Number Out of Bounds')
-                                    XNR_final = XNR
-
-                                else:
-                                    print('Decrease Tap Number')
-                                    dss.RegControls.TapNumber(
-                                        dss.RegControls.TapNumber() - 1)
-                                    print('New tap number ',
-                                          dss.RegControls.TapNumber())
-                                    flag = 1  # run NR3 again
-                            else:  # NR3 voltage below forward-Vreg
-                                if dss.RegControls.TapNumber() >= 16:
-                                    print('Tap Number Out of Bounds')
-                                    print('New tap number ',
-                                          dss.RegControls.TapNumber())
-                                    XNR_final = XNR
-
-                                else:
-                                    print('Increase tap number')
-                                    dss.RegControls.TapNumber(
-                                        dss.RegControls.TapNumber() + 1)
-                                    flag = 1  # run NR3 again
-            if flag == 1:
-                return flag, XNR_final
-        return flag, XNR_final
-
     def get_bus_powers(self):
         """
         Total complex powers by bus (load powers and capacitor powers)
@@ -426,28 +265,59 @@ class Solution():
         self.circuit._orient = orient
         pass
 
+    def get_V(self, orient='') -> pd.DataFrame:
+        """ Return solved voltage as a DataFrame"""
+        return self.get_data_frame('V', orient)
+
+    def get_Vmag(self, orient='') -> pd.DataFrame:
+        """ Return solved voltage magnitude as a DataFrame"""
+        return self.get_data_frame('Vmag', orient)
+
+    def get_I(self, orient='') -> pd.DataFrame:
+        """ Return solved line currents as a DataFrame"""
+        return self.get_data_frame('I', orient)
+
+    def get_Stx(self, orient='') -> pd.DataFrame:
+        """ Return solved incoming line powers as a DataFrame"""
+        return self.get_data_frame('Stx', orient)
+
+    def get_Srx(self, orient='') -> pd.DataFrame:
+        """ Return solved outgoing line powers as a DataFrame"""
+        return self.get_data_frame('Srx', orient)
+
+    def get_sV(self, orient='') -> pd.DataFrame:
+        """ Return solved total bus powers as a DataFrame"""
+        return self.get_data_frame('sV', orient)
+
     def print_solution(self):
-        """
-        prints solution to stdout
-        """
-        print("\n Parameters:")
-        print(self.params_df())
+        """ Prints solution values to stdout, row-major order."""
+        pd.options.display.float_format = '{:,.3f}'.format
 
-        print("\n V solution")
-        print(self.V_df())
+        print("\nParameters:")
+        for p, v in self.get_params().items():
+            print(f'{p}: {v}')
+        print('-' * 80)
 
-        print("\n Vmag solution")
-        print(self.calc_Vmag())
+        print("\nV solution")
+        print(self.get_V('rows'))
+        print('-' * 80)
 
-        print("\n I solution")
-        print(self.I_df())
+        print("\nVmag solution")
+        print(self.get_Vmag('rows'))
+        print('-' * 80)
 
-        print("\n Stx solution")
-        print(self.Stx_df())
+        print("\nI solution")
+        print(self.get_I('rows'))
+        print('-' * 80)
 
-        print("\n Srx solution")
-        print(self.Srx_df())
+        print("\nStx solution")
+        print(self.get_Stx('rows'))
+        print('-' * 80)
 
-        print("\n sV solution")
-        print(self.sV_df())
-        print()
+        print("\nSrx solution")
+        print(self.get_Srx('rows'))
+        print('-' * 80)
+
+        print("\nsV solution")
+        print(self.get_sV('rows'))
+        print('-' * 80)

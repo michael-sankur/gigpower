@@ -1,11 +1,21 @@
 import pandas as pd
 import numpy as np
+from . solution import Solution
+
+
+def compare_solutions(sol_left: Solution, sol_right: Solution, left_name:str,
+                      right_name: str):
+    """ Prints a comparison of two Solutions."""
+    for param in Solution.SOLUTION_PARAMS:
+        left_df = sol_left.get_data_frame(param, 'rows')
+        right_df = sol_left.get_data_frame(param, 'rows')
+        compare_data_frames(left_df, right_df, left_name, right_name, f'{param}')
 
 
 def compare_data_frames(df1: pd.DataFrame, df2: pd.DataFrame, df1_label:str, 
                         df2_label: str, title: str, cols = ['A', 'B', 'C']):
     """ 
-    prints a comparison of 2 dataframes, df1 - df2
+    Prints a comparison of 2 dataframes, df1 - df2
     """
     summary_labels = ['MAX', 'SUM', 'MEAN']
     compare = df1 - df2
