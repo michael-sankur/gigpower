@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('./gigpower/src'))
 # -- Project information -----------------------------------------------------
 
 project = 'gigpower'
-copyright = '2021, Daniel Arnold, Michael Sankur, Sy-Toan Ngo, Kathleen Chang, Elaine Laguerta'
+copyright = '2021, The Regents of the University of California, through Lawrence Berkeley National Laboratory'
 author = 'Daniel Arnold, Michael Sankur, Sy-Toan Ngo, Kathleen Chang, Elaine Laguerta'
 
 # The full version, including alpha/beta/rc tags
