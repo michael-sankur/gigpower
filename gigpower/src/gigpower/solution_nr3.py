@@ -11,8 +11,19 @@ from . nr3_lib.compute_NR3JT import compute_NR3JT
 from . nr3_lib.map_output import map_output
 
 class SolutionNR3(Solution):
-    # TODO: set a class-level NR3 tolerance value
+
     CONVERGENCE_TOLERANCE = 10**-6
+
+    @classmethod
+    def set_zip_values(cls, zip_v):
+        """
+        sets zip values for the Solution class
+        param zip_V: List or nd.array with 7 values
+        [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min voltage pu]
+        Note that zip values are set both on the Solution class and Circuit
+        class
+        """
+        Solution.set_zip_values(zip_v)
 
     def __init__(self, dss_fp: str, **kwargs):
         super().__init__(dss_fp, **kwargs)  # sets self.circuit

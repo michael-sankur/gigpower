@@ -12,6 +12,17 @@ import copy
 
 
 class SolutionFBS(Solution):
+    
+    @classmethod
+    def set_zip_values(cls, zip_v):
+        """
+        sets zip values for the Solution class
+        param zip_V: List or nd.array with 7 values
+        [a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min voltage pu]
+        Note that zip values are set both on the Solution class and Circuit
+        class
+        """
+        Solution.set_zip_values(zip_v)    
 
     def __init__(self, dss_fp: str, **kwargs):
         super().__init__(dss_fp, **kwargs)  # sets self.circuit
