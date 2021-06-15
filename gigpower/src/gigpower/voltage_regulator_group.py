@@ -72,7 +72,10 @@ class VoltageRegulatorGroup(LineGroup):
         return new_adj
 
     def get_idx(self, obj):
-        # returns a list of VRs, not an index
+        """
+        Handles tuple representation. If passed a tuple, returns a list of VRs
+        on the Line represented by the tuple
+        """
         if isinstance(obj, tuple):
             return self._key_to_element_dict[obj]  
         else:

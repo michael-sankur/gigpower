@@ -20,6 +20,7 @@ class TransformerGroup(LineGroup):
         super()._populate_name_idx_dicts()
 
     def get_idx(self, obj):
+        """Handles Tuple representations of transformers"""
         if isinstance(obj, tuple):
             return CircuitElementGroup.get_idx(self, self._key_to_element_dict[obj])
         return CircuitElementGroup.get_idx(self, obj)
