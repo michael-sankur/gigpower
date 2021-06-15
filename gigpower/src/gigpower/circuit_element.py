@@ -77,5 +77,3 @@ class CircuitElement():
     def get_wpu_matrix(self, dss):
         pass
 
-    def get_vvcpu_matrix(self, dss):
-        pass

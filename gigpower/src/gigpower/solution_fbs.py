@@ -83,7 +83,7 @@ class SolutionFBS(Solution):
         topo_order = self.topo_order
         root_idx = self.circuit.buses.get_idx(self.root)
         converged = max(abs(self.Vtest - self.Vref)) <= self.tolerance
- 
+
         while not converged and self.iterations < self.maxiter:
             # set V.root to Vref
             self.V[root_idx] = np.copy(self.Vref)  # type: ignore

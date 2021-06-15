@@ -15,7 +15,6 @@ def map_output(circuit, XNR):
     AI = circuit.get_aI_matrix()
     cappu = circuit.get_cappu_matrix()
     wpu = circuit.get_wpu_matrix()
-    vvcpu = circuit.get_vvcpu_matrix()
 
     # remap XNR to VNR, INR, STXNR, SRXNR, iNR, sNR
     VNR = np.zeros((3, nnode), dtype='complex')
@@ -58,7 +57,7 @@ def map_output(circuit, XNR):
     sNR = np.zeros((3,nnode), dtype='complex')
     iNR = np.zeros((3,nnode), dtype='complex')
     # Totdal node loads
-    sNR = spu*(APQ + AI*np.abs(VNR) + AZ*np.abs(VNR)**2) - 1j*cappu.real + 1j*wpu + 1j*vvcpu.real
+    sNR = spu*(APQ + AI*np.abs(VNR) + AZ*np.abs(VNR)**2) - 1j*cappu.real + 1j*wpu
     sNR[PH == 0] = 0
     for ph in range(0,3):
         for k1 in range(0,nnode):

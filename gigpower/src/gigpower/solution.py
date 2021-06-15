@@ -104,7 +104,6 @@ class Solution():
         self.aZ = self.circuit.get_aZ_matrix()
         self.cappu = self.circuit.get_cappu_matrix()
         self.wpu = self.circuit.get_wpu_matrix()
-        self.vvcpu = self.circuit.get_vvcpu_matrix()
 
     def _init_solution_matrices(self):
         """
@@ -186,7 +185,7 @@ class Solution():
         V = self.V
         spu = self.spu
         aPQ, aI, aZ = self.aPQ, self.aI, self.aZ
-        cappu, wpu, vvcpu = self.cappu, self.wpu, self.vvcpu
+        cappu, wpu = self.cappu, self.wpu
         phase_matrix = self.phase_matrix
 
         if bus:
@@ -194,14 +193,14 @@ class Solution():
             V = self.V[bus_idx]
             spu = self.spu[bus_idx]
             aPQ, aI, aZ = self.aPQ[bus_idx], self.aI[bus_idx], self.aZ[bus_idx]
-            cappu, wpu, vvcpu = self.cappu[bus_idx], self.wpu[bus_idx], self.vvcpu[bus_idx]
+            cappu, wpu = self.cappu[bus_idx], self.wpu[bus_idx]
             phase_matrix = self.phase_matrix[bus_idx]
 
         # TODO: confirm if cappu.real needs to be multiplied by abs(V)**2
         # nr3 map_solution does not do that, but fbs requires it for
         # results to be consistent with opendss
         update = spu * (aPQ + aI * np.abs(V) + aZ * np.abs(V) ** 2) - \
-            1j * cappu * np.abs(V)**2 + 1j * wpu + 1j * vvcpu
+            1j * cappu * np.abs(V)**2 + 1j * wpu
 
         update[phase_matrix == 0] = 0
 

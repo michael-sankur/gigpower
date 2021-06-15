@@ -649,7 +649,6 @@ class SolutionNR3(Solution):
         AI = self.circuit.get_aI_matrix() 
         cappu = self.circuit.get_cappu_matrix()
         wpu = self.circuit.get_wpu_matrix()
-        vvcpu = self.circuit.get_vvcpu_matrix()
 
         XNR = self.XNR
         # TODO: can/should we include transformers and voltage regulators in 
