@@ -4,17 +4,18 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>gigpower &#8212; gigpower 0.1.0 documentation</title>
-    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>README &#8212; gigpower 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="API" href="API.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -31,48 +32,147 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="gigpower">
-<h1>gigpower<a class="headerlink" href="#gigpower" title="Permalink to this headline">¶</a></h1>
-<p>gigpower will solve your problem of where to start with documentation,
-by providing a basic explanation of how to do it easily.</p>
-<p>Look how easy it is to use:</p>
-<blockquote>
-<div><p>import gigpower
-# Get your stuff done
-gigpower.do_stuff()</p>
-</div></blockquote>
-<div class="section" id="features">
+  <section id="readme">
+<h1>README<a class="headerlink" href="#readme" title="Permalink to this headline">¶</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">gigpower</span></code> solves power flow for radial and meshed networks. It supports
+solving power flow with both Newton-Raphson and Forward Backward Sweep algorithms,
+written completely in Python.</p>
+<section id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Be awesome</p></li>
-<li><p>Make things faster</p></li>
+<li><p>Parse <code class="docutils literal notranslate"><span class="pre">*.dss</span></code> files into <code class="docutils literal notranslate"><span class="pre">Circuit</span></code> objects, which you can interact with directly in Python.</p></li>
+<li><p>Solve power flow for radial or meshed networks using Newton-Raphson method.</p></li>
+<li><p>Solve power flow radial networks using Forward Backward Sweep.</p></li>
+<li><p>Compare solutions to <a class="reference external" href="https://github.com/dss-extensions/OpenDSSDirect.py">OpenDSSDirect.py</a>.</p></li>
 </ul>
-</div>
-<div class="section" id="installation">
+</section>
+<section id="how-is-gigpower-different-from-opendssdirect-py">
+<h2>How is gigpower different from <a class="reference external" href="https://github.com/dss-extensions/OpenDSSDirect.py">OpenDSSDirect.py</a>?<a class="headerlink" href="#how-is-gigpower-different-from-opendssdirect-py" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://github.com/dss-extensions/OpenDSSDirect.py">OpenDSSDirect.py</a> provides a Python interface to OpenDSS. In contrast,
+<code class="docutils literal notranslate"><span class="pre">gigpower</span></code> aims to be a stand-alone Python power flow tool, to allow users to
+use Python to view intermediate results and customize things more easily.
+<code class="docutils literal notranslate"><span class="pre">gigpower</span></code> provides:</p>
+<ul class="simple">
+<li><p>Implementations of Newton Raphson and Forward Backward Sweep algorithms in Python.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Circuit</span></code> objects, (similar to <a class="reference external" href="https://github.com/dss-extensions/OpenDSSDirect.py">OpenDSSDirect.py</a>’s <code class="docutils literal notranslate"><span class="pre">Circuit</span></code> objects) that are native Python structures.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CircuitElement</span></code> objects (<code class="docutils literal notranslate"><span class="pre">Bus</span></code>, <code class="docutils literal notranslate"><span class="pre">Line</span></code>, <code class="docutils literal notranslate"><span class="pre">Load</span></code>, etc.) that are native Python structures.</p></li>
+</ul>
+<p>However, <code class="docutils literal notranslate"><span class="pre">gigpower</span></code> is not yet a standalone package. It relies on <a class="reference external" href="https://github.com/dss-extensions/OpenDSSDirect.py">OpenDSSDirect.py</a>’s API to parse <code class="docutils literal notranslate"><span class="pre">*.dss</span></code> files into gigpower objects.
+Construction of some initial matrices used by <code class="docutils literal notranslate"><span class="pre">SolutionNR3</span></code> also rely on calls to <a class="reference external" href="https://github.com/dss-extensions/OpenDSSDirect.py">OpenDSSDirect.py</a>.
+A future goal is to decouple <code class="docutils literal notranslate"><span class="pre">gigpower</span></code> from <a class="reference external" href="https://github.com/dss-extensions/OpenDSSDirect.py">OpenDSSDirect.py</a>.</p>
+</section>
+<section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>Install gigpower by running:</p>
-<blockquote>
-<div><p>install gigpower</p>
-</div></blockquote>
+<p>gigpower requires python3 &gt;= 3.7.
+Install gigpower with pip, in a python3 environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">gigpower</span>
+</pre></div>
 </div>
-<div class="section" id="contribute">
+</section>
+<section id="solve-power-flow">
+<h2>Solve Power Flow<a class="headerlink" href="#solve-power-flow" title="Permalink to this headline">¶</a></h2>
+<p>Solve with Newton-Raphson:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gigpower.SolutionNR3</span> <span class="kn">import</span> <span class="n">SolutionNR3</span>
+
+<span class="n">my_solution_nr3</span> <span class="o">=</span> <span class="n">SolutionNR3</span><span class="p">(</span><span class="s1">&#39;my_feeder.dss&#39;</span><span class="p">)</span>
+<span class="n">my_solution_nr3</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Solve with Forward Backward Sweep:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gigpower.SolutionFBS</span> <span class="kn">import</span> <span class="n">SolutionFBS</span>
+
+<span class="n">my_solution_fbs</span> <span class="o">=</span> <span class="n">SolutionFBS</span><span class="p">(</span><span class="s1">&#39;my_feeder.dss&#39;</span><span class="p">)</span>
+<span class="n">my_solution_fbs</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Solve with _OpenDSSDirect:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gigpower.SolutionDSS</span> <span class="kn">import</span> <span class="n">SolutionDSS</span>
+
+<span class="n">my_solution_dss</span> <span class="o">=</span> <span class="n">SolutionDSS</span><span class="p">(</span><span class="s1">&#39;my_feeder.dss&#39;</span><span class="p">)</span>
+<span class="n">my_solution_dss</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Compare solutions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># prints a useful comparison of the solutions</span>
+<span class="kn">from</span> <span class="nn">gigpower.pretty_print</span> <span class="kn">import</span> <span class="n">compare_solutions</span>
+
+<span class="n">compare_data_frames</span><span class="p">(</span><span class="n">my_solution_fbs</span><span class="p">,</span> <span class="n">my_solution_dss</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See <a class="reference external" href="https://github.com/LBNL-ETA/gigpower/docs/examples">https://github.com/LBNL-ETA/gigpower/docs/examples</a> for Jupyter notebooks with examples.</p>
+</section>
+<section id="caveat">
+<h2>CAVEAT!!!!<a class="headerlink" href="#caveat" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">gigpower</span></code> gives different results from <a class="reference external" href="https://github.com/dss-extensions/OpenDSSDirect.py">OpenDSSDirect.py</a>.</p>
+<p>A future goal of the project is to explain these disparities. One known source
+is that <code class="docutils literal notranslate"><span class="pre">gigpower</span></code> models line current differently from OpenDSS.</p>
+<p>To view the disparities, see
+<a class="reference external" href="https://github.com/LBNL-ETA/gigpower/tests/v1_test_report.csv">https://github.com/LBNL-ETA/gigpower/tests/v1_test_report.csv</a>.</p>
+<p>To reproduce them, you need <code class="docutils literal notranslate"><span class="pre">pytest</span></code> and <code class="docutils literal notranslate"><span class="pre">pytest-assume</span></code>. You can install these
+from our development requirements:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">cd</span> <span class="o">./</span><span class="n">gigpower</span><span class="o">/</span><span class="n">src</span>
+<span class="o">&gt;</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">-</span><span class="n">dev</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>then run pytest as a module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="o">./</span><span class="n">gigpower</span><span class="o">/</span><span class="n">tests</span>
+</pre></div>
+</div>
+</section>
+<section id="contribute">
 <h2>Contribute<a class="headerlink" href="#contribute" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Issue Tracker: github.com/gigpower/gigpower/issues</p></li>
-<li><p>Source Code: github.com/gigpower/gigpower</p></li>
+<li><p>Issue Tracker: <a class="reference external" href="https://github.com/LBNL-ETA/gigpower/issues">https://github.com/LBNL-ETA/gigpower/issues</a></p></li>
+<li><p>Source Code: <a class="reference external" href="https://github.com/LBNL-ETA/gigpower">https://github.com/LBNL-ETA/gigpower</a></p></li>
 </ul>
+</section>
+<section id="development">
+<h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
+<p>Follow the steps below to develop this project.</p>
+<ol class="arabic">
+<li><p>Create a python virtual environment, and activate it.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="n">venv</span>
+<span class="n">source</span> <span class="nb">bin</span><span class="o">/</span><span class="n">venv</span><span class="o">/</span><span class="n">activate</span>
+</pre></div>
 </div>
-<div class="section" id="support">
+</li>
+<li><p>Navigate to <code class="docutils literal notranslate"><span class="pre">./gigpower/src</span></code>. Install requirements.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">./</span><span class="n">gigpower</span><span class="o">/</span><span class="n">src</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">-</span><span class="n">dev</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+</li>
+<li><p>Navigate to <code class="docutils literal notranslate"><span class="pre">./gigpower/src</span></code>. Install modules locally in editable mode:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
+</pre></div>
+</div>
+</li>
+<li><p>To run tests, run pytest as a module from <code class="docutils literal notranslate"><span class="pre">./gigpower</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="n">tests</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="support">
 <h2>Support<a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h2>
-<p>This project is maintained by the Lawrence Berkeley National Lab
-Grid Integration Group.
+<p>This project is maintained by the <a class="reference external" href="https://gridintegration.lbl.gov/">Lawrence Berkeley National Lab Grid Integration Group</a>.
 For support, contact Daniel Arnold at: <a class="reference external" href="mailto:dbarnold&#37;&#52;&#48;lbl&#46;gov">dbarnold<span>&#64;</span>lbl<span>&#46;</span>gov</a></p>
-</div>
-<div class="section" id="license">
+</section>
+<section id="license">
 <h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
-<p>The project is licensed under the BSD license.</p>
-</div>
-</div>
+<p>Copyright (c) 2021, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.</p>
+<p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</p>
+<ol class="arabic simple">
+<li><p>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</p></li>
+<li><p>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</p></li>
+<li><p>Neither the name of the University of California, Lawrence Berkeley National Laboratory, U.S. Dept. of Energy, nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.</p></li>
+</ol>
+<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
+<p>You are under no obligation whatsoever to provide any bug fixes, patches, or upgrades to the features, functionality or performance of the source code (“Enhancements”) to anyone; however, if you choose to make your Enhancements available either publicly, or directly to Lawrence Berkeley National Laboratory, without imposing a separate written license agreement for such Enhancements, then you hereby grant the following license: a non-exclusive, royalty-free perpetual license to install, use, modify, prepare derivative works, incorporate into other computer software, distribute, and sublicense such enhancements or derivative works thereof, in binary and source code form.</p>
+</section>
+</section>
 
 
           </div>
@@ -91,11 +191,27 @@ For support, contact Daniel Arnold at: <a class="reference external" href="mailt
 
 
 <h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="API.html">API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">README</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#features">Features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-is-gigpower-different-from-opendssdirect-py">How is gigpower different from OpenDSSDirect.py?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#solve-power-flow">Solve Power Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#caveat">CAVEAT!!!!</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#contribute">Contribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#development">Development</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#support">Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#license">License</a></li>
+</ul>
+</li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="API.html" title="previous chapter">API</a></li>
   </ul></li>
 </ul>
 </div>
@@ -125,7 +241,7 @@ For support, contact Daniel Arnold at: <a class="reference external" href="mailt
       &copy;2021, Daniel Arnold, Michael Sankur, Sy-Toan Ngo, Kathleen Chang, Elaine Laguerta.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.2</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

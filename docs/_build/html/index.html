@@ -35,129 +35,7 @@
   <section id="gigpower">
 <h1>gigpower<a class="headerlink" href="#gigpower" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="API.html">API</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="API.html#solution">Solution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API.html#solutionnr3">SolutionNR3</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API.html#solutionfbs">SolutionFBS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API.html#circuit">Circuit</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API.html#circuitelementgroup">CircuitElementGroup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API.html#busgroup">BusGroup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API.html#loadgroup">LoadGroup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API.html#capacitorgroup">CapacitorGroup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API.html#transformergroup">TransformerGroup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="API.html#voltageregulatorgroup">VoltageRegulatorGroup</a></li>
-</ul>
-</li>
-</ul>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">gigpower</span></code> solves power flow for radial and meshed networks. It supports
-solving power flow with both Newton-Raphson and Forward Backward Sweep algorithms,
-written completely in Python.</p>
-<section id="features">
-<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>Parse <cite>*.dss</cite> files into <cite>Circuit</cite> objects, which you can interact with directly in Python.</p></li>
-<li><p>Solve power flow for radial or meshed networks using Newton-Raphson method.</p></li>
-<li><p>Solve power flow radial networks using Forward Backward Sweep.</p></li>
-<li><p>Compare solutions to <a class="reference external" href="https://github.com/dss-extensions/OpenDSSDirect.py">OpenDSSDirect.py</a>.</p></li>
-</ul>
-</section>
-<section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>Install gigpower by running:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&gt;</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">gigpower</span>
-</pre></div>
-</div>
-<section id="solve-power-flow">
-<h3>Solve Power Flow<a class="headerlink" href="#solve-power-flow" title="Permalink to this headline">¶</a></h3>
-<p>Solve with Newton-Raphson:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gigpower.SolutionNR3</span> <span class="kn">import</span> <span class="n">SolutionNR3</span>
-
-<span class="n">my_solution_nr3</span> <span class="o">=</span> <span class="n">SolutionNR3</span><span class="p">(</span><span class="s1">&#39;my_feeder.dss&#39;</span><span class="p">)</span>
-<span class="n">my_solution_nr3</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Solve with Forward Backward Sweep:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gigpower.SolutionFBS</span> <span class="kn">import</span> <span class="n">SolutionFBS</span>
-
-<span class="n">my_solution_fbs</span> <span class="o">=</span> <span class="n">SolutionFBS</span><span class="p">(</span><span class="s1">&#39;my_feeder.dss&#39;</span><span class="p">)</span>
-<span class="n">my_solution_fbs</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Solve with _OpenDSSDirect:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">gigpower.SolutionDSS</span> <span class="kn">import</span> <span class="n">SolutionDSS</span>
-
-<span class="n">my_solution_dss</span> <span class="o">=</span> <span class="n">SolutionDSS</span><span class="p">(</span><span class="s1">&#39;my_feeder.dss&#39;</span><span class="p">)</span>
-<span class="n">my_solution_dss</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Compare solutions:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># compares solved voltages</span>
-<span class="kn">from</span> <span class="nn">gigpower.pretty_print</span> <span class="kn">import</span> <span class="n">compare_data_frames</span>
-
-<span class="n">fbs_V</span> <span class="o">=</span> <span class="n">my_solution_fbs</span><span class="o">.</span><span class="n">get_data_frame</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
-<span class="n">dss_V</span> <span class="o">=</span> <span class="n">my_solution_dss</span><span class="o">.</span><span class="n">get_data_frame</span><span class="p">(</span><span class="s1">&#39;V&#39;</span><span class="p">)</span>
-<span class="n">compare_data_frames</span><span class="p">(</span><span class="n">fbs_V</span><span class="p">,</span> <span class="n">dss_V</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>See <a class="reference external" href="https://github.com/LBNL-ETA/gigpower/docs/examples">https://github.com/LBNL-ETA/gigpower/docs/examples</a> for Jupyter notebooks with examples.</p>
-</section>
-</section>
-<section id="contribute">
-<h2>Contribute<a class="headerlink" href="#contribute" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><p>Issue Tracker: <a class="reference external" href="https://github.com/LBNL-ETA/gigpower/issues">https://github.com/LBNL-ETA/gigpower/issues</a></p></li>
-<li><p>Source Code: <a class="reference external" href="https://github.com/LBNL-ETA/gigpower">https://github.com/LBNL-ETA/gigpower</a></p></li>
-</ul>
-</section>
-<section id="development">
-<h2>Development<a class="headerlink" href="#development" title="Permalink to this headline">¶</a></h2>
-<p>Follow the steps below to develop this project.</p>
-<ol class="arabic">
-<li><p>Create a python virtual environment, and activate it.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">venv</span> <span class="n">venv</span>
-<span class="n">source</span> <span class="nb">bin</span><span class="o">/</span><span class="n">venv</span><span class="o">/</span><span class="n">activate</span>
-</pre></div>
-</div>
-</li>
-<li><p>Navigate to <cite>./gigpower/src</cite>. Install requirements.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="o">./</span><span class="n">gigpower</span><span class="o">/</span><span class="n">src</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">-</span><span class="n">dev</span><span class="o">.</span><span class="n">txt</span>
-</pre></div>
-</div>
-</li>
-<li><p>Navigate to <cite>./gigpower/src</cite>. Install modules locally in editable mode:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
-</pre></div>
-</div>
-</li>
-<li><p>To run tests, run pytest as a module from <cite>./gigpower</cite>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python3</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span> <span class="n">tests</span>
-</pre></div>
-</div>
-</li>
-</ol>
-</section>
-<section id="support">
-<h2>Support<a class="headerlink" href="#support" title="Permalink to this headline">¶</a></h2>
-<p>This project is maintained by the <a class="reference external" href="https://gridintegration.lbl.gov/">Lawrence Berkeley National Lab Grid Integration Group</a>.
-For support, contact Daniel Arnold at: <a class="reference external" href="mailto:dbarnold&#37;&#52;&#48;lbl&#46;gov">dbarnold<span>&#64;</span>lbl<span>&#46;</span>gov</a></p>
-</section>
-<section id="license">
-<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
-<p>gigpower Copyright (c) 2021, The Regents of the University of California, through Lawrence Berkeley National Laboratory (subject to receipt of any required approvals from the U.S. Dept. of Energy). All rights reserved.</p>
-<p>Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:</p>
-<ol class="arabic simple">
-<li><p>Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.</p></li>
-<li><p>Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.</p></li>
-<li><p>Neither the name of the University of California, Lawrence Berkeley National Laboratory, U.S. Dept. of Energy, nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.</p></li>
-</ol>
-<p>THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</p>
-<p>You are under no obligation whatsoever to provide any bug fixes, patches, or upgrades to the features, functionality or performance of the source code (“Enhancements”) to anyone; however, if you choose to make your Enhancements available either publicly, or directly to Lawrence Berkeley National Laboratory, without imposing a separate written license agreement for such Enhancements, then you hereby grant the following license: a non-exclusive, royalty-free perpetual license to install, use, modify, prepare derivative works, incorporate into other computer software, distribute, and sublicense such enhancements or derivative works thereof, in binary and source code form.</p>
-</section>
 </section>
 
 
@@ -177,9 +55,9 @@ For support, contact Daniel Arnold at: <a class="reference external" href="mailt
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="API.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">README</a></li>
 </ul>
 
 <div class="relations">
