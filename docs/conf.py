@@ -36,7 +36,9 @@ extensions = [
     'sphinx.ext.napoleon',
 ]
 autodoc_class_signature = "separated"
-
+autodoc_default_options = {
+    'undoc-members': True
+}
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

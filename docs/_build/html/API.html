@@ -39,7 +39,37 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="gigpower.solution.Solution">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">gigpower.solution.</span></span><span class="sig-name descname"><span class="pre">Solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dss_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zip_v</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">array([0.1,</span> <span class="pre">0.05,</span> <span class="pre">0.85,</span> <span class="pre">0.1,</span> <span class="pre">0.05,</span> <span class="pre">0.85,</span> <span class="pre">0.8])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution.Solution" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.SLACKIDX">
+<span class="sig-name descname"><span class="pre">SLACKIDX</span></span><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#gigpower.solution.Solution.SLACKIDX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.SOLUTION_PARAMS">
+<span class="sig-name descname"><span class="pre">SOLUTION_PARAMS</span></span><em class="property"> <span class="pre">=</span> <span class="pre">{'I':</span> <span class="pre">['lines',</span> <span class="pre">['A',</span> <span class="pre">'B',</span> <span class="pre">'C'],</span> <span class="pre">&lt;class</span> <span class="pre">'complex'&gt;],</span> <span class="pre">'Srx':</span> <span class="pre">['lines',</span> <span class="pre">['A',</span> <span class="pre">'B',</span> <span class="pre">'C'],</span> <span class="pre">&lt;class</span> <span class="pre">'complex'&gt;],</span> <span class="pre">'Stx':</span> <span class="pre">['lines',</span> <span class="pre">['A',</span> <span class="pre">'B',</span> <span class="pre">'C'],</span> <span class="pre">&lt;class</span> <span class="pre">'complex'&gt;],</span> <span class="pre">'V':</span> <span class="pre">['buses',</span> <span class="pre">['A',</span> <span class="pre">'B',</span> <span class="pre">'C'],</span> <span class="pre">&lt;class</span> <span class="pre">'complex'&gt;],</span> <span class="pre">'Vmag':</span> <span class="pre">['buses',</span> <span class="pre">['A',</span> <span class="pre">'B',</span> <span class="pre">'C'],</span> <span class="pre">&lt;class</span> <span class="pre">'float'&gt;],</span> <span class="pre">'sV':</span> <span class="pre">['buses',</span> <span class="pre">['A',</span> <span class="pre">'B',</span> <span class="pre">'C'],</span> <span class="pre">&lt;class</span> <span class="pre">'complex'&gt;]}</span></em><a class="headerlink" href="#gigpower.solution.Solution.SOLUTION_PARAMS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.VSLACK">
+<span class="sig-name descname"><span class="pre">VSLACK</span></span><em class="property"> <span class="pre">=</span> <span class="pre">array([</span> <span class="pre">1.</span> <span class="pre">+0.j</span>&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">,</span> <span class="pre">-0.5-0.8660254j,</span> <span class="pre">-0.5+0.8660254j])</span></em><a class="headerlink" href="#gigpower.solution.Solution.VSLACK" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.calc_Srx">
+<span class="sig-name descname"><span class="pre">calc_Srx</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution.Solution.calc_Srx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.calc_Stx">
+<span class="sig-name descname"><span class="pre">calc_Stx</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution.Solution.calc_Stx" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.calc_Vmag">
+<span class="sig-name descname"><span class="pre">calc_Vmag</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">numpy.ndarray</span><a class="headerlink" href="#gigpower.solution.Solution.calc_Vmag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="gigpower.solution.Solution.calc_sV">
 <span class="sig-name descname"><span class="pre">calc_sV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution.Solution.calc_sV" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to calculate total node powers, accounting for loads
@@ -50,10 +80,33 @@ param bus: if a Bus is given, updates self.sV only at the index of the Bus</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="gigpower.solution.Solution.get_bus_powers">
-<span class="sig-name descname"><span class="pre">get_bus_powers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution.Solution.get_bus_powers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Total complex powers by bus (load powers and capacitor powers)
-indexed by bus</p>
+<dt class="sig sig-object py" id="gigpower.solution.Solution.get_I">
+<span class="sig-name descname"><span class="pre">get_I</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#gigpower.solution.Solution.get_I" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return solved line currents as a DataFrame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.get_Srx">
+<span class="sig-name descname"><span class="pre">get_Srx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#gigpower.solution.Solution.get_Srx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return solved outgoing line powers as a DataFrame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.get_Stx">
+<span class="sig-name descname"><span class="pre">get_Stx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#gigpower.solution.Solution.get_Stx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return solved incoming line powers as a DataFrame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.get_V">
+<span class="sig-name descname"><span class="pre">get_V</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#gigpower.solution.Solution.get_V" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return solved voltage as a DataFrame</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.get_Vmag">
+<span class="sig-name descname"><span class="pre">get_Vmag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#gigpower.solution.Solution.get_Vmag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return solved voltage magnitude as a DataFrame</p>
 </dd></dl>
 
 <dl class="py method">
@@ -66,7 +119,7 @@ orient: optional, ‘rows’ or ‘cols’, defaults to self._orient</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gigpower.solution.Solution.get_nominal_bus_powers">
-<span class="sig-name descname"><span class="pre">get_nominal_bus_powers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution.Solution.get_nominal_bus_powers" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_nominal_bus_powers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orient</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution.Solution.get_nominal_bus_powers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a DataFrame for self.Circuit’s powers by bus
 param: must be in SOLUTION_PARAMS
 orient: optional, ‘rows’ or ‘cols’, defaults to self._orient</p>
@@ -79,15 +132,20 @@ orient: optional, ‘rows’ or ‘cols’, defaults to self._orient</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="gigpower.solution.Solution.parse_vvc_objects">
-<span class="sig-name descname"><span class="pre">parse_vvc_objects</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution.Solution.parse_vvc_objects" title="Permalink to this definition">¶</a></dt>
-<dd><p>From 20180601/PYTHON/lib/dss_vvc.py by &#64;kathleenchang</p>
+<dt class="sig sig-object py" id="gigpower.solution.Solution.get_sV">
+<span class="sig-name descname"><span class="pre">get_sV</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">pandas.core.frame.DataFrame</span><a class="headerlink" href="#gigpower.solution.Solution.get_sV" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return solved total bus powers as a DataFrame</p>
 </dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.solution.Solution.maxiter">
+<span class="sig-name descname"><span class="pre">maxiter</span></span><em class="property"> <span class="pre">=</span> <span class="pre">100</span></em><a class="headerlink" href="#gigpower.solution.Solution.maxiter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gigpower.solution.Solution.print_solution">
 <span class="sig-name descname"><span class="pre">print_solution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution.Solution.print_solution" title="Permalink to this definition">¶</a></dt>
-<dd><p>prints solution to stdout</p>
+<dd><p>Prints solution values to stdout, row-major order.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -108,12 +166,33 @@ class</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="gigpower.solution_nr3.SolutionNR3">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">gigpower.solution_nr3.</span></span><span class="sig-name descname"><span class="pre">SolutionNR3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dss_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution_nr3.SolutionNR3" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<dd><p>Bases: <a class="reference internal" href="#gigpower.solution.Solution" title="gigpower.solution.Solution"><code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.solution.Solution</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.solution_nr3.SolutionNR3.CONVERGENCE_TOLERANCE">
+<span class="sig-name descname"><span class="pre">CONVERGENCE_TOLERANCE</span></span><em class="property"> <span class="pre">=</span> <span class="pre">1e-06</span></em><a class="headerlink" href="#gigpower.solution_nr3.SolutionNR3.CONVERGENCE_TOLERANCE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.solution_nr3.SolutionNR3.change_KCL_matrices">
+<span class="sig-name descname"><span class="pre">change_KCL_matrices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">der</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capacitance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution_nr3.SolutionNR3.change_KCL_matrices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="gigpower.solution_nr3.SolutionNR3.map_XNR">
 <span class="sig-name descname"><span class="pre">map_XNR</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution_nr3.SolutionNR3.map_XNR" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set self,V, self.I, self.Stx, self.Srx, self.i, self.s
 based on the current value of self.XNR
 Written by &#64;kathleenchang</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.solution_nr3.SolutionNR3.set_zip_values">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">set_zip_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zip_v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution_nr3.SolutionNR3.set_zip_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets zip values for the Solution class
+param zip_V: List or nd.array with 7 values
+[a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min voltage pu]
+Note that zip values are set both on the Solution class and Circuit
+class</p>
 </dd></dl>
 
 <dl class="py method">
@@ -132,13 +211,24 @@ Written by &#64;kathleenchang</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="gigpower.solution_fbs.SolutionFBS">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">gigpower.solution_fbs.</span></span><span class="sig-name descname"><span class="pre">SolutionFBS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dss_fp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution_fbs.SolutionFBS" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<dd><p>Bases: <a class="reference internal" href="#gigpower.solution.Solution" title="gigpower.solution.Solution"><code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.solution.Solution</span></code></a></p>
+<dl class="py method">
 <dt class="sig sig-object py" id="gigpower.solution_fbs.SolutionFBS.set_adj">
 <span class="sig-name descname"><span class="pre">set_adj</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution_fbs.SolutionFBS.set_adj" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets self.adj and self.reverse_adj for FBS algorithm
 FBS considers transformers and voltage regulators as edges, ignoring
 voltage regulator connections going upstream
 (otherwise, the circuit has cycles and is non-radial)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.solution_fbs.SolutionFBS.set_zip_values">
+<em class="property"><span class="pre">classmethod</span> </em><span class="sig-name descname"><span class="pre">set_zip_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zip_v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.solution_fbs.SolutionFBS.set_zip_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>sets zip values for the Solution class
+param zip_V: List or nd.array with 7 values
+[a_z_p, a_i_p, a_pq_p, a_z_q, a_i_q, a_pq_q, min voltage pu]
+Note that zip values are set both on the Solution class and Circuit
+class</p>
 </dd></dl>
 
 <dl class="py method">
@@ -214,7 +304,25 @@ tx_node.V &#64; [current entering tx_node]*reg_node.V</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="gigpower.circuit.Circuit">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">gigpower.circuit.</span></span><span class="sig-name descname"><span class="pre">Circuit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Sbase</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.circuit.Circuit" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py method">
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.circuit.Circuit.buses">
+<span class="sig-name descname"><span class="pre">buses</span></span><a class="headerlink" href="#gigpower.circuit.Circuit.buses" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Circuit’s BusGroup</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.circuit.Circuit.capacitors">
+<span class="sig-name descname"><span class="pre">capacitors</span></span><a class="headerlink" href="#gigpower.circuit.Circuit.capacitors" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Circuit’s CapacitorGroup</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.circuit.Circuit.dss">
+<span class="sig-name descname"><span class="pre">dss</span></span><a class="headerlink" href="#gigpower.circuit.Circuit.dss" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pointer to the OpenDSS object corresponding to this Circuit</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="gigpower.circuit.Circuit.get_aI_matrix">
 <span class="sig-name descname"><span class="pre">get_aI_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">numpy.ndarray</span><a class="headerlink" href="#gigpower.circuit.Circuit.get_aI_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>3 x n or n x 3matrix of all load.aPQ_p, aggregated by phase on bus,
@@ -277,19 +385,23 @@ Indexed as follows:
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="gigpower.circuit.Circuit.get_vvcpu_matrix">
-<span class="sig-name descname"><span class="pre">get_vvcpu_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">numpy.ndarray</span><a class="headerlink" href="#gigpower.circuit.Circuit.get_vvcpu_matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>3 x n or n x 3matrix of all real vvcpu, columns indexed by bus
-Currently set to all zeros.
-TODO: Implement logic to set this as needed.</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="gigpower.circuit.Circuit.get_wpu_matrix">
 <span class="sig-name descname"><span class="pre">get_wpu_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">numpy.ndarray</span><a class="headerlink" href="#gigpower.circuit.Circuit.get_wpu_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>3 x n or n x 3matrix of all real wpu, columns indexed by bus
 Currently set to all zeros.
 TODO: Implement logic to set this as needed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.circuit.Circuit.lines">
+<span class="sig-name descname"><span class="pre">lines</span></span><a class="headerlink" href="#gigpower.circuit.Circuit.lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Circuit’s LineGroup</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.circuit.Circuit.loads">
+<span class="sig-name descname"><span class="pre">loads</span></span><a class="headerlink" href="#gigpower.circuit.Circuit.loads" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Circuit’s LoadGroup</p>
 </dd></dl>
 
 <dl class="py method">
@@ -304,6 +416,254 @@ Updates Load.spu, Load.ppu, Load.qpu, and Bus.sum_spu</p>
 <span class="sig-name descname"><span class="pre">set_kvar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kvar</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.circuit.Circuit.set_kvar" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets a new kvar for the given Load.
 Updates Load.spu, Load.ppu, Load.qpu, and Bus.sum_spu</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.circuit.Circuit.transformers">
+<span class="sig-name descname"><span class="pre">transformers</span></span><a class="headerlink" href="#gigpower.circuit.Circuit.transformers" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Circuit’s TransformerGroup</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.circuit.Circuit.voltage_regulators">
+<span class="sig-name descname"><span class="pre">voltage_regulators</span></span><a class="headerlink" href="#gigpower.circuit.Circuit.voltage_regulators" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Circuit’s VoltageRegulatorGroup</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="circuitelementgroup">
+<h2>CircuitElementGroup<a class="headerlink" href="#circuitelementgroup" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="gigpower.circuit_element_group.CircuitElementGroup">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">gigpower.circuit_element_group.</span></span><span class="sig-name descname"><span class="pre">CircuitElementGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dss</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.circuit_element_group.CircuitElementGroup" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="gigpower.circuit_element_group.CircuitElementGroup.add_element">
+<span class="sig-name descname"><span class="pre">add_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ele</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inc_num_elements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.circuit_element_group.CircuitElementGroup.add_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds a CircuitElement to this group
+param inc_num_elements: Increment self.num_elements with this addition
+param unique_key: overwrite existing self._key_to_element dict so that
+there is only one object per key</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.circuit_element_group.CircuitElementGroup.all_names">
+<span class="sig-name descname"><span class="pre">all_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.circuit_element_group.CircuitElementGroup.all_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns all names in Group</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.circuit_element_group.CircuitElementGroup.get_element">
+<span class="sig-name descname"><span class="pre">get_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">int</span><span class="p"><span class="pre">,</span> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.circuit_element_group.CircuitElementGroup.get_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an element given a name, index, or tuple of (tx_name, rx_name)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.circuit_element_group.CircuitElementGroup.get_elements">
+<span class="sig-name descname"><span class="pre">get_elements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.circuit_element_group.CircuitElementGroup.get_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns an iterable View over all elements in the Group</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.circuit_element_group.CircuitElementGroup.get_idx">
+<span class="sig-name descname"><span class="pre">get_idx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">gigpower.circuit_element.CircuitElement</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">int</span><a class="headerlink" href="#gigpower.circuit_element_group.CircuitElementGroup.get_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the index of the object within the Group
+param obj: the object’s __name__, or the object itself</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.circuit_element_group.CircuitElementGroup.get_name">
+<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.circuit_element_group.CircuitElementGroup.get_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>return the name of the object given its Group idx</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.circuit_element_group.CircuitElementGroup.get_phase_matrix">
+<span class="sig-name descname"><span class="pre">get_phase_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">orient</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">numpy.ndarray</span><a class="headerlink" href="#gigpower.circuit_element_group.CircuitElementGroup.get_phase_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>phase matrix of 1’s where phases are present, 0’s otherwise
+indexed by element index, which is the same as in opendss
+param orient: ‘rows’ or ‘cols’</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.circuit_element_group.CircuitElementGroup.get_phase_matrix_dict">
+<span class="sig-name descname"><span class="pre">get_phase_matrix_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span> </span><span class="pre">numpy.ndarray</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#gigpower.circuit_element_group.CircuitElementGroup.get_phase_matrix_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a dictionary of element phase matrices, indexed by element name
+Phase matrix is 3 x 1, with 1’s where phase is present, zeros otherwise
+ex: [1, 0, 0] for element with only phase A</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="busgroup">
+<h2>BusGroup<a class="headerlink" href="#busgroup" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="gigpower.bus_group.BusGroup">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">gigpower.bus_group.</span></span><span class="sig-name descname"><span class="pre">BusGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dss</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.bus_group.BusGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gigpower.circuit_element_group.CircuitElementGroup" title="gigpower.circuit_element_group.CircuitElementGroup"><code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.circuit_element_group.CircuitElementGroup</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.bus_group.BusGroup.dss_module_name">
+<span class="sig-name descname"><span class="pre">dss_module_name</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'Bus'</span></em><a class="headerlink" href="#gigpower.bus_group.BusGroup.dss_module_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.bus_group.BusGroup.ele_class">
+<span class="sig-name descname"><span class="pre">ele_class</span></span><a class="headerlink" href="#gigpower.bus_group.BusGroup.ele_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.bus.Bus</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="loadgroup">
+<h2>LoadGroup<a class="headerlink" href="#loadgroup" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="gigpower.load_group.LoadGroup">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">gigpower.load_group.</span></span><span class="sig-name descname"><span class="pre">LoadGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bus_group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zip_v</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.load_group.LoadGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gigpower.circuit_element_group.CircuitElementGroup" title="gigpower.circuit_element_group.CircuitElementGroup"><code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.circuit_element_group.CircuitElementGroup</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.load_group.LoadGroup.dss_module_name">
+<span class="sig-name descname"><span class="pre">dss_module_name</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'Loads'</span></em><a class="headerlink" href="#gigpower.load_group.LoadGroup.dss_module_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.load_group.LoadGroup.ele_class">
+<span class="sig-name descname"><span class="pre">ele_class</span></span><a class="headerlink" href="#gigpower.load_group.LoadGroup.ele_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.load.Load</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.load_group.LoadGroup.get_ppu_matrix">
+<span class="sig-name descname"><span class="pre">get_ppu_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.load_group.LoadGroup.get_ppu_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>return 3 x n matrix of load.ppu values summed over Bus
+columns indexed by Bus index, padded by phase</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.load_group.LoadGroup.get_qpu_matrix">
+<span class="sig-name descname"><span class="pre">get_qpu_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.load_group.LoadGroup.get_qpu_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>return 3 x n matrix of kvar values summed over Bus
+columns indexed by Bus index, padded by phase</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.load_group.LoadGroup.get_spu_matrix">
+<span class="sig-name descname"><span class="pre">get_spu_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.load_group.LoadGroup.get_spu_matrix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="capacitorgroup">
+<h2>CapacitorGroup<a class="headerlink" href="#capacitorgroup" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="gigpower.capacitor_group.CapacitorGroup">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">gigpower.capacitor_group.</span></span><span class="sig-name descname"><span class="pre">CapacitorGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bus_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.capacitor_group.CapacitorGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gigpower.circuit_element_group.CircuitElementGroup" title="gigpower.circuit_element_group.CircuitElementGroup"><code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.circuit_element_group.CircuitElementGroup</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.capacitor_group.CapacitorGroup.dss_module_name">
+<span class="sig-name descname"><span class="pre">dss_module_name</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'Capacitors'</span></em><a class="headerlink" href="#gigpower.capacitor_group.CapacitorGroup.dss_module_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.capacitor_group.CapacitorGroup.ele_class">
+<span class="sig-name descname"><span class="pre">ele_class</span></span><a class="headerlink" href="#gigpower.capacitor_group.CapacitorGroup.ele_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.capacitor.Capacitor</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.capacitor_group.CapacitorGroup.get_cappu_matrix">
+<span class="sig-name descname"><span class="pre">get_cappu_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.capacitor_group.CapacitorGroup.get_cappu_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>return 3 x n matrix of kvar values summed over Bus
+columns indexed by Bus index, padded by phase</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="transformergroup">
+<h2>TransformerGroup<a class="headerlink" href="#transformergroup" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="gigpower.transformer_group.TransformerGroup">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">gigpower.transformer_group.</span></span><span class="sig-name descname"><span class="pre">TransformerGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bus_group</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.transformer_group.TransformerGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.line_group.LineGroup</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.transformer_group.TransformerGroup.dss_module_name">
+<span class="sig-name descname"><span class="pre">dss_module_name</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'Transformers'</span></em><a class="headerlink" href="#gigpower.transformer_group.TransformerGroup.dss_module_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.transformer_group.TransformerGroup.ele_class">
+<span class="sig-name descname"><span class="pre">ele_class</span></span><a class="headerlink" href="#gigpower.transformer_group.TransformerGroup.ele_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.transformer.Transformer</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.transformer_group.TransformerGroup.get_idx">
+<span class="sig-name descname"><span class="pre">get_idx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.transformer_group.TransformerGroup.get_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles Tuple representations of transformers</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="voltageregulatorgroup">
+<h2>VoltageRegulatorGroup<a class="headerlink" href="#voltageregulatorgroup" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="gigpower.voltage_regulator_group.VoltageRegulatorGroup">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">gigpower.voltage_regulator_group.</span></span><span class="sig-name descname"><span class="pre">VoltageRegulatorGroup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bus_group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.voltage_regulator_group.VoltageRegulatorGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.line_group.LineGroup</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.voltage_regulator_group.VoltageRegulatorGroup.add_element">
+<span class="sig-name descname"><span class="pre">add_element</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.voltage_regulator_group.VoltageRegulatorGroup.add_element" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the VR to the VRGroup, including all the lines of the VR
+in the VRGroup’s adjacency matrices</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.voltage_regulator_group.VoltageRegulatorGroup.dss_module_name">
+<span class="sig-name descname"><span class="pre">dss_module_name</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'RegControls'</span></em><a class="headerlink" href="#gigpower.voltage_regulator_group.VoltageRegulatorGroup.dss_module_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gigpower.voltage_regulator_group.VoltageRegulatorGroup.ele_class">
+<span class="sig-name descname"><span class="pre">ele_class</span></span><a class="headerlink" href="#gigpower.voltage_regulator_group.VoltageRegulatorGroup.ele_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">gigpower.voltage_regulator.VoltageRegulator</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.voltage_regulator_group.VoltageRegulatorGroup.get_adj_set">
+<span class="sig-name descname"><span class="pre">get_adj_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reversed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.voltage_regulator_group.VoltageRegulatorGroup.get_adj_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self.adj, with all voltage regulators between the same two buses
+into the same edge.
+ex: {‘650’:[‘rg60’, ‘rg60’, ‘rg60]} -&gt; {‘650’: [‘rg60’]}</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.voltage_regulator_group.VoltageRegulatorGroup.get_bus_ids">
+<span class="sig-name descname"><span class="pre">get_bus_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">which</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.voltage_regulator_group.VoltageRegulatorGroup.get_bus_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>overwrite super to get tx buses of upstream, downstream lines
+in vr index order
+param which = ‘tx’ or ‘rx’
+resulting list length is 2 * self.num_elements
+even number indices are upstream_line tx bus indices
+odd number indices are downstream_line tx bus indices</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.voltage_regulator_group.VoltageRegulatorGroup.get_gain_matrix">
+<span class="sig-name descname"><span class="pre">get_gain_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">numpy.ndarray</span><a class="headerlink" href="#gigpower.voltage_regulator_group.VoltageRegulatorGroup.get_gain_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>n x 1 matrix of NEGATIVE gain values, indexed by voltage_regulator index
+Negative sign for voltage ratio purposes</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gigpower.voltage_regulator_group.VoltageRegulatorGroup.get_idx">
+<span class="sig-name descname"><span class="pre">get_idx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gigpower.voltage_regulator_group.VoltageRegulatorGroup.get_idx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handles tuple representation. If passed a tuple, returns a list of VRs
+on the Line represented by the tuple</p>
 </dd></dl>
 
 </dd></dl>
@@ -335,6 +695,12 @@ Updates Load.spu, Load.ppu, Load.qpu, and Bus.sum_spu</p>
 <li class="toctree-l2"><a class="reference internal" href="#solutionnr3">SolutionNR3</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#solutionfbs">SolutionFBS</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#circuit">Circuit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#circuitelementgroup">CircuitElementGroup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#busgroup">BusGroup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loadgroup">LoadGroup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#capacitorgroup">CapacitorGroup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transformergroup">TransformerGroup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#voltageregulatorgroup">VoltageRegulatorGroup</a></li>
 </ul>
 </li>
 </ul>
