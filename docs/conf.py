@@ -23,7 +23,7 @@ copyright = '2021, Daniel Arnold, Michael Sankur, Sy-Toan Ngo, Kathleen Chang, E
 author = 'Daniel Arnold, Michael Sankur, Sy-Toan Ngo, Kathleen Chang, Elaine Laguerta'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1.0'
+release = 'v1.0.1-beta'
 
 
 # -- General configuration ---------------------------------------------------
