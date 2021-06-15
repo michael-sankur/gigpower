@@ -155,7 +155,7 @@ class Solution():
             print(f"Not a valid solution parameter. Valid parameters: \
                   {self.__class__.SOLUTION_PARAMS.keys()}")
 
-    def get_nominal_bus_powers(self, orient=None):
+    def get_nominal_bus_powers(self, orient: str = ''):
         """
         Returns a DataFrame for self.Circuit's powers by bus
         param: must be in SOLUTION_PARAMS
@@ -174,13 +174,6 @@ class Solution():
             cols = [_ for _ in index]
             index = temp
         return pd.DataFrame(data=data, index=index, columns=cols, dtype=data_type)
-
-    def get_bus_powers(self):
-        """
-        Total complex powers by bus (load powers and capacitor powers)
-        indexed by bus 
-        """
-        return self.get_load_powers() + self.get_capacitor_powers()
 
     def calc_sV(self, bus=None):
         """
