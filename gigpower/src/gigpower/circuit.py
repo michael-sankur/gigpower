@@ -41,11 +41,17 @@ class Circuit():
         """
         set_zip_values_dss(dss, Circuit.ZIP_V)
         self.Sbase = Sbase
+        #: The Circuit's BusGroup
         self.buses = BusGroup(dss)
+        #: The Circuit's LineGroup
         self.lines = LineGroup(dss, bus_group=self.buses)
+        #: The Circuit's LoadGroup
         self.loads = LoadGroup(dss, bus_group=self.buses, zip_v=Circuit.ZIP_V)
+        #: The Circuit's CapacitorGroup
         self.capacitors = CapacitorGroup(dss, bus_group=self.buses)
+        #: The Circuit's TransformerGroup
         self.transformers = TransformerGroup(dss, bus_group=self.buses)
+        #: The Circuit's VoltageRegulatorGroup
         self.voltage_regulators = VoltageRegulatorGroup(dss, bus_group=self.buses)
 
         # the main line group needs to be aware of transformers and voltage 
@@ -53,6 +59,7 @@ class Circuit():
         # indices and topology
         self.lines.transformers = self.transformers
         self.lines.voltage_regulators = self.voltage_regulators
+        #: A pointer to the OpenDSS object corresponding to this Circuit
         self.dss = dss
         self._orient = 'rows'  # may be overwritten by Solution
 
@@ -162,16 +169,6 @@ class Circuit():
         """
         return self._orient_switch(np.zeros((self.buses.num_elements, 3),
                                    dtype=float))
-
-    def get_vvcpu_matrix(self) -> np.ndarray:
-        """
-        3 x n or n x 3matrix of all real vvcpu, columns indexed by bus
-        Currently set to all zeros.
-        TODO: Implement logic to set this as needed.
-        """
-        # TODO: confirm vvpcu dtype
-        return self._orient_switch(np.zeros((self.buses.num_elements, 3),
-                                            dtype=float))
 
     def get_total_lines(self):
         """ returns number of Lines transformers, and voltage regulators * 2"""
