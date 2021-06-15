@@ -47,7 +47,7 @@ class Circuit():
         self.capacitors = CapacitorGroup(dss, bus_group=self.buses)
         self.transformers = TransformerGroup(dss, bus_group=self.buses)
         self.voltage_regulators = VoltageRegulatorGroup(dss, bus_group=self.buses)
-        
+
         # the main line group needs to be aware of transformers and voltage 
         # regulators. It can be queried for transformer and voltage regulator
         # indices and topology
@@ -61,8 +61,8 @@ class Circuit():
         sets a new kW for the given Load.
         Updates Load.spu, Load.ppu, Load.qpu, and Bus.sum_spu
         """
-        load = self.loads.get_ckt_element(load_name)
-        bus = self.bus.get_ckt_element(load.bus_name)
+        load = self.loads.get_element(load_name)
+        bus = self.buses.get_element(load.related_bus)
         old_load_spu = load.spu
         load._set_kW(kW)
         new_load_spu = load.spu
@@ -73,8 +73,8 @@ class Circuit():
         sets a new kvar for the given Load.
         Updates Load.spu, Load.ppu, Load.qpu, and Bus.sum_spu
         """
-        load = self.loads.get_ckt_element(load_name)
-        bus = self.bus.get_ckt_element(load.bus_name)
+        load = self.loads.get_element(load_name)
+        bus = self.buses.get_element(load.related_bus)
         old_load_spu = load.spu
         load._set_kvar(kvar)
         new_load_spu = load.spu
@@ -122,7 +122,7 @@ class Circuit():
         """
         spu_matrix = self.loads.get_spu_matrix()
         return self._orient_switch(spu_matrix)
-    
+
     def get_cappu_matrix(self) -> np.ndarray:
         """
         3 x n or n x 3 matrix of real cappu, columns indexed by bus index
