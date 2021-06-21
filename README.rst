@@ -127,7 +127,7 @@ For support, contact Daniel Arnold at: dbarnold@lbl.gov
 
 Authors
 -------
-The first releases of ``gigpower`` (<= 1.0.1) were written in June 2021 by researchers at the `Lawrence Berkeley National Lab Grid Integration Group <https://gridintegration.lbl.gov/>`_, lead by `Daniel Arnold <https://eta.lbl.gov/people/daniel-arnold>`_.
+The first releases of ``gigpower`` (<= 1.0.1) were written from August 2020 to June 2021 by researchers at the `Lawrence Berkeley National Lab Grid Integration Group <https://gridintegration.lbl.gov/>`_, lead by `Daniel Arnold <https://eta.lbl.gov/people/daniel-arnold>`_.
 
 Development Team:
 
