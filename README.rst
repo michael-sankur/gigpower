@@ -122,8 +122,19 @@ Follow the steps below to develop this project.
 
 Support
 -------
-This project is maintained by the `Lawrence Berkeley National Lab Grid Integration Group <https://gridintegration.lbl.gov/>`_. 
+This project is maintained by the `Lawrence Berkeley National Lab Grid Integration Group <https://gridintegration.lbl.gov/>`_.
 For support, contact Daniel Arnold at: dbarnold@lbl.gov
+
+Authors
+-------
+The first releases of ``gigpower`` (<= 1.0.1) were written in June 2021 by researchers at the `Lawrence Berkeley National Lab Grid Integration Group <https://gridintegration.lbl.gov/>`_, lead by `Daniel Arnold <https://eta.lbl.gov/people/daniel-arnold>`_.
+
+Development Team:
+
+- `Michael Sankur, @msankur <https://github.com/msankur>`_
+- `Elaine Laguerta, @elaguerta <https://github.com/elaguerta>`_
+- `Kathleen Chang, @kathleenchang <https://github.com/kathleenchang>`_
+- `Sy-Toan Ngo, @toanngosy <https://github.com/toanngosy>`_
 
 License
 -------
